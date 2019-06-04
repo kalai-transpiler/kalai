@@ -6,7 +6,7 @@
 ;; C++
 ;;
 
-(def emit-cpp)
+(declare emit-cpp)
 
 (defn emit-cpp-type
   [class]
@@ -70,7 +70,7 @@
 
 ;; common forms
 
-(def emit-java)
+(declare emit-java)
 
 (defn emit-java-type
   [class]
