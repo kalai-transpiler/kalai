@@ -46,10 +46,19 @@
                               "x = 13;"])))))
 
 (deftest java-binding-test-let
-  (testing "java - let"
+  (testing "java - let - 1 expression"
     (let [ast (az/analyze '(let [x 1] (+ x 3)))]
       (is (= (emit-java ast)
 "{
 x = 1;
 x + 3;
+}"))))
+
+  (testing "java - let - 2 expressions"
+    (let [ast (az/analyze '(let [x 1] (+ x 3) (+ x 5)))]
+      (is (= (emit-java ast)
+"{
+x = 1;
+x + 3;
+x + 5;
 }")))))

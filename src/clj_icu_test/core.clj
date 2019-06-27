@@ -205,15 +205,18 @@
   {:pre [(= :let (:op ast))]}
   (let [bindings (:bindings ast)
         binding-str (emit-java-bindings-stanza bindings)
-        body-strs (if (:statements ast)
-                    (let [butlast-statements (:statements ast)
-                          last-statement (:ret ast)
+        body-ast (:body ast)
+        body-strs (if (:statements body-ast)
+                    ;; if ast has key nesting of [:body :statements], then we have a multi-"statement" expression do block in the let form
+                    (let [butlast-statements (:statements body-ast)
+                          last-statement (:ret body-ast)
                           statements (concat butlast-statements [last-statement])
                           statement-strs (map emit-java statements)]
                       statement-strs)
+                    ;; else the let block has only one "statement" in the do block
                     [(emit-java (:body ast))])
-        body-strs-with-semicolons (map #(if (= ";" (last %)) % (str % ";")) body-strs)        
-        body-str (string/join "\n" body-strs-with-semicolons)        
+        body-strs-with-semicolons (map #(if (= ";" (last %)) % (str % ";")) body-strs)
+        body-str (string/join "\n" body-strs-with-semicolons)
         block-str-parts ["{"
                          binding-str
                          body-str
