@@ -41,20 +41,32 @@
 
 ;; bindings
 
-(defn emit-cpp-def
+
+(defn emit-cpp-assignment
+  "To be used by both 'def' and any bindings block of a form (ex: let)
+  Might return nil"
   [ast]
-  {:pre [(= :def (:op ast))]}
-  (let [type-class (or (get-in ast [:meta :val :tag])
+  (let [op-code (:op ast)
+        type-class (or (get-in ast [:meta :val :tag])
                        (get-in ast [:init :env :tag]))
         type-str (emit-cpp-type type-class)
-        identifier (name (:name ast))
-        expression (emit-cpp (:init ast))
+        identifier (when-let [identifer-symbol (or (get-in ast [:env :form])
+                                                   (case op-code
+                                                     :binding (get ast :form)
+                                                     :def (get ast :name)))]
+                     (str identifer-symbol))
+        expression (emit-java (:init ast))
         statement-parts [type-str
                          identifier
                          "="
                          expression]
         statement (emit-cpp-statement statement-parts)]
     statement))
+
+(defn emit-cpp-def
+  [ast]
+  {:pre [(= :def (:op ast))]}
+  (emit-cpp-assignment ast))
 
 ;; entry point
 
@@ -76,6 +88,7 @@
 (declare emit-java)
 
 (defn emit-java-type
+  "Might return nil"
   [class]
   (when class
     (cond
@@ -138,13 +151,19 @@
         statement (emit-java-statement statement-parts)]
     statement))
 
-(defn emit-java-def
+(defn emit-java-assignment
+  "To be used by both 'def' and any bindings block of a form (ex: let)
+  Might return nil"
   [ast]
-  {:pre [(= :def (:op ast))]}
-  (let [type-class (or (get-in ast [:meta :val :tag])
+  (let [op-code (:op ast)
+        type-class (or (get-in ast [:meta :val :tag])
                        (get-in ast [:init :env :tag]))
         type-str (emit-java-type type-class)
-        identifier (name (:name ast))
+        identifier (when-let [identifer-symbol (or (get-in ast [:env :form])
+                                                   (case op-code
+                                                     :binding (get ast :form)
+                                                     :def (get ast :name)))]
+                     (str identifer-symbol))
         expression (emit-java (:init ast))
         statement-parts [type-str
                          identifier
@@ -152,6 +171,11 @@
                          expression]
         statement (emit-java-statement statement-parts)]
     statement))
+
+(defn emit-java-def
+  [ast]
+  {:pre [(= :def (:op ast))]}
+  (emit-java-assignment ast))
 
 ;; entry point
 
