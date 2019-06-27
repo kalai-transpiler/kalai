@@ -45,3 +45,11 @@
       (is (= (emit-java ast) ["Long x = 11;"
                               "x = 13;"])))))
 
+(deftest java-binding-test-let
+  (testing "java - let"
+    (let [ast (az/analyze '(let [x 1] (+ x 3)))]
+      (is (= (emit-java ast)
+"{
+x = 1;
+x + 3;
+}")))))

@@ -3,6 +3,10 @@
             [clojure.tools.analyzer.jvm :as az]))
 
 ;;
+;; constants
+;;
+
+;;
 ;; C++
 ;;
 
@@ -177,6 +181,69 @@
   {:pre [(= :def (:op ast))]}
   (emit-java-assignment ast))
 
+(defn emit-java-binding
+  "Might return nil"
+  [ast]
+  {:pre [(= :binding (:op ast))]}
+  (emit-java-assignment ast))
+
+(defn emit-java-bindings-stanza
+  "The bindings stanza in a form (ex: in a let form).
+  Might return nil"
+  [ast]
+  {:pre [(sequential? ast)]}
+  (let [bindings ast ;; the AST in this case is a vector of sub-ASTs
+        binding-statements (map emit-java-binding bindings)]
+    (when-let [non-nil-binding-statements (->> binding-statements
+                                               (keep identity)
+                                               seq)]
+      (let [bindings-str (string/join "\n" non-nil-binding-statements)] 
+        bindings-str))))
+
+(defn emit-java-let
+  [ast]
+  {:pre [(= :let (:op ast))]}
+  (let [bindings (:bindings ast)
+        binding-str (emit-java-bindings-stanza bindings)
+        body-strs (if (:statements ast)
+                    (let [butlast-statements (:statements ast)
+                          last-statement (:ret ast)
+                          statements (concat butlast-statements [last-statement])
+                          statement-strs (map emit-java statements)]
+                      statement-strs)
+                    [(emit-java (:body ast))])
+        body-strs-with-semicolons (map #(if (= ";" (last %)) % (str % ";")) body-strs)        
+        body-str (string/join "\n" body-strs-with-semicolons)        
+        block-str-parts ["{"
+                         binding-str
+                         body-str
+                         "}"]        
+        block-str (->> block-str-parts
+                       (keep identity)
+                       (string/join "\n"))]
+    block-str))
+
+;; "arithmetic" (built-in operators)
+
+(defn emit-java-static-call
+  [ast]
+  {:pre [(= :static-call (:op ast))]}
+  (let [static-call-fn-symbol (-> ast :raw-forms last first)
+        args (:args ast)
+        arg-strs (map emit-java args)
+        expression-parts (interpose static-call-fn-symbol arg-strs)
+        expression (string/join " " expression-parts)]
+    expression))
+
+
+;; other
+
+(defn emit-java-local
+  [ast]
+  {:pre [(= :local (:op ast))]}
+  (let [form (:form ast)]
+    (str (name form))))
+
 ;; entry point
 
 (defn emit-java
@@ -188,4 +255,11 @@
     :invoke (case (-> ast :fn :meta :name name)
               "atom" (emit-java-atom ast)
               "reset!" (emit-java-reset! ast))
-    :do (emit-java-do ast)))
+    :do (emit-java-do ast)
+    :let (emit-java-let ast)
+    :local (emit-java-local ast)
+    :static-call (emit-java-static-call ast)
+    :else (cond
+            (:raw-forms ast) (emit-java (-> ast
+                                            :raw-forms
+                                            )))))
