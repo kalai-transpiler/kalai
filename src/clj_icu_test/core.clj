@@ -232,8 +232,10 @@
   [ast]
   {:pre [(= :static-call (:op ast))]}
   (let [static-call-fn-symbol (-> ast :raw-forms last first)
-        args (:args ast)
-        arg-strs (map emit-java args)
+        args (-> ast :raw-forms last rest)
+        arg-strs (->> args
+                      (map az/analyze)
+                      (map emit-java))
         expression-parts (interpose static-call-fn-symbol arg-strs)
         expression (string/join " " expression-parts)]
     expression))
@@ -244,6 +246,12 @@
 (defn emit-java-local
   [ast]
   {:pre [(= :local (:op ast))]}
+  (let [form (:form ast)]
+    (str (name form))))
+
+(defn emit-java-var
+  [ast]
+  {:pre [(= :var (:op ast))]}
   (let [form (:form ast)]
     (str (name form))))
 
@@ -262,6 +270,7 @@
     :let (emit-java-let ast)
     :local (emit-java-local ast)
     :static-call (emit-java-static-call ast)
+    :var (emit-java-var ast)
     :else (cond
             (:raw-forms ast) (emit-java (-> ast
                                             :raw-forms

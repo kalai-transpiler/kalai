@@ -45,6 +45,17 @@
       (is (= (emit-java ast) ["Long x = 11;"
                               "x = 13;"])))))
 
+(deftest java-static-call-test
+  (testing "java - arithmetic fn - +"
+    (let [ast (az/analyze '(+ 11 17))]
+      (is (= (emit-java ast) "11 + 17"))))
+  (testing "java - arithmetic fn - /"
+    (let [ast (az/analyze '(/ 34 17))]
+      (is (= (emit-java ast) "34 / 17"))))
+  (testing "java - arithmetic fn - multiple operands"
+    (let [ast (az/analyze '(+ 11 17 19 23))]
+      (is (= (emit-java ast) "11 + 17 + 19 + 23")))))
+
 (deftest java-binding-test-let
   (testing "java - let - 1 expression"
     (let [ast (az/analyze '(let [x 1] (+ x 3)))]
