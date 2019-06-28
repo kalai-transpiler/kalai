@@ -61,15 +61,30 @@
     (let [ast (az/analyze '(let [x 1] (+ x 3)))]
       (is (= (emit-java ast)
 "{
-x = 1;
-x + 3;
+  x = 1;
+  x + 3;
 }"))))
-
   (testing "java - let - 2 expressions"
     (let [ast (az/analyze '(let [x 1] (+ x 3) (+ x 5)))]
       (is (= (emit-java ast)
 "{
-x = 1;
-x + 3;
-x + 5;
+  x = 1;
+  x + 3;
+  x + 5;
+}"))))
+  (testing "java - let - 2 bindings"
+    (let [ast (az/analyze '(let [x 1 y 2] (* x y)))]
+      (is (= (emit-java ast)
+"{
+  x = 1;
+  y = 2;
+  x * y;
+}"))))
+  (testing "java - let - 2 bindings - expression in binding"
+    (let [ast (az/analyze '(let [x 5 y (* x x)] (+ x y)))]
+      (is (= (emit-java ast)
+"{
+  x = 5;
+  y = x * x;
+  x + y;
 }")))))

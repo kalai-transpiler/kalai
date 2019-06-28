@@ -6,6 +6,30 @@
 ;; constants
 ;;
 
+(def INDENT-CHAR \space)
+
+(def INDENT-LEVEL-INCREMENT 2)
+
+;;
+;; indentation - global state and fns
+;;
+
+(def indent-level (atom 0))
+
+(defn reset-indent-level [] (reset! indent-level 0))
+
+(defmacro indent
+  [& body] 
+  `(do
+     (swap! indent-level + INDENT-LEVEL-INCREMENT)
+     (let [result# (do ~@body)]
+       ;; force lazy sequences to evaluate now so that they use
+       ;; the current state of the indent level
+       (when (seq result#)
+         (doall result#))
+       (swap! indent-level - INDENT-LEVEL-INCREMENT) 
+       result#)))
+
 ;;
 ;; C++
 ;;
@@ -107,11 +131,18 @@
 
 (defn emit-java-statement
   [statement-parts]
-  (str (->> statement-parts
+  (str (apply str (repeat @indent-level INDENT-CHAR))
+       (->> statement-parts
             (keep identity)
             (map str)
             (string/join " "))
        ";"))
+
+(defn is-java-statement
+  [expression]
+  (-> expression
+      last
+      (= \;)))
 
 (defn emit-java-const
   [ast]
@@ -204,18 +235,20 @@
   [ast]
   {:pre [(= :let (:op ast))]}
   (let [bindings (:bindings ast)
-        binding-str (emit-java-bindings-stanza bindings)
+        binding-str (indent (emit-java-bindings-stanza bindings))
         body-ast (:body ast)
-        body-strs (if (:statements body-ast)
-                    ;; if ast has key nesting of [:body :statements], then we have a multi-"statement" expression do block in the let form
-                    (let [butlast-statements (:statements body-ast)
-                          last-statement (:ret body-ast)
-                          statements (concat butlast-statements [last-statement])
-                          statement-strs (map emit-java statements)]
-                      statement-strs)
-                    ;; else the let block has only one "statement" in the do block
-                    [(emit-java (:body ast))])
-        body-strs-with-semicolons (map #(if (= ";" (last %)) % (str % ";")) body-strs)
+        body-strs (indent
+                   (if (:statements body-ast)
+                     ;; if ast has key nesting of [:body :statements], then we have a multi-"statement" expression do block in the let form
+                     (let [butlast-statements (:statements body-ast)
+                           last-statement (:ret body-ast)
+                           statements (concat butlast-statements [last-statement])
+                           statement-strs (map emit-java statements)]
+                       statement-strs)
+                     ;; else the let block has only one "statement" in the do block
+                     [(emit-java (:body ast))]))
+        body-strs-with-semicolons (indent
+                                   (map #(if (is-java-statement %) % (emit-java-statement [%])) body-strs))
         body-str (string/join "\n" body-strs-with-semicolons)
         block-str-parts ["{"
                          binding-str
@@ -223,7 +256,7 @@
                          "}"]        
         block-str (->> block-str-parts
                        (keep identity)
-                       (string/join "\n"))]
+                       (string/join "\n"))] 
     block-str))
 
 ;; "arithmetic" (built-in operators)
