@@ -87,7 +87,7 @@
                                                      :binding (get ast :form)
                                                      :def (get ast :name)))]
                      (str identifer-symbol))
-        expression (emit-java (:init ast))
+        expression (emit-cpp (:init ast))
         statement-parts [type-str
                          identifier
                          "="
