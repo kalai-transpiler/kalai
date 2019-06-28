@@ -88,3 +88,15 @@
   y = x * x;
   x + y;
 }")))))
+
+(deftest java-let-test-nesting
+  (testing "nested let"
+    (let [ast (az/analyze '(let [x 5] (let [y (* x x)] (/ y x))))]
+      (is (= (emit-java ast)
+             "{
+  x = 5;
+  {
+    y = x * x;
+    y / x;
+  }
+}")))))

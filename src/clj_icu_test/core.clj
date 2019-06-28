@@ -30,6 +30,10 @@
        (swap! indent-level - INDENT-LEVEL-INCREMENT) 
        result#)))
 
+(defn indent-str-curr-level
+  []
+  (apply str (repeat @indent-level INDENT-CHAR)))
+
 ;;
 ;; C++
 ;;
@@ -131,18 +135,20 @@
 
 (defn emit-java-statement
   [statement-parts]
-  (str (apply str (repeat @indent-level INDENT-CHAR))
+  (str (indent-str-curr-level)
        (->> statement-parts
             (keep identity)
             (map str)
             (string/join " "))
        ";"))
 
-(defn is-java-statement
+(defn can-become-java-statement
   [expression]
-  (-> expression
-      last
-      (= \;)))
+  (let [result
+        (let [last-char (last expression)]
+          (and (not= \; last-char)
+               (not= \} last-char)))]
+    result))
 
 (defn emit-java-const
   [ast]
@@ -248,12 +254,12 @@
                      ;; else the let block has only one "statement" in the do block
                      [(emit-java (:body ast))]))
         body-strs-with-semicolons (indent
-                                   (map #(if (is-java-statement %) % (emit-java-statement [%])) body-strs))
+                                   (map #(if-not (can-become-java-statement %) % (emit-java-statement [%])) body-strs))
         body-str (string/join "\n" body-strs-with-semicolons)
-        block-str-parts ["{"
+        block-str-parts [(str (indent-str-curr-level) "{")
                          binding-str
                          body-str
-                         "}"]        
+                         (str (indent-str-curr-level) "}")]        
         block-str (->> block-str-parts
                        (keep identity)
                        (string/join "\n"))] 
