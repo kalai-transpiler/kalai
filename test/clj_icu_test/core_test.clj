@@ -129,3 +129,12 @@
     y / x;
   }
 }"))
+
+;; bindings - let - atom (as bound value)
+
+(let [ast (az/analyze '(let [a (atom 23)] (+ 3 5)))]
+  (expect (emit-java ast)
+"{
+  a = 23;
+  3 + 5;
+}"))
