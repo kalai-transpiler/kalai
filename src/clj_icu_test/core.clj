@@ -124,14 +124,38 @@
   [class]
   (when class
     (cond
-      (= long class) "long"
-      (= int class) "int"
-      (= char class) "char"
-      (= boolean class) "boolean"
-      :else (let [canonical-name (.getCanonicalName class)]
-              (if (.startsWith canonical-name "java.lang.")
+      ;; TODO: uncomment the primitive type class code unless and until we want to have
+      ;; implicit type signatures applied for bindings in a let block
+      ;; (= long class) "long"
+      ;; (= int class) "int"
+      ;; (= char class) "char"
+      ;; (= boolean class) "boolean"
+      :else (let [canonical-name (.getCanonicalName class)] 
+              (cond
+                ;; this is to prevent the analyzer from auto-tagging the type classes of
+                ;; symbols in a binding form in a way that is currently being assumed to
+                ;; be unwanted in the emitted output.
+                ;; If we need to actually emit a type signature of Object in the future,
+                ;; we can subclass Object to a custom type (ex: ExplicitlyAnObject.java)
+                ;; and tell users to use that new class in their type hints if they want
+                ;; a type signature of java.lang.Object in emitted Java output.
+                (= "java.lang.Object" canonical-name)
+                nil
+
+                (.startsWith canonical-name "java.lang.")
                 (subs canonical-name 10)
-                canonical-name)))))
+
+                ;; this when condition prevents Clojure-specific (?) classes like "long",
+                ;; "int", etc. that are automatically tagged by the analyzer on various
+                ;; binding symbols from becoming included in the emitted output.  This
+                ;; means that you need to used the boxed versions in type hints like
+                ;; ^Long, ^Integer, etc. in order to create type signatures in the emitted
+                ;; output.
+                (when (.getPackage class))
+                canonical-name
+
+                :else
+                nil)))))
 
 (defn emit-java-statement
   [statement-parts]
@@ -199,7 +223,9 @@
   [ast]
   (let [op-code (:op ast)
         type-class (or (get-in ast [:meta :val :tag])
-                       (get-in ast [:init :env :tag]))
+                       (get-in ast [:init :env :tag])
+                       (and (= :binding op-code)
+                            (get ast :tag)))
         type-str (emit-java-type type-class)
         identifier (when-let [identifer-symbol (or (get-in ast [:env :form])
                                                    (case op-code

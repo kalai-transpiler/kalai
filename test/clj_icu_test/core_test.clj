@@ -88,6 +88,15 @@
   x + 3;
 }"))
 
+;; bindings - let - 1 expression - type signature on symbol
+
+(let [ast (az/analyze '(let [^Integer x 1] (+ x 3)))]
+  (expect (emit-java ast)
+"{
+  Integer x = 1;
+  x + 3;
+}"))
+
 ;; bindings - let - 2 expressions
 
 (let [ast (az/analyze '(let [x 1] (+ x 3) (+ x 5)))]
@@ -145,6 +154,15 @@
   (expect (emit-java ast)
 "{
   a = 23;
+  a = 19;
+}"))
+
+;; bindings - let - atom (as bound value) and reset! - type signature
+
+(let [ast (az/analyze '(let [^Integer a (atom 23)] (reset! a 19)))]
+  (expect (emit-java ast)
+"{
+  Integer a = 23;
   a = 19;
 }"))
 
