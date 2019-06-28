@@ -181,7 +181,8 @@
   [ast]
   {:pre [(and (= :invoke (:op ast))
               (= (symbol "reset!") (-> ast :fn :meta :name)))]}
-  (let [identifier (-> ast :args first :meta :name name)
+  (let [identifier (str (or (-> ast :args first :meta :name)
+                            (-> ast :args first :form)))
         reset-val-ast (-> ast
                           :args
                           second)

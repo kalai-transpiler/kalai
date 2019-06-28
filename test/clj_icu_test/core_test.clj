@@ -138,3 +138,16 @@
   a = 23;
   3 + 5;
 }"))
+
+;; bindings - let - atom (as bound value) and reset!
+
+(let [ast (az/analyze '(let [a (atom 23)] (reset! a 19)))]
+  (expect (emit-java ast)
+"{
+  a = 23;
+  a = 19;
+}"))
+
+
+
+
