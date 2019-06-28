@@ -92,7 +92,7 @@
 
 (let [ast (az/analyze '(let [x 1] (+ x 3) (+ x 5)))]
   (expect (emit-java ast)
-     "{
+"{
   x = 1;
   x + 3;
   x + 5;
@@ -102,7 +102,7 @@
 
 (let [ast (az/analyze '(let [x 1 y 2] (* x y)))]
   (expect (emit-java ast)
-     "{
+"{
   x = 1;
   y = 2;
   x * y;
@@ -112,7 +112,7 @@
 
 (let [ast (az/analyze '(let [x 5 y (* x x)] (+ x y)))]
   (expect (emit-java ast)
-     "{
+"{
   x = 5;
   y = x * x;
   x + y;
@@ -122,7 +122,7 @@
 
 (let [ast (az/analyze '(let [x 5] (let [y (* x x)] (/ y x))))]
   (expect (emit-java ast)
-     "{
+"{
   x = 5;
   {
     y = x * x;
