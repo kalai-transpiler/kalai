@@ -328,21 +328,6 @@
 
 ;; "arithmetic" (built-in operators)
 
-;; (defn flatten-static-call-args
-;;   "Convert the :args field of the ast into a seq of subtrees of operands, but also flatten any nesting of :args-keyed operands into a flat seq.
-;;   Recursive function.
-;;   May return nil"
-;;   [ast]
-;;   (when ast
-;;     (if-not (sequential? (:args ast))
-;;       [(:args ast)]
-;;       (->> (mapcat
-;;             (fn [arg-ast] (if (:args arg-ast)
-;;                             (flatten-static-call-args arg-ast)
-;;                             [arg-ast]))
-;;              (:args ast))
-;;            (keep identity)))))
-
 (defn emit-java-arg
   [ast-opts symb]
   {:pre [(:env ast-opts)]}
@@ -383,11 +368,6 @@
   {:pre [(= :static-call (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
         static-call-fn-symbol (-> ast :raw-forms last first)
-        ;; flattened-args (or (when (-> ast :body :args)
-        ;;                      (flatten-static-call-args (-> ast :body)))
-        ;;                    (when (-> ast :args)
-        ;;                      (flatten-static-call-args ast)))
-        ;; arg-strs (map emit-java flattened-args)
         arg-strs (emit-java-args ast-opts)
         expression-parts (interpose static-call-fn-symbol arg-strs)
         expression (string/join " " expression-parts)]

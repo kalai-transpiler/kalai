@@ -174,3 +174,14 @@
 
 (let [ast (az/analyze '(/ 3 (/ 5 2) (/ 1 7) 23))]
   (expect (emit-java (map->AstOpts {:ast ast})) "3 / (5 / 2) / (1 / 7) / 23"))
+
+(let [ast (az/analyze '(let [x 101] (+ 3 5 (+ x (+ 1 7 (+ x x))) 23)))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+"{
+  x = 101;
+  3 + 5 + (x + (1 + 7 + (x + x))) + 23;
+}"))
+
+
+(let [ast (az/analyze '(/ 3 (+ 5 2) (* 1 7) 23))]
+  (expect (emit-java (map->AstOpts {:ast ast})) "3 / (5 + 2) / (1 * 7) / 23"))
