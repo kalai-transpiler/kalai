@@ -185,3 +185,16 @@
 
 (let [ast (az/analyze '(/ 3 (+ 5 2) (* 1 7) 23))]
   (expect (emit-java (map->AstOpts {:ast ast})) "3 / (5 + 2) / (1 * 7) / 23"))
+
+;; defn
+
+(let [ast (az/analyze '(defn compute ^void [^Integer x ^Integer y] (let [^Integer a (+ x y)] (* a y))))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+"public void compute(Integer x, Integer y)
+{
+  {
+    Integer a = x + y;
+    a * y;
+  }
+}"))
+

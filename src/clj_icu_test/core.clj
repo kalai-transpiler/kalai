@@ -144,11 +144,15 @@
   (when class
     (cond
       ;; TODO: uncomment the primitive type class code unless and until we want to have
-      ;; implicit type signatures applied for bindings in a let block
-      ;; (= long class) "long"
-      ;; (= int class) "int"
-      ;; (= char class) "char"
-      ;; (= boolean class) "boolean"
+      ;; implicit type signatures applied for bindings in a let block.
+      ;; Note: the problem is that the analyzer automatically infers the type of the
+      ;; binding symbol in a let binding block in :tag and :o-tag even if there is no
+      ;; type hint, whereas it doesn't do so in other places of binding (ex: def)
+      ;; (= Long/TYPE class) "long"
+      ;; (= Integer/TYPE class) "int"
+      ;; (= Character/TYPE class) "char"
+      ;; (= Boolean/TYPE class) "boolean"
+      (= Void/TYPE class) "void"
       :else (let [canonical-name (.getCanonicalName class)] 
               (cond                
                 ;; this is to prevent the analyzer from auto-tagging the type classes of
@@ -158,7 +162,8 @@
                 ;; we can subclass Object to a custom type (ex: ExplicitlyAnObject.java)
                 ;; and tell users to use that new class in their type hints if they want
                 ;; a type signature of java.lang.Object in emitted Java output.
-                (= "java.lang.Object" canonical-name)
+                (#{"java.lang.Object"
+                   "java.lang.Number"} canonical-name)
                 nil
 
                 (.startsWith canonical-name "java.lang.")
@@ -177,6 +182,7 @@
                 nil)))))
 
 (defn emit-java-statement
+  "input is a seq of strings"
   [statement-parts]
   (str (indent-str-curr-level)
        (->> statement-parts
@@ -186,6 +192,7 @@
        ";"))
 
 (defn can-become-java-statement
+  "input is a string representing a statement"
   [expression]
   (let [result
         (let [last-char (last expression)]
@@ -310,7 +317,7 @@
                            statement-strs (map emit-java statement-ast-opts)]
                        statement-strs)
                      ;; else the let block has only one "statement" in the do block
-                     [(emit-java (assoc ast-opts :ast (:body ast)))]))
+                     [(emit-java (assoc ast-opts :ast body-ast))]))
         body-strs-with-semicolons (indent
                                    (map #(if-not (can-become-java-statement %)
                                            %
@@ -390,6 +397,83 @@
         form (:form ast)]
     (str (name form))))
 
+;; functions
+
+(defn emit-java-defn-arg
+  [ast-opts]
+  {:pre [(= :binding (-> ast-opts :ast :op))]}
+  (let [ast (:ast ast-opts)
+        arg-name (-> ast :form name)
+        type-class (-> ast :tag)
+        type-str (emit-java-type type-class)
+        identifier-signature-parts [type-str
+                                    arg-name]
+        identifier-signature (->> identifier-signature-parts
+                                  (keep identity)
+                                  (string/join " "))]
+    identifier-signature))
+
+(defn emit-java-defn-args
+  [ast-opts]
+  {:pre [(seq (:ast ast-opts))]}
+  (let [ast (:ast ast-opts)
+        arg-ast-seq ast
+        arg-ast-opts (->> arg-ast-seq
+                          (map #(assoc ast-opts :ast %))
+                          (map emit-java-defn-arg))]
+    (string/join ", " arg-ast-opts)))
+
+(defn emit-java-defn
+  "currently does not handle variadic fns (fn overloading)"
+  [ast-opts]
+  {:pre [(= :def (-> ast-opts :ast :op))]}
+  (let [ast (:ast ast-opts)
+        fn-name (:name ast)
+        fn-ast (:init ast)
+        fn-return-type (-> fn-ast
+                           :return-tag
+                           emit-java-type)
+        ;; Note: currently not dealing with fn overloading (variadic fns in Clojure),
+        ;; so just take the first fn method
+        fn-method-first (-> fn-ast
+                            :expr
+                            :methods first)
+        fn-method-first-arg-asts (:params fn-method-first)
+        fn-method-first-args (-> {:ast fn-method-first-arg-asts}
+                                 emit-java-defn-args)
+        fn-method-first-signature-parts ["public"
+                                         fn-return-type
+                                         (str fn-name "(" fn-method-first-args ")")]
+        fn-method-first-signature (->> fn-method-first-signature-parts
+                                       (keep identity)
+                                       (string/join " " ))
+        fn-method-first-body-ast (:body fn-method-first)
+        fn-method-first-body-strs (indent
+                                   (if (:statements fn-method-first-body-ast)
+                                     ;; if ast has key nesting of [:body :statements], then we have a multi-"statement" expression do block in the let form
+                                     (let [butlast-statements (:statements fn-method-first-body-ast)
+                                           last-statement (:ret fn-method-first-body-ast)
+                                           statements (concat butlast-statements [last-statement])
+                                           statement-ast-opts (map #(assoc ast-opts :ast %) statements)
+                                           statement-strs (map emit-java statement-ast-opts)]
+                                       statement-strs)
+                                     ;; else the let block has only one "statement" in the do block
+                                     [(emit-java (assoc ast-opts :ast fn-method-first-body-ast))]))
+        fn-method-first-body-strs-with-semicolons (indent
+                                                   (map #(if-not (can-become-java-statement %)
+                                                           %
+                                                           (emit-java-statement [%]))
+                                                        fn-method-first-body-strs))
+        fn-method-first-body-str (string/join "\n" fn-method-first-body-strs-with-semicolons)
+        fn-method-first-str-parts [(str (indent-str-curr-level) fn-method-first-signature)
+                                   (str (indent-str-curr-level) "{")
+                                   fn-method-first-body-str
+                                   (str (indent-str-curr-level) "}")]
+        fn-method-first-str (->> fn-method-first-str-parts
+                                 (keep identity)
+                                 (string/join "\n"))]
+    fn-method-first-str))
+
 ;; entry point
 
 (defn emit-java
@@ -397,7 +481,9 @@
   (let [ast (:ast ast-opts)]
     ;; TODO: some multimethod ?
     (case (:op ast)
-      :def (emit-java-def ast-opts)
+      :def (case (some-> ast :raw-forms last first name)
+             "defn" (emit-java-defn ast-opts)
+             (emit-java-def ast-opts))
       :const (emit-java-const ast-opts)
       :invoke (case (-> ast :fn :meta :name name)
                 "atom" (emit-java-atom ast-opts)
