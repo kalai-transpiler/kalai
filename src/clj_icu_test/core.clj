@@ -205,7 +205,7 @@
   {:pre [(= :const (:op (:ast ast-opts)))
          (:literal? (:ast ast-opts))]}
   (let [ast (:ast ast-opts)]
-    (str (:val ast))))
+    (pr-str (:val ast))))
 
 (defn emit-java-do
   [ast-opts]
@@ -441,6 +441,8 @@
         fn-method-first-arg-asts (:params fn-method-first)
         fn-method-first-args (-> {:ast fn-method-first-arg-asts}
                                  emit-java-defn-args)
+        ;; Note: hard-coding all methods as public.  Access modifiers are important
+        ;; for 'encapsulation', which has a much lower priority and disputed value.
         fn-method-first-signature-parts ["public"
                                          fn-return-type
                                          (str fn-name "(" fn-method-first-args ")")]
@@ -474,6 +476,67 @@
                                  (string/join "\n"))]
     fn-method-first-str))
 
+;; fn invocations
+
+(defn emit-java-invoke-arg
+  [ast-opts]
+  (emit-java ast-opts))
+
+(defn emit-java-invoke-args
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args-ast (:args ast)
+        args-ast-opts (map #(assoc ast-opts :ast %) args-ast)
+        emitted-args (map emit-java-invoke-arg args-ast-opts)]
+    emitted-args))
+
+(defn emit-java-str
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        arg-strs (emit-java-invoke-args ast-opts)
+        arg-append-strs (map #(str ".append(" % ")") arg-strs)
+        expr-parts (concat ["new StringBuffer()"]
+                           arg-append-strs
+                           [".toString()"])
+        expr (apply str expr-parts)]
+    expr))
+
+(defn emit-java-println
+  "Emit the equivalent of printing out to std out. To support auto-casting to str, insert a \"\" before the other args"
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        arg-strs (emit-java-invoke-args ast-opts)
+        all-arg-strs (cons "\"\"" arg-strs)
+        command-expr (str "System.out.println("
+                          (apply str (interpose " + " all-arg-strs))
+                          ")")]
+    command-expr))
+
+(defn fn-matches?
+  "indicates whether the function AST's meta submap matches the fn with the given fully-qualified namespace string and name.
+  Takes an AST and returns a boolean."
+  [fn-meta-ast exp-ns-str exp-name-str]
+  (let [fn-ns (:ns fn-meta-ast)
+        fn-name (-> fn-meta-ast :name)
+        exp-ns (find-ns (symbol exp-ns-str))]
+    (boolean (and (= fn-ns exp-ns)
+                  (= (name fn-name) exp-name-str)))))
+
+(defn emit-java-invoke
+  "handles invocations of known functions"
+  [ast-opts]
+    {:pre [(= :invoke (:op (:ast ast-opts)))]}
+  (let [ast (:ast ast-opts)
+        fn-meta-ast (-> ast :fn :meta)]
+    (cond
+      (fn-matches? fn-meta-ast "clojure.core" "str")
+      (emit-java-str ast-opts)
+
+      (fn-matches? fn-meta-ast "clojure.core" "println")
+      (emit-java-println ast-opts)
+
+      )))
+
 ;; entry point
 
 (defn emit-java
@@ -487,7 +550,8 @@
       :const (emit-java-const ast-opts)
       :invoke (case (-> ast :fn :meta :name name)
                 "atom" (emit-java-atom ast-opts)
-                "reset!" (emit-java-reset! ast-opts))
+                "reset!" (emit-java-reset! ast-opts)
+                (emit-java-invoke ast-opts)) 
       :do (emit-java-do ast-opts)
       :let (emit-java-let ast-opts)
       :local (emit-java-local ast-opts)

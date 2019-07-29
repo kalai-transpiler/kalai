@@ -198,3 +198,13 @@
   }
 }"))
 
+
+(let [ast (az/analyze '(defn doStuff ^void [^Integer x ^Integer y] (str (+ x y)) (println "hello") 3))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+"public void doStuff(Integer x, Integer y)
+{
+  new StringBuffer().append(x + y).toString();
+  System.out.println(\"\" + \"hello\");
+  3;
+}"))
+
