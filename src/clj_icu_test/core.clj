@@ -415,7 +415,8 @@
 
 (defn emit-java-defn-args
   [ast-opts]
-  {:pre [(seq (:ast ast-opts))]}
+  ;; Note: can have empty args
+  ;;{:pre [(seq (:ast ast-opts))]}
   (let [ast (:ast ast-opts)
         arg-ast-seq ast
         arg-ast-opts (->> arg-ast-seq
@@ -476,6 +477,57 @@
                                  (string/join "\n"))]
     fn-method-first-str))
 
+;; classes (or modules or namespaces)
+
+(defn defclass
+  "Create a cosmetic fn that allows us to organize the forms in body"
+  [name & body]
+  ;; Note: everything in body will get evaluated as a result of being arguments passed
+  ;; to the function.  The fn creates a name to be used when searching the AST to detect
+  ;; this semantic.
+  ;; Note: this trick of defining semantics in the AST through custom fns should be able
+  ;; to work even in a nested fashion, AFAICT
+  ;; Note: the return value shouldn't matter since the code/S-expressions in Clojure may
+  ;; not result in working Clojure code, let alone the best/most efficient code.
+  ;; Note: originally tried using a pass-through macro or wrapping the body inside a do
+  ;; form, but then the original macro nor the do block show up in the AST in an easily
+  ;; recognizable way.  In the future, if a macro is truly needed, the combination of
+  ;; a macro and a function give the full power of expression (not requiring name to
+  ;; be of a certain type) while still being easy to recognize in the AST.
+  nil)
+
+(defn emit-java-defclass
+  [ast-opts]
+  {:pre [(= :invoke (-> ast-opts :ast :op))]}
+  (let [ast (:ast ast-opts)
+        class-name (-> ast :args first :val)
+        ;; Note: making all classes public b/c no reason to do otherwise currently,
+        ;; see emit-java-defn for reasoning.
+        class-signature-parts ["public"
+                               "class"
+                               class-name]
+        class-signature (string/join " " class-signature-parts)
+        class-form-asts (-> ast :args rest)
+        class-form-ast-opts (map (partial assoc ast-opts :ast) class-form-asts)
+        class-form-strs (indent
+                         (map emit-java class-form-ast-opts))
+        class-form-strs-with-semicolons (indent
+                                         (map #(if-not (can-become-java-statement %)
+                                                 %
+                                                 (emit-java-statement [%]))
+                                              class-form-strs))
+        ;; Note: should have a blank line between top-level statements/blocks
+        ;; in a class, so join with 2 newlines instead of just 1 like in a let block
+        class-forms-str (string/join "\n\n" class-form-strs-with-semicolons)
+        class-str-parts [(str (indent-str-curr-level) class-signature)
+                         (str (indent-str-curr-level) "{")
+                         class-forms-str
+                         (str (indent-str-curr-level) "}")]
+        class-str (->> class-str-parts
+                       (keep identity)
+                       (string/join "\n"))]
+    class-str))
+
 ;; fn invocations
 
 (defn emit-java-invoke-arg
@@ -534,6 +586,9 @@
 
       (fn-matches? fn-meta-ast "clojure.core" "println")
       (emit-java-println ast-opts)
+
+      (fn-matches? fn-meta-ast "clj-icu-test.core" "defclass")
+      (emit-java-defclass ast-opts)
 
       )))
 

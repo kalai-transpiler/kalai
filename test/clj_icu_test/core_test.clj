@@ -208,3 +208,16 @@
   3;
 }"))
 
+;; classes
+
+(let [ast (az/analyze '(defclass "MyClass" (def ^Integer b 3) (defn x ^void [] (+ b 1))))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+"public class MyClass
+{
+  Integer b = 3;
+
+  public void x()
+  {
+    b + 1;
+  }
+}"))
