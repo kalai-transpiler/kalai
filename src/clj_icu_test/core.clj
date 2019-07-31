@@ -1,5 +1,6 @@
 (ns clj-icu-test.core
-  (:require [clojure.string :as string]
+  (:require [clojure.edn :as edn]
+            [clojure.string :as string]
             [clojure.tools.analyzer.jvm :as az]))
 
 ;;
@@ -85,7 +86,7 @@
   {:pre [(= :const (:op (:ast ast-opts)))
          (:literal? (:ast ast-opts))]}  
   (let [ast (:ast ast-opts)]
-    (str (:val ast))))
+    (pr-str (:val ast))))
 
 ;; bindings
 
@@ -500,6 +501,7 @@
   [ast-opts]
   {:pre [(= :invoke (-> ast-opts :ast :op))]}
   (let [ast (:ast ast-opts)
+        ;; Currently assuming that the class-name is provided as String
         class-name (-> ast :args first :val)
         ;; Note: making all classes public b/c no reason to do otherwise currently,
         ;; see emit-java-defn for reasoning.
@@ -527,6 +529,54 @@
                        (keep identity)
                        (string/join "\n"))]
     class-str))
+
+;; enum classes
+
+(defn defenum-impl
+  "This is the fn in the macro + fn trick described in defclass above to allow
+  ease of use for users while still preserving retrievability of info in AST"
+  [name & body]
+  ;; Note: similar notes as those for defclass
+  nil)
+
+(defmacro defenum
+  "This is the macro in the macro + fn trick.  See defenum-impl and defclass."
+  [name & body]
+  (let [quoted-field-names (map str body)]
+    (list* 'defenum-impl name quoted-field-names)))
+
+(defn emit-java-defenum
+  [ast-opts]
+  {:pre [(= :invoke (-> ast-opts :ast :op))]}
+  (let [ast (:ast ast-opts)
+        ;; Note: similar to defclass, currently assuming name is provided as string
+        enum-name (-> ast :args first :val)
+        enum-class-signature-parts ["public"
+                                    "enum"
+                                    enum-name]
+        enum-class-signature (string/join " " enum-class-signature-parts)
+        ;; Note: assuming that enums are only provided as field names,
+        ;; and actual values associated with each field name are not provided
+        enum-field-asts (-> ast :args rest)
+        enum-field-ast-opts (map (partial assoc ast-opts :ast) enum-field-asts)
+        enum-field-strs (map emit-java enum-field-ast-opts)
+        enum-field-unescaped-strs (map edn/read-string enum-field-strs)
+        enum-field-symbols (map symbol enum-field-unescaped-strs)
+        enum-field-indented-symbols (indent
+                                     (map #(str (indent-str-curr-level) %) enum-field-symbols))
+        enum-field-strs-with-commas (concat (->> enum-field-indented-symbols
+                                                 butlast
+                                                 (map #(str % ",")))
+                                            [(last enum-field-indented-symbols)])
+        enum-fields-str (string/join "\n" enum-field-strs-with-commas)
+        enum-class-str-parts [(str (indent-str-curr-level) enum-class-signature)
+                              (str (indent-str-curr-level) "{")
+                              enum-fields-str
+                              (str (indent-str-curr-level) "}")]
+        enum-class-str (->> enum-class-str-parts
+                            (keep identity)
+                            (string/join "\n"))]
+    enum-class-str))
 
 ;; fn invocations
 
@@ -589,6 +639,9 @@
 
       (fn-matches? fn-meta-ast "clj-icu-test.core" "defclass")
       (emit-java-defclass ast-opts)
+
+      (fn-matches? fn-meta-ast "clj-icu-test.core" "defenum-impl")
+      (emit-java-defenum ast-opts)
 
       )))
 

@@ -221,3 +221,19 @@
     b + 1;
   }
 }"))
+
+;; enums
+
+(let [ast (az/analyze '(defenum "Day"
+                         SUNDAY MONDAY TUESDAY WEDNESDAY THURSDAY FRIDAY SATURDAY))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+"public enum Day
+{
+  SUNDAY,
+  MONDAY,
+  TUESDAY,
+  WEDNESDAY,
+  THURSDAY,
+  FRIDAY,
+  SATURDAY
+}"))
