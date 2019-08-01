@@ -601,6 +601,17 @@
                                               expr-ast-str])]
     return-stmt-str))
 
+;; deref
+
+(defn emit-java-deref
+  [ast-opts]
+  {:pre [(= :invoke (-> ast-opts :ast :op))]}
+  (let [ast (:ast ast-opts)
+        ;; Note: assuming that there is only one arg to deref, which is the symbol (identifier)
+        identifier-symbol (-> ast :args first :form)
+        identifier-str (str identifier-symbol)]
+    identifier-str))
+
 ;; fn invocations
 
 (defn emit-java-invoke-arg
@@ -654,6 +665,9 @@
   (let [ast (:ast ast-opts)
         fn-meta-ast (-> ast :fn :meta)]
     (cond
+      (fn-matches? fn-meta-ast "clojure.core" "deref")
+      (emit-java-deref ast-opts)
+
       (fn-matches? fn-meta-ast "clojure.core" "str")
       (emit-java-str ast-opts)
 

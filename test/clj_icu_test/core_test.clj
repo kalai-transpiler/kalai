@@ -267,3 +267,21 @@
 {
   return x + y;
 }"))
+
+;; deref
+
+(let [ast (az/analyze '(let [x (atom 3)] @x))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+"{
+  x = 3;
+  x;
+}"))
+
+
+(let [ast (az/analyze '(let [x (atom 3)] x))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+"{
+  x = 3;
+  x;
+}"))
+
