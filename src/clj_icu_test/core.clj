@@ -578,6 +578,24 @@
                             (string/join "\n"))]
     enum-class-str))
 
+;; return statement
+
+(defn return
+  "A pass-through function that defines \"return\" as a form"
+  [expr]
+  expr)
+
+(defn emit-java-return
+  [ast-opts]
+  {:pre [(= :invoke (-> ast-opts :ast :op))]}
+  (let [ast (:ast ast-opts)
+        expr-ast (-> ast :args first)
+        expr-ast-opts (assoc ast-opts :ast expr-ast)
+        expr-ast-str (emit-java expr-ast-opts)
+        return-stmt-str (emit-java-statement ["return"
+                                              expr-ast-str])]
+    return-stmt-str))
+
 ;; fn invocations
 
 (defn emit-java-invoke-arg
@@ -643,6 +661,9 @@
       (fn-matches? fn-meta-ast "clj-icu-test.core" "defenum-impl")
       (emit-java-defenum ast-opts)
 
+      (fn-matches? fn-meta-ast "clj-icu-test.core" "return")
+      (emit-java-return ast-opts)
+      
       )))
 
 ;; entry point

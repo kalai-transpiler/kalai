@@ -237,3 +237,25 @@
   FRIDAY,
   SATURDAY
 }"))
+
+;; return statement
+
+(let [ast (az/analyze '(defn add ^Integer [^Integer x ^Integer y]
+                         (let [^Integer sum (+ x y)]
+                           (return sum))))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+"public Integer add(Integer x, Integer y)
+{
+  {
+    Integer sum = x + y;
+    return sum;
+  }
+}"))
+
+(let [ast (az/analyze '(defn add ^Integer [^Integer x ^Integer y]
+                         (return (+ x y))))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+"public Integer add(Integer x, Integer y)
+{
+  return x + y;
+}"))
