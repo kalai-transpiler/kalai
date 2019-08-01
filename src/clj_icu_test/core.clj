@@ -375,7 +375,12 @@
   [ast-opts]
   {:pre [(= :static-call (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
-        static-call-fn-symbol (-> ast :raw-forms last first)
+        static-call-fn-symbol (let [fn-symbol (-> ast :raw-forms last first)
+                                    fn-str (str fn-symbol)]
+                                (case  fn-str
+                                  "quot" "/"
+                                  "rem" "%"
+                                  fn-str))
         arg-strs (emit-java-args ast-opts)
         expression-parts (interpose static-call-fn-symbol arg-strs)
         expression (string/join " " expression-parts)]
