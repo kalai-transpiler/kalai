@@ -305,3 +305,69 @@
   (expect (emit-java (map->AstOpts {:ast ast}))
 "!(3 == (10 / 2))"))
 
+;; demo code
+
+(let [ast (az/analyze '(defclass "NumFmt"
+                         (defn parse ^String [^Integer num]
+                           (let [^Integer i (atom num)
+                                 ^String result (atom "")]
+                             (while (not (= @i 0))
+                               (let [^Integer quotient (quot @i 10)
+                                     ^Integer remainder (rem @i 10)]
+                                 (reset! result (str remainder @result))
+                                 (reset! i quotient)))
+                             (return @result)))))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+"public class NumFmt
+{
+  public String parse(Integer num)
+  {
+    {
+      Integer i = num;
+      String result = \"\";
+      while (!((i) == 0))
+      {
+        {
+          Integer quotient = (i) / 10;
+          Integer remainder = (i) % 10;
+          result = new StringBuffer().append(remainder).append(result).toString();
+          i = quotient;
+        }
+      }
+      return result;
+    }
+  }
+}"))
+
+
+(let [ast (az/analyze '(defclass "NumFmt"
+                         (defn parse ^String [^Integer num]
+                           (let [^Integer i (atom num)
+                                 ^String result (atom "")]
+                             (while (not (= i 0))
+                               (let [^Integer quotient (quot i 10)
+                                     ^Integer remainder (rem i 10)]
+                                 (reset! result (str remainder result))
+                                 (reset! i quotient)))
+                             (return result)))))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+"public class NumFmt
+{
+  public String parse(Integer num)
+  {
+    {
+      Integer i = num;
+      String result = \"\";
+      while (!(i == 0))
+      {
+        {
+          Integer quotient = i / 10;
+          Integer remainder = i % 10;
+          result = new StringBuffer().append(remainder).append(result).toString();
+          i = quotient;
+        }
+      }
+      return result;
+    }
+  }
+}"))
