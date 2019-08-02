@@ -616,6 +616,18 @@
         identifier-str (str identifier-symbol)]
     identifier-str))
 
+;; not
+
+(defn emit-java-not
+  [ast-opts]
+  {:pre [(= :invoke (-> ast-opts :ast :op))]}
+  (let [ast (:ast ast-opts)
+        ;; Note: assuming that not only has 1 arg
+        arg-ast (-> ast :args first)
+        arg-str (emit-java (assoc ast-opts :ast arg-ast))
+        expr-str (str "!(" arg-str ")")]
+    expr-str))
+
 ;; fn invocations
 
 (defn emit-java-invoke-arg
@@ -665,7 +677,7 @@
 (defn emit-java-invoke
   "handles invocations of known functions"
   [ast-opts]
-    {:pre [(= :invoke (:op (:ast ast-opts)))]}
+  {:pre [(= :invoke (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
         fn-meta-ast (-> ast :fn :meta)]
     (cond
@@ -674,6 +686,9 @@
 
       (fn-matches? fn-meta-ast "clojure.core" "str")
       (emit-java-str ast-opts)
+
+      (fn-matches? fn-meta-ast "clojure.core" "not")
+      (emit-java-not ast-opts)
 
       (fn-matches? fn-meta-ast "clojure.core" "println")
       (emit-java-println ast-opts)

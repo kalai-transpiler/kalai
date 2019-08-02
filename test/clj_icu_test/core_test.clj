@@ -290,3 +290,10 @@
   x;
 }"))
 
+
+;; not
+
+(let [ast (az/analyze '(not (= 3 (/ 10 2))))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+"!(3 == (10 / 2))"))
+
