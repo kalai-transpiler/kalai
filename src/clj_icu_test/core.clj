@@ -380,6 +380,10 @@
                                 (case  fn-str
                                   "quot" "/"
                                   "rem" "%"
+                                  ;; Note: extra work is required if supporting Clojure expressions using =
+                                  ;; with more than 2 expression arguments.  Not really high
+                                  ;; priority at the moment to support > 2 args for =
+                                  "=" "=="
                                   fn-str))
         arg-strs (emit-java-args ast-opts)
         expression-parts (interpose static-call-fn-symbol arg-strs)

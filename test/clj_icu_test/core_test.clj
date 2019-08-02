@@ -73,6 +73,11 @@
 (let [ast (az/analyze '(/ 34 17))]
   (expect (emit-java (map->AstOpts {:ast ast})) "34 / 17"))
 
+;; static call - =
+
+(let [ast (az/analyze '(= 34 (* 2 17)))]
+  (expect (emit-java (map->AstOpts {:ast ast})) "34 == (2 * 17)"))
+
 ;; static call - convert fn names to symbols
 
 (let [ast (az/analyze '(quot 37 10))]
