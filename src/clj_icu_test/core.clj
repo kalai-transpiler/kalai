@@ -704,6 +704,44 @@
       
       )))
 
+;; loops (ex: while, doseq)
+
+(defn emit-java-while
+  [ast-opts]
+  {:pre [(= :loop (:op (:ast ast-opts)))]}
+  (let [ast (:ast ast-opts)
+        test-ast (-> ast :body :test)
+        test-str (emit-java (assoc ast-opts :ast test-ast))
+        then-ast (-> ast :body :then)
+        ;; Note: we are ignoring the "return" expression stored in (-> ast :body :then :ret)
+        ;; when we only look at (-> ast :body :then :statements)
+        statements (:statements then-ast)
+        body-strs (indent
+                   (let [statement-ast-opts (map #(assoc ast-opts :ast %) statements)
+                         statement-strs (map emit-java statement-ast-opts)]
+                     statement-strs))
+        body-strs-with-semicolons (indent
+                                   (map #(if-not (can-become-java-statement %)
+                                           %
+                                           (emit-java-statement [%]))
+                                        body-strs))
+        body-str (string/join "\n" body-strs-with-semicolons)
+        while-parts [(str (indent-str-curr-level) "while (" test-str ")")
+                     (str (indent-str-curr-level) "{")
+                     body-str
+                     (str (indent-str-curr-level) "}")]
+        while-str (string/join "\n" while-parts)]
+    while-str))
+
+(defn emit-java-loop
+  [ast-opts]
+  {:pre [(= :loop (:op (:ast ast-opts)))]}
+  (let [ast (:ast ast-opts)
+        form-symbol (-> ast :raw-forms first first)
+        form-symbol-str (str form-symbol)]
+    (case form-symbol-str
+      "while" (emit-java-while ast-opts))))
+
 ;; entry point
 
 (defn emit-java
@@ -724,6 +762,7 @@
       :local (emit-java-local ast-opts)
       :static-call (emit-java-static-call ast-opts)
       :var (emit-java-var ast-opts)
+      :loop (emit-java-loop ast-opts)
       :else (cond 
               (:raw-forms ast)
               (emit-java (assoc ast-opts :ast (-> ast :raw-forms)))))))

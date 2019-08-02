@@ -290,6 +290,14 @@
   x;
 }"))
 
+;; loops (ex: while, doseq)
+
+(let [ast (az/analyze '(while true (println "e")))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+"while (true)
+{
+  System.out.println(\"\" + \"e\");
+}"))
 
 ;; not
 
