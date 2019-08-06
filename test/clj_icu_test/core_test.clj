@@ -9,6 +9,17 @@
 ;; Note: Java and C++ unit tests have moved to java_test.clj and cpp_test.clj
 ;;
 
+;; fn-matches?
+
+(let [ast (az/analyze '(println "Yaarrrrgh!"))
+      fn-meta-ast (-> ast :fn :meta)]
+  ;; positive case
+  (expect (fn-matches? fn-meta-ast "clojure.core" "println"))
+  ;; negative case
+  (expect false? (fn-matches? fn-meta-ast "clojure.core.subnamespace" "println"))
+  (expect false? (fn-matches? fn-meta-ast "clojure.core" "some-other-fn"))
+  )
+
 ;; instance-call-matches?
 
 (let [ast (az/analyze '(let [sb (StringBuffer.)]
