@@ -83,6 +83,19 @@
                 :else
                 nil)))))
 
+(defn is-number-type?
+  [class]
+  (when class
+    (let [number-classes #{java.lang.Number
+                           java.lang.Short
+                           java.lang.Integer
+                           java.lang.Long
+                           java.lang.Float
+                           java.lang.Double}
+          is-number-type (boolean
+                          (get number-classes class))]
+      is-number-type)))
+
 (defn emit-cpp-statement
   [statement-parts]
   (str (indent-str-curr-level)
@@ -502,6 +515,19 @@
         args-ast (:args ast)
         args-ast-opts (map #(assoc ast-opts :ast %) args-ast)
         emitted-args (map emit-cpp-invoke-arg args-ast-opts)]
+    emitted-args))
+
+(defn emit-cpp-str-arg
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        ]))
+
+(defn emit-cpp-str-args
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args-ast (:args ast)
+        args-ast-opts (map #(assoc ast-opts :ast %) args-ast)
+        emitted-args (map emit-cpp-str-arg args-ast-opts)]
     emitted-args))
 
 (defn emit-cpp-str

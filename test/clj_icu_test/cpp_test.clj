@@ -11,6 +11,28 @@
 
 (reset-indent-level)
 
+;; types
+
+;; types - numbers
+
+(expect true (is-number-type? java.lang.Number))
+
+(expect true (is-number-type? Number))
+
+(expect true (is-number-type? java.lang.Short))
+
+(expect true (is-number-type? java.lang.Integer))
+
+(expect true (is-number-type? java.lang.Long))
+
+(expect true (is-number-type? java.lang.Float))
+
+(expect true (is-number-type? java.lang.Double))
+
+(expect false (is-number-type? java.lang.Character))
+
+(expect false (is-number-type? java.lang.Boolean))
+
 ;; bindings
 
 ;; bindings - def
