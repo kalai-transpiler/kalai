@@ -319,7 +319,7 @@
 ;; demo code
 
 (let [ast (az/analyze '(defclass "NumFmt"
-                         (defn parse ^String [^Integer num]
+                         (defn format ^String [^Integer num]
                            (let [^Integer i (atom num)
                                  ^String result (atom "")]
                              (while (not (= @i 0))
@@ -331,7 +331,7 @@
   (expect (emit-cpp (map->AstOpts {:ast ast}))
 "class NumFmt
 {
-  string parse(int num)
+  string format(int num)
   {
     {
       int i = num;
@@ -350,9 +350,10 @@
   }
 };"))
 
-
+;; TODO: make emitters for args to a static call / function call invoke discard the parens around derefs.
+;; Then this test should be removed, and test above can have a simplified output.
 (let [ast (az/analyze '(defclass "NumFmt"
-                         (defn parse ^String [^Integer num]
+                         (defn format ^String [^Integer num]
                            (let [^Integer i (atom num)
                                  ^String result (atom "")]
                              (while (not (= i 0))
@@ -364,7 +365,7 @@
   (expect (emit-cpp (map->AstOpts {:ast ast}))
 "class NumFmt
 {
-  string parse(int num)
+  string format(int num)
   {
     {
       int i = num;

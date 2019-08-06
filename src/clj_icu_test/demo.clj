@@ -2,7 +2,7 @@
   (:require [clj-icu-test.core :refer :all]))
 
 (defclass "NumFmt"
-  (defn parse ^String [^Integer num]
+  (defn format ^String [^Integer num]
     (let [^Integer i (atom num)
           ^String result (atom "")]
       (while (not (= @i 0))
