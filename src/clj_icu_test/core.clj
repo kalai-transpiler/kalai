@@ -100,3 +100,16 @@
     (boolean (and (= fn-ns exp-ns)
                   (= (name fn-name) exp-name-str)))))
 
+(defn instance-call-matches?
+  "Given a map with keys :inst-call-ast (AST), :exp-method-name (type=String), and :exp-instance-class (type=Class),
+  return whether the instance call's AST matches the expected instance obj type and method.
+  Returns a boolean"
+  [{:keys [inst-call-ast exp-method-name exp-instance-class]}]
+  (let [inst-class (-> inst-call-ast
+                       :instance
+                       :tag)
+        method-name (-> inst-call-ast
+                        :method
+                        str)]
+    (boolean (and (= inst-class exp-instance-class)
+                  (= method-name exp-method-name)))))
