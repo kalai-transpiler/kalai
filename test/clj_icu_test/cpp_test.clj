@@ -222,7 +222,7 @@
   {
     b + 1;
   }
-}"))
+};"))
 
 ;; enums
 
@@ -238,7 +238,7 @@
   THURSDAY,
   FRIDAY,
   SATURDAY
-}"))
+};"))
 
 ;; return statement
 
@@ -326,7 +326,7 @@
       return result;
     }
   }
-}"))
+};"))
 
 
 (let [ast (az/analyze '(defclass "NumFmt"
@@ -359,5 +359,5 @@
       return result;
     }
   }
-}"))
+};"))
 

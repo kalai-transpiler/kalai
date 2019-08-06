@@ -414,7 +414,7 @@
         class-str-parts [(str (indent-str-curr-level) class-signature)
                          (str (indent-str-curr-level) "{")
                          class-forms-str
-                         (str (indent-str-curr-level) "}")]
+                         (str (indent-str-curr-level) "};")]
         class-str (->> class-str-parts
                        (keep identity)
                        (string/join "\n"))]
@@ -448,7 +448,7 @@
         enum-class-str-parts [(str (indent-str-curr-level) enum-class-signature)
                               (str (indent-str-curr-level) "{")
                               enum-fields-str
-                              (str (indent-str-curr-level) "}")]
+                              (str (indent-str-curr-level) "};")]
         enum-class-str (->> enum-class-str-parts
                             (keep identity)
                             (string/join "\n"))]
