@@ -331,11 +331,11 @@
   (expect (emit-cpp (map->AstOpts {:ast ast}))
 "class NumFmt
 {
-  string format(int num)
+  std::string format(int num)
   {
     {
       int i = num;
-      string result = \"\";
+      std::string result = \"\";
       while (!((i) == 0))
       {
         {
@@ -365,11 +365,11 @@
   (expect (emit-cpp (map->AstOpts {:ast ast}))
 "class NumFmt
 {
-  string format(int num)
+  std::string format(int num)
   {
     {
       int i = num;
-      string result = \"\";
+      std::string result = \"\";
       while (!(i == 0))
       {
         {

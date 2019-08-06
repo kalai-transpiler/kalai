@@ -67,7 +67,7 @@
                                          java.lang.Double "double float"
                                          java.lang.Boolean "bool"
                                          boolean "bool"
-                                         java.lang.String "string"}]
+                                         java.lang.String "std::string"}]
                   (when-let [transformed-type (get java-cpp-type-map class)]
                     transformed-type))
 
