@@ -316,6 +316,16 @@
   (expect (emit-cpp (map->AstOpts {:ast ast}))
 "!(3 == (10 / 2))"))
 
+;; new
+
+(let [ast (az/analyze '(StringBuffer.))]
+  (expect (emit-cpp (map->AstOpts {:ast ast}))
+          "StringBuffer"))
+
+(let [ast (az/analyze '(StringBuffer. "Initial string value"))]
+  (expect (emit-cpp (map->AstOpts {:ast ast}))
+          "StringBuffer(\"Initial string value\")"))
+
 ;; demo code
 
 (let [ast (az/analyze '(defclass "NumFmt"

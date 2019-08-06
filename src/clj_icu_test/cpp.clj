@@ -620,6 +620,24 @@
     (case form-symbol-str
       "while" (emit-cpp-while ast-opts))))
 
+;; new
+
+(defn emit-cpp-new
+  [ast-opts]
+  {:pre [(= :new (:op (:ast ast-opts)))]}
+  (let [ast (:ast ast-opts)
+        new-class-name (-> ast :class :form)
+        ;; reuse invoke-args helper fns here
+        arg-strs (emit-cpp-invoke-args ast-opts)
+        arg-str-with-parens (when (seq arg-strs)
+                              (let [arg-str (string/join ", " arg-strs)]
+                                (str "(" arg-str ")")))
+        new-str (->> [new-class-name
+                      arg-str-with-parens]
+                     (keep identity)
+                     (apply str))]
+    new-str))
+
 ;; entry point
 
 (defn emit-cpp
@@ -641,6 +659,7 @@
       :static-call (emit-cpp-static-call ast-opts)
       :var (emit-cpp-var ast-opts)
       :loop (emit-cpp-loop ast-opts)
+      :new (emit-cpp-new ast-opts)
       :else (cond 
               (:raw-forms ast)
               (emit-cpp (assoc ast-opts :ast (-> ast :raw-forms)))))))

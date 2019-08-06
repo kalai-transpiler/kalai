@@ -570,6 +570,24 @@
     (case form-symbol-str
       "while" (emit-java-while ast-opts))))
 
+;; new
+
+(defn emit-java-new
+  [ast-opts]
+  {:pre [(= :new (:op (:ast ast-opts)))]}
+  (let [ast (:ast ast-opts)
+        new-class-name (-> ast :class :form)
+        ;; reuse invoke-args helper fns here
+        arg-strs (emit-java-invoke-args ast-opts)
+        arg-str (string/join ", " arg-strs)
+        new-str-parts ["new"
+                       (apply str [new-class-name
+                                   "("
+                                   arg-str
+                                   ")"])]
+        new-str (string/join " " new-str-parts)]
+    new-str))
+
 ;; entry point
 
 (defn emit-java
@@ -591,6 +609,7 @@
       :static-call (emit-java-static-call ast-opts)
       :var (emit-java-var ast-opts)
       :loop (emit-java-loop ast-opts)
+      :new (emit-java-new ast-opts)
       :else (cond 
               (:raw-forms ast)
               (emit-java (assoc ast-opts :ast (-> ast :raw-forms)))))))

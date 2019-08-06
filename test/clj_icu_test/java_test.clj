@@ -292,7 +292,17 @@
 
 (let [ast (az/analyze '(not (= 3 (/ 10 2))))]
   (expect (emit-java (map->AstOpts {:ast ast}))
-"!(3 == (10 / 2))"))
+          "!(3 == (10 / 2))"))
+
+;; new
+
+(let [ast (az/analyze '(StringBuffer.))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+          "new StringBuffer()"))
+
+(let [ast (az/analyze '(StringBuffer. "Initial string value"))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+          "new StringBuffer(\"Initial string value\")"))
 
 ;; demo code
 
