@@ -520,7 +520,12 @@
 (defn emit-cpp-str-arg
   [ast-opts]
   (let [ast (:ast ast-opts)
-        ]))
+        tag-class (:tag ast)
+        emitted-arg (emit-cpp ast-opts)
+        casted-emitted-arg (if (is-number-type? tag-class)
+                             (str "std::to_string(" emitted-arg ")") 
+                             emitted-arg)]
+    casted-emitted-arg))
 
 (defn emit-cpp-str-args
   [ast-opts]
@@ -533,9 +538,8 @@
 (defn emit-cpp-str
   [ast-opts]
   (let [ast (:ast ast-opts)
-        arg-strs (emit-cpp-invoke-args ast-opts)
-        arg-append-strs (map #(str "std::to_string(" % ")") arg-strs)
-        expr-parts (interpose " + " arg-append-strs)
+        arg-strs (emit-cpp-str-args ast-opts)
+        expr-parts (interpose " + " arg-strs)
         expr (apply str expr-parts)]
     expr))
 

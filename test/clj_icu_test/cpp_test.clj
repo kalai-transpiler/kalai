@@ -341,7 +341,7 @@
         {
           int quotient = (i) / 10;
           int remainder = (i) % 10;
-          result = std::to_string(remainder) + std::to_string(result);
+          result = std::to_string(remainder) + result;
           i = quotient;
         }
       }
@@ -374,7 +374,7 @@
         {
           int quotient = i / 10;
           int remainder = i % 10;
-          result = std::to_string(remainder) + std::to_string(result);
+          result = std::to_string(remainder) + result;
           i = quotient;
         }
       }
