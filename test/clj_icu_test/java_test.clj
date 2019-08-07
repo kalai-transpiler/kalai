@@ -304,18 +304,46 @@
   (expect (emit-java (map->AstOpts {:ast ast}))
           "new StringBuffer(\"Initial string value\")"))
 
+;; string buffer - new
+
+(let [ast (az/analyze '(new-strbuf))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+          "new StringBuffer()"))
+
+(let [ast (az/analyze '(atom (new-strbuf)))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+          "new StringBuffer()"))
+
+(let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] sb))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+"{
+  StringBuffer sb = new StringBuffer();
+  sb;
+}"))
+
+;; string buffer - prepend
+
+
+(let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] (prepend-strbuf sb "hello")))]
+  (expect (emit-java (map->AstOpts {:ast ast}))
+"{
+  StringBuffer sb = new StringBuffer();
+  sb.insert(0, \"hello\");
+}"))
+
+
 ;; demo code
 
 (let [ast (az/analyze '(defclass "NumFmt"
                          (defn format ^String [^Integer num]
                            (let [^Integer i (atom num)
-                                 ^String result (atom "")]
+                                 ^StringBuffer result (atom (new-strbuf))]
                              (while (not (= @i 0))
                                (let [^Integer quotient (quot @i 10)
                                      ^Integer remainder (rem @i 10)]
-                                 (reset! result (str remainder @result))
+                                 (reset! result (prepend-strbuf @result remainder))
                                  (reset! i quotient)))
-                             (return @result)))))]
+                             (return (tostring-strbuf @result))))))]
   (expect (emit-java (map->AstOpts {:ast ast}))
 "public class NumFmt
 {
@@ -323,17 +351,17 @@
   {
     {
       Integer i = num;
-      String result = \"\";
+      StringBuffer result = new StringBuffer();
       while (!((i) == 0))
       {
         {
           Integer quotient = (i) / 10;
           Integer remainder = (i) % 10;
-          result = new StringBuffer().append(remainder).append(result).toString();
+          result = result.insert(0, remainder);
           i = quotient;
         }
       }
-      return result;
+      return result.toString();
     }
   }
 }"))

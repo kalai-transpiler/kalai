@@ -4,10 +4,10 @@
 (defclass "NumFmt"
   (defn format ^String [^Integer num]
     (let [^Integer i (atom num)
-          ^String result (atom "")]
+          ^StringBuffer result (atom (new-strbuf))]
       (while (not (= @i 0))
         (let [^Integer quotient (quot @i 10)
               ^Integer remainder (rem @i 10)]
-          (reset! result (str remainder @result))
+          (reset! result (prepend-strbuf @result remainder))
           (reset! i quotient)))
-      (return @result))))
+      (return (tostring-strbuf @result)))))

@@ -89,6 +89,27 @@
   [expr]
   expr)
 
+;; impl fns - string-related
+
+(defn new-strbuf
+  "This fn represents creating a string buffer in the target language.
+  For the purposes of the JVM-based analyzer, return a StringBuffer"
+  []
+  (new StringBuffer))
+
+(defn prepend-strbuf
+  "This fn represents prepending a string into an accumulator string buffer in the target language."
+  [strbuf s]
+  (.insert strbuf 0 s))
+
+(defn tostring-strbuf
+  "This fn represents producing the final string value of a string buffer"
+  [strbuf]
+  (.toString strbuf))
+
+;;
+;; AST helper fns
+;;
 
 (defn fn-matches?
   "indicates whether the function AST's meta submap matches the fn with the given fully-qualified namespace string and name.

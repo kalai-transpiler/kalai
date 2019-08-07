@@ -13,24 +13,6 @@
 (declare emit-cpp)
 
 (defn emit-cpp-type
-  [class]
-  (when class
-    (let [canonical-name (.getCanonicalName class)
-          java-cpp-type-map {java.lang.Integer "int"
-                             int "int"
-                             java.lang.Long "long int"
-                             long "long int"
-                             java.lang.Float "float"
-                             java.lang.Double "double float"
-                             java.lang.Boolean "bool"
-                             boolean "bool"
-                             java.lang.String "string"}]
-      (if-let [transformed-type (get java-cpp-type-map class)]
-        transformed-type
-        canonical-name))))
-
-
-(defn emit-cpp-type
   "Might return nil"
   [class]  
   (when class
@@ -67,7 +49,8 @@
                                          java.lang.Double "double float"
                                          java.lang.Boolean "bool"
                                          boolean "bool"
-                                         java.lang.String "std::string"}]
+                                         java.lang.String "std::string"
+                                         java.lang.StringBuffer "std::string"}]
                   (when-let [transformed-type (get java-cpp-type-map class)]
                     transformed-type))
 
@@ -552,6 +535,44 @@
         command-expr (apply str (interpose " << " all-arg-strs))]
     command-expr))
 
+(defn emit-cpp-new-strbuf
+  "Emit an instantiation of a string buffer in C++ as a string"
+  [ast-opts]
+  ;; Note: currently assuming that there are 0 args to StringBuffer,
+  ;; but can support args later
+  "\"\"")
+
+(defn emit-cpp-prepend-strbuf
+  "Emit the prepending of a string to a string buffer in C++.
+  A C++ string is mutable, so it will be used as the buffer.
+  First arg in the AST is the string (mutable string = string
+  buffer), second arg is the string that needs to be prepended"
+  [ast-opts]
+  ;; Note: need to swap order of args to get string concatenation
+  ;; with args in correct order. Assuming there are only 2 args
+  ;; (string buffer == mutable string, and string to insert).
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        first-arg (first args)
+        second-arg (second args)
+        new-args (-> args
+                     (assoc 0 second-arg)
+                     (assoc 1 first-arg))
+        new-ast (assoc ast :args new-args)
+        new-ast-opts (assoc ast-opts :ast new-ast)
+        rhs-expr (emit-cpp-str new-ast-opts)]
+    rhs-expr))
+
+(defn emit-cpp-tostring-strbuf
+  "Emit the production of a string from a string buffer in C++"
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-cpp-invoke-args ast-opts)
+        obj-name (first arg-strs)]
+    obj-name))
+
+
 (defn emit-cpp-invoke
   "handles invocations of known functions"
   [ast-opts]
@@ -580,7 +601,20 @@
       (fn-matches? fn-meta-ast "clj-icu-test.core" "return")
       (emit-cpp-return ast-opts)
       
-      )))
+      (fn-matches? fn-meta-ast "clj-icu-test.core" "new-strbuf")
+      (emit-cpp-new-strbuf ast-opts)
+
+      (fn-matches? fn-meta-ast "clj-icu-test.core" "prepend-strbuf")
+      (emit-cpp-prepend-strbuf ast-opts)
+
+      (fn-matches? fn-meta-ast "clj-icu-test.core" "tostring-strbuf")
+      (emit-cpp-tostring-strbuf ast-opts)
+      
+      :else
+      (let [fn-ns (-> fn-meta-ast :ns str)
+            fn-name (-> fn-meta-ast :name)]
+        (throw (Exception. (str "Function call not recognized for "
+                                fn-ns "/" fn-name)))))))
 
 ;; loops (ex: while, doseq)
 

@@ -502,6 +502,40 @@
                           ")")]
     command-expr))
 
+(defn emit-java-new-strbuf
+  "Emit an instantiation of a string buffer in Java"
+  [ast-opts]
+  ;; Note: currently assuming that there are 0 args to StringBuffer,
+  ;; but can support args later
+  "new StringBuffer()")
+
+(defn emit-java-prepend-strbuf
+  "Emit the prepending of a string to a string buffer in Java"
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-java-invoke-args ast-opts)
+        obj-name (first arg-strs)
+        prepended-val-str (second arg-strs)
+        prepend-invoke-parts [obj-name
+                              ".insert("
+                              0
+                              ", "
+                              prepended-val-str
+                              ")"]
+        prepend-invoke (apply str prepend-invoke-parts)]
+    prepend-invoke))
+
+(defn emit-java-tostring-strbuf
+  "Emit the production of a string from a string buffer in Java"
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-java-invoke-args ast-opts)
+        obj-name (first arg-strs)
+        tostring-invoke (str obj-name ".toString()")]
+    tostring-invoke))
+
 (defn emit-java-invoke
   "handles invocations of known functions"
   [ast-opts]
@@ -529,8 +563,21 @@
 
       (fn-matches? fn-meta-ast "clj-icu-test.core" "return")
       (emit-java-return ast-opts)
+
+      (fn-matches? fn-meta-ast "clj-icu-test.core" "new-strbuf")
+      (emit-java-new-strbuf ast-opts)
+
+      (fn-matches? fn-meta-ast "clj-icu-test.core" "prepend-strbuf")
+      (emit-java-prepend-strbuf ast-opts)
+
+      (fn-matches? fn-meta-ast "clj-icu-test.core" "tostring-strbuf")
+      (emit-java-tostring-strbuf ast-opts)
       
-      )))
+      :else
+      (let [fn-ns (-> fn-meta-ast :ns str)
+            fn-name (-> fn-meta-ast :name)]
+        (throw (Exception. (str "Function call not recognized for "
+                                fn-ns "/" fn-name)))))))
 
 ;; loops (ex: while, doseq)
 
