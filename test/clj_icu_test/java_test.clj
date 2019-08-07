@@ -371,13 +371,13 @@
 (let [ast (az/analyze '(defclass "NumFmt"
                          (defn format ^String [^Integer num]
                            (let [^Integer i (atom num)
-                                 ^String result (atom "")]
+                                 ^StringBuffer result (atom (new-strbuf))]
                              (while (not (= i 0))
                                (let [^Integer quotient (quot i 10)
                                      ^Integer remainder (rem i 10)]
-                                 (reset! result (str remainder result))
+                                 (reset! result (prepend-strbuf result remainder))
                                  (reset! i quotient)))
-                             (return result)))))]
+                             (return (tostring-strbuf result))))))]
   (expect (emit-java (map->AstOpts {:ast ast}))
 "public class NumFmt
 {
@@ -385,17 +385,17 @@
   {
     {
       Integer i = num;
-      String result = \"\";
+      StringBuffer result = new StringBuffer();
       while (!(i == 0))
       {
         {
           Integer quotient = i / 10;
           Integer remainder = i % 10;
-          result = new StringBuffer().append(remainder).append(result).toString();
+          result = result.insert(0, remainder);
           i = quotient;
         }
       }
-      return result;
+      return result.toString();
     }
   }
 }"))
