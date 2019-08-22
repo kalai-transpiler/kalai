@@ -1,5 +1,5 @@
 (ns clj-icu-test.java
-  (:require [clj-icu-test.core :refer :all]
+  (:require [clj-icu-test.common :refer :all]
             [clojure.edn :as edn]
             [clojure.string :as string]
             [clojure.tools.analyzer.jvm :as az]))
@@ -555,22 +555,22 @@
       (fn-matches? fn-meta-ast "clojure.core" "println")
       (emit-java-println ast-opts)
 
-      (fn-matches? fn-meta-ast "clj-icu-test.core" "defclass")
+      (fn-matches? fn-meta-ast "clj-icu-test.common" "defclass")
       (emit-java-defclass ast-opts)
 
-      (fn-matches? fn-meta-ast "clj-icu-test.core" "defenum-impl")
+      (fn-matches? fn-meta-ast "clj-icu-test.common" "defenum-impl")
       (emit-java-defenum ast-opts)
 
-      (fn-matches? fn-meta-ast "clj-icu-test.core" "return")
+      (fn-matches? fn-meta-ast "clj-icu-test.common" "return")
       (emit-java-return ast-opts)
 
-      (fn-matches? fn-meta-ast "clj-icu-test.core" "new-strbuf")
+      (fn-matches? fn-meta-ast "clj-icu-test.common" "new-strbuf")
       (emit-java-new-strbuf ast-opts)
 
-      (fn-matches? fn-meta-ast "clj-icu-test.core" "prepend-strbuf")
+      (fn-matches? fn-meta-ast "clj-icu-test.common" "prepend-strbuf")
       (emit-java-prepend-strbuf ast-opts)
 
-      (fn-matches? fn-meta-ast "clj-icu-test.core" "tostring-strbuf")
+      (fn-matches? fn-meta-ast "clj-icu-test.common" "tostring-strbuf")
       (emit-java-tostring-strbuf ast-opts)
       
       :else

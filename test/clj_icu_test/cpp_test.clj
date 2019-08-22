@@ -1,9 +1,9 @@
 (ns clj-icu-test.cpp-test
-  (:require [clj-icu-test.core :refer :all]
+  (:require [clj-icu-test.common :refer :all]
             [clj-icu-test.cpp :refer :all]
             [clojure.tools.analyzer.jvm :as az]
             [expectations :refer :all])
-  (:import clj_icu_test.core.AstOpts))
+  (:import clj_icu_test.common.AstOpts))
 
 ;;
 ;; C++
