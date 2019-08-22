@@ -1,5 +1,6 @@
 (ns clj-icu-test.java
   (:require [clj-icu-test.common :refer :all]
+            [clj-icu-test.emit.api :refer :all]
             [clojure.edn :as edn]
             [clojure.string :as string]
             [clojure.tools.analyzer.jvm :as az]))
@@ -74,12 +75,12 @@
                (not= \} last-char)))]
     result))
 
-(defn emit-java-const
-  [ast-opts]
-  {:pre [(= :const (:op (:ast ast-opts)))
-         (:literal? (:ast ast-opts))]}
-  (let [ast (:ast ast-opts)]
-    (pr-str (:val ast))))
+;; (defn emit-java-const
+;;   [ast-opts]
+;;   {:pre [(= :const (:op (:ast ast-opts)))
+;;          (:literal? (:ast ast-opts))]}
+;;   (let [ast (:ast ast-opts)]
+;;     (pr-str (:val ast))))
 
 (defn emit-java-do
   [ast-opts]
@@ -215,7 +216,7 @@
   (let [ast-opts-env (:env ast-opts)
         symb-class (class symb)
         symb-ast (az/analyze symb ast-opts-env)
-        symb-ast-opts {:ast symb-ast}]
+        symb-ast-opts (assoc ast-opts :ast symb-ast :lang "java")]
     (cond
 
       ;; emit a "standalone" token
@@ -240,7 +241,7 @@
         raw-form-arg-symbols (-> raw-forms
                                  last
                                  rest)
-        raw-form-arg-symbol-ast-opts {:env (-> ast :env)}
+        raw-form-arg-symbol-ast-opts {:env (-> ast :env) :lang "java"}
         emitted-args (map (partial emit-java-arg raw-form-arg-symbol-ast-opts) raw-form-arg-symbols)]
     emitted-args))
 
@@ -645,7 +646,7 @@
       :def (case (some-> ast :raw-forms last first name)
              "defn" (emit-java-defn ast-opts)
              (emit-java-def ast-opts))
-      :const (emit-java-const ast-opts)
+      :const (emit-const ast-opts)
       :invoke (case (-> ast :fn :meta :name name)
                 "atom" (emit-java-atom ast-opts)
                 "reset!" (emit-java-reset! ast-opts)
