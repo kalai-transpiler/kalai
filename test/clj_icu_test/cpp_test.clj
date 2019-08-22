@@ -38,21 +38,21 @@
 ;; bindings - def
 
 (let [ast (az/analyze '(def x 3))]
-  (expect "x = 3;" (emit-cpp (map->AstOpts {:ast ast}))))
+  (expect "x = 3;" (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))))
 
 (let [ast (az/analyze '(def ^Integer x 5))]
-  (expect "int x = 5;" (emit-cpp (map->AstOpts {:ast ast}))))
+  (expect "int x = 5;" (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))))
 
 ;; language - multiple expressions
 
 ;; language - multiple expressions - do block
 
 (let [ast (az/analyze '(do (def x 3) (def y 5)))]
-  (expect (emit-cpp (map->AstOpts {:ast ast})) ["x = 3;"
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"})) ["x = 3;"
                                                 "y = 5;"]))
 
 (let [ast (az/analyze '(do (def ^Boolean x true) (def ^Long y 5)))]
-  (expect (emit-cpp (map->AstOpts {:ast ast})) ["bool x = true;"
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"})) ["bool x = true;"
                                                 "long int y = 5;"]))
 
 ;; bindings
@@ -60,16 +60,16 @@
 ;; bindings - atoms
 
 (let [ast (az/analyze '(def x (atom 11)))]
-  (expect (emit-cpp (map->AstOpts {:ast ast})) "x = 11;"))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"})) "x = 11;"))
 
 ;; bindings - reset!
 
 (let [ast (az/analyze '(do (def x (atom 11)) (reset! x 13)))]
-  (expect (emit-cpp (map->AstOpts {:ast ast})) ["x = 11;"
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"})) ["x = 11;"
                                                 "x = 13;"]))
 
 (let [ast (az/analyze '(do (def ^Long x (atom 11)) (reset! x 13)))]
-  (expect (emit-cpp {:ast ast}) ["long int x = 11;"
+  (expect (emit-cpp {:ast ast :lang "cpp"}) ["long int x = 11;"
                                   "x = 13;"]))
 
 ;; static call (arithmetic operations)
@@ -77,37 +77,37 @@
 ;; static call - +
 
 (let [ast (az/analyze '(+ 11 17))]
-  (expect (emit-cpp (map->AstOpts {:ast ast})) "11 + 17"))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"})) "11 + 17"))
 
 ;; static call - /
 
 (let [ast (az/analyze '(/ 34 17))]
-  (expect (emit-cpp (map->AstOpts {:ast ast})) "34 / 17"))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"})) "34 / 17"))
 
 ;; static call - =
 
 (let [ast (az/analyze '(= 34 (* 2 17)))]
-  (expect (emit-cpp (map->AstOpts {:ast ast})) "34 == (2 * 17)"))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"})) "34 == (2 * 17)"))
 
 ;; static call - convert fn names to symbols
 
 (let [ast (az/analyze '(quot 37 10))]
-  (expect (emit-cpp (map->AstOpts {:ast ast})) "37 / 10"))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"})) "37 / 10"))
 
 (let [ast (az/analyze '(rem 37 10))]
-  (expect (emit-cpp (map->AstOpts {:ast ast})) "37 % 10"))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"})) "37 % 10"))
 
 ;; language - multiple operands
 
 (let [ast (az/analyze '(+ 11 17 19 23))]
-  (expect (emit-cpp (map->AstOpts {:ast ast})) "11 + 17 + 19 + 23"))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"})) "11 + 17 + 19 + 23"))
 
 ;; bindings - let
 
 ;; bindings - let - 1 expression
 
 (let [ast (az/analyze '(let [x 1] (+ x 3)))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "{
   x = 1;
   x + 3;
@@ -116,7 +116,7 @@
 ;; bindings - let - 1 expression - type signature on symbol
 
 (let [ast (az/analyze '(let [^Integer x 1] (+ x 3)))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "{
   int x = 1;
   x + 3;
@@ -125,7 +125,7 @@
 ;; bindings - let - 2 expressions
 
 (let [ast (az/analyze '(let [x 1] (+ x 3) (+ x 5)))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "{
   x = 1;
   x + 3;
@@ -135,7 +135,7 @@
 ;; bindings - let - 2 bindings
 
 (let [ast (az/analyze '(let [x 1 y 2] (* x y)))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "{
   x = 1;
   y = 2;
@@ -145,7 +145,7 @@
 ;; bindings - let - 2 bindings - expression in binding
 
 (let [ast (az/analyze '(let [x 5 y (* x x)] (+ x y)))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "{
   x = 5;
   y = x * x;
@@ -155,7 +155,7 @@
 ;; bindings - let - nesting of let forms
 
 (let [ast (az/analyze '(let [x 5] (let [y (* x x)] (/ y x))))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "{
   x = 5;
   {
@@ -167,7 +167,7 @@
 ;; bindings - let - atom (as bound value)
 
 (let [ast (az/analyze '(let [a (atom 23)] (+ 3 5)))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "{
   a = 23;
   3 + 5;
@@ -176,7 +176,7 @@
 ;; bindings - let - atom (as bound value) and reset!
 
 (let [ast (az/analyze '(let [a (atom 23)] (reset! a 19)))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "{
   a = 23;
   a = 19;
@@ -185,7 +185,7 @@
 ;; bindings - let - atom (as bound value) and reset! - type signature
 
 (let [ast (az/analyze '(let [^Integer a (atom 23)] (reset! a 19)))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "{
   int a = 23;
   a = 19;
@@ -194,13 +194,13 @@
 ;; language - nested operands
 
 (let [ast (az/analyze '(+ 3 5 (+ 1 7) 23))]
-  (expect (emit-cpp (map->AstOpts {:ast ast})) "3 + 5 + (1 + 7) + 23"))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"})) "3 + 5 + (1 + 7) + 23"))
 
 (let [ast (az/analyze '(/ 3 (/ 5 2) (/ 1 7) 23))]
-  (expect (emit-cpp (map->AstOpts {:ast ast})) "3 / (5 / 2) / (1 / 7) / 23"))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"})) "3 / (5 / 2) / (1 / 7) / 23"))
 
 (let [ast (az/analyze '(let [x 101] (+ 3 5 (+ x (+ 1 7 (+ x x))) 23)))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "{
   x = 101;
   3 + 5 + (x + (1 + 7 + (x + x))) + 23;
@@ -208,12 +208,12 @@
 
 
 (let [ast (az/analyze '(/ 3 (+ 5 2) (* 1 7) 23))]
-  (expect (emit-cpp (map->AstOpts {:ast ast})) "3 / (5 + 2) / (1 * 7) / 23"))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"})) "3 / (5 + 2) / (1 * 7) / 23"))
 
 ;; defn
 
 (let [ast (az/analyze '(defn compute ^void [^Integer x ^Integer y] (let [^Integer a (+ x y)] (* a y))))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "void compute(int x, int y)
 {
   {
@@ -224,7 +224,7 @@
 
 
 (let [ast (az/analyze '(defn doStuff ^void [^Integer x ^Integer y] (str (+ x y)) (println "hello") 3))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "void doStuff(int x, int y)
 {
   std::to_string(x + y);
@@ -235,7 +235,7 @@
 ;; classes
 
 (let [ast (az/analyze '(defclass "MyClass" (def ^Integer b 3) (defn x ^void [] (+ b 1))))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "class MyClass
 {
   int b = 3;
@@ -250,7 +250,7 @@
 
 (let [ast (az/analyze '(defenum "Day"
                          SUNDAY MONDAY TUESDAY WEDNESDAY THURSDAY FRIDAY SATURDAY))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "enum Day
 {
   SUNDAY,
@@ -267,7 +267,7 @@
 (let [ast (az/analyze '(defn add ^Integer [^Integer x ^Integer y]
                          (let [^Integer sum (+ x y)]
                            (return sum))))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "int add(int x, int y)
 {
   {
@@ -278,7 +278,7 @@
 
 (let [ast (az/analyze '(defn add ^Integer [^Integer x ^Integer y]
                          (return (+ x y))))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "int add(int x, int y)
 {
   return x + y;
@@ -287,7 +287,7 @@
 ;; deref
 
 (let [ast (az/analyze '(let [x (atom 3)] @x))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "{
   x = 3;
   x;
@@ -295,7 +295,7 @@
 
 
 (let [ast (az/analyze '(let [x (atom 3)] x))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "{
   x = 3;
   x;
@@ -304,7 +304,7 @@
 ;; loops (ex: while, doseq)
 
 (let [ast (az/analyze '(while true (println "e")))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "while (true)
 {
   cout << \"e\" << endl;
@@ -313,31 +313,31 @@
 ;; not
 
 (let [ast (az/analyze '(not (= 3 (/ 10 2))))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "!(3 == (10 / 2))"))
 
 ;; new
 
 (let [ast (az/analyze '(StringBuffer.))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
           "StringBuffer"))
 
 (let [ast (az/analyze '(StringBuffer. "Initial string value"))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
           "StringBuffer(\"Initial string value\")"))
 
 ;; string buffer - new
 
 (let [ast (az/analyze '(new-strbuf))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
           "\"\""))
 
 (let [ast (az/analyze '(atom (new-strbuf)))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
           "\"\""))
 
 (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] sb))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "{
   std::string sb = \"\";
   sb;
@@ -347,7 +347,7 @@
 
 
 (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] (prepend-strbuf sb "hello")))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "{
   std::string sb = \"\";
   \"hello\" + sb;
@@ -365,7 +365,7 @@
                                  (reset! result (prepend-strbuf @result remainder))
                                  (reset! i quotient)))
                              (return (tostring-strbuf @result))))))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "class NumFmt
 {
   std::string format(int num)
@@ -399,7 +399,7 @@
                                  (reset! result (prepend-strbuf @result remainder))
                                  (reset! i quotient)))
                              (return (tostring-strbuf @result))))))]
-  (expect (emit-cpp (map->AstOpts {:ast ast}))
+  (expect (emit-cpp (map->AstOpts {:ast ast :lang "cpp"}))
 "class NumFmt
 {
   std::string format(int num)
