@@ -56,22 +56,31 @@
 
 (defn emit-java-statement
   "input is a seq of strings"
-  [statement-parts]
-  (str (indent-str-curr-level)
-       (->> statement-parts
-            (keep identity)
-            (map str)
-            (string/join " "))
-       ";"))
+  [val-opts]
+  {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
+  (let [statement-parts (:val val-opts)]
+    (if (string? statement-parts)
+      (let [statement statement-parts]
+        (str (indent-str-curr-level)
+             statement
+             ";"))
+      (str (indent-str-curr-level)
+           (->> statement-parts
+                (keep identity)
+                (map str)
+                (string/join " "))
+           ";"))))
 
 (defn can-become-java-statement
   "input is a string representing a statement"
-  [expression]
-  (let [result
-        (let [last-char (last expression)]
-          (and (not= \; last-char)
-               (not= \} last-char)))]
-    result))
+  [val-opts]
+  {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
+  (let [expression (:val val-opts)]
+    (let [result
+          (let [last-char (last expression)]
+            (and (not= \; last-char)
+                 (not= \} last-char)))]
+      result)))
 
 ;;
 ;; defmethods
@@ -122,7 +131,10 @@
         statement-parts [identifier
                          "="
                          expression]
-        statement (emit-java-statement statement-parts)]
+        statement-parts-opts (-> ast-opts
+                                 (assoc :val statement-parts)
+                                 map->AnyValOpts)
+        statement (emit-java-statement statement-parts-opts)]
     statement))
 
 (defmethod iface/emit-assignment :l/java
@@ -146,8 +158,11 @@
         statement-parts [type-str
                          identifier
                          "="
-                         expression]        
-        statement (emit-java-statement statement-parts)]
+                         expression]
+        statement-parts-opts (-> ast-opts
+                                 (assoc :val statement-parts)
+                                 map->AnyValOpts)
+        statement (emit-java-statement statement-parts-opts)]
     statement))
 
 (defmethod iface/emit-def :l/java
@@ -193,11 +208,15 @@
                        statement-strs)
                      ;; else the let block has only one "statement" in the do block
                      [(emit (assoc ast-opts :ast body-ast))]))
+        body-strs-opts-seq (map #(-> ast-opts
+                                     (assoc :val %)
+                                     map->AnyValOpts)
+                                body-strs)
         body-strs-with-semicolons (indent
                                    (map #(if-not (can-become-java-statement %)
-                                           %
-                                           (emit-java-statement [%]))
-                                        body-strs))
+                                           (:val %)
+                                           (emit-java-statement %))
+                                        body-strs-opts-seq))
         body-str (string/join "\n" body-strs-with-semicolons)
         block-str-parts [(str (indent-str-curr-level) "{")
                          binding-str
@@ -350,11 +369,15 @@
                                        statement-strs)
                                      ;; else the let block has only one "statement" in the do block
                                      [(emit (assoc ast-opts :ast fn-method-first-body-ast))]))
+        fn-method-first-body-strs-opts-seq (map #(-> ast-opts
+                                                     (assoc :val %)
+                                                     map->AnyValOpts)
+                                                fn-method-first-body-strs)
         fn-method-first-body-strs-with-semicolons (indent
                                                    (map #(if-not (can-become-java-statement %)
-                                                           %
-                                                           (emit-java-statement [%]))
-                                                        fn-method-first-body-strs))
+                                                           (:val %)
+                                                           (emit-java-statement %))
+                                                        fn-method-first-body-strs-opts-seq))
         fn-method-first-body-str (string/join "\n" fn-method-first-body-strs-with-semicolons)
         fn-method-first-str-parts [(str (indent-str-curr-level) fn-method-first-signature)
                                    (str (indent-str-curr-level) "{")
@@ -383,11 +406,15 @@
         class-form-ast-opts (map (partial assoc ast-opts :ast) class-form-asts)
         class-form-strs (indent
                          (map emit class-form-ast-opts))
+        class-form-strs-opts-seq (map #(-> ast-opts
+                                          (assoc :val %)
+                                          map->AnyValOpts)
+                                      class-form-strs)
         class-form-strs-with-semicolons (indent
                                          (map #(if-not (can-become-java-statement %)
-                                                 %
-                                                 (emit-java-statement [%]))
-                                              class-form-strs))
+                                                 (:val %)
+                                                 (emit-java-statement %))
+                                              class-form-strs-opts-seq))
         ;; Note: should have a blank line between top-level statements/blocks
         ;; in a class, so join with 2 newlines instead of just 1 like in a let block
         class-forms-str (string/join "\n\n" class-form-strs-with-semicolons)
@@ -444,8 +471,11 @@
         expr-ast (-> ast :args first)
         expr-ast-opts (assoc ast-opts :ast expr-ast)
         expr-ast-str (emit expr-ast-opts)
-        return-stmt-str (emit-java-statement ["return"
-                                              expr-ast-str])]
+        expr-ast-str-opts (-> ast-opts
+                              (assoc :val ["return"
+                                           expr-ast-str])
+                              map->AnyValOpts)
+        return-stmt-str (emit-java-statement expr-ast-str-opts)]
     return-stmt-str))
 
 ;; deref
@@ -595,11 +625,15 @@
                    (let [statement-ast-opts (map #(assoc ast-opts :ast %) statements)
                          statement-strs (map emit statement-ast-opts)]
                      statement-strs))
+        body-strs-opts-seq (map #(-> ast-opts
+                                     (assoc :val %)
+                                     map->AnyValOpts)
+                                body-strs)
         body-strs-with-semicolons (indent
                                    (map #(if-not (can-become-java-statement %)
-                                           %
-                                           (emit-java-statement [%]))
-                                        body-strs))
+                                           (:val %)
+                                           (emit-java-statement %))
+                                        body-strs-opts-seq))
         body-str (string/join "\n" body-strs-with-semicolons)
         while-parts [(str (indent-str-curr-level) "while (" test-str ")")
                      (str (indent-str-curr-level) "{")
