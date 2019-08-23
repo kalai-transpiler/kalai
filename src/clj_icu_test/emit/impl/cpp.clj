@@ -13,88 +13,101 @@
 
 (defn emit-cpp-type
   "Might return nil"
-  [class]  
-  (when class
-    (cond
-      ;; TODO: uncomment the primitive type class code unless and until we want to have
-      ;; implicit type signatures applied for bindings in a let block.
-      ;; Note: the problem is that the analyzer automatically infers the type of the
-      ;; binding symbol in a let binding block in :tag and :o-tag even if there is no
-      ;; type hint, whereas it doesn't do so in other places of binding (ex: def)
-      ;; (= Long/TYPE class) "long"
-      ;; (= Integer/TYPE class) "int"
-      ;; (= Character/TYPE class) "char"
-      ;; (= Boolean/TYPE class) "boolean"
-      (= Void/TYPE class) "void"
-      :else (let [canonical-name (.getCanonicalName class)] 
-              (cond                
-                ;; this is to prevent the analyzer from auto-tagging the type classes of
-                ;; symbols in a binding form in a way that is currently being assumed to
-                ;; be unwanted in the emitted output.
-                ;; If we need to actually emit a type signature of Object in the future,
-                ;; we can subclass Object to a custom type (ex: ExplicitlyAnObject.java)
-                ;; and tell users to use that new class in their type hints if they want
-                ;; a type signature of java.lang.Object in emitted Java output.
-                (#{"java.lang.Object"
-                   "java.lang.Number"} canonical-name)
-                nil
+  [val-opts]
+  {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
+  (let [class (:val val-opts)]
+    (when class
+      (cond
+        ;; TODO: uncomment the primitive type class code unless and until we want to have
+        ;; implicit type signatures applied for bindings in a let block.
+        ;; Note: the problem is that the analyzer automatically infers the type of the
+        ;; binding symbol in a let binding block in :tag and :o-tag even if there is no
+        ;; type hint, whereas it doesn't do so in other places of binding (ex: def)
+        ;; (= Long/TYPE class) "long"
+        ;; (= Integer/TYPE class) "int"
+        ;; (= Character/TYPE class) "char"
+        ;; (= Boolean/TYPE class) "boolean"
+        (= Void/TYPE class) "void"
+        :else (let [canonical-name (.getCanonicalName class)] 
+                (cond                
+                  ;; this is to prevent the analyzer from auto-tagging the type classes of
+                  ;; symbols in a binding form in a way that is currently being assumed to
+                  ;; be unwanted in the emitted output.
+                  ;; If we need to actually emit a type signature of Object in the future,
+                  ;; we can subclass Object to a custom type (ex: ExplicitlyAnObject.java)
+                  ;; and tell users to use that new class in their type hints if they want
+                  ;; a type signature of java.lang.Object in emitted Java output.
+                  (#{"java.lang.Object"
+                     "java.lang.Number"} canonical-name)
+                  nil
 
-                (.startsWith canonical-name "java.lang.")
-                (let [java-cpp-type-map {java.lang.Integer "int"
-                                         int "int"
-                                         java.lang.Long "long int"
-                                         long "long int"
-                                         java.lang.Float "float"
-                                         java.lang.Double "double float"
-                                         java.lang.Boolean "bool"
-                                         boolean "bool"
-                                         java.lang.String "std::string"
-                                         java.lang.StringBuffer "std::string"}]
-                  (when-let [transformed-type (get java-cpp-type-map class)]
-                    transformed-type))
+                  (.startsWith canonical-name "java.lang.")
+                  (let [java-cpp-type-map {java.lang.Integer "int"
+                                           int "int"
+                                           java.lang.Long "long int"
+                                           long "long int"
+                                           java.lang.Float "float"
+                                           java.lang.Double "double float"
+                                           java.lang.Boolean "bool"
+                                           boolean "bool"
+                                           java.lang.String "std::string"
+                                           java.lang.StringBuffer "std::string"}]
+                    (when-let [transformed-type (get java-cpp-type-map class)]
+                      transformed-type))
 
-                ;; this when condition prevents Clojure-specific (?) classes like "long",
-                ;; "int", etc. that are automatically tagged by the analyzer on various
-                ;; binding symbols from becoming included in the emitted output.  This
-                ;; means that you need to used the boxed versions in type hints like
-                ;; ^Long, ^Integer, etc. in order to create type signatures in the emitted
-                ;; output.
-                (when (.getPackage class))
-                canonical-name
+                  ;; this when condition prevents Clojure-specific (?) classes like "long",
+                  ;; "int", etc. that are automatically tagged by the analyzer on various
+                  ;; binding symbols from becoming included in the emitted output.  This
+                  ;; means that you need to used the boxed versions in type hints like
+                  ;; ^Long, ^Integer, etc. in order to create type signatures in the emitted
+                  ;; output.
+                  (when (.getPackage class))
+                  canonical-name
 
-                :else
-                nil)))))
+                  :else
+                  nil))))))
 
 (defn is-number-type?
-  [class]
-  (when class
-    (let [number-classes #{java.lang.Number
-                           java.lang.Short
-                           java.lang.Integer
-                           java.lang.Long
-                           java.lang.Float
-                           java.lang.Double}
-          is-number-type (boolean
-                          (get number-classes class))]
-      is-number-type)))
+  [val-opts]
+  {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
+  (let [class (:val val-opts)]
+    (when class
+      (let [number-classes #{java.lang.Number
+                             java.lang.Short
+                             java.lang.Integer
+                             java.lang.Long
+                             java.lang.Float
+                             java.lang.Double}
+            is-number-type (boolean
+                            (get number-classes class))]
+        is-number-type))))
 
 (defn emit-cpp-statement
-  [statement-parts]
-  (str (indent-str-curr-level)
-       (->> statement-parts
-            (keep identity)
-            (map str)
-            (string/join " "))
-       ";"))
+  [val-opts]
+  {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
+  (let [statement-parts (:val val-opts)]
+    (if (string? statement-parts)
+      (let [statement statement-parts]
+        (str (indent-str-curr-level)
+             statement
+             ";")) 
+      (str (indent-str-curr-level)
+           (->> statement-parts
+                (keep identity)
+                (map str)
+                (string/join " "))
+           ";"))))
 
 (defn can-become-cpp-statement
-  "input is a string representing a statement"
-  [expression]
-  (let [result
-        (let [last-char (last expression)]
-          (and (not= \; last-char)
-               (not= \} last-char)))]
-    result))
+  "input is a string representing a statement" 
+  [val-opts]
+  {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
+  (let [expression (:val val-opts)]
+    (let [result
+          (let [last-char (last expression)]
+            (and (not= \; last-char)
+                 (not= \} last-char)))]
+      result)))
 
 ;;
 ;; defmethods
@@ -145,7 +158,10 @@
         statement-parts [identifier
                          "="
                          expression]
-        statement (emit-cpp-statement statement-parts)]
+        statement-parts-opts (-> ast-opts
+                                 (assoc :val statement-parts)
+                                 map->AnyValOpts)
+        statement (emit-cpp-statement statement-parts-opts)]
     statement))
 
 (defmethod iface/emit-assignment :l/cpp
@@ -155,8 +171,11 @@
         type-class (or (get-in ast [:meta :val :tag])
                        (get-in ast [:init :env :tag])
                        (and (= :binding op-code)
-                            (get ast :tag)))        
-        type-str (emit-cpp-type type-class)
+                            (get ast :tag)))
+        type-class-opts (-> ast-opts
+                            (assoc :val type-class)
+                            map->AnyValOpts)
+        type-str (emit-cpp-type type-class-opts)
         identifier (when-let [identifer-symbol (or (get-in ast [:env :form])
                                                    (case op-code
                                                      :binding (get ast :form)
@@ -166,8 +185,11 @@
         statement-parts [type-str
                          identifier
                          "="
-                         expression]        
-        statement (emit-cpp-statement statement-parts)]
+                         expression]
+        statement-parts-opts (-> ast-opts
+                                 (assoc :val statement-parts)
+                                 map->AnyValOpts)
+        statement (emit-cpp-statement statement-parts-opts)]
     statement))
 
 (defmethod iface/emit-def :l/cpp
@@ -213,11 +235,15 @@
                        statement-strs)
                      ;; else the let block has only one "statement" in the do block
                      [(emit (assoc ast-opts :ast body-ast))]))
+        body-strs-opts-seq (map #(-> ast-opts
+                                     (assoc :val %)
+                                     map->AnyValOpts)
+                                body-strs) 
         body-strs-with-semicolons (indent
                                    (map #(if-not (can-become-cpp-statement %)
-                                           %
-                                           (emit-cpp-statement [%]))
-                                        body-strs))
+                                           (:val %)
+                                           (emit-cpp-statement %))
+                                        body-strs-opts-seq))
         body-str (string/join "\n" body-strs-with-semicolons)
         block-str-parts [(str (indent-str-curr-level) "{")
                          binding-str
@@ -309,7 +335,10 @@
   (let [ast (:ast ast-opts)
         arg-name (-> ast :form name)
         type-class (-> ast :tag)
-        type-str (emit-cpp-type type-class)
+        type-class-opts (-> ast-opts
+                            (assoc :val type-class)
+                            map->AnyValOpts)
+        type-str (emit-cpp-type type-class-opts)
         identifier-signature-parts [type-str
                                     arg-name]
         identifier-signature (->> identifier-signature-parts
@@ -334,9 +363,12 @@
   (let [ast (:ast ast-opts)
         fn-name (:name ast)
         fn-ast (:init ast)
-        fn-return-type (-> fn-ast
-                           :return-tag
-                           emit-cpp-type)
+        fn-return-type-class (-> fn-ast
+                                 :return-tag)
+        fn-return-type-opts (-> ast-opts
+                                (assoc :val fn-return-type-class)
+                                map->AnyValOpts)
+        fn-return-type (emit-cpp-type fn-return-type-opts)
         ;; Note: currently not dealing with fn overloading (variadic fns in Clojure),
         ;; so just take the first fn method
         fn-method-first (-> fn-ast
@@ -364,11 +396,15 @@
                                        statement-strs)
                                      ;; else the let block has only one "statement" in the do block
                                      [(emit (assoc ast-opts :ast fn-method-first-body-ast))]))
+        fn-method-first-body-strs-opts-seq (map #(-> ast-opts
+                                                     (assoc :val %)
+                                                     map->AnyValOpts)
+                                                fn-method-first-body-strs) 
         fn-method-first-body-strs-with-semicolons (indent
                                                    (map #(if-not (can-become-cpp-statement %)
-                                                           %
-                                                           (emit-cpp-statement [%]))
-                                                        fn-method-first-body-strs))
+                                                           (:val %)
+                                                           (emit-cpp-statement %))
+                                                        fn-method-first-body-strs-opts-seq))
         fn-method-first-body-str (string/join "\n" fn-method-first-body-strs-with-semicolons)
         fn-method-first-str-parts [(str (indent-str-curr-level) fn-method-first-signature)
                                    (str (indent-str-curr-level) "{")
@@ -396,11 +432,15 @@
         class-form-ast-opts (map (partial assoc ast-opts :ast) class-form-asts)
         class-form-strs (indent
                          (map emit class-form-ast-opts))
+        class-form-strs-opts-seq (map #(-> ast-opts
+                                           (assoc :val %)
+                                           map->AnyValOpts)
+                                      class-form-strs) 
         class-form-strs-with-semicolons (indent
                                          (map #(if-not (can-become-cpp-statement %)
-                                                 %
-                                                 (emit-cpp-statement [%]))
-                                              class-form-strs))
+                                                 (:val %)
+                                                 (emit-cpp-statement %))
+                                              class-form-strs-opts-seq))
         ;; Note: should have a blank line between top-level statements/blocks
         ;; in a class, so join with 2 newlines instead of just 1 like in a let block
         class-forms-str (string/join "\n\n" class-form-strs-with-semicolons)
@@ -456,8 +496,11 @@
         expr-ast (-> ast :args first)
         expr-ast-opts (assoc ast-opts :ast expr-ast)
         expr-ast-str (emit expr-ast-opts)
-        return-stmt-str (emit-cpp-statement ["return"
-                                              expr-ast-str])]
+        expr-ast-str-opts (-> ast-opts
+                              (assoc :val ["return"
+                                           expr-ast-str])
+                              map->AnyValOpts) 
+        return-stmt-str (emit-cpp-statement expr-ast-str-opts)]
     return-stmt-str))
 
 ;; deref
@@ -502,7 +545,10 @@
   (let [ast (:ast ast-opts)
         tag-class (:tag ast)
         emitted-arg (emit ast-opts)
-        casted-emitted-arg (if (is-number-type? tag-class)
+        tag-class-opts (-> ast-opts
+                           (assoc :val tag-class)
+                           map->AnyValOpts)
+        casted-emitted-arg (if (is-number-type? tag-class-opts)
                              (str "std::to_string(" emitted-arg ")") 
                              emitted-arg)]
     casted-emitted-arg))
@@ -621,11 +667,15 @@
                    (let [statement-ast-opts (map #(assoc ast-opts :ast %) statements)
                          statement-strs (map emit statement-ast-opts)]
                      statement-strs))
+        body-strs-opts-seq (map #(-> ast-opts
+                                     (assoc :val %)
+                                     map->AnyValOpts)
+                                body-strs) 
         body-strs-with-semicolons (indent
                                    (map #(if-not (can-become-cpp-statement %)
-                                           %
-                                           (emit-cpp-statement [%]))
-                                        body-strs))
+                                           (:val %)
+                                           (emit-cpp-statement %))
+                                        body-strs-opts-seq))
         body-str (string/join "\n" body-strs-with-semicolons)
         while-parts [(str (indent-str-curr-level) "while (" test-str ")")
                      (str (indent-str-curr-level) "{")
