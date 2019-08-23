@@ -40,8 +40,10 @@
   (iface/emit-let ast-opts))
 
 (defn emit-arg
-  [ast-opts]
-  (iface/emit-arg ast-opts))
+  ([ast-opts]
+   (iface/emit-arg ast-opts))
+  ([ast-opts symb]
+   (iface/emit-arg ast-opts symb)))
 
 (defn emit-args
   [ast-opts]
