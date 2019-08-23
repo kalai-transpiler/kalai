@@ -41,14 +41,11 @@
 ;; records
 ;;
 
+;; record for passing an AST around with its env and target language
 (defrecord AstOpts [ast env lang])
 
-(defn new-ast-opts
-  "keys of the opts map are the fields in AstOpts record"
-  [opts]
-  {:pre [(or (not (:lang opts))
-             (get LANGS (:lang opts)))]}
-  (map->AstOpts opts))
+;; record for passing non-AST values around, otherwise same as AstOpts
+(defrecord AnyValOpts [val env lang])
 
 ;;
 ;; impl fns and macros

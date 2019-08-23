@@ -11,46 +11,48 @@
 
 (defn emit-java-type
   "Might return nil"
-  [class]  
-  (when class
-    (cond
-      ;; TODO: uncomment the primitive type class code unless and until we want to have
-      ;; implicit type signatures applied for bindings in a let block.
-      ;; Note: the problem is that the analyzer automatically infers the type of the
-      ;; binding symbol in a let binding block in :tag and :o-tag even if there is no
-      ;; type hint, whereas it doesn't do so in other places of binding (ex: def)
-      ;; (= Long/TYPE class) "long"
-      ;; (= Integer/TYPE class) "int"
-      ;; (= Character/TYPE class) "char"
-      ;; (= Boolean/TYPE class) "boolean"
-      (= Void/TYPE class) "void"
-      :else (let [canonical-name (.getCanonicalName class)] 
-              (cond                
-                ;; this is to prevent the analyzer from auto-tagging the type classes of
-                ;; symbols in a binding form in a way that is currently being assumed to
-                ;; be unwanted in the emitted output.
-                ;; If we need to actually emit a type signature of Object in the future,
-                ;; we can subclass Object to a custom type (ex: ExplicitlyAnObject.java)
-                ;; and tell users to use that new class in their type hints if they want
-                ;; a type signature of java.lang.Object in emitted Java output.
-                (#{"java.lang.Object"
-                   "java.lang.Number"} canonical-name)
-                nil
+  [val-opts]
+  {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
+  (let [class (:val val-opts)]
+    (when class
+      (cond
+        ;; TODO: uncomment the primitive type class code unless and until we want to have
+        ;; implicit type signatures applied for bindings in a let block.
+        ;; Note: the problem is that the analyzer automatically infers the type of the
+        ;; binding symbol in a let binding block in :tag and :o-tag even if there is no
+        ;; type hint, whereas it doesn't do so in other places of binding (ex: def)
+        ;; (= Long/TYPE class) "long"
+        ;; (= Integer/TYPE class) "int"
+        ;; (= Character/TYPE class) "char"
+        ;; (= Boolean/TYPE class) "boolean"
+        (= Void/TYPE class) "void"
+        :else (let [canonical-name (.getCanonicalName class)] 
+                (cond                
+                  ;; this is to prevent the analyzer from auto-tagging the type classes of
+                  ;; symbols in a binding form in a way that is currently being assumed to
+                  ;; be unwanted in the emitted output.
+                  ;; If we need to actually emit a type signature of Object in the future,
+                  ;; we can subclass Object to a custom type (ex: ExplicitlyAnObject.java)
+                  ;; and tell users to use that new class in their type hints if they want
+                  ;; a type signature of java.lang.Object in emitted Java output.
+                  (#{"java.lang.Object"
+                     "java.lang.Number"} canonical-name)
+                  nil
 
-                (.startsWith canonical-name "java.lang.")
-                (subs canonical-name 10)
+                  (.startsWith canonical-name "java.lang.")
+                  (subs canonical-name 10)
 
-                ;; this when condition prevents Clojure-specific (?) classes like "long",
-                ;; "int", etc. that are automatically tagged by the analyzer on various
-                ;; binding symbols from becoming included in the emitted output.  This
-                ;; means that you need to used the boxed versions in type hints like
-                ;; ^Long, ^Integer, etc. in order to create type signatures in the emitted
-                ;; output.
-                (when (.getPackage class))
-                canonical-name
+                  ;; this when condition prevents Clojure-specific (?) classes like "long",
+                  ;; "int", etc. that are automatically tagged by the analyzer on various
+                  ;; binding symbols from becoming included in the emitted output.  This
+                  ;; means that you need to used the boxed versions in type hints like
+                  ;; ^Long, ^Integer, etc. in order to create type signatures in the emitted
+                  ;; output.
+                  (when (.getPackage class))
+                  canonical-name
 
-                :else
-                nil)))))
+                  :else
+                  nil))))))
 
 (defn emit-java-statement
   "input is a seq of strings"
@@ -74,7 +76,6 @@
 ;;
 ;; defmethods
 ;;
-
 
 (defmethod iface/emit-const :l/java
   [ast-opts]
@@ -131,8 +132,11 @@
         type-class (or (get-in ast [:meta :val :tag])
                        (get-in ast [:init :env :tag])
                        (and (= :binding op-code)
-                            (get ast :tag)))        
-        type-str (emit-java-type type-class)
+                            (get ast :tag)))
+        type-class-opts (-> ast-opts
+                            (assoc :val type-class)
+                            map->AnyValOpts)
+        type-str (emit-java-type type-class-opts)
         identifier (when-let [identifer-symbol (or (get-in ast [:env :form])
                                                    (case op-code
                                                      :binding (get ast :form)
@@ -285,7 +289,10 @@
   (let [ast (:ast ast-opts)
         arg-name (-> ast :form name)
         type-class (-> ast :tag)
-        type-str (emit-java-type type-class)
+        type-class-opts (-> ast-opts
+                            (assoc :val type-class)
+                            map->AnyValOpts)
+        type-str (emit-java-type type-class-opts)
         identifier-signature-parts [type-str
                                     arg-name]
         identifier-signature (->> identifier-signature-parts
@@ -310,9 +317,11 @@
   (let [ast (:ast ast-opts)
         fn-name (:name ast)
         fn-ast (:init ast)
-        fn-return-type (-> fn-ast
-                           :return-tag
-                           emit-java-type)
+        fn-return-type-class (:return-tag fn-ast)
+        fn-return-type-class-opts (-> ast-opts
+                                      (assoc :val fn-return-type-class)
+                                      map->AnyValOpts)
+        fn-return-type (emit-java-type fn-return-type-class-opts)
         ;; Note: currently not dealing with fn overloading (variadic fns in Clojure),
         ;; so just take the first fn method
         fn-method-first (-> fn-ast
