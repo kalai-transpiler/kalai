@@ -5,11 +5,8 @@
             [clojure.edn :as edn]
             [clojure.string :as string]
             [clojure.tools.analyzer.jvm :as az]))
-;;
-;; stuff that needs to be in defmethods
-;;
 
-(defmethod emit-type :l/java
+(defmethod emit-type ::l/java
   [val-opts]
   {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
   (let [class (:val val-opts)]
@@ -53,7 +50,7 @@
                   :else
                   nil))))))
 
-(defmethod emit-statement :l/java
+(defmethod emit-statement ::l/java
   [val-opts]
   {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
   (let [statement-parts (:val val-opts)]
@@ -69,7 +66,7 @@
                 (string/join " "))
            ";"))))
 
-(defmethod can-become-statement :l/java
+(defmethod can-become-statement ::l/java
   [val-opts]
   {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
   (let [expression (:val val-opts)]
@@ -79,18 +76,14 @@
                  (not= \} last-char)))]
       result)))
 
-;;
-;; defmethods
-;;
-
-(defmethod iface/emit-const :l/java
+(defmethod iface/emit-const ::l/java
   [ast-opts]
  {:pre [(= :const (:op (:ast ast-opts)))
          (:literal? (:ast ast-opts))]}
   (let [ast (:ast ast-opts)]
     (pr-str (:val ast))))
 
-(defmethod iface/emit-do :l/java
+(defmethod iface/emit-do ::l/java
   [ast-opts]
   {:pre [(= :do (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
@@ -104,7 +97,7 @@
 
 ;; bindings
 
-(defmethod iface/emit-atom :l/java
+(defmethod iface/emit-atom ::l/java
   [ast-opts]
   {:pre [(and (= :invoke (:op (:ast ast-opts)))
               (= (symbol "atom") (-> ast-opts :ast :fn :meta :name)))]}
@@ -114,7 +107,7 @@
                          first)]
     (emit (assoc ast-opts :ast init-val-ast))))
 
-(defmethod iface/emit-reset! :l/java
+(defmethod iface/emit-reset! ::l/java
   [ast-opts]
   {:pre [(and (= :invoke (:op (:ast ast-opts)))
               (= (symbol "reset!") (-> ast-opts :ast :fn :meta :name)))]}
@@ -134,7 +127,7 @@
         statement (emit-statement statement-parts-opts)]
     statement))
 
-(defmethod iface/emit-assignment :l/java
+(defmethod iface/emit-assignment ::l/java
   [ast-opts]
   (let [ast (:ast ast-opts)
         op-code (:op ast) 
@@ -162,19 +155,19 @@
         statement (emit-statement statement-parts-opts)]
     statement))
 
-(defmethod iface/emit-def :l/java
+(defmethod iface/emit-def ::l/java
   [ast-opts]
   {:pre [(= :def (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)]
     (emit-assignment ast-opts)))
 
-(defmethod iface/emit-binding :l/java
+(defmethod iface/emit-binding ::l/java
   [ast-opts]
   {:pre [(= :binding (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)]
     (emit-assignment ast-opts)))
 
-(defmethod iface/emit-bindings-stanza :l/java
+(defmethod iface/emit-bindings-stanza ::l/java
   [ast-opts]
   {:pre [(sequential? (:ast ast-opts))]}
   (let [ast (:ast ast-opts)
@@ -187,7 +180,7 @@
       (let [bindings-str (string/join "\n" non-nil-binding-statements)] 
         bindings-str))))
 
-(defmethod iface/emit-let :l/java
+(defmethod iface/emit-let ::l/java
   [ast-opts]
   {:pre [(= :let (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
@@ -226,7 +219,7 @@
 
 ;; "arithmetic" (built-in operators)
 
-(defmethod iface/emit-arg :l/java
+(defmethod iface/emit-arg ::l/java
   [ast-opts symb]
   {:pre [(:env ast-opts)]}
   (let [ast-opts-env (:env ast-opts)
@@ -249,7 +242,7 @@
       ;; else, we have something that we treat like a scalar
       :else (emit symb-ast-opts))))
 
-(defmethod iface/emit-args :l/java
+(defmethod iface/emit-args ::l/java
   [ast-opts]
   {:pre [(-> ast-opts :ast :raw-forms seq)]}
   (let [ast (:ast ast-opts)
@@ -261,7 +254,7 @@
         emitted-args (map (partial emit-arg raw-form-arg-symbol-ast-opts) raw-form-arg-symbols)]
     emitted-args))
 
-(defmethod iface/emit-static-call :l/java
+(defmethod iface/emit-static-call ::l/java
   [ast-opts]
   {:pre [(= :static-call (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
@@ -283,14 +276,14 @@
 
 ;; other
 
-(defmethod iface/emit-local :l/java
+(defmethod iface/emit-local ::l/java
   [ast-opts]
   {:pre [(= :local (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
         form (:form ast)]
     (str (name form))))
 
-(defmethod iface/emit-var :l/java
+(defmethod iface/emit-var ::l/java
   [ast-opts]
   {:pre [(= :var (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
@@ -299,7 +292,7 @@
 
 ;; functions
 
-(defmethod iface/emit-defn-arg :l/java
+(defmethod iface/emit-defn-arg ::l/java
   [ast-opts]
   {:pre [(= :binding (-> ast-opts :ast :op))]}
   (let [ast (:ast ast-opts)
@@ -316,7 +309,7 @@
                                   (string/join " "))]
     identifier-signature))
 
-(defmethod iface/emit-defn-args :l/java
+(defmethod iface/emit-defn-args ::l/java
   [ast-opts]
   ;; Note: can have empty args
   ;;{:pre [(seq (:ast ast-opts))]}
@@ -327,7 +320,7 @@
                           (map emit-defn-arg))]
     (string/join ", " arg-ast-opts)))
 
-(defmethod iface/emit-defn :l/java 
+(defmethod iface/emit-defn ::l/java 
   [ast-opts]
   {:pre [(= :def (-> ast-opts :ast :op))]}
   (let [ast (:ast ast-opts)
@@ -387,7 +380,7 @@
 
 ;; classes (or modules or namespaces)
 
-(defmethod iface/emit-defclass :l/java
+(defmethod iface/emit-defclass ::l/java
   [ast-opts]
   {:pre [(= :invoke (-> ast-opts :ast :op))]}
   (let [ast (:ast ast-opts)
@@ -426,7 +419,7 @@
 
 ;; enum classes
 
-(defmethod iface/emit-defenum :l/java
+(defmethod iface/emit-defenum ::l/java
   [ast-opts]
   {:pre [(= :invoke (-> ast-opts :ast :op))]}
   (let [ast (:ast ast-opts)
@@ -461,7 +454,7 @@
 
 ;; return statement
 
-(defmethod iface/emit-return :l/java
+(defmethod iface/emit-return ::l/java
   [ast-opts]
   {:pre [(= :invoke (-> ast-opts :ast :op))]}
   (let [ast (:ast ast-opts)
@@ -477,7 +470,7 @@
 
 ;; deref
 
-(defmethod iface/emit-deref :l/java
+(defmethod iface/emit-deref ::l/java
   [ast-opts]
   {:pre [(= :invoke (-> ast-opts :ast :op))]}
   (let [ast (:ast ast-opts)
@@ -488,7 +481,7 @@
 
 ;; not
 
-(defmethod iface/emit-not :l/java
+(defmethod iface/emit-not ::l/java
   [ast-opts]
   {:pre [(= :invoke (-> ast-opts :ast :op))]}
   (let [ast (:ast ast-opts)
@@ -500,11 +493,11 @@
 
 ;; fn invocations
 
-(defmethod iface/emit-invoke-arg :l/java
+(defmethod iface/emit-invoke-arg ::l/java
   [ast-opts]
   (emit ast-opts))
 
-(defmethod iface/emit-invoke-args :l/java
+(defmethod iface/emit-invoke-args ::l/java
   [ast-opts]
   (let [ast (:ast ast-opts)
         args-ast (:args ast)
@@ -512,7 +505,7 @@
         emitted-args (map emit-invoke-arg args-ast-opts)]
     emitted-args))
 
-(defmethod iface/emit-str :l/java
+(defmethod iface/emit-str ::l/java
   [ast-opts]
   (let [ast (:ast ast-opts)
         arg-strs (emit-invoke-args ast-opts)
@@ -523,7 +516,7 @@
         expr (apply str expr-parts)]
     expr))
 
-(defmethod iface/emit-println :l/java
+(defmethod iface/emit-println ::l/java
   [ast-opts]
   (let [ast (:ast ast-opts)
         arg-strs (emit-invoke-args ast-opts)
@@ -533,13 +526,13 @@
                           ")")]
     command-expr))
 
-(defmethod iface/emit-new-strbuf :l/java
+(defmethod iface/emit-new-strbuf ::l/java
   [ast-opts]
   ;; Note: currently assuming that there are 0 args to StringBuffer,
   ;; but can support args later
   "new StringBuffer()")
 
-(defmethod iface/emit-prepend-strbuf :l/java
+(defmethod iface/emit-prepend-strbuf ::l/java
   [ast-opts]
   (let [ast (:ast ast-opts)
         args (:args ast)
@@ -555,7 +548,7 @@
         prepend-invoke (apply str prepend-invoke-parts)]
     prepend-invoke))
 
-(defmethod iface/emit-tostring-strbuf :l/java
+(defmethod iface/emit-tostring-strbuf ::l/java
   [ast-opts]
   (let [ast (:ast ast-opts)
         args (:args ast)
@@ -564,7 +557,7 @@
         tostring-invoke (str obj-name ".toString()")]
     tostring-invoke))
 
-(defmethod iface/emit-invoke :l/java
+(defmethod iface/emit-invoke ::l/java
   [ast-opts]
   {:pre [(= :invoke (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
@@ -608,7 +601,7 @@
 
 ;; loops (ex: while, doseq)
 
-(defmethod iface/emit-while :l/java
+(defmethod iface/emit-while ::l/java
   [ast-opts]
   {:pre [(= :loop (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
@@ -639,7 +632,7 @@
         while-str (string/join "\n" while-parts)]
     while-str))
 
-(defmethod iface/emit-loop :l/java
+(defmethod iface/emit-loop ::l/java
   [ast-opts]
   {:pre [(= :loop (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
@@ -650,7 +643,7 @@
 
 ;; new
 
-(defmethod iface/emit-new :l/java
+(defmethod iface/emit-new ::l/java
   [ast-opts]
   {:pre [(= :new (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
@@ -668,7 +661,7 @@
 
 ;; entry point
 
-(defmethod iface/emit :l/java
+(defmethod iface/emit ::l/java
   [ast-opts]
   (let [ast (:ast ast-opts)]
     ;; TODO: some multimethod ?

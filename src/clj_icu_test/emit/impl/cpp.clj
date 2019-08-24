@@ -6,11 +6,7 @@
             [clojure.string :as string]
             [clojure.tools.analyzer.jvm :as az]))
 
-;;
-;; stuff that needs to be in defmethods
-;;
-
-(defmethod emit-type :l/cpp
+(defmethod emit-type ::l/cpp
   [val-opts]
   {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
   (let [class (:val val-opts)]
@@ -65,7 +61,7 @@
                   :else
                   nil))))))
 
-(defmethod is-number-type? :l/cpp
+(defmethod is-number-type? ::l/cpp
   [val-opts]
   {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
   (let [class (:val val-opts)]
@@ -80,7 +76,7 @@
                             (get number-classes class))]
         is-number-type))))
 
-(defmethod emit-statement :l/cpp
+(defmethod emit-statement ::l/cpp
   [val-opts]
   {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
   (let [statement-parts (:val val-opts)]
@@ -96,7 +92,7 @@
                 (string/join " "))
            ";"))))
 
-(defmethod can-become-statement :l/cpp
+(defmethod can-become-statement ::l/cpp
   [val-opts]
   {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
   (let [expression (:val val-opts)]
@@ -106,18 +102,14 @@
                  (not= \} last-char)))]
       result)))
 
-;;
-;; defmethods
-;;
-
-(defmethod iface/emit-const :l/cpp
+(defmethod iface/emit-const ::l/cpp
   [ast-opts]
   {:pre [(= :const (:op (:ast ast-opts)))
          (:literal? (:ast ast-opts))]}
   (let [ast (:ast ast-opts)]
     (pr-str (:val ast))))
 
-(defmethod iface/emit-do :l/cpp
+(defmethod iface/emit-do ::l/cpp
   [ast-opts]
   {:pre [(= :do (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
@@ -131,7 +123,7 @@
 
 ;; bindings
 
-(defmethod iface/emit-atom :l/cpp
+(defmethod iface/emit-atom ::l/cpp
   [ast-opts]
   {:pre [(and (= :invoke (:op (:ast ast-opts)))
               (= (symbol "atom") (-> ast-opts :ast :fn :meta :name)))]}
@@ -141,7 +133,7 @@
                          first)]
     (emit (assoc ast-opts :ast init-val-ast))))
 
-(defmethod iface/emit-reset! :l/cpp
+(defmethod iface/emit-reset! ::l/cpp
   [ast-opts]
   {:pre [(and (= :invoke (:op (:ast ast-opts)))
               (= (symbol "reset!") (-> ast-opts :ast :fn :meta :name)))]}
@@ -161,7 +153,7 @@
         statement (emit-statement statement-parts-opts)]
     statement))
 
-(defmethod iface/emit-assignment :l/cpp
+(defmethod iface/emit-assignment ::l/cpp
   [ast-opts]
   (let [ast (:ast ast-opts)
         op-code (:op ast) 
@@ -189,19 +181,19 @@
         statement (emit-statement statement-parts-opts)]
     statement))
 
-(defmethod iface/emit-def :l/cpp
+(defmethod iface/emit-def ::l/cpp
   [ast-opts]
   {:pre [(= :def (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)]
     (emit-assignment ast-opts)))
 
-(defmethod iface/emit-binding :l/cpp
+(defmethod iface/emit-binding ::l/cpp
   [ast-opts]
   {:pre [(= :binding (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)]
     (emit-assignment ast-opts)))
 
-(defmethod iface/emit-bindings-stanza :l/cpp
+(defmethod iface/emit-bindings-stanza ::l/cpp
   [ast-opts]
   {:pre [(sequential? (:ast ast-opts))]}
   (let [ast (:ast ast-opts)
@@ -214,7 +206,7 @@
       (let [bindings-str (string/join "\n" non-nil-binding-statements)] 
         bindings-str))))
 
-(defmethod iface/emit-let :l/cpp
+(defmethod iface/emit-let ::l/cpp
   [ast-opts]
   {:pre [(= :let (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
@@ -253,7 +245,7 @@
 
 ;; "arithmetic" (built-in operators)
 
-(defmethod iface/emit-arg :l/cpp
+(defmethod iface/emit-arg ::l/cpp
   [ast-opts symb]
   {:pre [(:env ast-opts)]}
   (let [ast-opts-env (:env ast-opts)
@@ -276,7 +268,7 @@
       ;; else, we have something that we treat like a scalar
       :else (emit symb-ast-opts))))
 
-(defmethod iface/emit-args :l/cpp
+(defmethod iface/emit-args ::l/cpp
   [ast-opts]
   {:pre [(-> ast-opts :ast :raw-forms seq)]}
   (let [ast (:ast ast-opts)
@@ -288,7 +280,7 @@
         emitted-args (map (partial emit-arg raw-form-arg-symbol-ast-opts) raw-form-arg-symbols)]
     emitted-args))
 
-(defmethod iface/emit-static-call :l/cpp
+(defmethod iface/emit-static-call ::l/cpp
   [ast-opts]
   {:pre [(= :static-call (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
@@ -310,14 +302,14 @@
 
 ;; other
 
-(defmethod iface/emit-local :l/cpp
+(defmethod iface/emit-local ::l/cpp
   [ast-opts]
   {:pre [(= :local (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
         form (:form ast)]
     (str (name form))))
 
-(defmethod iface/emit-var :l/cpp
+(defmethod iface/emit-var ::l/cpp
   [ast-opts]
   {:pre [(= :var (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
@@ -326,7 +318,7 @@
 
 ;; functions
 
-(defmethod iface/emit-defn-arg :l/cpp
+(defmethod iface/emit-defn-arg ::l/cpp
   [ast-opts]
   {:pre [(= :binding (-> ast-opts :ast :op))]}
   (let [ast (:ast ast-opts)
@@ -343,7 +335,7 @@
                                   (string/join " "))]
     identifier-signature))
 
-(defmethod iface/emit-defn-args :l/cpp
+(defmethod iface/emit-defn-args ::l/cpp
   [ast-opts]
   ;; Note: can have empty args
   ;;{:pre [(seq (:ast ast-opts))]}
@@ -354,7 +346,7 @@
                           (map emit-defn-arg))]
     (string/join ", " arg-ast-opts)))
 
-(defmethod iface/emit-defn :l/cpp
+(defmethod iface/emit-defn ::l/cpp
   [ast-opts]
   {:pre [(= :def (-> ast-opts :ast :op))]}
   (let [ast (:ast ast-opts)
@@ -414,7 +406,7 @@
 
 ;; classes (or modules or namespaces)
 
-(defmethod iface/emit-defclass :l/cpp
+(defmethod iface/emit-defclass ::l/cpp
   [ast-opts]
   {:pre [(= :invoke (-> ast-opts :ast :op))]}
   (let [ast (:ast ast-opts)
@@ -452,7 +444,7 @@
 
 ;; enum classes
 
-(defmethod iface/emit-defenum :l/cpp
+(defmethod iface/emit-defenum ::l/cpp
   [ast-opts]
   {:pre [(= :invoke (-> ast-opts :ast :op))]}
   (let [ast (:ast ast-opts)
@@ -486,7 +478,7 @@
 
 ;; return statement
 
-(defmethod iface/emit-return :l/cpp
+(defmethod iface/emit-return ::l/cpp
   [ast-opts]
   {:pre [(= :invoke (-> ast-opts :ast :op))]}
   (let [ast (:ast ast-opts)
@@ -502,7 +494,7 @@
 
 ;; deref
 
-(defmethod iface/emit-deref :l/cpp
+(defmethod iface/emit-deref ::l/cpp
   [ast-opts]
   {:pre [(= :invoke (-> ast-opts :ast :op))]}
   (let [ast (:ast ast-opts)
@@ -513,7 +505,7 @@
 
 ;; not
 
-(defmethod iface/emit-not :l/cpp
+(defmethod iface/emit-not ::l/cpp
   [ast-opts]
   {:pre [(= :invoke (-> ast-opts :ast :op))]}
   (let [ast (:ast ast-opts)
@@ -525,11 +517,11 @@
 
 ;; fn invocations
 
-(defmethod iface/emit-invoke-arg :l/cpp
+(defmethod iface/emit-invoke-arg ::l/cpp
   [ast-opts]
   (emit ast-opts))
 
-(defmethod iface/emit-invoke-args :l/cpp
+(defmethod iface/emit-invoke-args ::l/cpp
   [ast-opts]
   (let [ast (:ast ast-opts)
         args-ast (:args ast)
@@ -537,7 +529,7 @@
         emitted-args (map emit-invoke-arg args-ast-opts)]
     emitted-args))
 
-(defmethod iface/emit-str-arg :l/cpp
+(defmethod iface/emit-str-arg ::l/cpp
   [ast-opts]
   (let [ast (:ast ast-opts)
         tag-class (:tag ast)
@@ -550,7 +542,7 @@
                              emitted-arg)]
     casted-emitted-arg))
 
-(defmethod iface/emit-str-args :l/cpp
+(defmethod iface/emit-str-args ::l/cpp
   [ast-opts]
   (let [ast (:ast ast-opts)
         args-ast (:args ast)
@@ -558,7 +550,7 @@
         emitted-args (map emit-str-arg args-ast-opts)]
     emitted-args))
 
-(defmethod iface/emit-str :l/cpp
+(defmethod iface/emit-str ::l/cpp
   [ast-opts]
   (let [ast (:ast ast-opts)
         arg-strs (emit-str-args ast-opts)
@@ -566,7 +558,7 @@
         expr (apply str expr-parts)]
     expr))
 
-(defmethod iface/emit-println :l/cpp
+(defmethod iface/emit-println ::l/cpp
   [ast-opts]
   (let [ast (:ast ast-opts)
         arg-strs (emit-invoke-args ast-opts)
@@ -574,13 +566,13 @@
         command-expr (apply str (interpose " << " all-arg-strs))]
     command-expr))
 
-(defmethod iface/emit-new-strbuf :l/cpp 
+(defmethod iface/emit-new-strbuf ::l/cpp 
   [ast-opts]
   ;; Note: currently assuming that there are 0 args to StringBuffer,
   ;; but can support args later
   "\"\"")
 
-(defmethod iface/emit-prepend-strbuf :l/cpp 
+(defmethod iface/emit-prepend-strbuf ::l/cpp 
   [ast-opts]
   ;; Note: need to swap order of args to get string concatenation
   ;; with args in correct order. Assuming there are only 2 args
@@ -597,7 +589,7 @@
         rhs-expr (emit-str new-ast-opts)]
     rhs-expr))
 
-(defmethod iface/emit-tostring-strbuf :l/cpp 
+(defmethod iface/emit-tostring-strbuf ::l/cpp 
   [ast-opts]
   (let [ast (:ast ast-opts)
         args (:args ast)
@@ -606,7 +598,7 @@
     obj-name))
 
 
-(defmethod iface/emit-invoke :l/cpp 
+(defmethod iface/emit-invoke ::l/cpp 
   [ast-opts]
   {:pre [(= :invoke (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
@@ -650,7 +642,7 @@
 
 ;; loops (ex: while, doseq)
 
-(defmethod iface/emit-while :l/cpp
+(defmethod iface/emit-while ::l/cpp
   [ast-opts]
   {:pre [(= :loop (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
@@ -681,7 +673,7 @@
         while-str (string/join "\n" while-parts)]
     while-str))
 
-(defmethod iface/emit-loop :l/cpp
+(defmethod iface/emit-loop ::l/cpp
   [ast-opts]
   {:pre [(= :loop (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
@@ -692,7 +684,7 @@
 
 ;; new
 
-(defmethod iface/emit-new :l/cpp
+(defmethod iface/emit-new ::l/cpp
   [ast-opts]
   {:pre [(= :new (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
@@ -710,7 +702,7 @@
 
 ;; entry point
 
-(defmethod iface/emit :l/cpp
+(defmethod iface/emit ::l/cpp
   [ast-opts]
   (let [ast (:ast ast-opts)]
     ;; TODO: some multimethod ?
