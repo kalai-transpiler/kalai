@@ -1,7 +1,24 @@
 (ns clj-icu-test.emit.api
   (:require [clj-icu-test.emit.interface :as iface]
             [clj-icu-test.emit.impl.cpp :as cpp]
-            [clj-icu-test.emit.impl.java :as java]))
+            [clj-icu-test.emit.impl.java :as java]
+            [clj-icu-test.emit.impl.curlybrace :as curlybrace]))
+
+(defn emit-type
+  [val-opts]
+  (iface/emit-type val-opts))
+
+(defn is-number-type?
+  [val-opts]
+  (iface/is-number-type? val-opts))
+
+(defn emit-statement
+  [val-opts]
+  (iface/emit-statement val-opts))
+
+(defn can-become-statement
+  [val-opts]
+  (iface/can-become-statement val-opts))
 
 (defn emit-const
   [ast-opts]

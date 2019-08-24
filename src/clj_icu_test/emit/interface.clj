@@ -12,7 +12,17 @@
 ;; multimethod specs
 ;;
 
+(defmulti
+  ^{:doc "Might return nil"}
+  emit-type lang)
 
+(defmulti is-number-type? lang)
+
+(defmulti emit-statement lang)
+
+(defmulti
+  ^{:doc "indicate whether input is a string representing a statement"}
+  can-become-statement lang)
 
 (defmulti emit-const lang)
 
