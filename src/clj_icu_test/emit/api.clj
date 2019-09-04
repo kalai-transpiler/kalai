@@ -5,8 +5,8 @@
             [clj-icu-test.emit.impl.curlybrace :as curlybrace]))
 
 (defn emit-type
-  [val-opts]
-  (iface/emit-type val-opts))
+  [ast-opts]
+  (iface/emit-type ast-opts))
 
 (defn is-number-type?
   [val-opts]

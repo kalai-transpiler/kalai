@@ -66,13 +66,17 @@
   [ast-opts]
   (let [ast (:ast ast-opts)
         op-code (:op ast) 
-        type-class (or (get-in ast [:meta :val :tag])
-                       (get-in ast [:init :env :tag])
-                       (and (= :binding op-code)
-                            (get ast :tag)))
-        type-class-opts (-> ast-opts
-                            (assoc :val type-class)
-                            map->AnyValOpts)
+        type-class-ast (cond
+                         (get-in ast [:meta :val :tag])
+                         (get-in ast [:meta :val])
+
+                         (get-in ast [:init :env :tag])
+                         (get-in ast [:init :env])
+                         
+                         (and (= :binding op-code)
+                              (get ast :tag))
+                         ast)
+        type-class-opts (assoc ast-opts :ast type-class-ast) 
         type-str (emit-type type-class-opts)
         identifier (when-let [identifer-symbol (or (get-in ast [:env :form])
                                                    (case op-code
@@ -230,11 +234,8 @@
   [ast-opts]
   {:pre [(= :binding (-> ast-opts :ast :op))]}
   (let [ast (:ast ast-opts)
-        arg-name (-> ast :form name)
-        type-class (-> ast :tag)
-        type-class-opts (-> ast-opts
-                            (assoc :val type-class)
-                            map->AnyValOpts)
+        arg-name (-> ast :form name) 
+        type-class-opts ast-opts 
         type-str (emit-type type-class-opts)
         identifier-signature-parts [type-str
                                     arg-name]

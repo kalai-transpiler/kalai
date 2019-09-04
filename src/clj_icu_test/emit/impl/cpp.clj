@@ -7,9 +7,10 @@
             [clojure.tools.analyzer.jvm :as az]))
 
 (defmethod emit-type ::l/cpp
-  [val-opts]
-  {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
-  (let [class (:val val-opts)]
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        class (or (:return-tag ast)
+                  (:tag ast))]
     (when class
       (cond
         ;; TODO: uncomment the primitive type class code unless and until we want to have
@@ -107,13 +108,9 @@
   {:pre [(= :def (-> ast-opts :ast :op))]}
   (let [ast (:ast ast-opts)
         fn-name (:name ast)
-        fn-ast (:init ast)
-        fn-return-type-class (-> fn-ast
-                                 :return-tag)
-        fn-return-type-opts (-> ast-opts
-                                (assoc :val fn-return-type-class)
-                                map->AnyValOpts)
-        fn-return-type (emit-type fn-return-type-opts)
+        fn-ast (:init ast) 
+        fn-ast-opts (assoc ast-opts :ast fn-ast)
+        fn-return-type (emit-type fn-ast-opts) 
         ;; Note: currently not dealing with fn overloading (variadic fns in Clojure),
         ;; so just take the first fn method
         fn-method-first (-> fn-ast
