@@ -34,6 +34,12 @@
 
 (defmulti emit-reset! lang)
 
+(defmulti emit-assignment-vector lang)
+
+(defmulti get-assignment-identifier-symbol lang)
+
+(defmulti get-assignment-type-class-ast lang)
+
 (defmulti
   ^{:doc "To be used by both 'def' and any bindings block of a form (ex: let)
   Might return nil"}

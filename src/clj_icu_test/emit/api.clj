@@ -36,6 +36,18 @@
   [ast-opts]
   (iface/emit-reset! ast-opts))
 
+(defn emit-assignment-vector
+  [ast-opts]
+  (iface/emit-assignment-vector ast-opts))
+
+(defn get-assignment-type-class-ast
+  [ast-opts]
+  (iface/get-assignment-type-class-ast ast-opts))
+
+(defn get-assignment-identifier-symbol
+  [ast-opts]
+  (iface/get-assignment-identifier-symbol ast-opts))
+
 (defn emit-assignment
   [ast-opts]
   (iface/emit-assignment ast-opts))

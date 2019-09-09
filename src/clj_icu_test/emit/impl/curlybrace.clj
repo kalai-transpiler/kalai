@@ -64,38 +64,59 @@
         statement (emit-statement statement-parts-opts)]
     statement))
 
-(defmethod iface/emit-assignment ::l/curlybrace
+(defmethod iface/get-assignment-type-class-ast ::l/curlybrace
   [ast-opts]
   (let [ast (:ast ast-opts)
-        op-code (:op ast) 
-        type-class-ast (cond
-                         (get-in ast [:meta :val :tag])
-                         (get-in ast [:meta :val])
+        op-code (:op ast)]
+    (cond
+      (get-in ast [:meta :val :tag])
+      (get-in ast [:meta :val])
 
-                         (get-in ast [:init :env :tag])
-                         (get-in ast [:init :env])
-                         
-                         (and (= :binding op-code)
-                              (get ast :tag))
-                         ast)
-        type-class-opts (assoc ast-opts :ast type-class-ast) 
-        type-str (emit-type type-class-opts)
-        identifier (when-let [identifer-symbol (or (get-in ast [:env :form])
-                                                   (case op-code
-                                                     :binding (get ast :form)
-                                                     :def (get ast :name)))]
-                     (str identifer-symbol))
-        expression (emit (assoc ast-opts :ast (:init ast)))
-        statement-parts [type-str
-                         identifier
-                         "="
-                         expression]
-        statement-parts-opts (-> ast-opts
-                                 (assoc :val statement-parts)
-                                 map->AnyValOpts)
-        statement (emit-statement statement-parts-opts)]
-    statement))
+      (get-in ast [:init :env :tag])
+      (get-in ast [:init :en])
+      
+      (and (= :binding op-code)
+           (get ast :tag))
+      ast
 
+      (:type ast)
+      ast
+
+      (get-in ast [:meta :val :type])
+      (get-in ast [:meta :val]))))
+
+(defmethod iface/get-assignment-identifier-symbol ::l/curlybrace
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        op-code (:op ast)
+        identifier-symbol (or (get-in ast [:env :form])
+                              (case op-code
+                                :binding (get ast :form)
+                                :def (get ast :name)))]
+    identifier-symbol))
+
+(defmethod iface/emit-assignment ::l/curlybrace
+  [ast-opts]
+  (let [ast (:ast ast-opts)]
+    (if (= :vector (or (get-in ast [:init :type])
+                       (get-in ast [:init :op])))
+      (emit-assignment-vector ast-opts)
+      (let [op-code (:op ast)
+            type-class-ast (get-assignment-type-class-ast ast-opts)
+            type-class-opts (assoc ast-opts :ast type-class-ast) 
+            type-str (emit-type type-class-opts)
+            identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
+                         (str identifer-symbol))
+            expression (emit (assoc ast-opts :ast (:init ast)))
+            statement-parts [type-str
+                             identifier
+                             "="
+                             expression]
+            statement-parts-opts (-> ast-opts
+                                     (assoc :val statement-parts)
+                                     map->AnyValOpts)
+            statement (emit-statement statement-parts-opts)]
+        statement))))
 
 (defmethod iface/emit-def ::l/curlybrace
   [ast-opts]

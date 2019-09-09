@@ -9,58 +9,71 @@
 (defmethod iface/emit-type ::l/cpp
   [ast-opts]
   (let [ast (:ast ast-opts)
+        type-val (:type ast)
         class (or (:return-tag ast)
                   (:tag ast))]
-    (when class
-      (cond
-        ;; TODO: uncomment the primitive type class code unless and until we want to have
-        ;; implicit type signatures applied for bindings in a let block.
-        ;; Note: the problem is that the analyzer automatically infers the type of the
-        ;; binding symbol in a let binding block in :tag and :o-tag even if there is no
-        ;; type hint, whereas it doesn't do so in other places of binding (ex: def)
-        ;; (= Long/TYPE class) "long"
-        ;; (= Integer/TYPE class) "int"
-        ;; (= Character/TYPE class) "char"
-        ;; (= Boolean/TYPE class) "boolean"
-        (= Void/TYPE class) "void"
-        :else (let [canonical-name (.getCanonicalName class)] 
-                (cond                
-                  ;; this is to prevent the analyzer from auto-tagging the type classes of
-                  ;; symbols in a binding form in a way that is currently being assumed to
-                  ;; be unwanted in the emitted output.
-                  ;; If we need to actually emit a type signature of Object in the future,
-                  ;; we can subclass Object to a custom type (ex: ExplicitlyAnObject.java)
-                  ;; and tell users to use that new class in their type hints if they want
-                  ;; a type signature of java.lang.Object in emitted Java output.
-                  (#{"java.lang.Object"
-                     "java.lang.Number"} canonical-name)
-                  nil
+    (if type-val
+      (do
+        ;; support list types only, for now
+        (assert (sequential? type-val))
+        (assert (= java.util.List (first type-val)))
+        (let [type-parameter-val (second type-val)
+              _ (assert (sequential? type-parameter-val))
+              type-parameter-class (first type-parameter-val)
+              type-parameter-class-ast-opts (assoc ast-opts :ast {:tag type-parameter-class})
+              type-parameter (emit-type type-parameter-class-ast-opts) 
+              type (str "std::vector<" type-parameter ">")] 
+            type))
+      (when class
+        (cond
+          ;; TODO: uncomment the primitive type class code unless and until we want to have
+          ;; implicit type signatures applied for bindings in a let block.
+          ;; Note: the problem is that the analyzer automatically infers the type of the
+          ;; binding symbol in a let binding block in :tag and :o-tag even if there is no
+          ;; type hint, whereas it doesn't do so in other places of binding (ex: def)
+          ;; (= Long/TYPE class) "long"
+          ;; (= Integer/TYPE class) "int"
+          ;; (= Character/TYPE class) "char"
+          ;; (= Boolean/TYPE class) "boolean"
+          (= Void/TYPE class) "void"
+          :else (let [canonical-name (.getCanonicalName class)] 
+                  (cond                
+                    ;; this is to prevent the analyzer from auto-tagging the type classes of
+                    ;; symbols in a binding form in a way that is currently being assumed to
+                    ;; be unwanted in the emitted output.
+                    ;; If we need to actually emit a type signature of Object in the future,
+                    ;; we can subclass Object to a custom type (ex: ExplicitlyAnObject.java)
+                    ;; and tell users to use that new class in their type hints if they want
+                    ;; a type signature of java.lang.Object in emitted Java output.
+                    (#{"java.lang.Object"
+                       "java.lang.Number"} canonical-name)
+                    nil
 
-                  (.startsWith canonical-name "java.lang.")
-                  (let [java-cpp-type-map {java.lang.Integer "int"
-                                           int "int"
-                                           java.lang.Long "long int"
-                                           long "long int"
-                                           java.lang.Float "float"
-                                           java.lang.Double "double float"
-                                           java.lang.Boolean "bool"
-                                           boolean "bool"
-                                           java.lang.String "std::string"
-                                           java.lang.StringBuffer "std::string"}]
-                    (when-let [transformed-type (get java-cpp-type-map class)]
-                      transformed-type))
+                    (.startsWith canonical-name "java.lang.")
+                    (let [java-cpp-type-map {java.lang.Integer "int"
+                                             int "int"
+                                             java.lang.Long "long int"
+                                             long "long int"
+                                             java.lang.Float "float"
+                                             java.lang.Double "double float"
+                                             java.lang.Boolean "bool"
+                                             boolean "bool"
+                                             java.lang.String "std::string"
+                                             java.lang.StringBuffer "std::string"}]
+                      (when-let [transformed-type (get java-cpp-type-map class)]
+                        transformed-type))
 
-                  ;; this when condition prevents Clojure-specific (?) classes like "long",
-                  ;; "int", etc. that are automatically tagged by the analyzer on various
-                  ;; binding symbols from becoming included in the emitted output.  This
-                  ;; means that you need to used the boxed versions in type hints like
-                  ;; ^Long, ^Integer, etc. in order to create type signatures in the emitted
-                  ;; output.
-                  (when (.getPackage class))
-                  canonical-name
+                    ;; this when condition prevents Clojure-specific (?) classes like "long",
+                    ;; "int", etc. that are automatically tagged by the analyzer on various
+                    ;; binding symbols from becoming included in the emitted output.  This
+                    ;; means that you need to used the boxed versions in type hints like
+                    ;; ^Long, ^Integer, etc. in order to create type signatures in the emitted
+                    ;; output.
+                    (when (.getPackage class))
+                    canonical-name
 
-                  :else
-                  nil))))))
+                    :else
+                    nil)))))))
 
 (defmethod iface/is-number-type? ::l/cpp
   [val-opts]
@@ -104,6 +117,39 @@
             (and (not= \; last-char)
                  (not= \} last-char)))]
       result)))
+
+(defmethod iface/emit-assignment-vector ::l/cpp
+  [ast-opts]
+  {:pre [(or (and (= :const (-> ast-opts :ast :init :op))
+                  (= :vector (-> ast-opts :ast :init :type)))
+             (= :vector (-> ast-opts :ast :init :op)))]}
+  (let [ast (:ast ast-opts)
+        type-class-ast (get-assignment-type-class-ast ast-opts)
+        type-class-ast-opts (assoc ast-opts :ast type-class-ast)
+        type-str (emit-type type-class-ast-opts) 
+        identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
+                     (str identifer-symbol))
+        expr-ast (:init ast)
+        item-asts (if-not (:literal? expr-ast)
+                    (:items expr-ast)
+                    (let [item-vals (:val expr-ast)]
+                      (map az/analyze item-vals)))
+        item-strs (map emit (map (partial assoc ast-opts :ast) item-asts))
+        ;; TODO: figure out how to auto-import java.util.Arrays
+        item-strs-comma-separated (string/join ", " item-strs)
+        expr-parts ["{"
+                    item-strs-comma-separated
+                    "}"]
+        expr (apply str expr-parts)
+        statement-parts [type-str
+                         identifier
+                         "="
+                         expr]
+        statement-parts-opts (-> ast-opts
+                                 (assoc :val statement-parts)
+                                 map->AnyValOpts)
+        statement (emit-statement statement-parts-opts)]
+    statement))
 
 (defmethod iface/emit-defn ::l/cpp
   [ast-opts]
