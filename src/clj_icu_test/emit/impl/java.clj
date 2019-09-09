@@ -6,7 +6,7 @@
             [clojure.string :as string]
             [clojure.tools.analyzer.jvm :as az]))
 
-(defmethod emit-type ::l/java
+(defmethod iface/emit-type ::l/java
   [ast-opts]
   (let [ast (:ast ast-opts)
         class (or (:return-tag ast)
@@ -51,7 +51,7 @@
                   :else
                   nil))))))
 
-(defmethod emit-statement ::l/java
+(defmethod iface/emit-statement ::l/java
   [val-opts]
   {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
   (let [statement-parts (:val val-opts)]
@@ -67,7 +67,7 @@
                 (string/join " "))
            ";"))))
 
-(defmethod can-become-statement ::l/java
+(defmethod iface/can-become-statement ::l/java
   [val-opts]
   {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
   (let [expression (:val val-opts)]

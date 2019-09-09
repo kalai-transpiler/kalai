@@ -6,7 +6,7 @@
             [clojure.string :as string]
             [clojure.tools.analyzer.jvm :as az]))
 
-(defmethod emit-type ::l/cpp
+(defmethod iface/emit-type ::l/cpp
   [ast-opts]
   (let [ast (:ast ast-opts)
         class (or (:return-tag ast)
@@ -62,7 +62,7 @@
                   :else
                   nil))))))
 
-(defmethod is-number-type? ::l/cpp
+(defmethod iface/is-number-type? ::l/cpp
   [val-opts]
   {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
   (let [class (:val val-opts)]
@@ -77,7 +77,7 @@
                             (get number-classes class))]
         is-number-type))))
 
-(defmethod emit-statement ::l/cpp
+(defmethod iface/emit-statement ::l/cpp
   [val-opts]
   {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
   (let [statement-parts (:val val-opts)]
@@ -93,7 +93,7 @@
                 (string/join " "))
            ";"))))
 
-(defmethod can-become-statement ::l/cpp
+(defmethod iface/can-become-statement ::l/cpp
   [val-opts]
   {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
   (let [expression (:val val-opts)]
