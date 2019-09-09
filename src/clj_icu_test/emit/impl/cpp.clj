@@ -83,9 +83,11 @@
   (let [statement-parts (:val val-opts)]
     (if (string? statement-parts)
       (let [statement statement-parts]
-        (str (indent-str-curr-level)
-             statement
-             ";")) 
+        (if (= \; (last statement))
+          statement
+          (str (indent-str-curr-level)
+               statement
+               ";"))) 
       (str (indent-str-curr-level)
            (->> statement-parts
                 (keep identity)

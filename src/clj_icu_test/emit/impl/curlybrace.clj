@@ -29,7 +29,9 @@
         stmt-emitted-lines (map emit stmts-ast-opts)
         last-stmt (:ret ast)
         last-emitted-line (emit (assoc ast-opts :ast last-stmt))
-        all-lines (concat stmt-emitted-lines [last-emitted-line])]
+        last-emitted-line-val-opts (map->AnyValOpts (assoc ast-opts :val last-emitted-line))
+        last-emitted-line-as-stmt (emit-statement last-emitted-line-val-opts)
+        all-lines (concat stmt-emitted-lines [last-emitted-line-as-stmt])]
     all-lines))
 
 (defmethod iface/emit-atom ::l/curlybrace
