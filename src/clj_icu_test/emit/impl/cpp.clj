@@ -9,14 +9,12 @@
 (defmethod iface/emit-complex-type ::l/cpp
   [ast-opts]
   (let [ast (:ast ast-opts)
-        type-val (:type ast)]
+        type-val (:mtype ast)]
     ;; support list types only, for now
-    (assert (sequential? type-val))
     (assert (= java.util.List (first type-val)))
     (let [type-parameter-val (second type-val)
           _ (assert (sequential? type-parameter-val))
-          type-parameter-class (first type-parameter-val)
-          type-parameter-class-ast-opts (assoc ast-opts :ast {:tag type-parameter-class})
+          type-parameter-class-ast-opts (assoc-in ast-opts [:ast :mtype] type-parameter-val)
           type-parameter (emit-type type-parameter-class-ast-opts) 
           type (str "std::vector<" type-parameter ">")] 
       type)))
@@ -25,7 +23,8 @@
   [ast-opts]
   (let [ast (:ast ast-opts)
         class (or (:return-tag ast)
-                  (:tag ast))]
+                  (:tag ast)
+                  (:mtype ast))]
     (when class
       (cond
         ;; TODO: uncomment the primitive type class code unless and until we want to have
@@ -120,6 +119,25 @@
                  (not= \} last-char)))]
       result)))
 
+(defmethod iface/emit-const-complex-type [::l/cpp :vector]
+  [ast-opts]
+  {:pre [(is-complex-type? ast-opts)
+         (= :vector (or (-> ast-opts :ast :type)
+                        (-> ast-opts :ast :op)))]}
+  (let [ast (:ast ast-opts)
+        item-asts (if-not (:literal? ast)
+                    (:items ast)
+                    (let [item-vals (:val ast)]
+                      (map az/analyze item-vals)))
+        item-strs (map emit (map (partial assoc ast-opts :ast) item-asts))
+        ;; TODO: figure out how to auto-import java.util.Arrays
+        item-strs-comma-separated (string/join ", " item-strs)
+        expr-parts ["{"
+                    item-strs-comma-separated
+                    "}"]
+        expr (apply str expr-parts)]
+    expr))
+
 (defmethod iface/emit-assignment-vector ::l/cpp
   [ast-opts]
   {:pre [(or (and (= :const (-> ast-opts :ast :init :op))
@@ -131,18 +149,8 @@
         type-str (emit-type type-class-ast-opts) 
         identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
                      (str identifer-symbol))
-        expr-ast (:init ast)
-        item-asts (if-not (:literal? expr-ast)
-                    (:items expr-ast)
-                    (let [item-vals (:val expr-ast)]
-                      (map az/analyze item-vals)))
-        item-strs (map emit (map (partial assoc ast-opts :ast) item-asts))
-        ;; TODO: figure out how to auto-import java.util.Arrays
-        item-strs-comma-separated (string/join ", " item-strs)
-        expr-parts ["{"
-                    item-strs-comma-separated
-                    "}"]
-        expr (apply str expr-parts)
+        expr-ast-opts (update-in ast-opts [:ast] :init)
+        expr (emit-const-complex-type expr-ast-opts) 
         statement-parts [type-str
                          identifier
                          "="

@@ -32,6 +32,10 @@
   [val-opts]
   (iface/can-become-statement val-opts))
 
+(defn emit-const-complex-type
+  [ast-opts]
+  (iface/emit-const-complex-type ast-opts))
+
 (defn emit-const
   [ast-opts]
   (iface/emit-const ast-opts))

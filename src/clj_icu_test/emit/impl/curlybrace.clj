@@ -15,10 +15,12 @@
   [ast-opts]
   (let [ast (:ast ast-opts)
         ;; TODO: find if it is possible to re-use code from tools.analyzer to determine scalar vs. complex/aggregate data
-        ast-type (:type ast)
-        is-type-user-defined (and (not (nil? ast-type))
-                                  (seqable? ast-type))
-        non-scalar-types #{:seq :vector :map :set}
+        user-type (:mtype ast)
+        is-type-user-defined (and (not (nil? user-type))
+                                  (seqable? user-type))
+        ast-type (or (:type ast)
+                     (:op ast))
+        non-scalar-types #{:seq :vector :map :set :record}
         is-non-scalar-type (get non-scalar-types ast-type)
         is-complex-type (or is-non-scalar-type
                             is-type-user-defined)]
@@ -27,15 +29,23 @@
 (defmethod iface/emit-type ::l/curlybrace
   [ast-opts]
   (if (is-complex-type? ast-opts)
-    (emit-complex-type ast-opts)
+    (do
+      (let [type-val (-> ast-opts :ast :mtype)]
+        (assert (sequential? type-val))
+        (if (= 1 (count type-val))
+          (let [type-as-tag-ast-opts (update-in ast-opts [:ast :mtype] first)]
+            (emit-type type-as-tag-ast-opts))
+          (emit-complex-type ast-opts))))
     (emit-scalar-type ast-opts)))
 
 (defmethod iface/emit-const ::l/curlybrace
   [ast-opts]
   {:pre [(= :const (:op (:ast ast-opts)))
          (:literal? (:ast ast-opts))]}
-  (let [ast (:ast ast-opts)]
-    (pr-str (:val ast))))
+  (if (is-complex-type? ast-opts)
+    (emit-const-complex-type ast-opts)
+    (let [ast (:ast ast-opts)]
+      (pr-str (:val ast)))))
 
 (defmethod iface/emit-do ::l/curlybrace
   [ast-opts]
@@ -90,7 +100,7 @@
       (get-in ast [:meta :val])
 
       (get-in ast [:init :env :tag])
-      (get-in ast [:init :en])
+      (get-in ast [:init :env])
       
       (and (= :binding op-code)
            (get ast :tag))
@@ -99,7 +109,7 @@
       (:type ast)
       ast
 
-      (get-in ast [:meta :val :type])
+      (get-in ast [:meta :val :mtype])
       (get-in ast [:meta :val]))))
 
 (defmethod iface/get-assignment-identifier-symbol ::l/curlybrace

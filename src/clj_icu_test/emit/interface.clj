@@ -8,6 +8,19 @@
   [ast-opts & other-args]
   (:lang ast-opts))
 
+(defn const-complex-type-dispatch
+  [ast-opts]
+  (letfn [(const-complex-type-fn
+            [ast-opts]
+            (or (-> ast-opts :ast :type)
+                (-> ast-opts :ast :op)))
+          (get-dispatch-fn
+            [ast-opts]
+            (juxt lang const-complex-type-fn))]
+    (let [dispatch-fn (get-dispatch-fn ast-opts)
+          dispatch-val (dispatch-fn ast-opts)]
+      dispatch-val)))
+
 ;;
 ;; multimethod specs
 ;;
@@ -35,6 +48,8 @@
 (defmulti
   ^{:doc "indicate whether input is a string representing a statement"}
   can-become-statement lang)
+
+(defmulti emit-const-complex-type const-complex-type-dispatch)
 
 (defmulti emit-const lang)
 

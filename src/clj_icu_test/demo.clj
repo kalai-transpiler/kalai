@@ -1,5 +1,5 @@
 (ns clj-icu-test.demo
-  (:require [clj-icu-test.core :refer :all]))
+  (:require [clj-icu-test.common :refer :all]))
 
 (defclass "NumFmt"
   (defn format ^String [^Integer num]
