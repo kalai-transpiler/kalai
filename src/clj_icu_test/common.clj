@@ -11,8 +11,6 @@
 
 (def INDENT-LEVEL-INCREMENT 2)
 
-(def LANGS {:java :cpp})
-
 ;;
 ;; indentation - global state and fns
 ;;
