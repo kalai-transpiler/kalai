@@ -6,63 +6,65 @@
             [clojure.string :as string]
             [clojure.tools.analyzer.jvm :as az]))
 
-(defmethod iface/emit-type ::l/java
+(defmethod iface/emit-complex-type ::l/java
   [ast-opts]
   (let [ast (:ast ast-opts)
-        type-val (:type ast)
+        type-val (:type ast)]
+    ;; support list types only, for now
+    (assert (sequential? type-val))
+    (assert (= java.util.List (first type-val)))
+    (let [type-parameter-val (second type-val)
+          _ (assert (sequential? type-parameter-val))
+          type-parameter-class (first type-parameter-val)
+          type-parameter-class-ast-opts (assoc ast-opts :ast {:tag type-parameter-class})
+          type-parameter (emit-type type-parameter-class-ast-opts)
+          type (str "List<" type-parameter ">")]
+      type)))
+
+(defmethod iface/emit-scalar-type ::l/java
+  [ast-opts]
+  (let [ast (:ast ast-opts)
         class (or (:return-tag ast)
                   (:tag ast))]
-    (if type-val
-      (do
-        ;; support list types only, for now
-        (assert (sequential? type-val))
-        (assert (= java.util.List (first type-val)))
-        (let [type-parameter-val (second type-val)
-              _ (assert (sequential? type-parameter-val))
-              type-parameter-class (first type-parameter-val)
-              type-parameter-class-ast-opts (assoc ast-opts :ast {:tag type-parameter-class})
-              type-parameter (emit-type type-parameter-class-ast-opts)
-              type (str "List<" type-parameter ">")]
-          type))
-      (when class
-        (cond
-          ;; TODO: uncomment the primitive type class code unless and until we want to have
-          ;; implicit type signatures applied for bindings in a let block.
-          ;; Note: the problem is that the analyzer automatically infers the type of the
-          ;; binding symbol in a let binding block in :tag and :o-tag even if there is no
-          ;; type hint, whereas it doesn't do so in other places of binding (ex: def)
-          ;; (= Long/TYPE class) "long"
-          ;; (= Integer/TYPE class) "int"
-          ;; (= Character/TYPE class) "char"
-          ;; (= Boolean/TYPE class) "boolean"
-          (= Void/TYPE class) "void"
-          :else (let [canonical-name (.getCanonicalName class)] 
-                  (cond                
-                    ;; this is to prevent the analyzer from auto-tagging the type classes of
-                    ;; symbols in a binding form in a way that is currently being assumed to
-                    ;; be unwanted in the emitted output.
-                    ;; If we need to actually emit a type signature of Object in the future,
-                    ;; we can subclass Object to a custom type (ex: ExplicitlyAnObject.java)
-                    ;; and tell users to use that new class in their type hints if they want
-                    ;; a type signature of java.lang.Object in emitted Java output.
-                    (#{"java.lang.Object"
-                       "java.lang.Number"} canonical-name)
-                    nil
+    (when class
+      (cond
+        ;; TODO: uncomment the primitive type class code unless and until we want to have
+        ;; implicit type signatures applied for bindings in a let block.
+        ;; Note: the problem is that the analyzer automatically infers the type of the
+        ;; binding symbol in a let binding block in :tag and :o-tag even if there is no
+        ;; type hint, whereas it doesn't do so in other places of binding (ex: def)
+        ;; (= Long/TYPE class) "long"
+        ;; (= Integer/TYPE class) "int"
+        ;; (= Character/TYPE class) "char"
+        ;; (= Boolean/TYPE class) "boolean"
+        (= Void/TYPE class) "void"
+        :else (let [canonical-name (.getCanonicalName class)] 
+                (cond                
+                  ;; this is to prevent the analyzer from auto-tagging the type classes of
+                  ;; symbols in a binding form in a way that is currently being assumed to
+                  ;; be unwanted in the emitted output.
+                  ;; If we need to actually emit a type signature of Object in the future,
+                  ;; we can subclass Object to a custom type (ex: ExplicitlyAnObject.java)
+                  ;; and tell users to use that new class in their type hints if they want
+                  ;; a type signature of java.lang.Object in emitted Java output.
+                  (#{"java.lang.Object"
+                     "java.lang.Number"} canonical-name)
+                  nil
 
-                    (.startsWith canonical-name "java.lang.")
-                    (subs canonical-name 10)
+                  (.startsWith canonical-name "java.lang.")
+                  (subs canonical-name 10)
 
-                    ;; this when condition prevents Clojure-specific (?) classes like "long",
-                    ;; "int", etc. that are automatically tagged by the analyzer on various
-                    ;; binding symbols from becoming included in the emitted output.  This
-                    ;; means that you need to used the boxed versions in type hints like
-                    ;; ^Long, ^Integer, etc. in order to create type signatures in the emitted
-                    ;; output.
-                    (when (.getPackage class))
-                    canonical-name
+                  ;; this when condition prevents Clojure-specific (?) classes like "long",
+                  ;; "int", etc. that are automatically tagged by the analyzer on various
+                  ;; binding symbols from becoming included in the emitted output.  This
+                  ;; means that you need to used the boxed versions in type hints like
+                  ;; ^Long, ^Integer, etc. in order to create type signatures in the emitted
+                  ;; output.
+                  (when (.getPackage class))
+                  canonical-name
 
-                    :else
-                    nil)))))))
+                  :else
+                  nil))))))
 
 (defmethod iface/emit-statement ::l/java
   [val-opts]

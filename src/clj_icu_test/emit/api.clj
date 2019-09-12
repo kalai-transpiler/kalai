@@ -4,6 +4,18 @@
             [clj-icu-test.emit.impl.java :as java]
             [clj-icu-test.emit.impl.curlybrace :as curlybrace]))
 
+(defn is-complex-type?
+  [ast-opts]
+  (iface/is-complex-type? ast-opts))
+
+(defn emit-complex-type
+  [ast-opts]
+  (iface/emit-complex-type ast-opts))
+
+(defn emit-scalar-type
+  [ast-opts]
+  (iface/emit-complex-type ast-opts))
+
 (defn emit-type
   [ast-opts]
   (iface/emit-type ast-opts))

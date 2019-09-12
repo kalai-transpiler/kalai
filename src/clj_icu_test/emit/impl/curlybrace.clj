@@ -11,7 +11,24 @@
 ;; (could be used for C++, Java, and/or others)
 ;;
 
+(defmethod iface/is-complex-type? ::l/curlybrace
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        ;; TODO: find if it is possible to re-use code from tools.analyzer to determine scalar vs. complex/aggregate data
+        ast-type (:type ast)
+        is-type-user-defined (and (not (nil? ast-type))
+                                  (seqable? ast-type))
+        non-scalar-types #{:seq :vector :map :set}
+        is-non-scalar-type (get non-scalar-types ast-type)
+        is-complex-type (or is-non-scalar-type
+                            is-type-user-defined)]
+    (boolean is-complex-type)))
 
+(defmethod iface/emit-type ::l/curlybrace
+  [ast-opts]
+  (if (is-complex-type? ast-opts)
+    (emit-complex-type ast-opts)
+    (emit-scalar-type ast-opts)))
 
 (defmethod iface/emit-const ::l/curlybrace
   [ast-opts]

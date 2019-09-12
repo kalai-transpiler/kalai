@@ -13,6 +13,18 @@
 ;;
 
 (defmulti
+  ^{:doc "Return whether AST represents a non-scalar / collection type"}
+  is-complex-type? lang)
+
+(defmulti
+  ^{:doc "Might return nil"}
+  emit-complex-type lang)
+
+(defmulti
+  ^{:doc "Might return nil"}
+  emit-scalar-type lang)
+
+(defmulti
   ^{:doc "Might return nil"}
   emit-type lang)
 
