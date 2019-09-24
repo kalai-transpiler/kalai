@@ -12,7 +12,7 @@
     (boolean
      (some seqable? expr-form))))
 
-(defn cpp-emit-const-complex-type-not-nested
+(defn cpp-emit-const-vector-not-nested
   [ast-opts]
   {:pre [(is-complex-type? ast-opts)
          (= :vector (or (-> ast-opts :ast :type)
@@ -31,8 +31,9 @@
         expr (apply str expr-parts)]
     expr))
 
-(defn cpp-emit-const-complex-type-nested-recursive
-  "Return value is 2-element vector [sub-vector-identifier new-statements].
+(defn cpp-emit-assignment-vector-nested-recursive
+  "Recursive implementation fn for cpp-emit-assignment-vector-nested.
+  Return value is 2-element vector [sub-vector-identifier new-statements].
   Only works for nested Lists currently.
   Supports nested collections (at least N-dimension types of a single type),
   but may not yet support all configurations of nested parameters."
@@ -57,7 +58,7 @@
         (let [item-asts (map #(az/analyze % (:env ast-opts)) item-form-seq)
               item-ast-opts-seq (map #(assoc ast-opts :ast %) item-asts)
               item-strs (map emit item-ast-opts-seq) 
-              expr (cpp-emit-const-complex-type-not-nested ast-opts)
+              expr (cpp-emit-const-vector-not-nested ast-opts)
               statement-parts [type-str
                                sub-vector-identifier
                                "="
@@ -80,7 +81,7 @@
                           (emit item-ast-opts)
                           (let [new-type-class-ast (update-in type-class-ast [:mtype] second)
                                 new-position-vector (conj position-vector idx)]
-                            (cpp-emit-const-complex-type-nested-recursive item-ast-opts new-type-class-ast identifier new-position-vector statements))))
+                            (cpp-emit-assignment-vector-nested-recursive item-ast-opts new-type-class-ast identifier new-position-vector statements))))
             collected-statements (->> item-strs
                                       (map #(if (seqable? %) (second %) %))
                                       (apply concat))
@@ -102,15 +103,17 @@
             return-val [sub-vector-identifier new-statements]]
         return-val))))
 
-(defn cpp-emit-const-complex-type-nested
+(defn cpp-emit-assignment-vector-nested
   "element-type and identifier are strings"
   [ast-opts type-class-ast identifier]
   {:pre [(is-complex-type? ast-opts)
          (is-const-complex-type-nested? ast-opts)]}
-  (let [result (cpp-emit-const-complex-type-nested-recursive ast-opts
-                                                             type-class-ast
-                                                             identifier
-                                                             []
-                                                             [])
+  (let [init-position-vector []
+        init-statements []
+        result (cpp-emit-assignment-vector-nested-recursive ast-opts
+                                                            type-class-ast
+                                                            identifier
+                                                            init-position-vector
+                                                            init-statements)
         [identifier statements] result]
     (string/join \newline statements)))

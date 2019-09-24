@@ -125,7 +125,7 @@
   {:pre [(is-complex-type? ast-opts)
          (= :vector (or (-> ast-opts :ast :type)
                         (-> ast-opts :ast :op)))]}
-  (type-util/cpp-emit-const-complex-type-not-nested ast-opts))
+  (type-util/cpp-emit-const-vector-not-nested ast-opts))
 
 (defmethod iface/emit-assignment-complex-type [::l/cpp :vector]
   [ast-opts]
@@ -140,8 +140,8 @@
                      (str identifer-symbol))
         expr-ast-opts (update-in ast-opts [:ast] :init)]
     (if (type-util/is-const-complex-type-nested? expr-ast-opts) 
-      (type-util/cpp-emit-const-complex-type-nested expr-ast-opts type-class-ast identifier)
-      (let [expr (type-util/cpp-emit-const-complex-type-not-nested expr-ast-opts) 
+      (type-util/cpp-emit-assignment-vector-nested expr-ast-opts type-class-ast identifier)
+      (let [expr (type-util/cpp-emit-const-vector-not-nested expr-ast-opts) 
             statement-parts [type-str
                              identifier
                              "="
