@@ -52,9 +52,9 @@
   [ast-opts]
   (iface/emit-reset! ast-opts))
 
-(defn emit-assignment-vector
+(defn emit-assignment-complex-type
   [ast-opts]
-  (iface/emit-assignment-vector ast-opts))
+  (iface/emit-assignment-complex-type ast-opts))
 
 (defn get-assignment-type-class-ast
   [ast-opts]

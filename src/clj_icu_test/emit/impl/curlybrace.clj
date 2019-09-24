@@ -11,6 +11,9 @@
 ;; (could be used for C++, Java, and/or others)
 ;;
 
+;; requires the AST directly containing the type class info to be passed in
+;; (ex: the metadata map of a def form, or the AST of the expression of a collection literal
+;; in a def form).
 (defmethod iface/is-complex-type? ::l/curlybrace
   [ast-opts]
   (let [ast (:ast ast-opts)
@@ -125,9 +128,8 @@
 (defmethod iface/emit-assignment ::l/curlybrace
   [ast-opts]
   (let [ast (:ast ast-opts)]
-    (if (= :vector (or (get-in ast [:init :type])
-                       (get-in ast [:init :op])))
-      (emit-assignment-vector ast-opts)
+    (if (is-complex-type? (update-in ast-opts [:ast] :init))
+      (emit-assignment-complex-type ast-opts)
       (let [op-code (:op ast)
             type-class-ast (get-assignment-type-class-ast ast-opts)
             type-class-opts (assoc ast-opts :ast type-class-ast) 

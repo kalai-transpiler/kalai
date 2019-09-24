@@ -8,6 +8,8 @@
   [ast-opts & other-args]
   (:lang ast-opts))
 
+;; to be used on the AST of a data literal of
+;; a complex (collection/aggregate) type
 (defn const-complex-type-dispatch
   [ast-opts]
   (letfn [(const-complex-type-fn
@@ -20,6 +22,15 @@
     (let [dispatch-fn (get-dispatch-fn ast-opts)
           dispatch-val (dispatch-fn ast-opts)]
       dispatch-val)))
+
+;; for the specific value of the complex type, use
+;; the expression on RHS to get the specific type val,
+;; not the user-provided type in the metadata of the
+;; identifier name.
+(defn assignment-complex-type-dispatch
+  [ast-opts]
+  (let [expr-ast (update-in ast-opts [:ast] :init)]
+    (const-complex-type-dispatch expr-ast)))
 
 ;;
 ;; multimethod specs
@@ -61,7 +72,7 @@
 
 (defmulti emit-reset! lang)
 
-(defmulti emit-assignment-vector lang)
+(defmulti emit-assignment-complex-type assignment-complex-type-dispatch)
 
 (defmulti get-assignment-identifier-symbol lang)
 

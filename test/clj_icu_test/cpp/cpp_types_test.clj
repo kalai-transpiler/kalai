@@ -20,6 +20,16 @@
            "std::vector<int> numbers = {x};"]
           (emit (map->AstOpts {:ast ast :lang ::l/cpp}))))
 
+(let [ast (az/analyze '(def ^{:mtype [List [List [Integer]]]} matrix [[2 3 5]
+                                                                      [7 11 13]
+                                                                      [17 19 23]]))]
+  (expect "std::vector<int> matrixV0 = {2, 3, 5};
+std::vector<int> matrixV1 = {7, 11, 13};
+std::vector<int> matrixV2 = {17, 19, 23};
+std::vector<std::vector<int>> matrix = {matrixV0, matrixV1, matrixV2};"
+          (emit (map->AstOpts {:ast ast :lang ::l/cpp}))))
+
+
 (let [ast (az/analyze '{"one" 1
                         "two" 2
                         "three" 3})]

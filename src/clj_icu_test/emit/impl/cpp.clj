@@ -2,6 +2,7 @@
   (:require [clj-icu-test.common :refer :all]
             [clj-icu-test.emit.interface :as iface :refer :all]
             [clj-icu-test.emit.langs :as l]
+            [clj-icu-test.emit.impl.util.cpp-type-util :as type-util]
             [clojure.edn :as edn]
             [clojure.string :as string]
             [clojure.tools.analyzer.jvm :as az]))
@@ -124,21 +125,9 @@
   {:pre [(is-complex-type? ast-opts)
          (= :vector (or (-> ast-opts :ast :type)
                         (-> ast-opts :ast :op)))]}
-  (let [ast (:ast ast-opts)
-        item-asts (if-not (:literal? ast)
-                    (:items ast)
-                    (let [item-vals (:val ast)]
-                      (map az/analyze item-vals)))
-        item-strs (map emit (map (partial assoc ast-opts :ast) item-asts))
-        ;; TODO: figure out how to auto-import java.util.Arrays
-        item-strs-comma-separated (string/join ", " item-strs)
-        expr-parts ["{"
-                    item-strs-comma-separated
-                    "}"]
-        expr (apply str expr-parts)]
-    expr))
+  (type-util/cpp-emit-const-complex-type-not-nested ast-opts))
 
-(defmethod iface/emit-assignment-vector ::l/cpp
+(defmethod iface/emit-assignment-complex-type [::l/cpp :vector]
   [ast-opts]
   {:pre [(or (and (= :const (-> ast-opts :ast :init :op))
                   (= :vector (-> ast-opts :ast :init :type)))
@@ -146,20 +135,22 @@
   (let [ast (:ast ast-opts)
         type-class-ast (get-assignment-type-class-ast ast-opts)
         type-class-ast-opts (assoc ast-opts :ast type-class-ast)
-        type-str (emit-type type-class-ast-opts) 
+        type-str (emit-type type-class-ast-opts)
         identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
                      (str identifer-symbol))
-        expr-ast-opts (update-in ast-opts [:ast] :init)
-        expr (emit-const-complex-type expr-ast-opts) 
-        statement-parts [type-str
-                         identifier
-                         "="
-                         expr]
-        statement-parts-opts (-> ast-opts
-                                 (assoc :val statement-parts)
-                                 map->AnyValOpts)
-        statement (emit-statement statement-parts-opts)]
-    statement))
+        expr-ast-opts (update-in ast-opts [:ast] :init)]
+    (if (type-util/is-const-complex-type-nested? expr-ast-opts) 
+      (type-util/cpp-emit-const-complex-type-nested expr-ast-opts type-class-ast identifier)
+      (let [expr (type-util/cpp-emit-const-complex-type-not-nested expr-ast-opts) 
+            statement-parts [type-str
+                             identifier
+                             "="
+                             expr]
+            statement-parts-opts (-> ast-opts
+                                     (assoc :val statement-parts)
+                                     map->AnyValOpts)
+            statement (emit-statement statement-parts-opts)]
+        statement))))
 
 (defmethod iface/emit-defn ::l/cpp
   [ast-opts]
