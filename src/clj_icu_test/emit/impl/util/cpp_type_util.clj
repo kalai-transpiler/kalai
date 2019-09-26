@@ -117,6 +117,4 @@
                                                              init-statements)
         [identifier statements] result
         statements-val-opts (map->AnyValOpts (assoc ast-opts :val statements))]
-    ;;(string/join \newline statements)
-    (emit-statements statements-val-opts)
-    ))
+    (emit-statements statements-val-opts)))
