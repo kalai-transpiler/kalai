@@ -56,6 +56,8 @@
 
 (defmulti emit-statement lang)
 
+(defmulti emit-statements lang)
+
 (defmulti
   ^{:doc "indicate whether input is a string representing a statement"}
   can-become-statement lang)

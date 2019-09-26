@@ -28,6 +28,10 @@
   [val-opts]
   (iface/emit-statement val-opts))
 
+(defn emit-statements
+  [val-opts]
+  (iface/emit-statement val-opts))
+
 (defn can-become-statement
   [val-opts]
   (iface/can-become-statement val-opts))

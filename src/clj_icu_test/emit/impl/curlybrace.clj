@@ -50,6 +50,14 @@
     (let [ast (:ast ast-opts)]
       (pr-str (:val ast)))))
 
+(defmethod iface/emit-statements ::l/curlybrace
+  [val-opts]
+  {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
+  (let [statement-parts-seq (:val val-opts)
+        statement-parts-opts-seq (for [statement-parts statement-parts-seq]
+                                   (assoc val-opts :val statement-parts))]
+    (map emit-statement statement-parts-opts-seq)))
+
 (defmethod iface/emit-do ::l/curlybrace
   [ast-opts]
   {:pre [(= :do (:op (:ast ast-opts)))]}

@@ -111,9 +111,12 @@
   (let [init-position-vector []
         init-statements []
         result (cpp-emit-assignment-vector-nested-recursive ast-opts
-                                                            type-class-ast
-                                                            identifier
-                                                            init-position-vector
-                                                            init-statements)
-        [identifier statements] result]
-    (string/join \newline statements)))
+                                                             type-class-ast
+                                                             identifier
+                                                             init-position-vector
+                                                             init-statements)
+        [identifier statements] result
+        statements-val-opts (map->AnyValOpts (assoc ast-opts :val statements))]
+    ;;(string/join \newline statements)
+    (emit-statements statements-val-opts)
+    ))
