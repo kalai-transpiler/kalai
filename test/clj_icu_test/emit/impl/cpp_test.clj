@@ -1,4 +1,4 @@
-(ns clj-icu-test.cpp.cpp-test
+(ns clj-icu-test.emit.impl.cpp-test
   (:require [clj-icu-test.common :refer :all]
             [clj-icu-test.emit.api :refer :all]
             [clj-icu-test.emit.langs :as l]

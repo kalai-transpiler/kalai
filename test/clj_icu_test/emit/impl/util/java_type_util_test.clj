@@ -1,4 +1,4 @@
-(ns clj-icu-test.java.java-types-test
+(ns clj-icu-test.emit.impl.util.java-type-util-test
   (:require [clj-icu-test.common :refer :all]
             [clj-icu-test.emit.api :refer :all]
             [clj-icu-test.emit.langs :as l]
