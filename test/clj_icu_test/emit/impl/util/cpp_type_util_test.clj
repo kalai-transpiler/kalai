@@ -5,14 +5,15 @@
             [clj-icu-test.emit.langs :as l]
             [clojure.string :as string]
             [clojure.tools.analyzer.jvm :as az]
-            [expectations :refer :all])
+            [expectations.clojure.test :refer :all])
   (:import clj_icu_test.common.AstOpts))
 
 
-(let [ast (az/analyze '[2 3 5])
-      ast-opts (map->AstOpts {:ast ast :lang ::l/cpp})
-      type-class-ast {:mtype [java.util.List [java.lang.Integer]]}
-      identifier "matrix"]
-  (expect (cpp-emit-assignment-vector-nested-recursive ast-opts type-class-ast identifier [0] [])
-          ["matrixV0" ["std::vector<int> matrixV0 = {2, 3, 5};"]]))
+(defexpect vectors-nested-impl-recursive-fn
+  (let [ast (az/analyze '[2 3 5])
+        ast-opts (map->AstOpts {:ast ast :lang ::l/cpp})
+        type-class-ast {:mtype [java.util.List [java.lang.Integer]]}
+        identifier "matrix"]
+    (expect (cpp-emit-assignment-vector-nested-recursive ast-opts type-class-ast identifier [0] [])
+            ["matrixV0" ["std::vector<int> matrixV0 = {2, 3, 5};"]])))
 
