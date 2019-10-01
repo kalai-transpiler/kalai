@@ -8,9 +8,8 @@
   [ast-opts & other-args]
   (:lang ast-opts))
 
-;; to be used on the AST of a data literal of
-;; a complex (collection/aggregate) type
 (defn const-complex-type-dispatch
+  "Dispatch fn for emit-const-complex-type that returns the complex (coll) type of the input in addition to the emitter's target lang. Return val is something like :vector, :map, :set, :record as provided by analyzer."
   [ast-opts]
   (letfn [(const-complex-type-fn
             [ast-opts]
@@ -23,11 +22,9 @@
           dispatch-val (dispatch-fn ast-opts)]
       dispatch-val)))
 
-;; for the specific value of the complex type, use
-;; the expression on RHS to get the specific type val,
-;; not the user-provided type in the metadata of the
-;; identifier name.
 (defn assignment-complex-type-dispatch
+  "Dispatch fn for emit-assignment-complex-type that returns the complex (coll) type of the input in addition to the emitter's target lang. Return val is something like :vector, :map, :set, :record as provided by analyzer.
+  Since in a statically typed target lang, we sometimes need the type signature of the identifier on the LHS when emitting the constructor code on the RHS, we must obtain the user-provided type accordingly."
   [ast-opts]
   (let [expr-ast (update-in ast-opts [:ast] :init)]
     (const-complex-type-dispatch expr-ast)))
@@ -41,20 +38,26 @@
   is-complex-type? lang)
 
 (defmulti
-  ^{:doc "Might return nil"}
+  ^{:doc "Emit the type signature for a complex (collection) type based on an AST representing the type.  The AST contains the :mtype key which holds the sub-AST that represents the type information.
+Might return nil"}
   emit-complex-type lang)
 
 (defmulti
-  ^{:doc "Might return nil"}
+  ^{:doc "Emit the type signature for a scalar type based on an AST representing the type.
+Might return nil"}
   emit-scalar-type lang)
 
 (defmulti
-  ^{:doc "Might return nil"}
+  ^{:doc   "Allow the value of :mtype to be a class representing a scalar type.  But the more
+consistent way would be in a vector, which can be used for a scalar type as well as
+for a complex (collection) type.
+Might return nil"}
   emit-type lang)
 
 (defmulti is-number-type? lang)
 
-(defmulti emit-statement lang)
+(defmulti ^{:doc "Emit a statement. Input is either a string representing the statement, or a seq representing the parts of the statement (assumed that parts of space-separated)."}
+  emit-statement lang)
 
 (defmulti emit-statements lang)
 
@@ -62,9 +65,11 @@
   ^{:doc "indicate whether input is a string representing a statement"}
   can-become-statement lang)
 
-(defmulti emit-const-complex-type const-complex-type-dispatch)
+(defmulti ^{:doc "emit a literal value that represents a complex (collection) type"}
+  emit-const-complex-type const-complex-type-dispatch)
 
-(defmulti emit-const lang)
+(defmulti ^{:doc "emit a literal value"}
+  emit-const lang)
 
 (defmulti emit-do lang)
 
@@ -85,7 +90,8 @@
   Might return nil"}
   emit-assignment lang)
 
-(defmulti emit-def lang)
+(defmulti ^{:doc "emit a top-level assignment"}
+  emit-def lang)
 
 (defmulti
   ^{:doc "Might return nil"}
@@ -96,27 +102,35 @@
   Might return nil"}
   emit-bindings-stanza lang)
 
-(defmulti emit-let lang)
+(defmulti ^{:doc "emit a local block"}
+  emit-let lang)
 
 ;; "arithmetic" (built-in operators)
 
-(defmulti emit-arg lang)
+(defmulti ^{:doc "Emit one of the arguments for emit-args"}
+  emit-arg lang)
 
-(defmulti emit-args lang)
+(defmulti ^{:doc "Emit the arguments of a static call"}
+  emit-args lang)
 
-(defmulti emit-static-call lang)
+(defmulti ^{:doc "Emit a static call (ex: arithmetic operation with a built-in operator/fn)"}
+  emit-static-call lang)
 
 ;; other
 
-(defmulti emit-local lang)
+(defmulti ^{:doc "Emit a local binding var (stored in :local key in AST by analyzer)"}
+  emit-local lang)
 
-(defmulti emit-var lang)
+(defmulti ^{:doc "Emit a var (stored in :var key in AST by analyzer)"}
+  emit-var lang)
 
 ;; defn
 
-(defmulti emit-defn-arg lang)
+(defmulti ^{:doc "Emit one of the arguments in emit-defn-args"}
+  emit-defn-arg lang)
 
-(defmulti emit-defn-args lang)
+(defmulti ^{:doc "Emit the args for defn, which require a type signature in static languages"}
+  emit-defn-args lang)
 
 (defmulti
   ^{:doc "currently does not handle variadic fns (fn overloading)"}
