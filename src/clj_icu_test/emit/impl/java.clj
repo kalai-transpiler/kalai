@@ -5,20 +5,19 @@
             [clj-icu-test.emit.impl.util.java-type-util :as type-util]
             [clojure.edn :as edn]
             [clojure.string :as string]
-            [clojure.tools.analyzer.jvm :as az]))
+            [clojure.tools.analyzer.jvm :as az])
+  (:import [java.util List Map]))
 
-(defmethod iface/emit-complex-type ::l/java
+(defmethod iface/emit-complex-type [::l/java List]
   [ast-opts]
   (let [ast (:ast ast-opts)
         type-val (:mtype ast)]
-    ;; support list types only, for now
-    (assert (= java.util.List (first type-val)))
-    (let [type-parameter-val (second type-val)
-          _ (assert (sequential? type-parameter-val))
-          type-parameter-class-ast-opts (assoc-in ast-opts [:ast :mtype] type-parameter-val)
-          type-parameter (emit-type type-parameter-class-ast-opts)
-          type (str "List<" type-parameter ">")]
-      type)))
+    (let [type-parameter-val (second type-val)]
+      (assert (sequential? type-parameter-val))
+      (let [type-parameter-class-ast-opts (assoc-in ast-opts [:ast :mtype] type-parameter-val)
+            type-parameter (emit-type type-parameter-class-ast-opts)
+            type (str "List<" type-parameter ">")]
+        type))))
 
 (defmethod iface/emit-scalar-type ::l/java
   [ast-opts]

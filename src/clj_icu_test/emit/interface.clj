@@ -9,7 +9,7 @@
   (:lang ast-opts))
 
 (defn const-complex-type-dispatch
-  "Dispatch fn for emit-const-complex-type that returns the complex (coll) type of the input in addition to the emitter's target lang. Return val is something like :vector, :map, :set, :record as provided by analyzer."
+  "Dispatch fn for emit-const-complex-type.  Returns the complex (coll) type of the input in addition to the emitter's target lang. Return val is something like :vector, :map, :set, :record as provided by analyzer."
   [ast-opts]
   (letfn [(const-complex-type-fn
             [ast-opts]
@@ -23,11 +23,21 @@
       dispatch-val)))
 
 (defn assignment-complex-type-dispatch
-  "Dispatch fn for emit-assignment-complex-type that returns the complex (coll) type of the input in addition to the emitter's target lang. Return val is something like :vector, :map, :set, :record as provided by analyzer.
+  "Dispatch fn for emit-assignment-complex-type.  Returns the complex (coll) type of the input in addition to the emitter's target lang. Return val is something like :vector, :map, :set, :record as provided by analyzer.
   Since in a statically typed target lang, we sometimes need the type signature of the identifier on the LHS when emitting the constructor code on the RHS, we must obtain the user-provided type accordingly."
   [ast-opts]
   (let [expr-ast (update-in ast-opts [:ast] :init)]
     (const-complex-type-dispatch expr-ast)))
+
+(defn complex-type-dispatch
+  "Dispatch fn for emit-complex-type.  Returns the value in the AST of the user-defined type that represents the complex (coll) type."
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        user-defined-type-ast (:mtype ast)
+        complex-type-val (first user-defined-type-ast)
+        lang-val (lang ast-opts)
+        dispatch-val [lang-val complex-type-val]]
+    dispatch-val))
 
 ;;
 ;; multimethod specs
@@ -40,7 +50,7 @@
 (defmulti
   ^{:doc "Emit the type signature for a complex (collection) type based on an AST representing the type.  The AST contains the :mtype key which holds the sub-AST that represents the type information.
 Might return nil"}
-  emit-complex-type lang)
+  emit-complex-type complex-type-dispatch)
 
 (defmulti
   ^{:doc "Emit the type signature for a scalar type based on an AST representing the type.
