@@ -1,7 +1,6 @@
 (ns clj-icu-test.emit.impl.util.java-type-util
   (:require [clj-icu-test.common :refer :all]
             [clj-icu-test.emit.interface :as iface :refer :all]
-            [clj-icu-test.emit.impl.util.common-type-util :as common-type-util]
             [clojure.string :as string]
             [clojure.tools.analyzer.jvm :as az]))
 

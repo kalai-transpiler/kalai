@@ -2,7 +2,7 @@
   (:require [clj-icu-test.common :refer :all]
             [clj-icu-test.emit.interface :as iface :refer :all]
             [clj-icu-test.emit.langs :as l]
-            [clj-icu-test.emit.impl.util.java-type-util :as type-util]
+            [clj-icu-test.emit.impl.util.java-type-util :as java-type-util]
             [clj-icu-test.emit.impl.util.common-type-util :as common-type-util]
             [clojure.edn :as edn]
             [clojure.string :as string]
@@ -111,7 +111,7 @@
 
 (defmethod iface/emit-const-complex-type [::l/java :vector]
   [ast-opts]
-  (type-util/java-emit-const-complex-type ast-opts))
+  (java-type-util/java-emit-const-complex-type ast-opts))
 
 (defmethod iface/emit-assignment-complex-type [::l/java :vector]
   [ast-opts]
@@ -125,7 +125,7 @@
         identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
                      (str identifer-symbol)) 
         expr-ast-opts (update-in ast-opts [:ast] :init)
-        expr (type-util/java-emit-const-complex-type expr-ast-opts) 
+        expr (java-type-util/java-emit-const-complex-type expr-ast-opts) 
         statement-parts [type-str
                          identifier
                          "="
@@ -142,14 +142,9 @@
                   (= :map (-> ast-opts :ast :init :type)))
              (= :map (-> ast-opts :ast :init :op)))]}
   (let [ast (:ast ast-opts)
-        type-class-ast (get-assignment-type-class-ast ast-opts)
-        type-class-ast-opts (assoc ast-opts :ast type-class-ast)
-        type-str (emit-type type-class-ast-opts) 
-        identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
-                     (str identifer-symbol)) 
         expr-ast-opts (update-in ast-opts [:ast] :init)] 
     (when-not (common-type-util/is-const-map-nested? expr-ast-opts)
-      (type-util/java-emit-assignment-map-not-nested ast-opts))))
+      (java-type-util/java-emit-assignment-map-not-nested ast-opts))))
 
 (defmethod iface/emit-defn ::l/java 
   [ast-opts]

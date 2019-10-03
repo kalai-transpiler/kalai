@@ -1,16 +1,9 @@
 (ns clj-icu-test.emit.impl.util.cpp-type-util
   (:require [clj-icu-test.common :refer :all]
+            [clj-icu-test.emit.impl.util.common-type-util :as common-type-util]
             [clj-icu-test.emit.interface :as iface :refer :all]
             [clojure.string :as string]
             [clojure.tools.analyzer.jvm :as az]))
-
-(defn is-const-complex-type-nested?
-  [ast-opts]
-  (let [ast (:ast ast-opts)
-        expr-form (:form ast)]
-    (assert (seqable? expr-form))
-    (boolean
-     (some seqable? expr-form))))
 
 (defn cpp-emit-const-vector-not-nested
   [ast-opts]
@@ -107,7 +100,7 @@
   "element-type and identifier are strings"
   [ast-opts type-class-ast identifier]
   {:pre [(is-complex-type? ast-opts)
-         (is-const-complex-type-nested? ast-opts)]}
+         (common-type-util/is-const-vector-nested? ast-opts)]}
   (let [init-position-vector []
         init-statements []
         result (cpp-emit-assignment-vector-nested-recursive ast-opts
@@ -118,3 +111,23 @@
         [identifier statements] result
         statements-val-opts (map->AnyValOpts (assoc ast-opts :val statements))]
     (emit-statements statements-val-opts)))
+
+(defn cpp-emit-assignment-vector-not-nested
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        type-class-ast (get-assignment-type-class-ast ast-opts)
+        type-class-ast-opts (assoc ast-opts :ast type-class-ast)
+        type-str (emit-type type-class-ast-opts)
+        identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
+                     (str identifer-symbol))
+        expr-ast-opts (update-in ast-opts [:ast] :init)
+        expr (cpp-emit-const-vector-not-nested expr-ast-opts) 
+        statement-parts [type-str
+                         identifier
+                         "="
+                         expr]
+        statement-parts-opts (-> ast-opts
+                                 (assoc :val statement-parts)
+                                 map->AnyValOpts)
+        statement (emit-statement statement-parts-opts)]
+    statement))
