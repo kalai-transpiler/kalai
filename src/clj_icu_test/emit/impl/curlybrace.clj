@@ -225,7 +225,9 @@
   {:pre [(:env ast-opts)]}
   (let [ast-opts-env (:env ast-opts)
         symb-class (class symb)
-        symb-ast (az/analyze symb ast-opts-env)
+        symb-ast (if (seq ast-opts-env)
+                   (az/analyze symb ast-opts-env)
+                   (az/analyze symb))
         symb-ast-opts (assoc ast-opts :ast symb-ast)]
     (cond
 
