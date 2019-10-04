@@ -20,6 +20,21 @@
             type (str "std::vector<" type-parameter ">")]
         type))))
 
+(defmethod iface/emit-complex-type [::l/cpp Map]
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        type-val (:mtype ast)]
+    (let [type-parameters-val (second type-val)]
+      (assert (sequential? type-parameters-val))
+      (let [map-key-type-parameter-val (first type-parameters-val)
+            map-val-type-parameter-val (second type-parameters-val) 
+            map-key-type-parameter-class-ast-opts (assoc-in ast-opts [:ast :mtype] map-key-type-parameter-val)
+            map-val-type-parameter-class-ast-opts (assoc-in ast-opts [:ast :mtype] map-val-type-parameter-val) 
+            map-key-type-parameter (emit-type map-key-type-parameter-class-ast-opts)
+            map-val-type-parameter (emit-type map-val-type-parameter-class-ast-opts)
+            type (str "std::map<" map-key-type-parameter "," map-val-type-parameter ">")]
+        type))))
+
 (defmethod iface/emit-scalar-type ::l/cpp
   [ast-opts]
   (let [ast (:ast ast-opts)
@@ -140,6 +155,16 @@
     (if (common-type-util/is-const-vector-nested? expr-ast-opts) 
       (cpp-type-util/cpp-emit-assignment-vector-nested expr-ast-opts type-class-ast identifier)
       (cpp-type-util/cpp-emit-assignment-vector-not-nested ast-opts))))
+
+(defmethod iface/emit-assignment-complex-type [::l/cpp :map]
+  [ast-opts]
+  {:pre [(or (and (= :const (-> ast-opts :ast :init :op))
+                  (= :map (-> ast-opts :ast :init :type)))
+             (= :map (-> ast-opts :ast :init :op)))]}
+  (let [ast (:ast ast-opts)
+        expr-ast-opts (update-in ast-opts [:ast] :init)] 
+    (when-not (common-type-util/is-const-map-nested? expr-ast-opts)
+      (cpp-type-util/cpp-emit-assignment-map-not-nested ast-opts))))
 
 (defmethod iface/emit-defn ::l/cpp
   [ast-opts]

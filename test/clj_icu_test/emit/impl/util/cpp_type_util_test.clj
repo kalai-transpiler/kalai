@@ -37,10 +37,14 @@
   ;;   )
   (do
     (import 'java.util.Map)
-    (let [ast (az/analyze '(def ^{:mtype [Map [String Integer]]} number-words {"one" 1
-                                                                               "two" 2
-                                                                               "three" 3}))]
-      "TODO")))
+    (let [ast (az/analyze '(def ^{:mtype [Map [String Integer]]} numberWords {"one" 1
+                                                                              "two" 2
+                                                                              "three" 3}))]
+      (expect ["std::map<std::string,int> numberWords;"
+               "numberWords.insert(std::make_pair(\"one\", 1));"
+               "numberWords.insert(std::make_pair(\"two\", 2));"
+               "numberWords.insert(std::make_pair(\"three\", 3));"]
+              (emit (map->AstOpts {:ast ast :lang ::l/cpp}))))))
 
 (defexpect sets
   (do

@@ -131,3 +131,40 @@
                                  map->AnyValOpts)
         statement (emit-statement statement-parts-opts)]
     statement))
+
+(defn cpp-emit-assignment-map-not-nested
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        type-class-ast (get-assignment-type-class-ast ast-opts)
+        type-class-ast-opts (assoc ast-opts :ast type-class-ast)
+        type-str (emit-type type-class-ast-opts) 
+        identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
+                     (str identifer-symbol)) 
+        initialize-statement-parts [type-str
+                                    identifier]
+        map-form-entry-seq (-> ast
+                               :init
+                               :form
+                               seq)
+        map-entry-env (or (:env ast-opts)
+                          (:env ast))
+        map-entry-ast-opts (assoc ast-opts :env map-entry-env)
+        map-form-entry-str-seq (for [[k-form v-form] map-form-entry-seq] 
+                                 (let [k-str (emit-arg map-entry-ast-opts k-form)
+                                       v-str (emit-arg map-entry-ast-opts v-form) 
+                                       result [k-str v-str]]
+                                   result))
+        map-entry-put-statements (for [[k-str v-str :as entry] map-form-entry-str-seq]
+                                   (let [put-statement-args entry
+                                         put-statement-args-str (string/join ", " put-statement-args)
+                                         statement-parts [(str identifier ".insert(std::make_pair(")
+                                                          put-statement-args-str
+                                                          "))"]
+                                         statement (string/join statement-parts)]
+                                     statement))
+        all-statement-data-seq (concat [initialize-statement-parts]
+                                       map-entry-put-statements)
+        all-statement-data-seq-val-opts (map->AnyValOpts
+                                         (assoc ast-opts :val all-statement-data-seq))
+        all-statement-str-seq (emit-statements all-statement-data-seq-val-opts)]
+    all-statement-str-seq))

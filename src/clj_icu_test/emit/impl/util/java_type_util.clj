@@ -57,9 +57,7 @@
                                          statement (string/join statement-parts)]
                                      statement))
         all-statement-data-seq (concat [initialize-statement-parts]
-                                       map-entry-put-statements)
-        ;; all-statement-data-val-opts-seq (for [statement-data all-statement-data-seq]
-        ;;                                   (map->AnyValOpts (assoc ast-opts :val statement-data)))
+                                       map-entry-put-statements) 
         all-statement-data-seq-val-opts (map->AnyValOpts
                                          (assoc ast-opts :val all-statement-data-seq))
         all-statement-str-seq (emit-statements all-statement-data-seq-val-opts)]
