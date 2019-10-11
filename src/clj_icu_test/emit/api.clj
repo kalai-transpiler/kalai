@@ -40,6 +40,10 @@
   [ast-opts]
   (iface/emit-const-complex-type ast-opts))
 
+(defn emit-const-scalar-type
+  [ast-opts]
+  (iface/emit-const-scalar-type ast-opts))
+
 (defn emit-const
   [ast-opts]
   (iface/emit-const ast-opts))

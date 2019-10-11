@@ -41,14 +41,28 @@
           (emit-complex-type ast-opts))))
     (emit-scalar-type ast-opts)))
 
+(defmethod iface/emit-const-scalar-type [::l/curlybrace :char]
+  [ast-opts]
+  (let [char-val (-> ast-opts
+                     :ast
+                     :val)]
+    (str \' char-val \')))
+
 (defmethod iface/emit-const ::l/curlybrace
   [ast-opts]
   {:pre [(= :const (:op (:ast ast-opts)))
          (:literal? (:ast ast-opts))]}
   (if (is-complex-type? ast-opts)
     (emit-const-complex-type ast-opts)
-    (let [ast (:ast ast-opts)]
-      (pr-str (:val ast)))))
+    (let [custom-emitter-scalar-types #{:char}
+          ast (:ast ast-opts)
+          scalar-type (:type ast)]
+      ;; Clojure's syntax literals are pretty much the same as
+      ;; curlybrace langs like Java/C++ but differs in some cases like
+      ;; for characters
+      (if (contains? custom-emitter-scalar-types scalar-type)
+        (emit-const-scalar-type ast-opts)
+        (pr-str (:val ast))))))
 
 (defmethod iface/emit-statements ::l/curlybrace
   [val-opts]

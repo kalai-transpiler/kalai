@@ -22,6 +22,16 @@
           dispatch-val (dispatch-fn ast-opts)]
       dispatch-val)))
 
+(defn const-scalar-type-dispatch
+  "Dispatch fn for emit-const-scalar-type.  In the case of curlybrace langs, currently, the emitter gets called from emit-const only when is-complex-type? returns a falsey value.  The scalar type provided in the 2nd position of the dispatch value is the keyword value for the :type key of the AST"
+  [ast-opts]
+  (let [target-lang (lang ast-opts)
+        scalar-type (-> ast-opts
+                        :ast
+                        :type)
+        dispatch-val [target-lang scalar-type]]
+    dispatch-val))
+
 (defn assignment-complex-type-dispatch
   "Dispatch fn for emit-assignment-complex-type.  Returns the complex (coll) type of the input in addition to the emitter's target lang. Return val is something like :vector, :map, :set, :record as provided by analyzer.
   Since in a statically typed target lang, we sometimes need the type signature of the identifier on the LHS when emitting the constructor code on the RHS, we must obtain the user-provided type accordingly."
@@ -77,6 +87,9 @@ Might return nil"}
 
 (defmulti ^{:doc "emit a literal value that represents a complex (collection) type"}
   emit-const-complex-type const-complex-type-dispatch)
+
+(defmulti ^{:doc "emit a literal value that represents a \"scalar\" (non-collection) type"}
+  emit-const-scalar-type const-scalar-type-dispatch)
 
 (defmulti ^{:doc "emit a literal value"}
   emit-const lang)
