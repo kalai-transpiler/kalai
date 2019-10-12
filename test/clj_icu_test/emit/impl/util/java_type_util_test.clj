@@ -36,10 +36,6 @@
 ;; add test with a map as a return type
 
 (defexpect maps
-  ;; (let [ast (az/analyze '{"one" 1
-  ;;                         "two" 2
-  ;;                         "three" 3})]
-  ;;   )
   (do
     (import 'java.util.Map)
     (let [ast (az/analyze '(def ^{:mtype [Map [String Integer]]} numberWords {"one" 1
@@ -51,13 +47,11 @@
                "numberWords.put(\"three\", 3);"]
               (emit (map->AstOpts {:ast ast :lang ::l/java}))))))
 
-(defexpect sets
-  (do
-    (import 'java.util.Set)
-    (let [ast (az/analyze '#{"smell" "sight" "touch" "taste" "hearing"})]
-      )
-    (let [ast (az/analyze '(def ^{:mtype [Set [String]]} senses #{"smell" "sight" "touch" "taste" "hearing"}))]
-      "TODO")))
+;; (defexpect sets
+;;   (do
+;;     (import 'java.util.Set)
+;;     (let [ast (az/analyze '(def ^{:mtype [Set [String]]} senses #{"smell" "sight" "touch" "taste" "hearing"}))]
+;;       "TODO")))
 
 (defexpect coll-type-nested
   (do
