@@ -40,9 +40,16 @@
 ;;
 
 ;; record for passing an AST around with its env and target language
-(defrecord AstOpts [ast env lang])
+;; ast - AST returned by tools.analyzer.jvm's analyze as a nested map (pretty much required)
+;; env - any environment state as created/used by tools.analyzer needed to parse the AST
+;; lang - the target programming language (pretty much required)
+;; impl-state - a map of any implementation details needed by emitter fns
+(defrecord AstOpts [ast env lang impl-state])
 
-;; record for passing non-AST values around, otherwise same as AstOpts
+;; record for passing non-AST values around, otherwise same as AstOpts (pretty much required)
+;; val - any non-AST value
+;; env - any environment state as created/used by tools.analyzer needed to parse the AST
+;; lang - the target programming language (pretty much required)
 (defrecord AnyValOpts [val env lang])
 
 ;;

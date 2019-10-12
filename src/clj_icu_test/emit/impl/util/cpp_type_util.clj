@@ -30,11 +30,17 @@
   Only works for nested Lists currently.
   Supports nested collections (at least N-dimension types of a single type),
   but may not yet support all configurations of nested parameters."
-  [ast-opts type-class-ast identifier position-vector statements]
+  [ast-opts]
   {:pre [(= :const (-> ast-opts :ast :op))
          (= :vector (-> ast-opts :ast :type))
-         (= java.util.List (-> type-class-ast :mtype first))]}
+         (-> ast-opts :impl-state :type-class-ast)
+         (-> ast-opts :impl-state :identifier)
+         (-> ast-opts :impl-state :position-vector)
+         (-> ast-opts :impl-state :statements)
+         (= java.util.List (-> ast-opts :impl-state :type-class-ast :mtype first))]}
   (let [ast (:ast ast-opts)
+        impl-state (:impl-state ast-opts)
+        {:keys [type-class-ast identifier position-vector statements]} impl-state
         form (:form ast)
         item-form-seq form
         is-nested-vector (some seqable? item-form-seq)
@@ -73,8 +79,12 @@
                         (if-not (is-complex-type? item-ast-opts)
                           (emit item-ast-opts)
                           (let [new-type-class-ast (update-in type-class-ast [:mtype] second)
-                                new-position-vector (conj position-vector idx)]
-                            (cpp-emit-assignment-vector-nested-recursive item-ast-opts new-type-class-ast identifier new-position-vector statements))))
+                                new-position-vector (conj position-vector idx)
+                                new-impl-state (assoc impl-state
+                                                      :type-class-ast new-type-class-ast
+                                                      :position-vector new-position-vector)
+                                new-item-ast-opts (assoc item-ast-opts :impl-state new-impl-state)]
+                            (cpp-emit-assignment-vector-nested-recursive new-item-ast-opts))))
             collected-statements (->> item-strs
                                       (map #(if (seqable? %) (second %) %))
                                       (apply concat))
@@ -98,16 +108,20 @@
 
 (defn cpp-emit-assignment-vector-nested
   "element-type and identifier are strings"
-  [ast-opts type-class-ast identifier]
+  [ast-opts]
   {:pre [(is-complex-type? ast-opts)
+         (-> ast-opts :impl-state :type-class-ast)
+         (-> ast-opts :impl-state :identifier)
          (common-type-util/is-const-vector-nested? ast-opts)]}
-  (let [init-position-vector []
+  (let [impl-state (:impl-state ast-opts)
+        {:keys [type-class-ast identifier]} impl-state
+        init-position-vector []
         init-statements []
-        result (cpp-emit-assignment-vector-nested-recursive ast-opts
-                                                             type-class-ast
-                                                             identifier
-                                                             init-position-vector
-                                                             init-statements)
+        ast-opts-init-impl-state (update-in ast-opts [:impl-state] merge {:type-class-ast type-class-ast
+                                                                          :identifier identifier
+                                                                          :position-vector init-position-vector
+                                                                          :statements init-statements})
+        result (cpp-emit-assignment-vector-nested-recursive ast-opts-init-impl-state)
         [identifier statements] result
         statements-val-opts (map->AnyValOpts (assoc ast-opts :val statements))]
     (emit-statements statements-val-opts)))

@@ -76,6 +76,7 @@
                                            java.lang.Boolean "bool"
                                            boolean "bool"
                                            java.lang.String "std::string"
+                                           java.lang.Character "char16_t"
                                            java.lang.StringBuffer "std::string"}]
                     (when-let [transformed-type (get java-cpp-type-map class)]
                       transformed-type))
@@ -152,9 +153,12 @@
         identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
                      (str identifer-symbol))
         expr-ast-opts (update-in ast-opts [:ast] :init)]
-    (if (common-type-util/is-const-vector-nested? expr-ast-opts) 
-      (cpp-type-util/cpp-emit-assignment-vector-nested expr-ast-opts type-class-ast identifier)
-      (cpp-type-util/cpp-emit-assignment-vector-not-nested ast-opts))))
+    (if-not (common-type-util/is-const-vector-nested? expr-ast-opts)
+      (cpp-type-util/cpp-emit-assignment-vector-not-nested ast-opts)
+      (let [impl-state {:identifier identifier
+                        :type-class-ast type-class-ast}
+            expr-ast-opts-init-impl-state (assoc expr-ast-opts :impl-state impl-state)]
+        (cpp-type-util/cpp-emit-assignment-vector-nested expr-ast-opts-init-impl-state)))))
 
 (defmethod iface/emit-assignment-complex-type [::l/cpp :map]
   [ast-opts]
