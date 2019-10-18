@@ -11,16 +11,11 @@
 (defn const-complex-type-dispatch
   "Dispatch fn for emit-const-complex-type.  Returns the complex (coll) type of the input in addition to the emitter's target lang. Return val is something like :vector, :map, :set, :record as provided by analyzer."
   [ast-opts]
-  (letfn [(const-complex-type-fn
-            [ast-opts]
-            (or (-> ast-opts :ast :type)
-                (-> ast-opts :ast :op)))
-          (get-dispatch-fn
-            [ast-opts]
-            (juxt lang const-complex-type-fn))]
-    (let [dispatch-fn (get-dispatch-fn ast-opts)
-          dispatch-val (dispatch-fn ast-opts)]
-      dispatch-val)))
+  (let [target-lang (lang ast-opts)
+        const-complex-type-val (or (-> ast-opts :ast :type)
+                                   (-> ast-opts :ast :op))
+        dispatch-val [target-lang const-complex-type-val]]
+    dispatch-val))
 
 (defn const-scalar-type-dispatch
   "Dispatch fn for emit-const-scalar-type.  In the case of curlybrace langs, currently, the emitter gets called from emit-const only when is-complex-type? returns a falsey value.  The scalar type provided in the 2nd position of the dispatch value is the keyword value for the :type key of the AST"
@@ -43,7 +38,8 @@
   "Dispatch fn for emit-complex-type.  Returns the value in the AST of the user-defined type that represents the complex (coll) type."
   [ast-opts]
   (let [ast (:ast ast-opts)
-        user-defined-type-ast (:mtype ast)
+        user-defined-type-ast (or (-> ast-opts :impl-state :type-class-ast :mtype)
+                                  (-> ast :mtype))
         complex-type-val (first user-defined-type-ast)
         lang-val (lang ast-opts)
         dispatch-val [lang-val complex-type-val]]

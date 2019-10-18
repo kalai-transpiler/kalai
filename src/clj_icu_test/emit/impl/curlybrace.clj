@@ -18,9 +18,16 @@
   [ast-opts]
   (let [ast (:ast ast-opts)
         ;; TODO: find if it is possible to re-use code from tools.analyzer to determine scalar vs. complex/aggregate data
-        user-type (:mtype ast)
+        user-type (or
+
+                   (-> ast-opts :impl-state :type-class-ast :mtype)
+                   (:mtype ast)
+
+                   )
         is-type-user-defined (and (not (nil? user-type))
-                                  (seqable? user-type))
+                                  (seqable? user-type)
+                                  (< 1 (count user-type))
+                                  )
         ast-type (or (:type ast)
                      (:op ast))
         non-scalar-types #{:seq :vector :map :set :record}
@@ -32,14 +39,37 @@
 (defmethod iface/emit-type ::l/curlybrace
   [ast-opts]
   (if (is-complex-type? ast-opts)
-    (do
-      (let [type-val (-> ast-opts :ast :mtype)]
-        (assert (sequential? type-val))
-        (if (= 1 (count type-val))
-          (let [type-as-tag-ast-opts (update-in ast-opts [:ast :mtype] first)]
-            (emit-type type-as-tag-ast-opts))
-          (emit-complex-type ast-opts))))
-    (emit-scalar-type ast-opts)))
+    (let [type-val (or
+
+                    (-> ast-opts :impl-state :type-class-ast :mtype)
+                    (-> ast-opts :ast :mtype)
+                    (-> ast-opts :impl-state :type-class-ast :mtype)
+
+                    )]
+      (assert (sequential? type-val))
+      (if (= 1 (count type-val))
+        (let [type-as-tag-ast-opts (if (-> ast-opts :impl-state :type-class-ast :mtype)
+                                     (-> ast-opts
+                                         (update-in [:impl-state :type-class-ast :mtype] first)
+                                         (update-in [:ast :mtype] first))
+                                     (update-in ast-opts [:ast :mtype] first))]
+          (emit-type type-as-tag-ast-opts))
+        (emit-complex-type ast-opts)))
+    (let [type-val (or
+
+                    (-> ast-opts :impl-state :type-class-ast :mtype)
+                    (-> ast-opts :ast :mtype)
+                    (-> ast-opts :impl-state :type-class-ast :mtype)
+
+                    )]
+      (if (and (sequential? type-val)
+               (= 1 (count type-val)))
+        (let [simplified-type-val (first type-val)
+              simplified-type-ast-opts (-> ast-opts
+                                           (assoc-in [:impl-state :type-class-ast :mtype] simplified-type-val)
+                                           (assoc-in [:ast :mtype] simplified-type-val))]
+          (emit-scalar-type simplified-type-ast-opts))
+        (emit-scalar-type ast-opts)))))
 
 (defmethod iface/emit-const-scalar-type [::l/curlybrace :char]
   [ast-opts]

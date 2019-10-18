@@ -11,11 +11,33 @@
          (= :vector (or (-> ast-opts :ast :type)
                         (-> ast-opts :ast :op)))]}
   (let [ast (:ast ast-opts)
-        item-asts (if-not (:literal? ast)
-                    (:items ast)
-                    (let [item-vals (:val ast)]
-                      (map az/analyze item-vals)))
-        item-strs (map emit (map (partial assoc ast-opts :ast) item-asts))
+
+        ;; item-form-seq (:form ast)
+        ;; item-ast-opts (-> ast-opts
+        ;;                   (assoc :env (-> ast-opts :ast :env))
+        ;;                   (update-in [:impl-state :type-class-ast :mtype] second))
+        ;; item-strs (map (partial emit-arg item-ast-opts) item-form-seq)
+        
+        ;; item-asts (if-not (:literal? ast)
+        ;;             (:items ast)
+        ;;             (let [item-vals (:val ast)]
+        ;;               (map az/analyze item-vals)))
+        ;; item-strs (map emit (map (partial assoc ast-opts :ast) item-asts))
+
+        item-strs  (let [item-form-seq (:form ast)
+                          item-ast-opts (-> ast-opts
+                                            (assoc :env (-> ast-opts :ast :env))
+                                            (update-in [:impl-state :type-class-ast :mtype] second))]
+                     (map (partial emit-arg item-ast-opts) item-form-seq))
+        
+        
+        ;; if (:literal? ast)
+        ;; (let [item-vals (:val ast)
+        ;;       item-asts (map az/analyze item-vals)]
+        ;;   (map emit (map (partial assoc ast-opts :ast) item-asts)))
+        
+        
+        
         ;; TODO: figure out how to auto-import java.util.Arrays
         item-strs-comma-separated (string/join ", " item-strs)
         expr-parts ["{"
@@ -54,9 +76,20 @@
       (do
         (assert (and (= 1 (-> type-class-ast :mtype second count))
                      (not (-> type-class-ast :mtype second first seqable?))))
-        (let [item-asts (map #(az/analyze % (:env ast-opts)) item-form-seq)
-              item-ast-opts-seq (map #(assoc ast-opts :ast %) item-asts)
-              item-strs (map emit item-ast-opts-seq) 
+          ;; TODO: consolidate/refactor calls to analyzer of args and literals
+        (let [
+
+              ;; item-asts (map #(az/analyze % (:env ast-opts)) item-form-seq)
+              ;; item-ast-opts-seq (map #(assoc ast-opts :ast %) item-asts)
+              ;; item-strs (map emit item-ast-opts-seq)
+              
+              ;; item-ast-opts (-> ast-opts
+              ;;                   (assoc :env (-> ast-opts :ast :env))
+              ;;                   (update-in [:impl-state :type-class-ast :mtype] second))
+              ;; item-strs (map (partial emit-arg item-ast-opts) item-form-seq)
+
+              
+              
               expr (cpp-emit-const-vector-not-nested ast-opts)
               statement-parts [type-str
                                sub-vector-identifier

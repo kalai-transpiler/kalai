@@ -12,10 +12,14 @@
 (defmethod iface/emit-complex-type [::l/cpp List]
   [ast-opts]
   (let [ast (:ast ast-opts)
-        type-val (:mtype ast)]
+        type-val (or (-> ast-opts :impl-state :type-class-ast :mtype)
+                     (:mtype ast))]
     (let [type-parameter-val (second type-val)]
       (assert (sequential? type-parameter-val))
-      (let [type-parameter-class-ast-opts (assoc-in ast-opts [:ast :mtype] type-parameter-val)
+      (let [type-parameter-class-ast-opts (-> ast-opts
+                                              (assoc-in [:ast :mtype] type-parameter-val)
+                                              (assoc-in [:impl-state :type-class-ast :mtype] type-parameter-val)
+                                              )
             type-parameter (emit-type type-parameter-class-ast-opts) 
             type (str "std::vector<" type-parameter ">")]
         type))))
