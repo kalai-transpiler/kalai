@@ -56,5 +56,10 @@
 (defexpect coll-type-nested
   (do
     (import '[java.util List Map Set])
-    (let [ast (az/analyze '(def ^{:mtype [Map [String List [Character]]]} number-systems-map {}))]
-      "TODO")))
+    (let [ast (az/analyze
+               '(def ^{:mtype [Map [String [List [Character]]]]}
+                  numberSystemsMap
+                  {"LATIN" [\0 \1 \9]}))]
+      (expect ["Map<String,List<Character>> numberSystemsMap = new HashMap<>();"
+               "numberSystemsMap.put(\"LATIN\", Arrays.asList('0', '1', '9'));"]
+              (emit (map->AstOpts {:ast ast :lang ::l/java}))))))

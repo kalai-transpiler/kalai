@@ -279,11 +279,19 @@
       (= clojure.lang.Symbol symb-class)
       (emit symb-ast-opts)
       
-      ;; a seq of symbols -> emit parenthases around the emitted form
+      ;; A seq of symbols -> emit parenthases around the emitted form. Do this for
+      ;; an expression like (+ 2 3) -> (2 + 3), but don't do this for a vector
+      ;; like [2 3 5] -> (Arrays.asList(2,3,5)).
       (or (isa? symb-class clojure.lang.IPersistentCollection)
           (isa? symb-class clojure.lang.ISeq))
-      (if (= 1 (count symb-ast))
+      (cond
+        (= 1 (count symb))
         (emit (assoc symb-ast-opts :ast (first symb-ast)))
+
+        (is-complex-type? ast-opts)
+        (emit symb-ast-opts)
+
+        :else
         (str "(" (emit symb-ast-opts) ")"))
 
       ;; else, we have something that we treat like a scalar

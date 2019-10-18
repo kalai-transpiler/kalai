@@ -15,7 +15,9 @@
         type-val (:mtype ast)]
     (let [type-parameter-val (second type-val)]
       (assert (sequential? type-parameter-val))
-      (let [type-parameter-class-ast-opts (assoc-in ast-opts [:ast :mtype] type-parameter-val)
+      (let [type-parameter-class-ast-opts (-> ast-opts
+                                              (assoc-in [:impl-state :type-class-ast :mtype] type-parameter-val)
+                                              (assoc-in [:ast :mtype] type-parameter-val))
             type-parameter (emit-type type-parameter-class-ast-opts)
             type (str "List<" type-parameter ">")]
         type))))
@@ -24,7 +26,7 @@
   [ast-opts]
   (let [ast (:ast ast-opts)
         type-val (:mtype ast)]
-    (let [type-parameters-val (second type-val)]
+    (let [type-parameters-val (second type-val)] 
       (assert (sequential? type-parameters-val))
       (let [map-key-type-parameter-val (first type-parameters-val)
             map-val-type-parameter-val (second type-parameters-val) 
@@ -40,6 +42,7 @@
   (let [ast (:ast ast-opts)
         class (or (:return-tag ast)
                   (:tag ast)
+                  (-> ast :impl-state :type-class-ast :mtype)
                   (:mtype ast))]
     (when class
       (cond
@@ -142,9 +145,16 @@
                   (= :map (-> ast-opts :ast :init :type)))
              (= :map (-> ast-opts :ast :init :op)))]}
   (let [ast (:ast ast-opts)
+        type-class-ast (get-assignment-type-class-ast ast-opts)
+        identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
+                     (str identifer-symbol))
         expr-ast-opts (update-in ast-opts [:ast] :init)] 
-    (when-not (common-type-util/is-const-map-nested? expr-ast-opts)
-      (java-type-util/java-emit-assignment-map-not-nested ast-opts))))
+    (if-not (common-type-util/is-const-map-nested? expr-ast-opts)
+      (java-type-util/java-emit-assignment-map-not-nested ast-opts)
+      (let [impl-state {:identifier identifier
+                        :type-class-ast type-class-ast}
+            expr-ast-opts-init-impl-state (assoc expr-ast-opts :impl-state impl-state)]
+        (java-type-util/java-emit-assignment-map-nested expr-ast-opts-init-impl-state)))))
 
 (defmethod iface/emit-defn ::l/java 
   [ast-opts]
