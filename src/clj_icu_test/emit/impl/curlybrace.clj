@@ -266,7 +266,8 @@
 
 (defmethod iface/emit-arg ::l/curlybrace
   [ast-opts symb]
-  {:pre [(:env ast-opts)]}
+  {:pre [(or (:env ast-opts)
+             (= symb (eval symb)))]}
   (let [ast-opts-env (:env ast-opts)
         symb-class (class symb)
         symb-ast (if (seq ast-opts-env)
