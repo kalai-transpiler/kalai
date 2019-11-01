@@ -179,8 +179,13 @@
 
 (defmethod iface/emit-assignment ::l/curlybrace
   [ast-opts]
-  (let [ast (:ast ast-opts)]
-    (if (is-complex-type? (update-in ast-opts [:ast] :init))
+  (let [ast (:ast ast-opts)
+        complex-expr-opts (let [nested-expr-sub-expr-opts ast-opts
+                                assignment-init-expr-opts (update-in ast-opts [:ast] :init)]
+                            (cond
+                              (-> ast-opts :ast :init) assignment-init-expr-opts
+                              :else nested-expr-sub-expr-opts))]
+    (if (is-complex-type? complex-expr-opts)
       (emit-assignment-complex-type ast-opts)
       (let [op-code (:op ast)
             type-class-ast (get-assignment-type-class-ast ast-opts)
@@ -188,7 +193,7 @@
             type-str (emit-type type-class-opts)
             identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
                          (str identifer-symbol))
-            expression (emit (assoc ast-opts :ast (:init ast)))
+            expression (emit complex-expr-opts)
             statement-parts [type-str
                              identifier
                              "="

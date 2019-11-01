@@ -31,8 +31,14 @@
   "Dispatch fn for emit-assignment-complex-type.  Returns the complex (coll) type of the input in addition to the emitter's target lang. Return val is something like :vector, :map, :set, :record as provided by analyzer.
   Since in a statically typed target lang, we sometimes need the type signature of the identifier on the LHS when emitting the constructor code on the RHS, we must obtain the user-provided type accordingly."
   [ast-opts]
-  (let [expr-ast (update-in ast-opts [:ast] :init)]
-    (const-complex-type-dispatch expr-ast)))
+  (let [;;expr-ast (update-in ast-opts [:ast] :init)
+        complex-expr-opts (let [nested-expr-sub-expr-opts ast-opts
+                                assignment-init-expr-opts (update-in ast-opts [:ast] :init)]
+                            (cond
+                              (-> ast-opts :ast :init) assignment-init-expr-opts
+                              :else nested-expr-sub-expr-opts))]
+    (const-complex-type-dispatch complex-expr-opts ;;expr-ast
+     )))
 
 (defn complex-type-dispatch
   "Dispatch fn for emit-complex-type.  Returns the value in the AST of the user-defined type that represents the complex (coll) type."

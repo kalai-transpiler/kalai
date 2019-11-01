@@ -17,6 +17,7 @@
     (let [type-parameter-val (second type-val)]
       (assert (sequential? type-parameter-val))
       (let [type-parameter-class-ast-opts (-> ast-opts
+                                              (dissoc :ast)
                                               (assoc-in [:ast :mtype] type-parameter-val)
                                               (assoc-in [:impl-state :type-class-ast :mtype] type-parameter-val)
                                               )
@@ -151,17 +152,25 @@
   [ast-opts]
   {:pre [(or (and (= :const (-> ast-opts :ast :init :op))
                   (= :vector (-> ast-opts :ast :init :type)))
-             (= :vector (-> ast-opts :ast :init :op)))]}
+             (= :vector (-> ast-opts :ast :init :op))
+             (= :vector (-> ast-opts :ast :type)))]}
   (let [ast (:ast ast-opts)
         type-class-ast (get-assignment-type-class-ast ast-opts)
-        identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
-                     (str identifer-symbol))
-        expr-ast-opts (update-in ast-opts [:ast] :init)]
+        identifier (cond
+                     (-> ast-opts :impl-state :identifier)
+                     (-> ast-opts :impl-state :identifier)
+                     
+                     :else
+                     (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
+                           (str identifer-symbol)))
+        expr-ast-opts (if (-> ast-opts :ast :init)
+                        (update-in ast-opts [:ast] :init)
+                        ast-opts)]
     (if-not (common-type-util/is-const-vector-nested? expr-ast-opts)
       (cpp-type-util/cpp-emit-assignment-vector-not-nested ast-opts)
       (let [impl-state {:identifier identifier
                         :type-class-ast type-class-ast}
-            expr-ast-opts-init-impl-state (assoc expr-ast-opts :impl-state impl-state)]
+            expr-ast-opts-init-impl-state (update-in expr-ast-opts [:impl-state] merge impl-state)]
         (cpp-type-util/cpp-emit-assignment-vector-nested expr-ast-opts-init-impl-state)))))
 
 (defmethod iface/emit-assignment-complex-type [::l/cpp :map]

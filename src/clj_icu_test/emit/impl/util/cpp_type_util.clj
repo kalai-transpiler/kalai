@@ -8,8 +8,9 @@
 (defn cpp-emit-const-vector-not-nested
   [ast-opts]
   {:pre [(is-complex-type? ast-opts)
-         (= :vector (or (-> ast-opts :ast :type)
-                        (-> ast-opts :ast :op)))]}
+         (or (= java.util.List (-> ast-opts :impl-state :type-class-ast :mtype first))
+             (= :vector (or (-> ast-opts :ast :type)
+                            (-> ast-opts :ast :op))))]}
   (let [ast (:ast ast-opts)
 
         ;; item-form-seq (:form ast)
@@ -117,10 +118,12 @@
                                                       :type-class-ast new-type-class-ast
                                                       :position-vector new-position-vector)
                                 new-item-ast-opts (assoc item-ast-opts :impl-state new-impl-state)]
-                            (cpp-emit-assignment-vector-nested-recursive new-item-ast-opts))))
+                            (emit-assignment-complex-type new-item-ast-opts))))
             collected-statements (->> item-strs
                                       (map #(if (seqable? %) (second %) %))
-                                      (apply concat))
+                                      ;;(apply concat)
+                                      flatten
+                                      )            
             new-vector-items (->> item-strs
                                   (map #(if (seqable? %) (first %) %)))
             expr (->> new-vector-items
@@ -147,9 +150,9 @@
          (-> ast-opts :impl-state :identifier)
          (common-type-util/is-const-vector-nested? ast-opts)]}
   (let [impl-state (:impl-state ast-opts)
-        {:keys [type-class-ast identifier]} impl-state
-        init-position-vector []
-        init-statements []
+        {:keys [type-class-ast identifier position-vector statements]} impl-state
+        init-position-vector (or position-vector [])
+        init-statements (or statements [])
         ast-opts-init-impl-state (update-in ast-opts [:impl-state] merge {:type-class-ast type-class-ast
                                                                           :identifier identifier
                                                                           :position-vector init-position-vector
@@ -165,9 +168,18 @@
         type-class-ast (get-assignment-type-class-ast ast-opts)
         type-class-ast-opts (assoc ast-opts :ast type-class-ast)
         type-str (emit-type type-class-ast-opts)
-        identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
-                     (str identifer-symbol))
-        expr-ast-opts (update-in ast-opts [:ast] :init)
+        identifier (if-let [impl-state-identifier (-> ast-opts :impl-state :identifier)]
+                     (let [position-vector (-> ast-opts :impl-state :position-vector)]
+                        (->> position-vector
+                             (map #(str "V" %))
+                             (apply str)
+                             (str impl-state-identifier)))
+                     (or (-> ast-opts :impl-state :identifier)
+                         (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
+                           (str identifer-symbol))))
+        expr-ast (or (:init ast)
+                     ast)
+        expr-ast-opts (assoc ast-opts :ast expr-ast)
         expr (cpp-emit-const-vector-not-nested expr-ast-opts) 
         statement-parts [type-str
                          identifier
@@ -176,8 +188,11 @@
         statement-parts-opts (-> ast-opts
                                  (assoc :val statement-parts)
                                  map->AnyValOpts)
-        statement (emit-statement statement-parts-opts)]
-    statement))
+        statement (emit-statement statement-parts-opts)
+        return-val (if (-> ast-opts :impl-state :identifier)
+                     [identifier statement]
+                     statement)]
+    return-val))
 
 (defn cpp-emit-assignment-map-not-nested
   [ast-opts]
