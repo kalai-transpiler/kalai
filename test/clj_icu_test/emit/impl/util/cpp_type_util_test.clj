@@ -57,8 +57,13 @@
 (defexpect coll-type-nested
   (do
     (import '[java.util List Map Set])
-    (let [ast (az/analyze '(def ^{:mtype [Map [String List [Character]]]} number-systems-map {}))]
-      "TODO")))
+    (let [ast (az/analyze '(def ^{:mtype [Map [String [List [Character]]]]} numberSystemsMap {"LATIN" [\0 \1 \9]}))]
+      (expect ["std::map<std::string,std::vector<char16_t>> numberSystemsMap;"
+               "numberSystemsMap.put(\"LATIN\", {'0', '1', '9'});"]
+              ;; ["std::vector<char16_t> numberSystemsMapM0 = {'0', '1', '9'};"
+              ;;  "std::map<std::string,std::vector<char16_t>> numberSystemsMap"
+              ;;  "numberSystemsMap.insert(std::make_pair(\"LATIN\", numberSystemsMapM0));"]
+              (emit (map->AstOpts {:ast ast :lang ::l/cpp}))))))
 
 (defexpect vectors-nested-impl-recursive-fn
   (let [ast (az/analyze '[2 3 5])

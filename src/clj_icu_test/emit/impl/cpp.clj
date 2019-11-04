@@ -179,9 +179,16 @@
                   (= :map (-> ast-opts :ast :init :type)))
              (= :map (-> ast-opts :ast :init :op)))]}
   (let [ast (:ast ast-opts)
+        type-class-ast (get-assignment-type-class-ast ast-opts)
+        identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
+                     (str identifer-symbol))
         expr-ast-opts (update-in ast-opts [:ast] :init)] 
-    (when-not (common-type-util/is-const-map-nested? expr-ast-opts)
-      (cpp-type-util/cpp-emit-assignment-map-not-nested ast-opts))))
+    (if-not (common-type-util/is-const-map-nested? expr-ast-opts)
+      (cpp-type-util/cpp-emit-assignment-map-not-nested ast-opts)
+      (let [impl-state {:identifier identifier
+                        :type-class-ast type-class-ast}
+            expr-ast-opts-init-impl-state (assoc expr-ast-opts :impl-state impl-state)]
+        (cpp-type-util/cpp-emit-assignment-map-nested expr-ast-opts-init-impl-state)))))
 
 (defmethod iface/emit-defn ::l/cpp
   [ast-opts]
