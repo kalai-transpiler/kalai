@@ -218,6 +218,10 @@ Might return nil"}
 
 (defmulti emit-loop lang)
 
+;; ns
+
+(defmulti emit-ns lang)
+
 ;; special forms
 
 (defmulti emit-new lang)

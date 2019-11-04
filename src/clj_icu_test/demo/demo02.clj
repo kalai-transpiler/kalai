@@ -1,4 +1,4 @@
-(ns clj-icu-test.demo
+(ns clj-icu-test.demo.demo02
   (:require [clj-icu-test.common :refer :all]))
 
 (defclass "NumFmt"

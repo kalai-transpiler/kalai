@@ -22,3 +22,9 @@
   (let [ast (az/analyze '[3 5 [1 7] 23])
         ast-opts (map->AstOpts {:ast ast :lang ::l/java})]
     (expect (emit-arg ast-opts '[3 5 [1 7] 23]) "Arrays.asList(3, 5, Arrays.asList(1, 7), 23)")))
+
+(defexpect emit-ns-form
+  (let [ast (az/analyze '(ns clj-icu-test.demo.demo02
+                           (:require [clj-icu-test.common :refer :all])))
+        ast-opts (map->AstOpts {:ast ast :lang ::l/java})]
+    (expect (emit ast-opts) nil)))

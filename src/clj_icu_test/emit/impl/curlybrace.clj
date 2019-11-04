@@ -471,6 +471,12 @@
     (case form-symbol-str
       "while" (emit-while ast-opts))))
 
+(defmethod iface/emit-ns ::l/curlybrace
+  [ast-opts]
+  {:pre [(= :do (:op (:ast ast-opts)))
+         (= "ns" (-> ast-opts :ast :raw-forms first first name))]}  
+  nil)
+
 ;; entry point
 
 (defmethod iface/emit ::l/curlybrace
@@ -486,7 +492,9 @@
                 "atom" (emit-atom ast-opts)
                 "reset!" (emit-reset! ast-opts)
                 (emit-invoke ast-opts)) 
-      :do (emit-do ast-opts)
+      :do (case (-> ast :raw-forms first first)
+            'ns (emit-ns ast-opts)
+            (emit-do ast-opts))
       :let (emit-let ast-opts)
       :local (emit-local ast-opts)
       :static-call (emit-static-call ast-opts)

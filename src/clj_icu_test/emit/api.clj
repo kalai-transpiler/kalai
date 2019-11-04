@@ -194,6 +194,10 @@
   [ast-opts]
   (iface/emit-loop ast-opts))
 
+(defn emit-ns
+  [ast-opts]
+  (iface/emit-ns ast-opts))
+
 (defn emit-new
   [ast-opts]
   (iface/emit-new ast-opts))
