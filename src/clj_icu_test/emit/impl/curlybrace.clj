@@ -99,8 +99,10 @@
   {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
   (let [statement-parts-seq (:val val-opts)
         statement-parts-opts-seq (for [statement-parts statement-parts-seq]
-                                   (assoc val-opts :val statement-parts))]
-    (map emit-statement statement-parts-opts-seq)))
+                                   (assoc val-opts :val statement-parts))
+        statement-strs (map emit-statement statement-parts-opts-seq)
+        all-statements-str (string/join "\n" statement-strs)]
+    all-statements-str))
 
 (defmethod iface/emit-do ::l/curlybrace
   [ast-opts]

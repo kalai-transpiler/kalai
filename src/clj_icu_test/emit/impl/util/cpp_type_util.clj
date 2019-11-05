@@ -229,8 +229,8 @@
                                        map-entry-put-statements)
         all-statement-data-seq-val-opts (map->AnyValOpts
                                          (assoc ast-opts :val all-statement-data-seq))
-        all-statement-str-seq (emit-statements all-statement-data-seq-val-opts)]
-    all-statement-str-seq))
+        all-statement-str (emit-statements all-statement-data-seq-val-opts)]
+    all-statement-str))
 
 (defn cpp-emit-assignment-map-nested-recursive
   [ast-opts]
@@ -294,7 +294,8 @@
                                              map-put-statements)
               all-statement-data-seq-val-opts (map->AnyValOpts
                                                (assoc ast-opts :val all-statement-data-seq))
-              all-statement-str-seq (emit-statements all-statement-data-seq-val-opts)
+              all-statement-str (emit-statements all-statement-data-seq-val-opts)
+              all-statement-str-seq [all-statement-str]
               return-val [sub-map-identifier all-statement-str-seq]]
           return-val)))))
 

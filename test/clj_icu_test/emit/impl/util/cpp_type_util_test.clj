@@ -30,10 +30,10 @@
     (let [ast (az/analyze '(def ^{:mtype [List [List [Integer]]]} matrix [[2 3 5]
                                                                           [7 11 13]
                                                                           [17 19 23]]))]
-      (expect ["std::vector<int> matrixV0 = {2, 3, 5};"
-               "std::vector<int> matrixV1 = {7, 11, 13};"
-               "std::vector<int> matrixV2 = {17, 19, 23};"
-               "std::vector<std::vector<int>> matrix = {matrixV0, matrixV1, matrixV2};"]
+      (expect "std::vector<int> matrixV0 = {2, 3, 5};
+std::vector<int> matrixV1 = {7, 11, 13};
+std::vector<int> matrixV2 = {17, 19, 23};
+std::vector<std::vector<int>> matrix = {matrixV0, matrixV1, matrixV2};"
               (emit (map->AstOpts {:ast ast :lang ::l/cpp}))))))
 
 (defexpect maps
@@ -42,10 +42,10 @@
     (let [ast (az/analyze '(def ^{:mtype [Map [String Integer]]} numberWords {"one" 1
                                                                               "two" 2
                                                                               "three" 3}))]
-      (expect ["std::map<std::string,int> numberWords;"
-               "numberWords.insert(std::make_pair(\"one\", 1));"
-               "numberWords.insert(std::make_pair(\"two\", 2));"
-               "numberWords.insert(std::make_pair(\"three\", 3));"]
+      (expect "std::map<std::string,int> numberWords;
+numberWords.insert(std::make_pair(\"one\", 1));
+numberWords.insert(std::make_pair(\"two\", 2));
+numberWords.insert(std::make_pair(\"three\", 3));"
               (emit (map->AstOpts {:ast ast :lang ::l/cpp}))))))
 
 ;; (defexpect sets
@@ -58,8 +58,8 @@
   (do
     (import '[java.util List Map Set])
     (let [ast (az/analyze '(def ^{:mtype [Map [String [List [Character]]]]} numberSystemsMap {"LATIN" [\0 \1 \9]}))]
-      (expect ["std::map<std::string,std::vector<char16_t>> numberSystemsMap;"
-               "numberSystemsMap.put(\"LATIN\", {'0', '1', '9'});"]
+      (expect "std::map<std::string,std::vector<char16_t>> numberSystemsMap;
+numberSystemsMap.put(\"LATIN\", {'0', '1', '9'});"
               ;; ["std::vector<char16_t> numberSystemsMapM0 = {'0', '1', '9'};"
               ;;  "std::map<std::string,std::vector<char16_t>> numberSystemsMap"
               ;;  "numberSystemsMap.insert(std::make_pair(\"LATIN\", numberSystemsMapM0));"]
