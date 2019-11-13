@@ -226,6 +226,13 @@ Might return nil"}
 
 (defmulti emit-new lang)
 
+;; metadata
+
+(defmulti
+  ^{:doc "For now, assume that :with-meta can be ignored, and that if the information
+is important, it will have been gotten elsewhere (ex: emit-assignment* fns)."}
+  emit-with-meta lang)
+
 ;; entry point
 
 (defmulti emit lang)

@@ -202,7 +202,10 @@
   [ast-opts]
   (iface/emit-new ast-opts))
 
+(defn emit-with-meta
+  [ast-opts]
+  (iface/emit-with-meta ast-opts))
+
 (defn emit
   [ast-opts]
   (iface/emit ast-opts))
-

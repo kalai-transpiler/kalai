@@ -28,3 +28,14 @@
                            (:require [clj-icu-test.common :refer :all])))
         ast-opts (map->AstOpts {:ast ast :lang ::l/java})]
     (expect (emit ast-opts) nil)))
+
+(defexpect emit-with-meta-test
+  (import 'java.util.List)
+  (let [ast (az/analyze '(do ^{:mtype [List [Character]]} [1 2 3]))
+        ast-opts (map->AstOpts {:ast ast :lang ::l/java})] 
+    (expect (emit ast-opts)
+            "Arrays.asList(1, 2, 3)"))
+  (let [ast (az/analyze '(do ^{:mtype [List [Character]] :hello "world"} [1 2 3]))
+        ast-opts (map->AstOpts {:ast ast :lang ::l/java})]
+    (expect (emit ast-opts)
+            "Arrays.asList(1, 2, 3)")))

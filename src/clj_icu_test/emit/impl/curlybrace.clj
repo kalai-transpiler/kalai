@@ -1,5 +1,6 @@
 (ns clj-icu-test.emit.impl.curlybrace
   (:require [clj-icu-test.common :refer :all]
+            [clj-icu-test.emit.impl.util.curlybrace-util :as cb-util]
             [clj-icu-test.emit.interface :as iface :refer :all]
             [clj-icu-test.emit.langs :as l]
             [clojure.edn :as edn] 
@@ -479,6 +480,15 @@
          (= "ns" (-> ast-opts :ast :raw-forms first first name))]}  
   nil)
 
+;; metadata
+
+(defmethod iface/emit-with-meta ::l/curlybrace
+  [ast-opts]
+  {:pre [(= :with-meta (:op (:ast ast-opts)))]}
+  (let [analyzed-form-ast-opts (cb-util/unwrap-with-meta ast-opts)
+        emitted-form-str (emit analyzed-form-ast-opts)]
+    emitted-form-str))
+
 ;; entry point
 
 (defmethod iface/emit ::l/curlybrace
@@ -489,6 +499,17 @@
       :def (case (some-> ast :raw-forms last first name)
              "defn" (emit-defn ast-opts)
              (emit-def ast-opts))
+      
+      ;; connect this to is-complex-type? somehow
+      :map (do
+             ast-opts
+             (println ":literal? =" (-> ast-opts :ast :literal?))
+             (emit-const-complex-type ast-opts))
+      [:seq :vector :set :record] (do
+                                    ast-opts
+                                    (println ":literal? =" (-> ast-opts :ast :literal?))
+                                    (emit-const-complex-type ast-opts))
+            
       :const (emit-const ast-opts)
       :invoke (case (-> ast :fn :meta :name name)
                 "atom" (emit-atom ast-opts)
@@ -503,6 +524,7 @@
       :var (emit-var ast-opts)
       :loop (emit-loop ast-opts)
       :new (emit-new ast-opts)
+      :with-meta (emit-with-meta ast-opts)
       :else (cond 
               (:raw-forms ast)
               (emit (assoc ast-opts :ast (-> ast :raw-forms)))))))
