@@ -237,11 +237,12 @@
   {:pre [(or (and (= :const (-> ast-opts :ast :op))
                   (= :map (-> ast-opts :ast :type))) 
              (= :map (-> ast-opts :ast :op)))
+         (or (= java.util.Map (-> ast-opts :impl-state :type-class-ast :mtype first))
+             (= java.util.Map (-> ast-opts :impl-state :type-class-ast first)))
          (-> ast-opts :impl-state :type-class-ast)
          (-> ast-opts :impl-state :identifier)
          (-> ast-opts :impl-state :position-vector)
-         (-> ast-opts :impl-state :statements)
-         (= java.util.Map (-> ast-opts :impl-state :type-class-ast :mtype first))]}
+         (-> ast-opts :impl-state :statements)]}
   (letfn [(analyze-literal [literal]
             (if-let [env (or (-> ast-opts :env)
                              (-> ast-opts :ast :env))]

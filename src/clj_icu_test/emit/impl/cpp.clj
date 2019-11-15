@@ -180,7 +180,16 @@
                   (= :map (-> ast-opts :ast :init :type)))
              (= :map (-> ast-opts :ast :init :op)))]}
   (let [ast (:ast ast-opts)
-        type-class-ast (get-assignment-type-class-ast ast-opts)
+        type-class-ast (let [default-type-class-ast (get-assignment-type-class-ast ast-opts)
+                             updated-type-class-ast (if (-> ast :form meta :mtype)
+                                                      ;; *** this uses eval *** -- see curlybrace.clj 
+                                                      (let [curr-ns (-> ast :env :ns find-ns)
+                                                            metadata-form (-> ast :form meta)
+                                                            metadata-val (binding [*ns* curr-ns]
+                                                                           (eval metadata-form))]
+                                                        (merge default-type-class-ast metadata-val))
+                                                      default-type-class-ast)]
+                         updated-type-class-ast)
         identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
                      (str identifer-symbol))
         expr-ast-opts (update-in ast-opts [:ast] :init)] 
@@ -200,8 +209,10 @@
         fn-ast-opts (assoc ast-opts :ast fn-ast)
         fn-return-type (if (-> ast :arglists first meta :mtype) 
                          ;; *** this uses eval *** -- see curlybrace.clj
-                         (let [metadata-form (-> ast :arglists first meta)
-                               metadata-val (eval metadata-form)
+                         (let [curr-ns (-> fn-ast :env :ns find-ns)
+                               metadata-form (-> ast :arglists first meta)
+                               metadata-val (binding [*ns* curr-ns]
+                                              (eval metadata-form))
                                fn-return-type-opts (map->AstOpts {:ast metadata-val :lang (:lang ast-opts)})
                                return-type (emit-type fn-return-type-opts)]
                            return-type) 
@@ -431,9 +442,20 @@
       
       :else
       (let [fn-ns (-> fn-meta-ast :ns str)
-            fn-name (-> fn-meta-ast :name)]
-        (throw (Exception. (str "Function call not recognized for "
-                                fn-ns "/" fn-name)))))))
+            fn-name (-> fn-meta-ast :name)
+            curr-ns (-> ast :fn :env :ns name)]
+        (if (= curr-ns fn-ns)
+          (let [fn-ast-opts (update-in ast-opts [:ast] :fn)
+                arg-strs (emit-invoke-args fn-ast-opts)
+                arg-str (string/join ", " arg-strs)
+                fn-call-str-parts [fn-name
+                                   "("
+                                   arg-str
+                                   ")"]
+                fn-call-str (apply str fn-call-str-parts)]
+            fn-call-str)
+          (throw (Exception. (str "Function call not recognized for "
+                                  fn-ns "/" fn-name))))))))
 
 ;; new
 
