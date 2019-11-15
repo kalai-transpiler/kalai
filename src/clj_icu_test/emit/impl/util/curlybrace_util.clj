@@ -8,10 +8,15 @@
   {:pre [(= :with-meta (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
         env (:env ast)
-        annotated-form (:form ast)
+        annotated-form (:form ast) 
         annotated-form-without-meta (vary-meta annotated-form select-keys [])
+        metadata (meta annotated-form)
         analyzed-form-ast (if env
                             (az/analyze annotated-form-without-meta env)
                             (az/analyze annotated-form-without-meta))
-        analyzed-form-ast-opts (assoc ast-opts :ast analyzed-form-ast)]
+        impl-state (:impl-state ast-opts)
+        new-impl-state (merge-with merge impl-state metadata)
+        analyzed-form-ast-opts (assoc ast-opts
+                                      :ast analyzed-form-ast
+                                      :impl-state new-impl-state)]
     analyzed-form-ast-opts))

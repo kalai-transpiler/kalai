@@ -43,9 +43,10 @@
 (defmethod iface/emit-scalar-type ::l/cpp
   [ast-opts]
   (let [ast (:ast ast-opts)
-        class (or (:return-tag ast)
-                  (:tag ast)
-                  (:mtype ast))]
+        class (or (:return-tag ast) 
+                  (-> ast :impl-state :type-class-ast :mtype)
+                  (:mtype ast)
+                  (:tag ast))]
     (when class
       (cond
         ;; TODO: uncomment the primitive type class code unless and until we want to have
@@ -197,7 +198,14 @@
         fn-name (:name ast)
         fn-ast (:init ast) 
         fn-ast-opts (assoc ast-opts :ast fn-ast)
-        fn-return-type (emit-type fn-ast-opts) 
+        fn-return-type (if (-> ast :arglists first meta :mtype) 
+                         ;; *** this uses eval *** -- see curlybrace.clj
+                         (let [metadata-form (-> ast :arglists first meta)
+                               metadata-val (eval metadata-form)
+                               fn-return-type-opts (map->AstOpts {:ast metadata-val :lang (:lang ast-opts)})
+                               return-type (emit-type fn-return-type-opts)]
+                           return-type) 
+                         (emit-type fn-ast-opts))
         ;; Note: currently not dealing with fn overloading (variadic fns in Clojure),
         ;; so just take the first fn method
         fn-method-first (-> fn-ast

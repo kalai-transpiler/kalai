@@ -5,7 +5,8 @@
             [clj-icu-test.emit.langs :as l]
             [clojure.edn :as edn] 
             [clojure.string :as string]
-            [clojure.tools.analyzer.jvm :as az]))
+            [clojure.tools.analyzer.jvm :as az])
+  (:import [java.util List Map]))
 
 ;;
 ;; this namespace is for C-style syntax emitting fns
@@ -168,7 +169,22 @@
       ast
 
       (get-in ast [:meta :val :mtype])
-      (get-in ast [:meta :val]))))
+      (get-in ast [:meta :val])
+
+      ;; when using tools.analyzer's analyze-ns, the user-supplied type (:mtype) in
+      ;; metadata gets parsed differently, which is most easily recovered in the
+      ;; same way by re-evaluating the form of symbols stored in :form of the AST.
+      ;;
+      ;; Note: *** this uses eval ***
+      ;;
+      ;; TODO: don't use eval
+      (get-in ast [:meta :form :mtype])
+      (do
+        (import '[java.util List Map])
+        (let [type-class-form (get-in ast [:meta :form :mtype])
+              type-class-val (eval type-class-form)
+              type-class-ast {:mtype type-class-val}]
+          type-class-ast)))))
 
 (defmethod iface/get-assignment-identifier-symbol ::l/curlybrace
   [ast-opts]
@@ -183,15 +199,22 @@
 (defmethod iface/emit-assignment ::l/curlybrace
   [ast-opts]
   (let [ast (:ast ast-opts)
+        type-class-ast (get-assignment-type-class-ast ast-opts)
         complex-expr-opts (let [nested-expr-sub-expr-opts ast-opts
-                                assignment-init-expr-opts (update-in ast-opts [:ast] :init)]
+                                ;; expression is nested within AST's :init :expr when calling analyze-ns, and :op = :with-meta
+                                ;; but calling analyze returns the expr in AST's :init with corresponding :op
+                                assignment-init-expr-opts (if (-> ast-opts :ast :init :expr)
+                                                            (-> ast-opts (update-in [:ast] (comp :expr :init)))
+                                                            (-> ast-opts (update-in [:ast] :init)))
+                                assignment-init-expr-with-type-opts (-> assignment-init-expr-opts 
+                                                                        (assoc-in [:impl-state :type-class-ast] type-class-ast))]
                             (cond
-                              (-> ast-opts :ast :init) assignment-init-expr-opts
+                              (-> ast-opts :ast :init) assignment-init-expr-with-type-opts
                               :else nested-expr-sub-expr-opts))]
     (if (is-complex-type? complex-expr-opts)
-      (emit-assignment-complex-type ast-opts)
+      ;; emit-assignment-complex-type expects the RHS expr to be in the AST :init key
+      (emit-assignment-complex-type (assoc-in ast-opts [:ast :init] (:ast complex-expr-opts)))
       (let [op-code (:op ast)
-            type-class-ast (get-assignment-type-class-ast ast-opts)
             type-class-opts (assoc ast-opts :ast type-class-ast) 
             type-str (emit-type type-class-opts)
             identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
