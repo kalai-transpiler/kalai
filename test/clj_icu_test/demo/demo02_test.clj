@@ -69,9 +69,6 @@
       (expect [""
 "public class NumFmt
 {
-  Map<String,List<Character>> numberSystemsMap = new HashMap<>();
-  numberSystemsMap.put(\"LATIN\", Arrays.asList('0', '1', '9'));
-
   public Map<String,List<Character>> getNumberSystemsMap()
   {
     {
@@ -80,6 +77,8 @@
       return m;
     }
   }
+
+  Map<String,List<Character>> numberSystemsMap = getNumberSystemsMap();
 
   public String format(Integer num)
   {

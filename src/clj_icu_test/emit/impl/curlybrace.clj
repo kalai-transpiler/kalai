@@ -196,6 +196,27 @@
                                 :def (get ast :name)))]
     identifier-symbol))
 
+(defmethod iface/emit-assignment-complex-type [::l/curlybrace :invoke]
+  [ast-opts]
+  {:pre [(= :invoke (-> ast-opts :ast :init :op))]}
+  (let [ast (:ast ast-opts)
+        type-class-ast (get-assignment-type-class-ast ast-opts)
+        type-class-ast-opts (assoc ast-opts :ast type-class-ast)
+        type-str (emit-type type-class-ast-opts) 
+        identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
+                     (str identifer-symbol)) 
+        expr-ast-opts (update-in ast-opts [:ast] :init)
+        expr (emit expr-ast-opts)
+        statement-parts [type-str
+                         identifier
+                         "="
+                         expr]
+        statement-parts-opts (-> ast-opts
+                                 (assoc :val statement-parts)
+                                 map->AnyValOpts)
+        statement (emit-statement statement-parts-opts)]
+    statement))
+
 (defmethod iface/emit-assignment ::l/curlybrace
   [ast-opts]
   (let [ast (:ast ast-opts)

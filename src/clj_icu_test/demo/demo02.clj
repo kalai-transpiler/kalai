@@ -2,14 +2,14 @@
   (:require [clj-icu-test.common :refer :all])
   (:import [java.util List Map]))
 
-(defclass "NumFmt"
-
-  (def ^{:mtype [Map [String [List [Character]]]]}
-    numberSystemsMap {"LATIN" [\0 \1 \9]})
+(defclass "NumFmt" 
 
   (defn getNumberSystemsMap ^{:mtype [Map [String [List [Character]]]]} []
     (let [^{:mtype [Map [String [List [Character]]]]} m {"LATIN" [\0 \1 \9]}]
       (return m)))
+
+  (def ^{:mtype [Map [String [List [Character]]]]}
+    numberSystemsMap (getNumberSystemsMap))
   
   (defn format ^String [^Integer num]
     (let [^Integer i (atom num)
