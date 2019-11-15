@@ -2,22 +2,23 @@
   (:require [clj-icu-test.common :refer :all]
             [clj-icu-test.emit.api :refer :all]
             [clj-icu-test.emit.langs :as l]
-            [clj-icu-test.emit.util :as emit-util] 
+            [clj-icu-test.emit.util :as emit-util]
+            [clojure.test :refer [deftest testing]]
             [clojure.tools.analyzer.jvm :as az]
             [expectations.clojure.test :refer :all])
   (:import clj_icu_test.common.AstOpts))
 
 
+(deftest demo02
+  ;; ast-seq is now a sequence of ASTs representing all the code in the
+  ;; namespace ("file") clj-icu-test.demo.demo
 
-;; ast-seq is now a sequence of ASTs representing all the code in the
-;; namespace ("file") clj-icu-test.demo.demo
+  (let [ast-seq (az/analyze-ns 'clj-icu-test.demo.demo02)]
 
-(let [ast-seq (az/analyze-ns 'clj-icu-test.demo.demo02)]
-
-  (defexpect demo02-java
-    (let [java-strs (emit-util/emit-analyzed-ns-asts ast-seq ::l/java)]
-      (expect [""
-"public class NumFmt
+    (testing "java"
+      (let [java-strs (emit-util/emit-analyzed-ns-asts ast-seq ::l/java)]
+        (expect [""
+                 "public class NumFmt
 {
   public Map<String,List<Character>> getNumberSystemsMap()
   {
@@ -48,13 +49,13 @@
     }
   }
 }"]
-              java-strs)))
+                java-strs)))
 
-  
-  (defexpect demo02-java
-    (let [cpp-strs (emit-util/emit-analyzed-ns-asts ast-seq ::l/cpp)]
-      (expect [""
-               "class NumFmt
+    
+    (testing "cpp"
+      (let [cpp-strs (emit-util/emit-analyzed-ns-asts ast-seq ::l/cpp)]
+        (expect [""
+                 "class NumFmt
 {
   std::map<std::string,std::vector<char16_t>> getNumberSystemsMap()
   {
@@ -85,5 +86,6 @@
     }
   }
 };"]
-              cpp-strs)))
+                cpp-strs)))
+    )
   )
