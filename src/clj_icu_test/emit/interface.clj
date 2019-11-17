@@ -149,6 +149,9 @@ Might return nil"}
 (defmulti ^{:doc "Emit a get call to a map"}
   emit-get lang)
 
+(defmulti ^{:doc "Emit an nth call to a vector/sequence"}
+  emit-nth lang)
+
 ;; other
 
 (defmulti ^{:doc "Emit a local binding var (stored in :local key in AST by analyzer)"}

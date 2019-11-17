@@ -322,6 +322,14 @@ numberWords.put(\"three\", 3);"
              "numberWords.get(\"one\");"]
             )))
 
+(defexpect nth-test
+  (let [ast (az/analyze '(do (def ^{:mtype [List [Integer]]} numbers [13 17 19 23])
+                             (nth numbers 2)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+            ["List<Integer> numbers = Arrays.asList(13, 17, 19, 23);"
+             "numbers.get(2);"]
+            )))
+
 ;; not
 
 (defexpect not-test

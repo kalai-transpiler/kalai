@@ -352,6 +352,14 @@ numberWords.insert(std::make_pair(\"three\", 3));"
              "numberWords[\"one\"];"]
             )))
 
+(defexpect nth-test
+  (let [ast (az/analyze '(do (def ^{:mtype [List [Integer]]} numbers [13 17 19 23])
+                             (nth numbers 2)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
+            ["std::vector<int> numbers = {13, 17, 19, 23};"
+             "numbers[2];"]
+            )))
+
 ;; not
 
 (defexpect not-test

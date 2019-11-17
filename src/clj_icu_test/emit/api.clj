@@ -114,6 +114,10 @@
   [ast-opts]
   (iface/emit-get ast-opts))
 
+(defn emit-nth
+  [ast-opts]
+  (iface/emit-nth ast-opts))
+
 (defn emit-local
   [ast-opts]
   (iface/emit-local ast-opts))

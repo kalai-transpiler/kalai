@@ -391,6 +391,7 @@
     ;; a syntactic operator if not otherwise handled explicitly below
     (case  fn-str
       "get" (emit-get ast-opts)
+      "nth" (emit-nth ast-opts)
       (emit-syntactic-operator ast-opts))))
 
 (defmethod iface/emit-local ::l/curlybrace
