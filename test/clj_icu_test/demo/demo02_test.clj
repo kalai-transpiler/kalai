@@ -24,7 +24,9 @@
   {
     {
       Map<String,List<Character>> m = new HashMap<>();
-      m.put(\"LATIN\", Arrays.asList('0', '1', '9'));
+      m.put(\"LATIN\", Arrays.asList('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'));
+      m.put(\"ARABIC\", Arrays.asList('٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'));
+      m.put(\"BENGALI\", Arrays.asList('০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'));
       return m;
     }
   }
@@ -61,7 +63,9 @@
   {
     {
       std::map<std::string,std::vector<char16_t>> m;
-      m.put(\"LATIN\", {'0', '1', '9'});
+      m.put(\"LATIN\", {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'});
+      m.put(\"ARABIC\", {'٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'});
+      m.put(\"BENGALI\", {'০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'});
       return m;
     }
   }
