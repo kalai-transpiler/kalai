@@ -275,9 +275,9 @@
         data-structure-name-str (first arg-strs)
         key-str (second arg-strs)
         expr-parts [data-structure-name-str
-                    ".at("
+                    "["
                     key-str
-                    ")"]
+                    "]"]
         expr (apply str expr-parts)]
     expr))
 

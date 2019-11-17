@@ -349,7 +349,7 @@
 numberWords.insert(std::make_pair(\"one\", 1));
 numberWords.insert(std::make_pair(\"two\", 2));
 numberWords.insert(std::make_pair(\"three\", 3));"
-             "numberWords.at(\"one\");"]
+             "numberWords[\"one\"];"]
             )))
 
 ;; not
