@@ -230,6 +230,24 @@
                                  (string/join "\n"))]
     fn-method-first-str))
 
+;; other built-in fns (also marked with op = :static-call)
+
+(defmethod iface/emit-get ::l/java
+  [ast-opts]
+  {:pre [(= :static-call (:op (:ast ast-opts)))
+         (= "get" (-> ast-opts :ast :raw-forms last first str))]}
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-args ast-opts)
+        data-structure-name-str (first arg-strs)
+        key-str (second arg-strs)
+        expr-parts [data-structure-name-str
+                    ".get("
+                    key-str
+                    ")"]
+        expr (apply str expr-parts)]
+    expr))
+
 ;; classes (or modules or namespaces)
 
 (defmethod iface/emit-defclass ::l/java

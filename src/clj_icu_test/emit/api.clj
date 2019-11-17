@@ -106,6 +106,14 @@
   [ast-opts]
   (iface/emit-static-call ast-opts))
 
+(defn emit-syntactic-operator
+  [ast-opts]
+  (iface/emit-syntactic-operator ast-opts))
+
+(defn emit-get
+  [ast-opts]
+  (iface/emit-get ast-opts))
+
 (defn emit-local
   [ast-opts]
   (iface/emit-local ast-opts))

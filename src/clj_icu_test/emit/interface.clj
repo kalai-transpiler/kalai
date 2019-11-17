@@ -138,8 +138,16 @@ Might return nil"}
 (defmulti ^{:doc "Emit the arguments of a static call"}
   emit-args lang)
 
-(defmulti ^{:doc "Emit a static call (ex: arithmetic operation with a built-in operator/fn)"}
+(defmulti ^{:doc "Emit a \"static call\" fn (happens to be implemented in Clojure as a static call.  Includes syntactic operators, get, etc."}
   emit-static-call lang)
+
+(defmulti ^{:doc "Emit an arithmetic operation with a built-in operator/fn"}
+  emit-syntactic-operator lang)
+
+;; other built-in fns (also marked with op = :static-call)
+
+(defmulti ^{:doc "Emit a get call to a map"}
+  emit-get lang)
 
 ;; other
 

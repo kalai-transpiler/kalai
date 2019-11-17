@@ -337,6 +337,21 @@
   cout << \"e\" << endl;
 }")))
 
+;; other built-in fns (also marked with op = :static-call)
+
+(defexpect get-test
+  (let [ast (az/analyze '(do (def ^{:mtype [Map [String Integer]]} numberWords {"one" 1
+                                                                                "two" 2
+                                                                                "three" 3})
+                             (get numberWords "one")))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
+            ["std::map<std::string,int> numberWords;
+numberWords.insert(std::make_pair(\"one\", 1));
+numberWords.insert(std::make_pair(\"two\", 2));
+numberWords.insert(std::make_pair(\"three\", 3));"
+             "numberWords.at(\"one\");"]
+            )))
+
 ;; not
 
 (defexpect not-test

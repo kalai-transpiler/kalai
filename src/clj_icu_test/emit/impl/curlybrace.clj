@@ -362,24 +362,36 @@
         emitted-args (map (partial emit-arg raw-form-arg-symbol-ast-opts) raw-form-arg-symbols)]
     emitted-args))
 
-(defmethod iface/emit-static-call ::l/curlybrace
+(defmethod iface/emit-syntactic-operator ::l/curlybrace
   [ast-opts]
   {:pre [(= :static-call (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
-        static-call-fn-symbol (let [fn-symbol (-> ast :raw-forms last first)
-                                    fn-str (str fn-symbol)]
-                                (case  fn-str
-                                  "quot" "/"
-                                  "rem" "%"
-                                  ;; Note: extra work is required if supporting Clojure expressions using =
-                                  ;; with more than 2 expression arguments.  Not really high
-                                  ;; priority at the moment to support > 2 args for =
-                                  "=" "=="
-                                  fn-str))
+        fn-symbol (-> ast :raw-forms last first)
+                                    fn-str (str fn-symbol)
+        static-call-fn-symbol (case  fn-str
+                                "quot" "/"
+                                "rem" "%"
+                                ;; Note: extra work is required if supporting Clojure expressions using =
+                                ;; with more than 2 expression arguments.  Not really high
+                                ;; priority at the moment to support > 2 args for =
+                                "=" "=="
+                                fn-str)
         arg-strs (emit-args ast-opts)
         expression-parts (interpose static-call-fn-symbol arg-strs)
         expression (string/join " " expression-parts)]
     expression))
+
+(defmethod iface/emit-static-call ::l/curlybrace
+  [ast-opts]
+  {:pre [(= :static-call (:op (:ast ast-opts)))]}
+  (let [ast (:ast ast-opts)
+        fn-symbol (-> ast :raw-forms last first)
+        fn-str (str fn-symbol)]
+    ;; for a :static-call op in the AST, we default to treating it like
+    ;; a syntactic operator if not otherwise handled explicitly below
+    (case  fn-str
+      "get" (emit-get ast-opts)
+      (emit-syntactic-operator ast-opts))))
 
 (defmethod iface/emit-local ::l/curlybrace
   [ast-opts]
