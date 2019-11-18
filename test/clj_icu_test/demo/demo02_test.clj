@@ -20,6 +20,46 @@
         (expect [""
                  "public class NumFmt
 {
+  public Map<Character,Integer> getDigitsMap()
+  {
+    {
+      Map<Character,Integer> m = new HashMap<>();
+      m.put('٠', 0);
+      m.put('١', 1);
+      m.put('٢', 2);
+      m.put('٣', 3);
+      m.put('٤', 4);
+      m.put('٥', 5);
+      m.put('০', 0);
+      m.put('٦', 6);
+      m.put('১', 1);
+      m.put('٧', 7);
+      m.put('২', 2);
+      m.put('٨', 8);
+      m.put('৩', 3);
+      m.put('٩', 9);
+      m.put('৪', 4);
+      m.put('৫', 5);
+      m.put('৬', 6);
+      m.put('৭', 7);
+      m.put('৮', 8);
+      m.put('৯', 9);
+      m.put('0', 0);
+      m.put('1', 1);
+      m.put('2', 2);
+      m.put('3', 3);
+      m.put('4', 4);
+      m.put('5', 5);
+      m.put('6', 6);
+      m.put('7', 7);
+      m.put('8', 8);
+      m.put('9', 9);
+      return m;
+    }
+  }
+
+  Map<Character,Integer> digitsMap = getDigitsMap();
+
   public Map<String,List<Character>> getNumberSystemsMap()
   {
     {
@@ -61,6 +101,46 @@
         (expect [""
                  "class NumFmt
 {
+  std::map<char16_t,int> getDigitsMap()
+  {
+    {
+      std::map<char16_t,int> m;
+      m.insert(std::make_pair('٠', 0));
+      m.insert(std::make_pair('١', 1));
+      m.insert(std::make_pair('٢', 2));
+      m.insert(std::make_pair('٣', 3));
+      m.insert(std::make_pair('٤', 4));
+      m.insert(std::make_pair('٥', 5));
+      m.insert(std::make_pair('০', 0));
+      m.insert(std::make_pair('٦', 6));
+      m.insert(std::make_pair('১', 1));
+      m.insert(std::make_pair('٧', 7));
+      m.insert(std::make_pair('২', 2));
+      m.insert(std::make_pair('٨', 8));
+      m.insert(std::make_pair('৩', 3));
+      m.insert(std::make_pair('٩', 9));
+      m.insert(std::make_pair('৪', 4));
+      m.insert(std::make_pair('৫', 5));
+      m.insert(std::make_pair('৬', 6));
+      m.insert(std::make_pair('৭', 7));
+      m.insert(std::make_pair('৮', 8));
+      m.insert(std::make_pair('৯', 9));
+      m.insert(std::make_pair('0', 0));
+      m.insert(std::make_pair('1', 1));
+      m.insert(std::make_pair('2', 2));
+      m.insert(std::make_pair('3', 3));
+      m.insert(std::make_pair('4', 4));
+      m.insert(std::make_pair('5', 5));
+      m.insert(std::make_pair('6', 6));
+      m.insert(std::make_pair('7', 7));
+      m.insert(std::make_pair('8', 8));
+      m.insert(std::make_pair('9', 9));
+      return m;
+    }
+  }
+
+  std::map<char16_t,int> digitsMap = getDigitsMap();
+
   std::map<std::string,std::vector<char16_t>> getNumberSystemsMap()
   {
     {
