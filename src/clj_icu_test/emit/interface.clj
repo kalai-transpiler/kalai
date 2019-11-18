@@ -172,7 +172,7 @@ Might return nil"}
   ^{:doc "currently does not handle variadic fns (fn overloading)"}
   emit-defn lang)
 
-;; emitter common impl forms
+;; emitter common impl forms (classes, enums, etc.)
 
 (defmulti emit-defclass lang)
 
@@ -218,6 +218,10 @@ Might return nil"}
 (defmulti
   ^{:doc "Emit the production of a string from a string buffer in C++"}
   emit-tostring-strbuf lang)
+
+(defmulti
+  ^{:doc "Emit the expression that gives the length of the given string expression"}
+  emit-strlen lang)
 
 (defmulti
   ^{:doc "handles invocations of known functions"}

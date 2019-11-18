@@ -389,6 +389,15 @@
         tostring-invoke (str obj-name ".toString()")]
     tostring-invoke))
 
+(defmethod iface/emit-strlen ::l/java
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-invoke-args ast-opts)
+        obj-name (first arg-strs)
+        strlen-invoke (str obj-name ".length()")]
+    strlen-invoke))
+
 (defmethod iface/emit-invoke ::l/java
   [ast-opts]
   {:pre [(= :invoke (:op (:ast ast-opts)))]}
@@ -424,6 +433,9 @@
 
       (fn-matches? fn-meta-ast "clj-icu-test.common" "tostring-strbuf")
       (emit-tostring-strbuf ast-opts)
+      
+      (fn-matches? fn-meta-ast "clj-icu-test.common" "strlen")
+      (emit-strlen ast-opts)
       
       :else
       (let [fn-ns (-> fn-meta-ast :ns str)

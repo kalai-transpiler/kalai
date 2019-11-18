@@ -109,6 +109,11 @@
   [strbuf]
   (.toString strbuf))
 
+(defn strlen
+  "Return the length of a string"
+  [s]
+  (count s))
+
 ;;
 ;; AST helper fns
 ;;

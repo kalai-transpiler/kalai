@@ -297,6 +297,14 @@
   x;
 }")))
 
+;; fn invocations
+
+(defexpect strlen-test
+  (let [ast (az/analyze '(do (def ^String s "Hello, Martians") (strlen s)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+            ["String s = \"Hello, Martians\";"
+             "s.length();"])))
+
 ;; loops (ex: while, doseq)
 
 (defexpect loops
