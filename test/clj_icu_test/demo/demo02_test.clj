@@ -33,7 +33,7 @@
 
   Map<String,List<Character>> numberSystemsMap = getNumberSystemsMap();
 
-  public String format(Integer num)
+  public String format(Integer num, String numberSystem)
   {
     {
       Integer i = num;
@@ -43,7 +43,9 @@
         {
           Integer quotient = (i) / 10;
           Integer remainder = (i) % 10;
-          result = result.insert(0, remainder);
+          List<Character> numberSystemDigits = numberSystemsMap.get(numberSystem);
+          Character localDigit = numberSystemDigits.get(remainder);
+          result = result.insert(0, localDigit);
           i = quotient;
         }
       }
@@ -72,7 +74,7 @@
 
   std::map<std::string,std::vector<char16_t>> numberSystemsMap = getNumberSystemsMap();
 
-  std::string format(int num)
+  std::string format(int num, std::string numberSystem)
   {
     {
       int i = num;
@@ -82,7 +84,9 @@
         {
           int quotient = (i) / 10;
           int remainder = (i) % 10;
-          result = std::to_string(remainder) + result;
+          std::vector<char16_t> numberSystemDigits = numberSystemsMap[numberSystem];
+          char16_t localDigit = numberSystemDigits[remainder];
+          result = localDigit + result;
           i = quotient;
         }
       }

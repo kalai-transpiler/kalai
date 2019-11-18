@@ -160,6 +160,14 @@
 
       (get-in ast [:init :env :tag])
       (get-in ast [:init :env])
+
+      (and (= :binding op-code)
+           (-> ast :form meta :mtype))
+      (let [curr-ns (-> ast :env :ns find-ns)
+            metadata-form (-> ast :form meta)
+            metadata-val (binding [*ns* curr-ns]
+                           (eval metadata-form))]
+        metadata-val)
       
       (and (= :binding op-code)
            (get ast :tag))
@@ -205,6 +213,27 @@
         type-str (emit-type type-class-ast-opts) 
         identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
                      (str identifer-symbol)) 
+        expr-ast-opts (update-in ast-opts [:ast] :init)
+        expr (emit expr-ast-opts)
+        statement-parts [type-str
+                         identifier
+                         "="
+                         expr]
+        statement-parts-opts (-> ast-opts
+                                 (assoc :val statement-parts)
+                                 map->AnyValOpts)
+        statement (emit-statement statement-parts-opts)]
+    statement))
+
+(defmethod iface/emit-assignment-complex-type [::l/curlybrace :static-call]
+  [ast-opts]
+  {:pre [(= :static-call (-> ast-opts :ast :init :op))]}
+  (let [ast (:ast ast-opts)
+        type-class-ast (get-assignment-type-class-ast ast-opts)
+        type-class-ast-opts (assoc ast-opts :ast type-class-ast)
+        type-str (emit-type type-class-ast-opts)
+        identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
+                     (str identifer-symbol))
         expr-ast-opts (update-in ast-opts [:ast] :init)
         expr (emit expr-ast-opts)
         statement-parts [type-str

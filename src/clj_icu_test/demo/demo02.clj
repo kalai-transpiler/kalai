@@ -13,12 +13,14 @@
   (def ^{:mtype [Map [String [List [Character]]]]}
     numberSystemsMap (getNumberSystemsMap))
   
-  (defn format ^String [^Integer num]
+  (defn format ^String [^Integer num, ^String numberSystem]
     (let [^Integer i (atom num)
           ^StringBuffer result (atom (new-strbuf))]
       (while (not (= @i 0))
         (let [^Integer quotient (quot @i 10)
-              ^Integer remainder (rem @i 10)]
-          (reset! result (prepend-strbuf @result remainder))
+              ^Integer remainder (rem @i 10)
+              ^{:mtype [List [Character]]} numberSystemDigits (get numberSystemsMap numberSystem)
+              ^Character localDigit (nth numberSystemDigits remainder)]
+          (reset! result (prepend-strbuf @result localDigit))
           (reset! i quotient)))
       (return (tostring-strbuf @result)))))
