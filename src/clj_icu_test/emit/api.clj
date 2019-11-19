@@ -210,6 +210,10 @@
   [ast-opts]
   (iface/emit-loop ast-opts))
 
+(defn emit-dotimes
+  [ast-opts]
+  (iface/emit-dotimes ast-opts))
+
 (defn emit-ns
   [ast-opts]
   (iface/emit-ns ast-opts))

@@ -23,6 +23,20 @@
         ast-opts (map->AstOpts {:ast ast :lang ::l/java})]
     (expect (emit-arg ast-opts '[3 5 [1 7] 23]) "Arrays.asList(3, 5, Arrays.asList(1, 7), 23)")))
 
+(defexpect emit-dotimes-test
+  (let [ast (az/analyze '(dotimes [^Integer i 10]
+                           (println i)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+            "for(Integer i = 0; i < 10; i++)
+{
+  System.out.println(\"\" + i);
+}")
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
+            "for(int i = 0; i < 10; i++)
+{
+  cout << i << endl;
+}")))
+
 (defexpect emit-ns-form
   (let [ast (az/analyze '(ns clj-icu-test.demo.demo02
                            (:require [clj-icu-test.common :refer :all])))

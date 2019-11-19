@@ -233,6 +233,10 @@ Might return nil"}
 
 (defmulti emit-loop lang)
 
+(defmulti
+  ^{:doc "Emit a dotimes form (aka \"for loop\" with a 0..N-1 iteration)"}
+  emit-dotimes lang)
+
 ;; ns
 
 (defmulti emit-ns lang)

@@ -308,39 +308,44 @@
 (defmethod iface/emit-let ::l/curlybrace
   [ast-opts]
   {:pre [(= :let (:op (:ast ast-opts)))]}
-  (let [ast (:ast ast-opts)
-        bindings (:bindings ast)
-        binding-str (indent (emit-bindings-stanza (assoc ast-opts :ast bindings)))
-        body-ast (:body ast)
-        body-strs (indent
-                   (if (:statements body-ast)
-                     ;; if ast has key nesting of [:body :statements], then we have a multi-"statement" expression do block in the let form
-                     (let [butlast-statements (:statements body-ast)
-                           last-statement (:ret body-ast)
-                           statements (concat butlast-statements [last-statement])
-                           statement-ast-opts (map #(assoc ast-opts :ast %) statements)
-                           statement-strs (map emit statement-ast-opts)]
-                       statement-strs)
-                     ;; else the let block has only one "statement" in the do block
-                     [(emit (assoc ast-opts :ast body-ast))]))
-        body-strs-opts-seq (map #(-> ast-opts
-                                     (assoc :val %)
-                                     map->AnyValOpts)
-                                body-strs)
-        body-strs-with-semicolons (indent
-                                   (map #(if-not (can-become-statement %)
-                                           (:val %)
-                                           (emit-statement %))
-                                        body-strs-opts-seq))
-        body-str (string/join "\n" body-strs-with-semicolons)
-        block-str-parts [(str (indent-str-curr-level) "{")
-                         binding-str
-                         body-str
-                         (str (indent-str-curr-level) "}")]        
-        block-str (->> block-str-parts
-                       (keep identity)
-                       (string/join "\n"))] 
-    block-str))
+  (let [ast (:ast ast-opts)]
+    (cond
+      (= "dotimes" (-> ast :raw-forms first first str))
+      (emit-dotimes ast-opts)
+      
+      :else
+      (let [bindings (:bindings ast)
+            binding-str (indent (emit-bindings-stanza (assoc ast-opts :ast bindings)))
+            body-ast (:body ast)
+            body-strs (indent
+                       (if (:statements body-ast)
+                         ;; if ast has key nesting of [:body :statements], then we have a multi-"statement" expression do block in the let form
+                         (let [butlast-statements (:statements body-ast)
+                               last-statement (:ret body-ast)
+                               statements (concat butlast-statements [last-statement])
+                               statement-ast-opts (map #(assoc ast-opts :ast %) statements)
+                               statement-strs (map emit statement-ast-opts)]
+                           statement-strs)
+                         ;; else the let block has only one "statement" in the do block
+                         [(emit (assoc ast-opts :ast body-ast))]))
+            body-strs-opts-seq (map #(-> ast-opts
+                                         (assoc :val %)
+                                         map->AnyValOpts)
+                                    body-strs)
+            body-strs-with-semicolons (indent
+                                       (map #(if-not (can-become-statement %)
+                                               (:val %)
+                                               (emit-statement %))
+                                            body-strs-opts-seq))
+            body-str (string/join "\n" body-strs-with-semicolons)
+            block-str-parts [(str (indent-str-curr-level) "{")
+                             binding-str
+                             body-str
+                             (str (indent-str-curr-level) "}")]        
+            block-str (->> block-str-parts
+                           (keep identity)
+                           (string/join "\n"))] 
+        block-str))))
 
 
 ;; "arithmetic" (built-in operators)
@@ -550,6 +555,87 @@
                      (str (indent-str-curr-level) "}")]
         while-str (string/join "\n" while-parts)]
     while-str))
+
+(defmethod iface/emit-dotimes ::l/curlybrace
+  [ast-opts]
+  {:pre [(= :let (:op (:ast ast-opts)))
+         (= "dotimes" (-> ast-opts :ast :raw-forms first first str))]}
+  (assert (= 1 (-> ast-opts :ast :bindings count))
+          "Currently only supporting dotimes forms with 1 binding")
+  (let [ast (:ast ast-opts)
+        bindings (:bindings ast)
+        binding-ast (first bindings)
+        binding-symbol (-> ast :raw-forms first second first)
+        iteration-count-limit (-> ast :raw-forms first second second)
+        binding-type-metadata (let [curr-ns (-> ast :env :ns find-ns)
+                                    metadata-form (meta binding-symbol)
+                                    metadata-val (binding [*ns* curr-ns]
+                                                   (eval metadata-form))]
+                                metadata-val)
+        zero-ast (az/analyze '0)
+        updated-binding-ast (-> binding-ast
+                                (assoc-in [:form] binding-symbol)
+                                (merge binding-type-metadata))
+        updated-binding-ast-opts (assoc ast-opts :ast updated-binding-ast)
+        binding-str (emit-binding updated-binding-ast-opts)
+        ;; dotimes puts extra layers of forms around the body compared to a while loop
+        ;; or a let block.  The following code is adapted from emit-let.
+        body-ast (-> ast
+                     :body
+                     :body
+                     :then)
+        body-strs (indent
+                   (if (:statements body-ast)
+                     ;; if ast has key nesting of [:body :statements], then we have a multi-"statement" expression do block in the let form
+                     (do
+                       (assert (= "recur" (-> body-ast :ret :form first str))
+                               "Execution assumes AST data to be skipped that does not exist")
+                       (let [butlast-statements (:statements body-ast)
+                             ;; do not emit return statement within dotimes b/c it is a recur
+                             ;;last-statement (:ret body-ast)
+                             ;;statements (concat butlast-statements [last-statement])
+                             statements butlast-statements
+                             statement-ast-opts (map #(assoc ast-opts :ast %) statements)
+                             statement-strs (map emit statement-ast-opts)]
+                         statement-strs))
+                     ;; else the let block has only one "statement" in the do block
+                     [(emit (assoc ast-opts :ast body-ast))]))
+        ;; the rest of this is copy-and-pasted from emit-let, except
+        ;; the extra for-loop declaration line to begin the block
+        body-strs-opts-seq (map #(-> ast-opts
+                                     (assoc :val %)
+                                     map->AnyValOpts)
+                                body-strs)
+        body-strs-with-semicolons (indent
+                                   (map #(if-not (can-become-statement %)
+                                           (:val %)
+                                           (emit-statement %))
+                                        body-strs-opts-seq))
+        body-str (string/join "\n" body-strs-with-semicolons)
+        first-line-condition-expr-parts [(str binding-symbol)
+                                         "<"
+                                         iteration-count-limit]
+        first-line-condition-expr-str (string/join " " first-line-condition-expr-parts)
+        first-line-condition-stmt-opts (map->AnyValOpts (assoc ast-opts
+                                                               :val first-line-condition-expr-str))
+        first-line-condition-stmt (emit-statement first-line-condition-stmt-opts)
+        first-line-increment-str (str binding-symbol "++")
+        first-line-args-parts [binding-str
+                               first-line-condition-stmt
+                               first-line-increment-str]
+        first-line-args-str (string/join " " first-line-args-parts)
+        first-line-parts ["for("
+                          first-line-args-str
+                          ")"]
+        first-line-str (apply str first-line-parts)
+        block-str-parts [(str (indent-str-curr-level) first-line-str)
+                         (str (indent-str-curr-level) "{")
+                         body-str
+                         (str (indent-str-curr-level) "}")]        
+        block-str (->> block-str-parts
+                       (keep identity)
+                       (string/join "\n"))]
+    block-str))
 
 (defmethod iface/emit-loop ::l/curlybrace
   [ast-opts]
