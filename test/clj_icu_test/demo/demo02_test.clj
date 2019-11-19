@@ -60,6 +60,23 @@
 
   Map<Character,Integer> digitsMap = getDigitsMap();
 
+  public Integer parse(String str)
+  {
+    {
+      Integer result = 0;
+      Integer strLength = str.length();
+      for(Integer i = 0; i < 10; i++)
+      {
+        {
+          Character digit = str.get(i);
+          Integer digitVal = digitsMap.get(digit);
+          result = (10 * (result)) + digitVal;
+        }
+      }
+      return result;
+    }
+  }
+
   public Map<String,List<Character>> getNumberSystemsMap()
   {
     {
@@ -140,6 +157,23 @@
   }
 
   std::map<char16_t,int> digitsMap = getDigitsMap();
+
+  int parse(std::string str)
+  {
+    {
+      int result = 0;
+      int strLength = str.length();
+      for(int i = 0; i < 10; i++)
+      {
+        {
+          char16_t digit = str[i];
+          int digitVal = digitsMap[digit];
+          result = (10 * (result)) + digitVal;
+        }
+      }
+      return result;
+    }
+  }
 
   std::map<std::string,std::vector<char16_t>> getNumberSystemsMap()
   {

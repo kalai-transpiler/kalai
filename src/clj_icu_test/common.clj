@@ -35,6 +35,19 @@
   []
   (apply str (repeat @indent-level INDENT-CHAR)))
 
+(defmacro noindent
+  [& body] 
+  `(do
+     (let [original-indent# (deref indent-level)]
+       (swap! indent-level - original-indent#)
+       (let [result# (do ~@body)]
+         ;; force lazy sequences to evaluate now so that they use
+         ;; the current state of the indent level
+         (when (seq result#)
+           (doall result#))
+         (swap! indent-level + original-indent#) 
+         result#))))
+
 ;;
 ;; records
 ;;

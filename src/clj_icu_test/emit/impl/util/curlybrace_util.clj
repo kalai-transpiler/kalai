@@ -20,3 +20,10 @@
                                       :ast analyzed-form-ast
                                       :impl-state new-impl-state)]
     analyzed-form-ast-opts))
+
+(defn shortest-raw-form
+  "Return the value whose string-ified version is shortest"
+  [raw-forms]
+  (let [raw-forms-by-size (sort-by (comp count str) raw-forms)
+        shortest-raw-form (first raw-forms-by-size)]
+    shortest-raw-form))

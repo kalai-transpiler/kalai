@@ -40,6 +40,15 @@
 
   (def ^{:mtype [Map [Character Integer]]} digitsMap (getDigitsMap))
 
+  (defn parse ^Integer [^String str]
+    (let [^Integer result (atom 0)
+          ^Integer strLength (strlen str)]
+      (dotimes [^{:mtype Integer} i 10]
+        (let [^Character digit (nth str i)
+              ^Integer digitVal (get digitsMap digit)]
+          (reset! result (+ (* 10 @result) digitVal))))
+      (return result)))
+
   (defn getNumberSystemsMap ^{:mtype [Map [String [List [Character]]]]}
     []
     (let [^{:mtype [Map [String [List [Character]]]]} m {"LATIN" [\0 \1 \2 \3 \4 \5 \6 \7 \8 \9]

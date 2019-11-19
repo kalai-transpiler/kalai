@@ -310,7 +310,7 @@
   {:pre [(= :let (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)]
     (cond
-      (= "dotimes" (-> ast :raw-forms first first str))
+      (= "dotimes" (-> ast :raw-forms cb-util/shortest-raw-form first str))
       (emit-dotimes ast-opts)
       
       :else
@@ -559,14 +559,14 @@
 (defmethod iface/emit-dotimes ::l/curlybrace
   [ast-opts]
   {:pre [(= :let (:op (:ast ast-opts)))
-         (= "dotimes" (-> ast-opts :ast :raw-forms first first str))]}
+         (= "dotimes" (-> ast-opts :ast :raw-forms cb-util/shortest-raw-form first str))]}
   (assert (= 1 (-> ast-opts :ast :bindings count))
           "Currently only supporting dotimes forms with 1 binding")
   (let [ast (:ast ast-opts)
         bindings (:bindings ast)
         binding-ast (first bindings)
-        binding-symbol (-> ast :raw-forms first second first)
-        iteration-count-limit (-> ast :raw-forms first second second)
+        binding-symbol (-> ast :raw-forms cb-util/shortest-raw-form second first)
+        iteration-count-limit (-> ast :raw-forms cb-util/shortest-raw-form second second)
         binding-type-metadata (let [curr-ns (-> ast :env :ns find-ns)
                                     metadata-form (meta binding-symbol)
                                     metadata-val (binding [*ns* curr-ns]
@@ -575,9 +575,11 @@
         zero-ast (az/analyze '0)
         updated-binding-ast (-> binding-ast
                                 (assoc-in [:form] binding-symbol)
+                                (assoc-in [:init] zero-ast)
                                 (merge binding-type-metadata))
         updated-binding-ast-opts (assoc ast-opts :ast updated-binding-ast)
-        binding-str (emit-binding updated-binding-ast-opts)
+        binding-str (noindent
+                     (emit-binding updated-binding-ast-opts))
         ;; dotimes puts extra layers of forms around the body compared to a while loop
         ;; or a let block.  The following code is adapted from emit-let.
         body-ast (-> ast
@@ -618,7 +620,8 @@
         first-line-condition-expr-str (string/join " " first-line-condition-expr-parts)
         first-line-condition-stmt-opts (map->AnyValOpts (assoc ast-opts
                                                                :val first-line-condition-expr-str))
-        first-line-condition-stmt (emit-statement first-line-condition-stmt-opts)
+        first-line-condition-stmt (noindent
+                                   (emit-statement first-line-condition-stmt-opts))
         first-line-increment-str (str binding-symbol "++")
         first-line-args-parts [binding-str
                                first-line-condition-stmt
@@ -641,7 +644,7 @@
   [ast-opts]
   {:pre [(= :loop (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
-        form-symbol (-> ast :raw-forms first first)
+        form-symbol (-> ast :raw-forms cb-util/shortest-raw-form first)
         form-symbol-str (str form-symbol)]
     (case form-symbol-str
       "while" (emit-while ast-opts))))
