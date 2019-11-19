@@ -276,7 +276,7 @@
       ;; for now, going to assume that all map keys are not the kind that return a seq of strings
       (assert (not (some common-type-util/val-with-nesting? key-strs)))
       (letfn [(map-put-statement [key-str val-str]
-                (str sub-map-identifier ".put(" key-str ", " val-str ")"))]
+                (str sub-map-identifier ".insert(std::make_pair(" key-str ", " val-str "))"))]
         (let [map-key-type-ast (update-in type-class-ast [:mtype] (comp first second))
               map-val-type-ast (update-in type-class-ast [:mtype] (comp second second)) 
               map-key-type-ast-opts (-> ast-opts
