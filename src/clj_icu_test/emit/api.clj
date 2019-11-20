@@ -198,6 +198,10 @@
   [ast-opts]
   (iface/emit-strlen ast-opts))
 
+(defn emit-str-char-at
+  [ast-opts]
+  (iface/emit-str-char-at ast-opts))
+
 (defn emit-invoke
   [ast-opts]
   (iface/emit-invoke ast-opts))

@@ -127,6 +127,11 @@
   [s]
   (count s))
 
+(defn str-char-at
+  "Return the character at the index of a string"
+  [s i]
+  (nth s i))
+
 ;;
 ;; AST helper fns
 ;;

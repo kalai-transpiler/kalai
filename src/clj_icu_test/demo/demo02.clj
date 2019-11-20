@@ -44,7 +44,7 @@
     (let [^Integer result (atom 0)
           ^Integer strLength (strlen s)]
       (dotimes [^{:mtype Integer} i strLength]
-        (let [^Character digit (nth s i)
+        (let [^Character digit (str-char-at s i)
               ^Integer digitVal (get digitsMap digit)]
           (reset! result (+ (* 10 @result) digitVal))))
       (return @result)))

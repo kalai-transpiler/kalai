@@ -68,7 +68,7 @@
       for(Integer i = 0; i < strLength; i++)
       {
         {
-          Character digit = s.get(i);
+          Character digit = s.charAt(i);
           Integer digitVal = digitsMap.get(digit);
           result = (10 * (result)) + digitVal;
         }
