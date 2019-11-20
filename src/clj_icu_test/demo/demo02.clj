@@ -40,14 +40,14 @@
 
   (def ^{:mtype [Map [Character Integer]]} digitsMap (getDigitsMap))
 
-  (defn parse ^Integer [^String str]
+  (defn parse ^Integer [^String s]
     (let [^Integer result (atom 0)
-          ^Integer strLength (strlen str)]
-      (dotimes [^{:mtype Integer} i 10]
-        (let [^Character digit (nth str i)
+          ^Integer strLength (strlen s)]
+      (dotimes [^{:mtype Integer} i strLength]
+        (let [^Character digit (nth s i)
               ^Integer digitVal (get digitsMap digit)]
           (reset! result (+ (* 10 @result) digitVal))))
-      (return result)))
+      (return @result)))
 
   (defn getNumberSystemsMap ^{:mtype [Map [String [List [Character]]]]}
     []

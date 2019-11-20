@@ -60,15 +60,15 @@
 
   Map<Character,Integer> digitsMap = getDigitsMap();
 
-  public Integer parse(String str)
+  public Integer parse(String s)
   {
     {
       Integer result = 0;
-      Integer strLength = str.length();
-      for(Integer i = 0; i < 10; i++)
+      Integer strLength = s.length();
+      for(Integer i = 0; i < strLength; i++)
       {
         {
-          Character digit = str.get(i);
+          Character digit = s.get(i);
           Integer digitVal = digitsMap.get(digit);
           result = (10 * (result)) + digitVal;
         }
@@ -158,15 +158,15 @@
 
   std::map<char16_t,int> digitsMap = getDigitsMap();
 
-  int parse(std::string str)
+  int parse(std::string s)
   {
     {
       int result = 0;
-      int strLength = str.length();
-      for(int i = 0; i < 10; i++)
+      int strLength = s.length();
+      for(int i = 0; i < strLength; i++)
       {
         {
-          char16_t digit = str[i];
+          char16_t digit = s[i];
           int digitVal = digitsMap[digit];
           result = (10 * (result)) + digitVal;
         }
