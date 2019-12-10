@@ -6,6 +6,17 @@
             [expectations.clojure.test :refer :all])
   (:import clj_icu_test.common.AstOpts))
 
+;; nil
+
+(defexpect nil-test
+  (let [ast (az/analyze 'nil)]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+            "null"))
+  (let [ast (az/analyze '(do (def x 3) (not= x nil)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+            ["x = 3;"
+             "x != null;"])))
+
 ;; not=
 
 (defexpect not=-test
