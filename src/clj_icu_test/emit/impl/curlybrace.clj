@@ -509,6 +509,19 @@
         expr-str (str "!(" arg-str ")")]
     expr-str))
 
+;; not=
+
+(defmethod iface/emit-not= ::l/curlybrace
+  [ast-opts]
+  {:pre [(= :invoke (-> ast-opts :ast :op))]}
+  (let [ast (:ast ast-opts)
+        ;; Note: assuming that not= only has 2 args
+        arg-strs (emit-invoke-args ast-opts)
+        first-arg (first arg-strs)
+        second-arg (second arg-strs)
+        expr-str (str first-arg " != " second-arg)]
+    expr-str))
+
 ;; fn invocations
 
 (defmethod iface/emit-invoke-arg ::l/curlybrace

@@ -6,6 +6,14 @@
             [expectations.clojure.test :refer :all])
   (:import clj_icu_test.common.AstOpts))
 
+;; not=
+
+(defexpect not=-test
+  (let [ast (az/analyze '(not= 3 (/ 10 2)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+            "3 != 10 / 2")))
+
+;; args
 
 (defexpect emit-arg-expressions-in-arg
   (let [ast (az/analyze '(+ 3 5 (+ 1 7) 23))]
@@ -23,6 +31,8 @@
         ast-opts (map->AstOpts {:ast ast :lang ::l/java})]
     (expect (emit-arg ast-opts '[3 5 [1 7] 23]) "Arrays.asList(3, 5, Arrays.asList(1, 7), 23)")))
 
+;; loops
+
 (defexpect emit-dotimes-test
   (let [ast (az/analyze '(dotimes [^Integer i 10]
                            (println i)))]
@@ -37,11 +47,15 @@
   cout << i << endl;
 }")))
 
+;; ns
+
 (defexpect emit-ns-form
   (let [ast (az/analyze '(ns clj-icu-test.demo.demo02
                            (:require [clj-icu-test.common :refer :all])))
         ast-opts (map->AstOpts {:ast ast :lang ::l/java})]
     (expect (emit ast-opts) nil)))
+
+;; metadata
 
 (defexpect emit-with-meta-test
   (import 'java.util.List)

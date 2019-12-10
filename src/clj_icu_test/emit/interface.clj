@@ -188,6 +188,8 @@ Might return nil"}
 
 (defmulti emit-not lang)
 
+(defmulti emit-not= lang)
+
 ;; fn invocations
 
 (defmulti emit-invoke-arg lang)

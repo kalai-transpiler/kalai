@@ -423,6 +423,9 @@
       (fn-matches? fn-meta-ast "clojure.core" "not")
       (emit-not ast-opts)
 
+      (fn-matches? fn-meta-ast "clojure.core" "not=")
+      (emit-not= ast-opts)
+
       (fn-matches? fn-meta-ast "clojure.core" "println")
       (emit-println ast-opts)
 
