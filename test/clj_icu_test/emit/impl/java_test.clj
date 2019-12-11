@@ -381,6 +381,14 @@ numberWords.put(\"three\", 3);"
   sb.insert(0, \"hello\");
 }")))
 
+;; sequential collection - append
+
+(defexpect seq-append-test
+  (let [ast (az/analyze '(do (def ^{:mtype [List [Character]]} formattedDigits []) (seq-append formattedDigits \1)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+["List<Character> formattedDigits = Arrays.asList();"
+ "formattedDigits.add('1');"])))
+
 ;; demo code
 
 (defexpect demo

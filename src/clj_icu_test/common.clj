@@ -132,6 +132,13 @@
   [s i]
   (nth s i))
 
+;; impl fns - collection-related
+
+(defn seq-append
+  "Append the element to the end of the input sequential collection"
+  [coll e]
+  (concat coll [e]))
+
 ;;
 ;; AST helper fns
 ;;

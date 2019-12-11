@@ -239,6 +239,8 @@ Might return nil"}
   ^{:doc "Emit the expression that gives the character at the given index of the given string expression"}
   emit-str-char-at lang)
 
+(defmulti emit-seq-append lang)
+
 (defmulti
   ^{:doc "handles invocations of known functions"}
   emit-invoke lang)

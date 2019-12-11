@@ -218,6 +218,10 @@
   [ast-opts]
   (iface/emit-str-char-at ast-opts))
 
+(defn emit-seq-append
+  [ast-opts]
+  (iface/emit-seq-append ast-opts))
+
 (defn emit-invoke
   [ast-opts]
   (iface/emit-invoke ast-opts))

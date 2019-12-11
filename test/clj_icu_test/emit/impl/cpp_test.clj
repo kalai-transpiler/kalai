@@ -412,6 +412,14 @@ numberWords.insert(std::make_pair(\"three\", 3));"
   \"hello\" + sb;
 }")))
 
+;; sequential collection - append
+
+(defexpect seq-append-test
+  (let [ast (az/analyze '(do (def ^{:mtype [List [Character]]} formattedDigits []) (seq-append formattedDigits \1)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
+["std::vector<char16_t> formattedDigits = {};"
+ "formattedDigits.push_back('1');"])))
+
 ;; demo code
 
 (defexpect demo
