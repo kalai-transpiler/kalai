@@ -190,6 +190,10 @@ Might return nil"}
 
 (defmulti emit-not= lang)
 
+;; contains?
+
+(defmulti emit-contains? lang)
+
 ;; fn invocations
 
 (defmulti emit-invoke-arg lang)

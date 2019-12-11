@@ -263,6 +263,7 @@
                     ")"]
         expr (apply str expr-parts)]
     expr))
+
 ;; classes (or modules or namespaces)
 
 (defmethod iface/emit-defclass ::l/java
@@ -348,6 +349,18 @@
         expr (apply str expr-parts)]
     expr))
 
+(defmethod iface/emit-contains? ::l/java
+  [ast-opts]
+  (let [arg-strs (emit-invoke-args ast-opts)
+        coll-name-str (first arg-strs)
+        key-str (second arg-strs)
+        expr-parts [coll-name-str
+                    ".contains("
+                    key-str
+                    ")"]
+        expr (apply str expr-parts)]
+    expr))
+
 (defmethod iface/emit-println ::l/java
   [ast-opts]
   (let [ast (:ast ast-opts)
@@ -425,6 +438,9 @@
 
       (fn-matches? fn-meta-ast "clojure.core" "not=")
       (emit-not= ast-opts)
+
+      (fn-matches? fn-meta-ast "clojure.core" "contains?")
+      (emit-contains? ast-opts)
 
       (fn-matches? fn-meta-ast "clojure.core" "println")
       (emit-println ast-opts)

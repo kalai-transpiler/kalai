@@ -480,3 +480,11 @@ numberWords.insert(std::make_pair(\"three\", 3));"
   }
 };")))
 
+(defexpect contains-test
+  (let [ast (az/analyze '(do
+                           (def ^{:mtype [Map [String Integer]]} numberWords {"one" 1})
+                           (contains? numberWords "ten")))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
+["std::map<std::string,int> numberWords;
+numberWords.insert(std::make_pair(\"one\", 1));"
+ "numberWords.count(\"ten\") > 0;"])))

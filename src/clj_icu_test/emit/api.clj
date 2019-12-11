@@ -162,6 +162,10 @@
   [ast-opts]
   (iface/emit-not= ast-opts))
 
+(defn emit-contains?
+  [ast-opts]
+  (iface/emit-contains? ast-opts))
+
 (defn emit-invoke-arg
   [ast-opts]
   (iface/emit-invoke-arg ast-opts))
