@@ -122,7 +122,7 @@
     (let [content-output (emit ast-opts)]
       (if (string? content-output)
         (let [unindented-stmt content-output
-              emit-result (emit-stmt-if-can-become (map->AnyValOpts (assoc ast-opts :val unindented-stmt)))]
+              emit-result (emit-stmt-if-can-become unindented-stmt)]
           emit-result)
         (let [unindented-stmt-seq content-output
               emit-result-seq (map emit-stmt-if-can-become unindented-stmt-seq)
