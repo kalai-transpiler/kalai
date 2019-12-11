@@ -45,8 +45,11 @@
           ^Integer strLength (strlen s)]
       (dotimes [^{:mtype Integer} i strLength]
         (let [^Character digit (str-char-at s i)
-              ^Integer digitVal (get digitsMap digit)]
-          (reset! result (+ (* 10 @result) digitVal))))
+              ^Integer digitVal (atom -1)]
+          (if (contains? digitsMap digit)
+            (do
+              (reset! digitVal (get digitsMap digit))
+              (reset! result (+ (* 10 @result) @digitVal))))))
       (return @result)))
 
   (defn getNumberSystemsMap ^{:mtype [Map [String [List [Character]]]]}
