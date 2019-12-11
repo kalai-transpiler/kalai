@@ -113,15 +113,21 @@
 (defmethod iface/emit-block-statement-content ::l/curlybrace
   [ast-opts]  
   {:pre [(= clj_icu_test.common.AstOpts (class ast-opts))]}
-  (let [content-output (emit ast-opts)]
-    (if (string? content-output)
-      (let [unindented-stmt content-output
-            emit-result (emit-statement (map->AnyValOpts (assoc ast-opts :val unindented-stmt)))]
-        emit-result)
-      (let [unindented-stmt-seq content-output
-            emit-result-seq (emit-statements (map->AnyValOpts (assoc ast-opts :val unindented-stmt-seq)))
-            result-str (string/join "\n" emit-result-seq)]
-        result-str))))
+  (letfn [(emit-stmt-if-can-become
+            [stmt-str]
+            (let [val-opts (map->AnyValOpts (assoc ast-opts :val stmt-str))]
+              (if (can-become-statement val-opts)
+                (emit-statement val-opts)
+                stmt-str)))]
+    (let [content-output (emit ast-opts)]
+      (if (string? content-output)
+        (let [unindented-stmt content-output
+              emit-result (emit-stmt-if-can-become (map->AnyValOpts (assoc ast-opts :val unindented-stmt)))]
+          emit-result)
+        (let [unindented-stmt-seq content-output
+              emit-result-seq (map emit-stmt-if-can-become unindented-stmt-seq)
+              result-str (string/join "\n" emit-result-seq)]
+          result-str)))))
 
 (defmethod iface/emit-do ::l/curlybrace
   [ast-opts]
@@ -146,10 +152,10 @@
         then-ast (:then ast)
         then-str (indent
                   (emit-block-statement-content (assoc ast-opts :ast then-ast)))
-        if-test-then-str-parts [(str "if (" test-str ")")
-                                "{"
+        if-test-then-str-parts [(str (indent-str-curr-level) "if (" test-str ")")
+                                (str (indent-str-curr-level) "{")
                                 then-str
-                                "}"]
+                                (str (indent-str-curr-level) "}")]
         if-test-then-str (string/join "\n" if-test-then-str-parts)
         else-ast (:else ast)
         else-branch-empty (and (= :const (-> else-ast :op))
@@ -158,10 +164,10 @@
                  if-test-then-str
                  (let [else-str (indent
                                  (emit-block-statement-content (assoc ast-opts :ast else-ast)))
-                       extra-else-branch-str-parts ["else"
-                                                    "{"
+                       extra-else-branch-str-parts [(str (indent-str-curr-level) "else")
+                                                    (str (indent-str-curr-level) "{")
                                                     else-str
-                                                    "}"]
+                                                    (str (indent-str-curr-level) "}")]
                        extra-else-branch-str (string/join "\n" extra-else-branch-str-parts)
                        if-test-then-else-str (str if-test-then-str
                                                   "\n"
