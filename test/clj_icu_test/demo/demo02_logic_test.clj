@@ -18,6 +18,11 @@
     (expect 321 (parse "৩২১"))
     (expect 21 (parse "২১"))
     (expect 1 (parse "১")))
+  (testing "parse - grouping separators"
+    (expect 7654321 (parse "7,654,321"))
+    (expect 7654321 (parse "76,54,321"))
+    (expect 4321 (parse "4,321"))
+    (expect 4321 (parse "4321")))
   (testing "format"
     (expect "50301" (format 50301 "LATIN"))
     (expect "321" (format 321 "LATIN"))
