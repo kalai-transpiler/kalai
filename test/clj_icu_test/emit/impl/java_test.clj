@@ -381,6 +381,29 @@ numberWords.put(\"three\", 3);"
   sb.insert(0, \"hello\");
 }")))
 
+;; string buffer - insert
+
+(defexpect stringbuffer-insert
+  (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] (insert-strbuf sb 0 "hello")))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+"{
+  StringBuffer sb = new StringBuffer();
+  sb.insert(0, \"hello\");
+}")))
+
+;; string buffer - length
+
+(defexpect stringbuffer-length
+  (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))]
+                           (insert-strbuf sb 0 "hello")
+                           (length-strbuf sb)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+"{
+  StringBuffer sb = new StringBuffer();
+  sb.insert(0, \"hello\");
+  sb.length();
+}")))
+
 ;; sequential collection - append
 
 (defexpect seq-append-test

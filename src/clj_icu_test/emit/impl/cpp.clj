@@ -441,6 +441,23 @@
         rhs-expr (emit-str new-ast-opts)]
     rhs-expr))
 
+(defmethod iface/emit-insert-strbuf ::l/cpp
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-invoke-args ast-opts)
+        obj-name (first arg-strs)
+        idx (nth arg-strs 1)
+        inserted-val-str (nth arg-strs 2)
+        insert-invoke-parts [obj-name
+                              ".insert("
+                              idx
+                              ", "
+                              inserted-val-str
+                              ")"]
+        insert-invoke (apply str insert-invoke-parts)]
+    insert-invoke))
+
 (defmethod iface/emit-tostring-strbuf ::l/cpp 
   [ast-opts]
   (let [ast (:ast ast-opts)
@@ -448,6 +465,15 @@
         arg-strs (emit-invoke-args ast-opts)
         obj-name (first arg-strs)]
     obj-name))
+
+(defmethod iface/emit-length-strbuf ::l/cpp
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-invoke-args ast-opts)
+        obj-name (first arg-strs)
+        strlen-invoke (str obj-name ".length()")]
+    strlen-invoke))
 
 (defmethod iface/emit-strlen ::l/cpp
   [ast-opts]
@@ -517,8 +543,14 @@
       (fn-matches? fn-meta-ast "clj-icu-test.common" "prepend-strbuf")
       (emit-prepend-strbuf ast-opts)
 
+      (fn-matches? fn-meta-ast "clj-icu-test.common" "insert-strbuf")
+      (emit-insert-strbuf ast-opts)
+
       (fn-matches? fn-meta-ast "clj-icu-test.common" "tostring-strbuf")
       (emit-tostring-strbuf ast-opts)
+
+      (fn-matches? fn-meta-ast "clj-icu-test.common" "length-strbuf")
+      (emit-length-strbuf ast-opts)
 
       (fn-matches? fn-meta-ast "clj-icu-test.common" "strlen")
       (emit-strlen ast-opts)

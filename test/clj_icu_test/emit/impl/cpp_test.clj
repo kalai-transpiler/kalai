@@ -401,6 +401,29 @@ numberWords.insert(std::make_pair(\"three\", 3));"
   sb;
 }")))
 
+;; string buffer - insert
+
+(defexpect stringbuffer-insert
+  (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] (insert-strbuf sb 0 "hello")))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
+"{
+  std::string sb = \"\";
+  sb.insert(0, \"hello\");
+}")))
+
+;; string buffer - length
+
+(defexpect stringbuffer-length
+  (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))]
+                           (insert-strbuf sb 0 "hello")
+                           (length-strbuf sb)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
+"{
+  std::string sb = \"\";
+  sb.insert(0, \"hello\");
+  sb.length();
+}")))
+
 ;; string buffer - prepend
 
 (defexpect stringbuffer-prepend

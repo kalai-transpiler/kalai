@@ -206,9 +206,17 @@
   [ast-opts]
   (iface/emit-prepend-strbuf ast-opts))
 
+(defn emit-insert-strbuf
+  [ast-opts]
+  (iface/emit-insert-strbuf ast-opts))
+
 (defn emit-tostring-strbuf
   [ast-opts]
   (iface/emit-tostring-strbuf ast-opts))
+
+(defn emit-length-strbuf
+  [ast-opts]
+  (iface/emit-strlen ast-opts))
 
 (defn emit-strlen
   [ast-opts]

@@ -227,9 +227,15 @@ Might return nil"}
   buffer), second arg is the string that needs to be prepended"}
   emit-prepend-strbuf lang)
 
+(defmulti emit-insert-strbuf lang)
+
 (defmulti
   ^{:doc "Emit the production of a string from a string buffer in C++"}
   emit-tostring-strbuf lang)
+
+(defmulti
+  ^{:doc "Emit the expression that gives the length of the given string buffer"}
+  emit-length-strbuf lang)
 
 (defmulti
   ^{:doc "Emit the expression that gives the length of the given string expression"}

@@ -117,10 +117,20 @@
   [strbuf s]
   (.insert strbuf 0 s))
 
+(defn insert-strbuf
+  "This fn represents inserting a string into an accumulator string buffer in the target language at a specific index."
+  [strbuf idx s]
+  (.insert strbuf idx s))
+
 (defn tostring-strbuf
   "This fn represents producing the final string value of a string buffer"
   [strbuf]
   (.toString strbuf))
+
+(defn length-strbuf
+  "Return the length of a string buffer"
+  [s]
+  (.length s))
 
 (defn strlen
   "Return the length of a string"
