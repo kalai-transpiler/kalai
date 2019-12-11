@@ -6,6 +6,29 @@
             [expectations.clojure.test :refer :all])
   (:import clj_icu_test.common.AstOpts))
 
+;; if
+
+(defexpect if-test
+  (let [ast (az/analyze '(if (== 8 (+ 5 3))
+                           (println "equals!")
+                           (println "not equals.")))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+"if (8 == (5 + 3))
+{
+  System.out.println(\"\" + \"equals!\");
+}
+else
+{
+  System.out.println(\"\" + \"not equals.\");
+}"))
+  (let [ast (az/analyze '(if (== 8 (+ 5 3))
+                           (println "equals!")))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+"if (8 == (5 + 3))
+{
+  System.out.println(\"\" + \"equals!\");
+}")))
+
 ;; nil
 
 (defexpect nil-test

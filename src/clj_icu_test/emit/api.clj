@@ -32,6 +32,10 @@
   [val-opts]
   (iface/emit-statement val-opts))
 
+(defn emit-block-statement-content
+  [ast-opts]
+  (iface/emit-block-statement-content ast-opts))
+
 (defn can-become-statement
   [val-opts]
   (iface/can-become-statement val-opts))
@@ -51,6 +55,10 @@
 (defn emit-do
   [ast-opts]
   (iface/emit-do ast-opts))
+
+(defn emit-if
+  [ast-opts]
+  (iface/emit-if ast-opts))
 
 (defn emit-atom
   [ast-opts]

@@ -83,6 +83,8 @@ Might return nil"}
 
 (defmulti emit-statements lang)
 
+(defmulti emit-block-statement-content lang)
+
 (defmulti
   ^{:doc "indicate whether input is a string representing a statement"}
   can-become-statement lang)
@@ -97,6 +99,10 @@ Might return nil"}
   emit-const lang)
 
 (defmulti emit-do lang)
+
+;; if
+
+(defmulti emit-if lang)
 
 ;; bindings
 

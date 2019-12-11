@@ -110,6 +110,19 @@
         all-statements-str (string/join "\n" statement-strs)]
     all-statements-str))
 
+(defmethod iface/emit-block-statement-content ::l/curlybrace
+  [ast-opts]  
+  {:pre [(= clj_icu_test.common.AstOpts (class ast-opts))]}
+  (let [content-output (emit ast-opts)]
+    (if (string? content-output)
+      (let [unindented-stmt content-output
+            emit-result (emit-statement (map->AnyValOpts (assoc ast-opts :val unindented-stmt)))]
+        emit-result)
+      (let [unindented-stmt-seq content-output
+            emit-result-seq (emit-statements (map->AnyValOpts (assoc ast-opts :val unindented-stmt-seq)))
+            result-str (string/join "\n" emit-result-seq)]
+        result-str))))
+
 (defmethod iface/emit-do ::l/curlybrace
   [ast-opts]
   {:pre [(= :do (:op (:ast ast-opts)))]}
@@ -123,6 +136,38 @@
         last-emitted-line-as-stmt (emit-statement last-emitted-line-val-opts)
         all-lines (concat stmt-emitted-lines [last-emitted-line-as-stmt])]
     all-lines))
+
+(defmethod iface/emit-if ::l/curlybrace
+  [ast-opts]
+  {:pre [(= :if (:op (:ast ast-opts)))]}
+  (let [ast (:ast ast-opts)
+        test-ast (:test ast)
+        test-str (emit (assoc ast-opts :ast test-ast))
+        then-ast (:then ast)
+        then-str (indent
+                  (emit-block-statement-content (assoc ast-opts :ast then-ast)))
+        if-test-then-str-parts [(str "if (" test-str ")")
+                                "{"
+                                then-str
+                                "}"]
+        if-test-then-str (string/join "\n" if-test-then-str-parts)
+        else-ast (:else ast)
+        else-branch-empty (and (= :const (-> else-ast :op))
+                               (= :nil (-> else-ast :type)))
+        result (if else-branch-empty
+                 if-test-then-str
+                 (let [else-str (indent
+                                 (emit-block-statement-content (assoc ast-opts :ast else-ast)))
+                       extra-else-branch-str-parts ["else"
+                                                    "{"
+                                                    else-str
+                                                    "}"]
+                       extra-else-branch-str (string/join "\n" extra-else-branch-str-parts)
+                       if-test-then-else-str (str if-test-then-str
+                                                  "\n"
+                                                  extra-else-branch-str)]
+                   if-test-then-else-str))]
+    result))
 
 (defmethod iface/emit-atom ::l/curlybrace
   [ast-opts]
@@ -710,6 +755,7 @@
       :do (case (-> ast :raw-forms first first)
             'ns (emit-ns ast-opts)
             (emit-do ast-opts))
+      :if (emit-if ast-opts)
       :let (emit-let ast-opts)
       :local (emit-local ast-opts)
       :static-call (emit-static-call ast-opts)
