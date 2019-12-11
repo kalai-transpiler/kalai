@@ -69,11 +69,12 @@
       {
         {
           Character digit = s.charAt(i);
-          Integer digitVal = -1;
           if (digitsMap.contains(digit))
           {
-            digitVal = digitsMap.get(digit);
-            result = (10 * (result)) + (digitVal);
+            {
+              Integer digitVal = digitsMap.get(digit);
+              result = (10 * (result)) + digitVal;
+            }
           }
         }
       }
@@ -171,11 +172,12 @@
       {
         {
           char16_t digit = s[i];
-          int digitVal = -1;
           if (digitsMap.count(digit) > 0)
           {
-            digitVal = digitsMap[digit];
-            result = (10 * (result)) + (digitVal);
+            {
+              int digitVal = digitsMap[digit];
+              result = (10 * (result)) + digitVal;
+            }
           }
         }
       }
