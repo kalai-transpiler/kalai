@@ -59,8 +59,45 @@
 
   (def ^{:mtype [Map [String [List [Character]]]]}
     numberSystemsMap (getNumberSystemsMap))
+
+  (defn getGroupingSeparatorsMap ^{:mtype [Map [String Character]]}
+    []
+    (let [^{:mtype [Map [String Character]]} m {"LATIN" ","
+                                                "ARABIC" "٬"
+                                                "BENGALI" ","}]
+      (return m)))
+
+  (def ^{:mtype [Map [String Character]]}
+    groupingSeparatorsMap (getGroupingSeparatorsMap))
+
+  (defn getSeparatorPositions ^{:mtype [List [Integer]]}
+    [^Integer numLength ^String groupingStrategy]
+    (let [^{:mtype [List [Integer]]} result (atom [])]
+      (if (str-eq groupingStrategy "NONE")
+        (return @result)
+        (if (str-eq groupingStrategy "ON_ALIGNED_3_3")
+          (let [i (atom (- numLength 3))]
+            (while (< 0 @i)
+              (seq-append result @i)
+              (reset! i (- @i 3)))
+            (return @result))
+          (if (str-eq groupingStrategy "ON_ALIGNED_3_2")
+            (let [i (atom (- numLength 3))]
+              (while (< 0 @i)
+                (seq-append result @i)
+                (reset! i (- @i 2)))
+              (return @result))
+            (if (str-eq groupingStrategy "MIN_2")
+              (if (<= numLength 4)
+                (return @result)
+                (let [i (atom (- numLength 3))]
+                  (while (< 0 @i)
+                    (seq-append result @i)
+                    (reset! i (- @i 3)))
+                  (return @result)))
+              (return @result)))))))
   
-  (defn format ^String [^Integer num, ^String numberSystem]
+  (defn format ^String [^Integer num, ^String numberSystem, ^String groupingStrategy]
     (let [^Integer i (atom num)
           ^StringBuffer result (atom (new-strbuf))]
       (while (not (= @i 0))
@@ -70,4 +107,8 @@
               ^Character localDigit (nth numberSystemDigits remainder)]
           (reset! result (prepend-strbuf @result localDigit))
           (reset! i quotient)))
+      (let [^Character sep (get groupingSeparatorsMap numberSystem)
+            ^Integer numLength (length-strbuf @result)
+            ^{:mtype [List [Integer]]} separatorPositions (getSeparatorPositions numLength groupingStrategy)]
+        )
       (return (tostring-strbuf @result)))))

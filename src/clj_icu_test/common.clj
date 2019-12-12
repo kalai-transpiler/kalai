@@ -157,7 +157,9 @@
 (defn seq-append
   "Append the element to the end of the input sequential collection"
   [coll e]
-  (concat coll [e]))
+  (if (instance? clojure.lang.IRef coll)
+    (swap! coll concat [e])
+    (concat coll [e])))
 
 ;;
 ;; AST helper fns
