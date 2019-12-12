@@ -104,6 +104,8 @@ Might return nil"}
 
 (defmulti emit-if lang)
 
+(defmulti emit-cond lang)
+
 ;; bindings
 
 (defmulti emit-atom lang)

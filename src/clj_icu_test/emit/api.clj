@@ -60,6 +60,10 @@
   [ast-opts]
   (iface/emit-if ast-opts))
 
+(defn emit-cond
+  [ast-opts]
+  (iface/emit-cond ast-opts))
+
 (defn emit-atom
   [ast-opts]
   (iface/emit-atom ast-opts))

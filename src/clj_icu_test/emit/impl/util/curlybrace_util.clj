@@ -39,3 +39,33 @@
   [ast]
   (and (ast-has-nil-value? ast)
        (not (-> ast :raw-forms))))
+
+(defn is-ast-false?
+  "Return whether the AST from the analyzer appears to come from false as the input"
+  [ast]
+  (and (= :const (-> ast :op))
+       (= :bool (-> ast :type))
+       (= false (-> ast :val))))
+
+(defn is-terminal-cond-form
+  "Return whether we have reached a terminal value when traversing the if-else expansion from a cond form"
+  [ast]
+  (and (ast-has-nil-value? ast)
+       (not (is-ast-nil? ast))))
+
+(defn- cond-ast-test-expr-pairs-recursive
+  [ast pairs]
+  (if (is-terminal-cond-form ast)
+    pairs
+    (let [test-ast (:test ast)
+          then-ast (:then ast)
+          new-pair [test-ast then-ast]
+          new-pairs (conj pairs new-pair)
+          else-ast (:else ast)
+          new-ast else-ast]
+      (recur new-ast new-pairs))))
+
+(defn cond-ast-test-expr-pairs
+  [ast]
+  (let [curr-pairs []]
+    (cond-ast-test-expr-pairs-recursive ast curr-pairs)))

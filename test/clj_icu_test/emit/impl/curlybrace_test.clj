@@ -29,6 +29,37 @@ else
   System.out.println(\"\" + \"equals!\");
 }")))
 
+(defexpect cond-test
+  (let [ast (az/analyze '(cond
+                           (= 1 3) (println "3")
+                           (= 1 11) (println "11")
+                           :else (println "hmm")))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+"if (1 == 3)
+{
+  System.out.println(\"\" + \"3\");
+}
+else if (1 == 11)
+{
+  System.out.println(\"\" + \"11\");
+}
+else
+{
+  System.out.println(\"\" + \"hmm\");
+}"))
+  (let [ast (az/analyze '(cond
+                           (= 1 3) (println "3")
+                           (= 1 11) (println "11")))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+"if (1 == 3)
+{
+  System.out.println(\"\" + \"3\");
+}
+else if (1 == 11)
+{
+  System.out.println(\"\" + \"11\");
+}")))
+
 ;; nil
 
 (defexpect nil-test

@@ -174,6 +174,57 @@
                    if-test-then-else-str))]
     result))
 
+(defmethod iface/emit-cond ::l/curlybrace
+  [ast-opts]
+  {:pre [(= :if (:op (:ast ast-opts)))]}
+  (let [ast (:ast ast-opts)
+        test-expr-ast-pairs (cb-util/cond-ast-test-expr-pairs ast)
+        final-pair (last test-expr-ast-pairs)
+        [final-test final-expr] final-pair
+        has-final-else (and (= :const (-> final-test :op))
+                            (not (cb-util/is-ast-false? final-test))
+                            (not (cb-util/is-ast-nil? final-test)))
+        if-else-if-pairs (if has-final-else
+                           (-> test-expr-ast-pairs rest butlast)
+                           (-> test-expr-ast-pairs rest))
+        if-else-if-str-pairs (for [pair if-else-if-pairs]
+                               (let [[test-ast expr-ast] pair
+                                     test-str (emit (assoc ast-opts :ast test-ast))
+                                     expr-str (indent
+                                               (emit-block-statement-content (assoc ast-opts :ast expr-ast)))
+                                     str-pair [test-str expr-str]]
+                                 str-pair))
+        first-pair (first test-expr-ast-pairs)
+        [first-test first-expr] first-pair
+        first-test-str (emit (assoc ast-opts :ast first-test))
+        first-expr-str (indent
+                        (emit-block-statement-content (assoc ast-opts :ast first-expr)))
+        first-if-str-lines [(str (indent-str-curr-level) "if (" first-test-str ")")
+                            (str (indent-str-curr-level) "{")
+                            first-expr-str
+                            (str (indent-str-curr-level) "}")]
+        if-else-if-str-lines (for [str-pair if-else-if-str-pairs]
+                               (let [[test-str expr-str] str-pair]
+                                 [(str (indent-str-curr-level) "else if (" test-str ")")
+                                  (str (indent-str-curr-level) "{")
+                                  expr-str
+                                  (str (indent-str-curr-level) "}")]))
+        all-lines (if-not has-final-else
+                    (flatten (concat first-if-str-lines
+                                     if-else-if-str-lines))
+                    (let [final-test-str (emit (assoc ast-opts :ast final-test))
+                          final-expr-str (indent
+                                          (emit-block-statement-content (assoc ast-opts :ast final-expr)))
+                          final-else-str-lines [(str (indent-str-curr-level) "else")
+                                                (str (indent-str-curr-level) "{")
+                                                final-expr-str
+                                                (str (indent-str-curr-level) "}")]]
+                      (flatten (concat first-if-str-lines
+                                       if-else-if-str-lines
+                                       final-else-str-lines))))
+        result (string/join "\n" all-lines)]
+    result))
+
 (defmethod iface/emit-atom ::l/curlybrace
   [ast-opts]
   {:pre [(and (= :invoke (:op (:ast ast-opts)))
@@ -760,7 +811,9 @@
       :do (case (-> ast :raw-forms first first)
             'ns (emit-ns ast-opts)
             (emit-do ast-opts))
-      :if (emit-if ast-opts)
+      :if (if (= "cond" (some-> ast :raw-forms cb-util/shortest-raw-form first name))
+            (emit-cond ast-opts)
+            (emit-if ast-opts))
       :let (emit-let ast-opts)
       :local (emit-local ast-opts)
       :static-call (emit-static-call ast-opts)
