@@ -73,29 +73,37 @@
   (defn getSeparatorPositions ^{:mtype [List [Integer]]}
     [^Integer numLength ^String groupingStrategy]
     (let [^{:mtype [List [Integer]]} result (atom [])]
-      (if (str-eq groupingStrategy "NONE")
+
+      (cond
+        
+        (str-eq groupingStrategy "NONE")
         (return @result)
-        (if (str-eq groupingStrategy "ON_ALIGNED_3_3")
+
+        (str-eq groupingStrategy "ON_ALIGNED_3_3")
+        (let [i (atom (- numLength 3))]
+          (while (< 0 @i)              
+            (seq-append result @i)
+            (reset! i (- @i 3)))
+          (return @result))
+        
+        (str-eq groupingStrategy "ON_ALIGNED_3_2")
+        (let [i (atom (- numLength 3))]
+          (while (< 0 @i)
+            (seq-append result @i)
+            (reset! i (- @i 2)))
+          (return @result))
+        
+        (str-eq groupingStrategy "MIN_2")
+        (if (<= numLength 4)
+          (return @result)
           (let [i (atom (- numLength 3))]
-            (while (< 0 @i)              
+            (while (< 0 @i)
               (seq-append result @i)
               (reset! i (- @i 3)))
-            (return @result))
-          (if (str-eq groupingStrategy "ON_ALIGNED_3_2")
-            (let [i (atom (- numLength 3))]
-              (while (< 0 @i)
-                (seq-append result @i)
-                (reset! i (- @i 2)))
-              (return @result))
-            (if (str-eq groupingStrategy "MIN_2")
-              (if (<= numLength 4)
-                (return @result)
-                (let [i (atom (- numLength 3))]
-                  (while (< 0 @i)
-                    (seq-append result @i)
-                    (reset! i (- @i 3)))
-                  (return @result)))
-              (return @result)))))))
+            (return @result)))
+
+        :else
+        (return @result))))
   
   (defn format ^String [^Integer num, ^String numberSystem, ^String groupingStrategy]
     (let [^Integer i (atom num)

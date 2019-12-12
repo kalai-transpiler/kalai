@@ -116,9 +116,37 @@
       {
         return result;
       }
-      else
+      else if (groupingStrategy.equals(\"ON_ALIGNED_3_3\"))
       {
-        if (groupingStrategy.equals(\"ON_ALIGNED_3_3\"))
+        {
+          i = numLength - 3;
+          while (0 < (i))
+          {
+            result.add(i);
+            i = (i) - 3;
+          }
+          return result;
+        }
+      }
+      else if (groupingStrategy.equals(\"ON_ALIGNED_3_2\"))
+      {
+        {
+          i = numLength - 3;
+          while (0 < (i))
+          {
+            result.add(i);
+            i = (i) - 2;
+          }
+          return result;
+        }
+      }
+      else if (groupingStrategy.equals(\"MIN_2\"))
+      {
+        if (numLength <= 4)
+        {
+          return result;
+        }
+        else
         {
           {
             i = numLength - 3;
@@ -130,47 +158,10 @@
             return result;
           }
         }
-        else
-        {
-          if (groupingStrategy.equals(\"ON_ALIGNED_3_2\"))
-          {
-            {
-              i = numLength - 3;
-              while (0 < (i))
-              {
-                result.add(i);
-                i = (i) - 2;
-              }
-              return result;
-            }
-          }
-          else
-          {
-            if (groupingStrategy.equals(\"MIN_2\"))
-            {
-              if (numLength <= 4)
-              {
-                return result;
-              }
-              else
-              {
-                {
-                  i = numLength - 3;
-                  while (0 < (i))
-                  {
-                    result.add(i);
-                    i = (i) - 3;
-                  }
-                  return result;
-                }
-              }
-            }
-            else
-            {
-              return result;
-            }
-          }
-        }
+      }
+      else
+      {
+        return result;
       }
     }
   }
@@ -312,9 +303,37 @@
       {
         return result;
       }
-      else
+      else if (groupingStrategy == \"ON_ALIGNED_3_3\")
       {
-        if (groupingStrategy == \"ON_ALIGNED_3_3\")
+        {
+          i = numLength - 3;
+          while (0 < (i))
+          {
+            result.push_back(i);
+            i = (i) - 3;
+          }
+          return result;
+        }
+      }
+      else if (groupingStrategy == \"ON_ALIGNED_3_2\")
+      {
+        {
+          i = numLength - 3;
+          while (0 < (i))
+          {
+            result.push_back(i);
+            i = (i) - 2;
+          }
+          return result;
+        }
+      }
+      else if (groupingStrategy == \"MIN_2\")
+      {
+        if (numLength <= 4)
+        {
+          return result;
+        }
+        else
         {
           {
             i = numLength - 3;
@@ -326,47 +345,10 @@
             return result;
           }
         }
-        else
-        {
-          if (groupingStrategy == \"ON_ALIGNED_3_2\")
-          {
-            {
-              i = numLength - 3;
-              while (0 < (i))
-              {
-                result.push_back(i);
-                i = (i) - 2;
-              }
-              return result;
-            }
-          }
-          else
-          {
-            if (groupingStrategy == \"MIN_2\")
-            {
-              if (numLength <= 4)
-              {
-                return result;
-              }
-              else
-              {
-                {
-                  i = numLength - 3;
-                  while (0 < (i))
-                  {
-                    result.push_back(i);
-                    i = (i) - 3;
-                  }
-                  return result;
-                }
-              }
-            }
-            else
-            {
-              return result;
-            }
-          }
-        }
+      }
+      else
+      {
+        return result;
       }
     }
   }
