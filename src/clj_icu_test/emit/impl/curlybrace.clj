@@ -158,8 +158,7 @@
                                 (str (indent-str-curr-level) "}")]
         if-test-then-str (string/join "\n" if-test-then-str-parts)
         else-ast (:else ast)
-        else-branch-empty (and (= :const (-> else-ast :op))
-                               (= :nil (-> else-ast :type)))
+        else-branch-empty (cb-util/is-ast-nil? else-ast)
         result (if else-branch-empty
                  if-test-then-str
                  (let [else-str (indent

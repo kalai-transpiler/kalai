@@ -27,3 +27,15 @@
   (let [raw-forms-by-size (sort-by (comp count str) raw-forms)
         shortest-raw-form (first raw-forms-by-size)]
     shortest-raw-form))
+
+(defn ast-has-nil-value?
+  "Return whether the AST comes from input that evaluates to nil"
+  [ast]
+  (and (= :const (-> ast :op))
+       (= :nil (-> ast :type))))
+
+(defn is-ast-nil?
+  "Return whether the AST from the analyzer appears to come from nil as the input"
+  [ast]
+  (and (ast-has-nil-value? ast)
+       (not (-> ast :raw-forms))))
