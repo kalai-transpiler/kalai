@@ -95,7 +95,87 @@
 
   Map<String,List<Character>> numberSystemsMap = getNumberSystemsMap();
 
-  public String format(Integer num, String numberSystem)
+  public Map<String,Character> getGroupingSeparatorsMap()
+  {
+    {
+      Map<String,Character> m = new HashMap<>();
+      m.put(\"LATIN\", \",\");
+      m.put(\"ARABIC\", \"٬\");
+      m.put(\"BENGALI\", \",\");
+      return m;
+    }
+  }
+
+  Map<String,Character> groupingSeparatorsMap = getGroupingSeparatorsMap();
+
+  public List<Integer> getSeparatorPositions(Integer numLength, String groupingStrategy)
+  {
+    {
+      List<Integer> result = Arrays.asList();
+      if (groupingStrategy.equals(\"NONE\"))
+      {
+        return result;
+      }
+      else
+      {
+        if (groupingStrategy.equals(\"ON_ALIGNED_3_3\"))
+        {
+          {
+            i = numLength - 3;
+            while (0 < (i))
+            {
+              result.add(i);
+              i = (i) - 3;
+            }
+            return result;
+          }
+        }
+        else
+        {
+          if (groupingStrategy.equals(\"ON_ALIGNED_3_2\"))
+          {
+            {
+              i = numLength - 3;
+              while (0 < (i))
+              {
+                result.add(i);
+                i = (i) - 2;
+              }
+              return result;
+            }
+          }
+          else
+          {
+            if (groupingStrategy.equals(\"MIN_2\"))
+            {
+              if (numLength <= 4)
+              {
+                return result;
+              }
+              else
+              {
+                {
+                  i = numLength - 3;
+                  while (0 < (i))
+                  {
+                    result.add(i);
+                    i = (i) - 3;
+                  }
+                  return result;
+                }
+              }
+            }
+            else
+            {
+              return result;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  public String format(Integer num, String numberSystem, String groupingStrategy)
   {
     {
       Integer i = num;
@@ -109,6 +189,19 @@
           Character localDigit = numberSystemDigits.get(remainder);
           result = result.insert(0, localDigit);
           i = quotient;
+        }
+      }
+      {
+        Character sep = groupingSeparatorsMap.get(numberSystem);
+        Integer numLength = result.length();
+        List<Integer> separatorPositions = getSeparatorPositions();
+        Integer numPositions = separatorPositions.length();
+        for(Integer idx = 0; idx < numPositions; idx++)
+        {
+          {
+            Integer position = separatorPositions.get(idx);
+            result = result.insert(position, sep);
+          }
         }
       }
       return result.toString();
@@ -198,7 +291,87 @@
 
   std::map<std::string,std::vector<char16_t>> numberSystemsMap = getNumberSystemsMap();
 
-  std::string format(int num, std::string numberSystem)
+  std::map<std::string,char16_t> getGroupingSeparatorsMap()
+  {
+    {
+      std::map<std::string,char16_t> m;
+      m.insert(std::make_pair(\"LATIN\", \",\"));
+      m.insert(std::make_pair(\"ARABIC\", \"٬\"));
+      m.insert(std::make_pair(\"BENGALI\", \",\"));
+      return m;
+    }
+  }
+
+  std::map<std::string,char16_t> groupingSeparatorsMap = getGroupingSeparatorsMap();
+
+  std::vector<int> getSeparatorPositions(int numLength, std::string groupingStrategy)
+  {
+    {
+      std::vector<int> result = {};
+      if (groupingStrategy == \"NONE\")
+      {
+        return result;
+      }
+      else
+      {
+        if (groupingStrategy == \"ON_ALIGNED_3_3\")
+        {
+          {
+            i = numLength - 3;
+            while (0 < (i))
+            {
+              result.push_back(i);
+              i = (i) - 3;
+            }
+            return result;
+          }
+        }
+        else
+        {
+          if (groupingStrategy == \"ON_ALIGNED_3_2\")
+          {
+            {
+              i = numLength - 3;
+              while (0 < (i))
+              {
+                result.push_back(i);
+                i = (i) - 2;
+              }
+              return result;
+            }
+          }
+          else
+          {
+            if (groupingStrategy == \"MIN_2\")
+            {
+              if (numLength <= 4)
+              {
+                return result;
+              }
+              else
+              {
+                {
+                  i = numLength - 3;
+                  while (0 < (i))
+                  {
+                    result.push_back(i);
+                    i = (i) - 3;
+                  }
+                  return result;
+                }
+              }
+            }
+            else
+            {
+              return result;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  std::string format(int num, std::string numberSystem, std::string groupingStrategy)
   {
     {
       int i = num;
@@ -212,6 +385,19 @@
           char16_t localDigit = numberSystemDigits[remainder];
           result = localDigit + result;
           i = quotient;
+        }
+      }
+      {
+        char16_t sep = groupingSeparatorsMap[numberSystem];
+        int numLength = result.length();
+        std::vector<int> separatorPositions = getSeparatorPositions();
+        int numPositions = separatorPositions.size();
+        for(int idx = 0; idx < numPositions; idx++)
+        {
+          {
+            int position = separatorPositions[idx];
+            result = result.insert(position, sep);
+          }
         }
       }
       return result;
