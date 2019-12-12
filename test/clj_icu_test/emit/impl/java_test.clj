@@ -404,6 +404,17 @@ numberWords.put(\"three\", 3);"
   sb.length();
 }")))
 
+;; string - equals
+
+(defexpect str-eq-test
+  (let [ast (az/analyze '(do (def ^String s1 "house")
+                             (def ^String s2 "home")
+                             (str-eq s1 s2)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+["String s1 = \"house\";"
+ "String s2 = \"home\";"
+ "s1.equals(s2);"])))
+
 ;; sequential collection - append
 
 (defexpect seq-append-test

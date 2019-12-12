@@ -241,6 +241,8 @@ Might return nil"}
   ^{:doc "Emit the expression that gives the length of the given string expression"}
   emit-strlen lang)
 
+(defmulti emit-str-eq lang)
+
 (defmulti
   ^{:doc "Emit the expression that gives the character at the given index of the given string expression"}
   emit-str-char-at lang)

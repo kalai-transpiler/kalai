@@ -484,6 +484,16 @@
         strlen-invoke (str obj-name ".length()")]
     strlen-invoke))
 
+(defmethod iface/emit-str-eq ::l/cpp
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-invoke-args ast-opts)
+        obj-name-1 (first arg-strs)
+        obj-name-2 (second arg-strs)
+        strlen-invoke (str obj-name-1 " == " obj-name-2)]
+    strlen-invoke))
+
 (defmethod iface/emit-str-char-at ::l/cpp
   [ast-opts]
   (let [ast (:ast ast-opts)
@@ -554,6 +564,9 @@
 
       (fn-matches? fn-meta-ast "clj-icu-test.common" "strlen")
       (emit-strlen ast-opts)
+
+      (fn-matches? fn-meta-ast "clj-icu-test.common" "str-eq")
+      (emit-str-eq ast-opts)
 
       (fn-matches? fn-meta-ast "clj-icu-test.common" "str-char-at")
       (emit-str-char-at ast-opts)

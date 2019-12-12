@@ -137,6 +137,11 @@
   [s]
   (count s))
 
+(defn str-eq
+  "Return whether two strings are equal"
+  [s1 s2]
+  (= s1 s2))
+
 (defn str-char-at
   "Return the character at the index of a string"
   [s i]

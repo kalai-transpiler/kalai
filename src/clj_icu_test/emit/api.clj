@@ -222,6 +222,10 @@
   [ast-opts]
   (iface/emit-strlen ast-opts))
 
+(defn emit-str-eq
+  [ast-opts]
+  (iface/emit-str-eq ast-opts))
+
 (defn emit-str-char-at
   [ast-opts]
   (iface/emit-str-char-at ast-opts))

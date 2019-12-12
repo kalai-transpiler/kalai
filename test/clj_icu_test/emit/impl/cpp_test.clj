@@ -435,6 +435,17 @@ numberWords.insert(std::make_pair(\"three\", 3));"
   \"hello\" + sb;
 }")))
 
+;; string - equals
+
+(defexpect str-eq-test
+  (let [ast (az/analyze '(do (def ^String s1 "house")
+                             (def ^String s2 "home")
+                             (str-eq s1 s2)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
+["std::string s1 = \"house\";"
+ "std::string s2 = \"home\";"
+ "s1 == s2;"])))
+
 ;; sequential collection - append
 
 (defexpect seq-append-test
