@@ -417,6 +417,12 @@ numberWords.put(\"three\", 3);"
 
 ;; sequential collection - append
 
+(defexpect seq-length-test
+  (let [ast (az/analyze '(do (def ^{:mtype [List [Character]]} formattedDigits []) (seq-length formattedDigits)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+["List<Character> formattedDigits = Arrays.asList();"
+ "formattedDigits.length();"])))
+
 (defexpect seq-append-test
   (let [ast (az/analyze '(do (def ^{:mtype [List [Character]]} formattedDigits []) (seq-append formattedDigits \1)))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))

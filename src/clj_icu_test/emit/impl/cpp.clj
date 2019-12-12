@@ -504,6 +504,15 @@
         strlen-invoke (str obj-name "[" idx "]")]
     strlen-invoke))
 
+(defmethod iface/emit-seq-length ::l/cpp
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-invoke-args ast-opts)
+        obj-name (first arg-strs)
+        seq-length-invoke (str obj-name ".size()")]
+    seq-length-invoke))
+
 (defmethod iface/emit-seq-append ::l/cpp
   [ast-opts]
   (let [ast (:ast ast-opts)
@@ -570,6 +579,9 @@
 
       (fn-matches? fn-meta-ast "clj-icu-test.common" "str-char-at")
       (emit-str-char-at ast-opts)
+
+      (fn-matches? fn-meta-ast "clj-icu-test.common" "seq-length")
+      (emit-seq-length ast-opts)
 
       (fn-matches? fn-meta-ast "clj-icu-test.common" "seq-append")
       (emit-seq-append ast-opts)

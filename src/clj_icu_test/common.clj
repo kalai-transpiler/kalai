@@ -149,6 +149,11 @@
 
 ;; impl fns - collection-related
 
+(defn seq-length
+  "Return the length of the sequential collection"
+  [coll]
+  (count coll))
+
 (defn seq-append
   "Append the element to the end of the input sequential collection"
   [coll e]

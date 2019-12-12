@@ -446,6 +446,14 @@ numberWords.insert(std::make_pair(\"three\", 3));"
  "std::string s2 = \"home\";"
  "s1 == s2;"])))
 
+;; sequential collection - length
+
+(defexpect seq-length-test
+  (let [ast (az/analyze '(do (def ^{:mtype [List [Character]]} formattedDigits []) (seq-length formattedDigits)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
+["std::vector<char16_t> formattedDigits = {};"
+ "formattedDigits.size();"])))
+
 ;; sequential collection - append
 
 (defexpect seq-append-test
