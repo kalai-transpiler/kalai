@@ -158,7 +158,7 @@
   "Append the element to the end of the input sequential collection"
   [coll e]
   (if (instance? clojure.lang.IRef coll)
-    (swap! coll concat [e])
+    (reset! coll (concat @coll [e]))
     (concat coll [e])))
 
 ;;

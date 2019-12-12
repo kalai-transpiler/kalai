@@ -77,7 +77,7 @@
         (return @result)
         (if (str-eq groupingStrategy "ON_ALIGNED_3_3")
           (let [i (atom (- numLength 3))]
-            (while (< 0 @i)
+            (while (< 0 @i)              
               (seq-append result @i)
               (reset! i (- @i 3)))
             (return @result))
@@ -109,6 +109,9 @@
           (reset! i quotient)))
       (let [^Character sep (get groupingSeparatorsMap numberSystem)
             ^Integer numLength (length-strbuf @result)
-            ^{:mtype [List [Integer]]} separatorPositions (getSeparatorPositions numLength groupingStrategy)]
-        )
+            ^{:mtype [List [Integer]]} separatorPositions (getSeparatorPositions numLength groupingStrategy)
+            ^Integer numPositions (seq-length separatorPositions)]
+        (dotimes [^{:mtype Integer} idx numPositions]
+          (let [^Integer position (nth separatorPositions idx)]
+            (reset! result (insert-strbuf @result position sep)))))
       (return (tostring-strbuf @result)))))
