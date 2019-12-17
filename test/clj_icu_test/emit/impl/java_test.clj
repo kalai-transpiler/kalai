@@ -496,3 +496,16 @@ numberWords.put(\"three\", 3);"
     }
   }
 }")))
+
+(defexpect invoke-test
+  (let [ast (az/analyze '(do
+                           (defn f ^Integer [^Integer a1 ^Integer a2 ^Integer a3]
+                             (return (+ a1 a2 a3)))
+                           (f 1 2 3)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+
+            ["public Integer f(Integer a1, Integer a2, Integer a3)
+{
+  return a1 + a2 + a3;
+}"
+             "f(1, 2, 3);"])))

@@ -185,7 +185,7 @@
       {
         Character sep = groupingSeparatorsMap.get(numberSystem);
         Integer numLength = result.length();
-        List<Integer> separatorPositions = getSeparatorPositions();
+        List<Integer> separatorPositions = getSeparatorPositions(numLength, groupingStrategy);
         Integer numPositions = separatorPositions.length();
         for(Integer idx = 0; idx < numPositions; idx++)
         {
@@ -372,7 +372,7 @@
       {
         char16_t sep = groupingSeparatorsMap[numberSystem];
         int numLength = result.length();
-        std::vector<int> separatorPositions = getSeparatorPositions();
+        std::vector<int> separatorPositions = getSeparatorPositions(numLength, groupingStrategy);
         int numPositions = separatorPositions.size();
         for(int idx = 0; idx < numPositions; idx++)
         {

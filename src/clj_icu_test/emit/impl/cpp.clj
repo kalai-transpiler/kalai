@@ -591,8 +591,7 @@
             fn-name (-> fn-meta-ast :name)
             curr-ns (-> ast :fn :env :ns name)]
         (if (= curr-ns fn-ns)
-          (let [fn-ast-opts (update-in ast-opts [:ast] :fn)
-                arg-strs (emit-invoke-args fn-ast-opts)
+          (let [arg-strs (emit-invoke-args ast-opts)
                 arg-str (string/join ", " arg-strs)
                 fn-call-str-parts [fn-name
                                    "("

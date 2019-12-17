@@ -538,3 +538,16 @@ numberWords.insert(std::make_pair(\"three\", 3));"
 ["std::map<std::string,int> numberWords;
 numberWords.insert(std::make_pair(\"one\", 1));"
  "numberWords.count(\"ten\") > 0;"])))
+
+(defexpect invoke-test
+  (let [ast (az/analyze '(do
+                           (defn f ^Integer [^Integer a1 ^Integer a2 ^Integer a3]
+                             (return (+ a1 a2 a3)))
+                           (f 1 2 3)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
+
+            ["int f(int a1, int a2, int a3)
+{
+  return a1 + a2 + a3;
+}"
+             "f(1, 2, 3);"])))
