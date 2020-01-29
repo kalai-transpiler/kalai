@@ -62,9 +62,9 @@
 
   (defn getGroupingSeparatorsMap ^{:mtype [Map [String Character]]}
     []
-    (let [^{:mtype [Map [String Character]]} m {"LATIN" ","
-                                                "ARABIC" "٬"
-                                                "BENGALI" ","}]
+    (let [^{:mtype [Map [String Character]]} m {"LATIN" \,
+                                                "ARABIC" \٬
+                                                "BENGALI" \,}]
       (return m)))
 
   (def ^{:mtype [Map [String Character]]}

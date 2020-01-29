@@ -99,9 +99,9 @@
   {
     {
       Map<String,Character> m = new HashMap<>();
-      m.put(\"LATIN\", \",\");
-      m.put(\"ARABIC\", \"٬\");
-      m.put(\"BENGALI\", \",\");
+      m.put(\"LATIN\", ',');
+      m.put(\"ARABIC\", '٬');
+      m.put(\"BENGALI\", ',');
       return m;
     }
   }
@@ -286,9 +286,9 @@
   {
     {
       std::map<std::string,char16_t> m;
-      m.insert(std::make_pair(\"LATIN\", \",\"));
-      m.insert(std::make_pair(\"ARABIC\", \"٬\"));
-      m.insert(std::make_pair(\"BENGALI\", \",\"));
+      m.insert(std::make_pair(\"LATIN\", ','));
+      m.insert(std::make_pair(\"ARABIC\", '٬'));
+      m.insert(std::make_pair(\"BENGALI\", ','));
       return m;
     }
   }
