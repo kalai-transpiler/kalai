@@ -80,14 +80,14 @@
         (return @result)
 
         (str-eq groupingStrategy "ON_ALIGNED_3_3")
-        (let [i (atom (- numLength 3))]
+        (let [^Integer i (atom (- numLength 3))]
           (while (< 0 @i)              
             (seq-append result @i)
             (reset! i (- @i 3)))
           (return @result))
         
         (str-eq groupingStrategy "ON_ALIGNED_3_2")
-        (let [i (atom (- numLength 3))]
+        (let [^Integer i (atom (- numLength 3))]
           (while (< 0 @i)
             (seq-append result @i)
             (reset! i (- @i 2)))
@@ -96,7 +96,7 @@
         (str-eq groupingStrategy "MIN_2")
         (if (<= numLength 4)
           (return @result)
-          (let [i (atom (- numLength 3))]
+          (let [^Integer i (atom (- numLength 3))]
             (while (< 0 @i)
               (seq-append result @i)
               (reset! i (- @i 3)))

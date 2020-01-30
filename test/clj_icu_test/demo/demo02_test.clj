@@ -119,7 +119,7 @@
       else if (groupingStrategy.equals(\"ON_ALIGNED_3_3\"))
       {
         {
-          i = numLength - 3;
+          Integer i = numLength - 3;
           while (0 < (i))
           {
             result.add(i);
@@ -131,7 +131,7 @@
       else if (groupingStrategy.equals(\"ON_ALIGNED_3_2\"))
       {
         {
-          i = numLength - 3;
+          Integer i = numLength - 3;
           while (0 < (i))
           {
             result.add(i);
@@ -149,7 +149,7 @@
         else
         {
           {
-            i = numLength - 3;
+            Integer i = numLength - 3;
             while (0 < (i))
             {
               result.add(i);
@@ -306,7 +306,7 @@
       else if (groupingStrategy == \"ON_ALIGNED_3_3\")
       {
         {
-          i = numLength - 3;
+          int i = numLength - 3;
           while (0 < (i))
           {
             result.push_back(i);
@@ -318,7 +318,7 @@
       else if (groupingStrategy == \"ON_ALIGNED_3_2\")
       {
         {
-          i = numLength - 3;
+          int i = numLength - 3;
           while (0 < (i))
           {
             result.push_back(i);
@@ -336,7 +336,7 @@
         else
         {
           {
-            i = numLength - 3;
+            int i = numLength - 3;
             while (0 < (i))
             {
               result.push_back(i);
