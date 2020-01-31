@@ -379,6 +379,37 @@
         statement (emit-statement statement-parts-opts)]
     statement))
 
+(defmethod iface/emit-assignment-scalar-type ::l/curlybrace
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        type-class-ast (get-assignment-type-class-ast ast-opts)
+        complex-expr-opts (let [nested-expr-sub-expr-opts ast-opts
+                                ;; expression is nested within AST's :init :expr when calling analyze-ns, and :op = :with-meta
+                                ;; but calling analyze returns the expr in AST's :init with corresponding :op
+                                assignment-init-expr-opts (if (-> ast-opts :ast :init :expr)
+                                                            (-> ast-opts (update-in [:ast] (comp :expr :init)))
+                                                            (-> ast-opts (update-in [:ast] :init)))
+                                assignment-init-expr-with-type-opts (-> assignment-init-expr-opts 
+                                                                        (assoc-in [:impl-state :type-class-ast] type-class-ast))]
+                            (cond
+                              (-> ast-opts :ast :init) assignment-init-expr-with-type-opts
+                              :else nested-expr-sub-expr-opts))
+        op-code (:op ast)
+        type-class-opts (assoc ast-opts :ast type-class-ast) 
+        type-str (emit-type type-class-opts)
+        identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
+                     (str identifer-symbol))
+        expression (emit complex-expr-opts)
+        statement-parts [type-str
+                         identifier
+                         "="
+                         expression]
+        statement-parts-opts (-> ast-opts
+                                 (assoc :val statement-parts)
+                                 map->AnyValOpts)
+        statement (emit-statement statement-parts-opts)]
+        statement))
+
 (defmethod iface/emit-assignment ::l/curlybrace
   [ast-opts]
   (let [ast (:ast ast-opts)
@@ -397,21 +428,7 @@
     (if (is-complex-type? complex-expr-opts)
       ;; emit-assignment-complex-type expects the RHS expr to be in the AST :init key
       (emit-assignment-complex-type (assoc-in ast-opts [:ast :init] (:ast complex-expr-opts)))
-      (let [op-code (:op ast)
-            type-class-opts (assoc ast-opts :ast type-class-ast) 
-            type-str (emit-type type-class-opts)
-            identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
-                         (str identifer-symbol))
-            expression (emit complex-expr-opts)
-            statement-parts [type-str
-                             identifier
-                             "="
-                             expression]
-            statement-parts-opts (-> ast-opts
-                                     (assoc :val statement-parts)
-                                     map->AnyValOpts)
-            statement (emit-statement statement-parts-opts)]
-        statement))))
+      (emit-assignment-scalar-type ast-opts))))
 
 (defmethod iface/emit-def ::l/curlybrace
   [ast-opts]

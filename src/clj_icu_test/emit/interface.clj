@@ -118,6 +118,8 @@ Might return nil"}
 
 (defmulti get-assignment-type-class-ast lang)
 
+(defmulti emit-assignment-scalar-type lang)
+
 (defmulti
   ^{:doc "To be used by both 'def' and any bindings block of a form (ex: let)
   Might return nil"}

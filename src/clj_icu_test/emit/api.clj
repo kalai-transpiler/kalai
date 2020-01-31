@@ -84,6 +84,10 @@
   [ast-opts]
   (iface/get-assignment-identifier-symbol ast-opts))
 
+(defn emit-assignment-scalar-type
+  [ast-opts]
+  (iface/emit-assignment-scalar-type))
+
 (defn emit-assignment
   [ast-opts]
   (iface/emit-assignment ast-opts))
