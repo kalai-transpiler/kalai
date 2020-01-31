@@ -2,6 +2,7 @@
   (:require [clj-icu-test.emit.interface :as iface]
             [clj-icu-test.emit.impl.cpp :as cpp]
             [clj-icu-test.emit.impl.java :as java]
+            [clj-icu-test.emit.impl.rust :as rust]
             [clj-icu-test.emit.impl.curlybrace :as curlybrace]))
 
 (defn is-complex-type?

@@ -5,6 +5,7 @@
 
 (def TARGET-LANGS {::java "Java (5 and higher)"
                    ::cpp "C++ (11 and higher)"
+                   ::rust "Rust"
                    ::curlybrace "category that includes ::java and :cpp"})
 
 ;; create the Clojure-style global type hierarchy for the target languages
@@ -12,5 +13,6 @@
 
 (derive ::java ::curlybrace)
 (derive ::cpp ::curlybrace)
+(derive ::rust ::curlybrace)
 
 
