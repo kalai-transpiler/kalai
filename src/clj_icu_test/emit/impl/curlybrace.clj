@@ -13,6 +13,34 @@
 ;; (could be used for C++, Java, and/or others)
 ;;
 
+(defmethod iface/emit-statement ::l/curlybrace
+  [val-opts]
+  {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
+  (let [statement-parts (:val val-opts)]
+    (if (string? statement-parts)
+      (let [statement statement-parts]
+        (if (= \; (last statement))
+          statement
+          (str (indent-str-curr-level)
+               statement
+               ";"))) 
+      (str (indent-str-curr-level)
+           (->> statement-parts
+                (keep identity)
+                (map str)
+                (string/join " "))
+           ";"))))
+
+(defmethod iface/can-become-statement ::l/curlybrace
+  [val-opts]
+  {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
+  (let [expression (:val val-opts)]
+    (let [result
+          (let [last-char (last expression)]
+            (and (not= \; last-char)
+                 (not= \} last-char)))]
+      result)))
+
 ;; requires the AST directly containing the type class info to be passed in
 ;; (ex: the metadata map of a def form, or the AST of the expression of a collection literal
 ;; in a def form).

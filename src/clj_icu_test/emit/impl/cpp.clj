@@ -114,34 +114,6 @@
                             (get number-classes class))]
         is-number-type))))
 
-(defmethod iface/emit-statement ::l/cpp
-  [val-opts]
-  {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
-  (let [statement-parts (:val val-opts)]
-    (if (string? statement-parts)
-      (let [statement statement-parts]
-        (if (= \; (last statement))
-          statement
-          (str (indent-str-curr-level)
-               statement
-               ";"))) 
-      (str (indent-str-curr-level)
-           (->> statement-parts
-                (keep identity)
-                (map str)
-                (string/join " "))
-           ";"))))
-
-(defmethod iface/can-become-statement ::l/cpp
-  [val-opts]
-  {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
-  (let [expression (:val val-opts)]
-    (let [result
-          (let [last-char (last expression)]
-            (and (not= \; last-char)
-                 (not= \} last-char)))]
-      result)))
-
 (defmethod iface/emit-const-complex-type [::l/cpp :vector]
   [ast-opts]
   {:pre [(is-complex-type? ast-opts)

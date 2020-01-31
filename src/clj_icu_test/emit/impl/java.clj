@@ -85,34 +85,6 @@
                   :else
                   nil))))))
 
-(defmethod iface/emit-statement ::l/java
-  [val-opts]
-  {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
-  (let [statement-parts (:val val-opts)]
-    (if (string? statement-parts)
-      (let [statement statement-parts]
-        (if (= \; (last statement))
-          statement
-          (str (indent-str-curr-level)
-               statement
-               ";")))
-      (str (indent-str-curr-level)
-           (->> statement-parts
-                (keep identity)
-                (map str)
-                (string/join " "))
-           ";"))))
-
-(defmethod iface/can-become-statement ::l/java
-  [val-opts]
-  {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
-  (let [expression (:val val-opts)]
-    (let [result
-          (let [last-char (last expression)]
-            (and (not= \; last-char)
-                 (not= \} last-char)))]
-      result)))
-
 (defmethod iface/emit-const-complex-type [::l/java :vector]
   [ast-opts]
   (java-type-util/java-emit-const-complex-type ast-opts))
