@@ -21,3 +21,15 @@
     (expect "x = 3;" (emit (map->AstOpts {:ast ast :lang ::l/rust}))))
   (let [ast (az/analyze '(def ^Integer x 5))]
     (expect "let x: i32 = 5;" (emit (map->AstOpts {:ast ast :lang ::l/rust})))))
+
+;; language - multiple expressions
+
+;; language - multiple expressions - do block
+
+(defexpect lang-mult-expr-do-block
+  (let [ast (az/analyze '(do (def x 3) (def y 5)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) ["x = 3;"
+                                                             "y = 5;"])) 
+  (let [ast (az/analyze '(do (def ^Boolean x true) (def ^Long y 5)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) ["let x: bool = true;"
+                                                             "let y: i64 = 5;"])))
