@@ -150,3 +150,21 @@
   let mut a: i32 = 23;
   a = 19;
 }")))
+
+;; language - nested operands
+
+(defexpect lang-nested-operands
+  (let [ast (az/analyze '(+ 3 5 (+ 1 7) 23))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "3 + 5 + (1 + 7) + 23"))
+  (let [ast (az/analyze '(/ 3 (/ 5 2) (/ 1 7) 23))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "3 / (5 / 2) / (1 / 7) / 23"))
+  (let [ast (az/analyze '(let [x 101] (+ 3 5 (+ x (+ 1 7 (+ x x))) 23)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+"{
+  let x = 101;
+  3 + 5 + (x + (1 + 7 + (x + x))) + 23;
+}"))
+
+
+  (let [ast (az/analyze '(/ 3 (+ 5 2) (* 1 7) 23))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "3 / (5 + 2) / (1 * 7) / 23")))
