@@ -99,21 +99,6 @@
                   :else
                   nil))))))
 
-(defmethod iface/is-number-type? ::l/cpp
-  [val-opts]
-  {:pre [(= clj_icu_test.common.AnyValOpts (class val-opts))]}
-  (let [class (:val val-opts)]
-    (when class
-      (let [number-classes #{java.lang.Number
-                             java.lang.Short
-                             java.lang.Integer
-                             java.lang.Long
-                             java.lang.Float
-                             java.lang.Double}
-            is-number-type (boolean
-                            (get number-classes class))]
-        is-number-type))))
-
 (defmethod iface/emit-const-complex-type [::l/cpp :vector]
   [ast-opts]
   {:pre [(is-complex-type? ast-opts)
