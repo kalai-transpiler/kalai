@@ -214,3 +214,22 @@ pub fn x()
 {
   b + 1;
 }"))))
+
+;; enums
+
+(defexpect enums
+  (do
+    (require '[clj-icu-test.common :refer :all])
+    (let [ast (az/analyze '(defenum "Day"
+                             SUNDAY MONDAY TUESDAY WEDNESDAY THURSDAY FRIDAY SATURDAY))]
+      (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+"enum Day
+{
+  SUNDAY,
+  MONDAY,
+  TUESDAY,
+  WEDNESDAY,
+  THURSDAY,
+  FRIDAY,
+  SATURDAY
+};"))))

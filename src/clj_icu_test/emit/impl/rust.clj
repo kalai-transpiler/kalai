@@ -5,7 +5,7 @@
             [clj-icu-test.emit.impl.util.rust-util :as rust-util]
             [clj-icu-test.emit.impl.util.java-type-util :as java-type-util]
             [clj-icu-test.emit.impl.util.common-type-util :as common-type-util]
-            ;;[clojure.edn :as edn]
+            [clojure.edn :as edn]
             [clojure.string :as string]
             [clojure.tools.analyzer.jvm :as az]))
 
@@ -270,3 +270,37 @@
                        (keep identity)
                        (string/join "\n"))]
     class-str))
+
+;; enum classes
+
+(defmethod iface/emit-defenum ::l/rust
+  [ast-opts]
+  {:pre [(= :invoke (-> ast-opts :ast :op))]}
+  (let [ast (:ast ast-opts)
+        ;; Note: similar to defclass, currently assuming name is provided as string
+        enum-name (-> ast :args first :val)
+        enum-class-signature-parts ["enum"
+                                    enum-name]
+        enum-class-signature (string/join " " enum-class-signature-parts)
+        ;; Note: assuming that enums are only provided as field names,
+        ;; and actual values associated with each field name are not provided
+        enum-field-asts (-> ast :args rest)
+        enum-field-ast-opts (map (partial assoc ast-opts :ast) enum-field-asts)
+        enum-field-strs (map emit enum-field-ast-opts)
+        enum-field-unescaped-strs (map edn/read-string enum-field-strs)
+        enum-field-symbols (map symbol enum-field-unescaped-strs)
+        enum-field-indented-symbols (indent
+                                     (map #(str (indent-str-curr-level) %) enum-field-symbols))
+        enum-field-strs-with-commas (concat (->> enum-field-indented-symbols
+                                                 butlast
+                                                 (map #(str % ",")))
+                                            [(last enum-field-indented-symbols)])
+        enum-fields-str (string/join "\n" enum-field-strs-with-commas)
+        enum-class-str-parts [(str (indent-str-curr-level) enum-class-signature)
+                              (str (indent-str-curr-level) "{")
+                              enum-fields-str
+                              (str (indent-str-curr-level) "};")]
+        enum-class-str (->> enum-class-str-parts
+                            (keep identity)
+                            (string/join "\n"))]
+    enum-class-str))
