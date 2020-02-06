@@ -207,3 +207,30 @@ else if (1 == 11)
 {
   return x + y;
 }")))
+
+
+;; deref
+
+(defexpect deref-test
+  (let [ast (az/analyze '(let [x (atom 3)] @x))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
+"{
+  x = 3;
+  x;
+}")
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+"{
+  x = 3;
+  x;
+}"))
+  (let [ast (az/analyze '(let [x (atom 3)] x))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
+"{
+  x = 3;
+  x;
+}")
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+"{
+  x = 3;
+  x;
+}")))

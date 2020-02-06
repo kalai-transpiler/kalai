@@ -234,24 +234,6 @@
   SATURDAY
 }"))))
 
-;; deref
-
-(defexpect deref-test
-  (let [ast (az/analyze '(let [x (atom 3)] @x))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
-"{
-  x = 3;
-  x;
-}"))
-
-
-  (let [ast (az/analyze '(let [x (atom 3)] x))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
-"{
-  x = 3;
-  x;
-}")))
-
 ;; fn invocations
 
 (defexpect strlen-test
