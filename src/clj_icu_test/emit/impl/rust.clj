@@ -241,3 +241,32 @@
                       ")"]
         command-expr (apply str all-arg-strs)]
     command-expr))
+
+;; classes (or modules or namespaces)
+
+(defmethod iface/emit-defclass ::l/rust
+  [ast-opts]
+  {:pre [(= :invoke (-> ast-opts :ast :op))]}
+  (let [ast (:ast ast-opts)
+        ;; Currently ignoring classes because assuming it as a
+        ;; construct that doesn't translate to Rust
+
+        class-form-asts (-> ast :args rest)
+        class-form-ast-opts (map (partial assoc ast-opts :ast) class-form-asts)
+        class-form-strs (map emit class-form-ast-opts)
+        class-form-strs-opts-seq (map #(-> ast-opts
+                                           (assoc :val %)
+                                           map->AnyValOpts)
+                                      class-form-strs) 
+        class-form-strs-with-semicolons (map #(if-not (can-become-statement %)
+                                                (:val %)
+                                                (emit-statement %))
+                                             class-form-strs-opts-seq)
+        ;; Note: should have a blank line between top-level statements/blocks
+        ;; in a class, so join with 2 newlines instead of just 1 like in a let block
+        class-forms-str (string/join "\n\n" class-form-strs-with-semicolons)
+        class-str-parts [class-forms-str]
+        class-str (->> class-str-parts
+                       (keep identity)
+                       (string/join "\n"))]
+    class-str))

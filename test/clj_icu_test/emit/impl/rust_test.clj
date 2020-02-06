@@ -200,3 +200,17 @@
     return a;
   }
 }")))
+
+;; classes
+
+(defexpect classes
+  (do
+    (require '[clj-icu-test.common :refer :all])
+    (let [ast (az/analyze '(defclass "MyClass" (def ^Integer b 3) (defn x ^void [] (+ b 1))))]
+      (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+"let b: i32 = 3;
+
+pub fn x()
+{
+  b + 1;
+}"))))
