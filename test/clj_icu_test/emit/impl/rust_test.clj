@@ -18,7 +18,7 @@
 
 (defexpect bindings-def 
   (let [ast (az/analyze '(def x 3))]
-    (expect "x = 3;" (emit (map->AstOpts {:ast ast :lang ::l/rust}))))
+    (expect "let x = 3;" (emit (map->AstOpts {:ast ast :lang ::l/rust}))))
   (let [ast (az/analyze '(def ^Integer x 5))]
     (expect "let x: i32 = 5;" (emit (map->AstOpts {:ast ast :lang ::l/rust})))))
 
@@ -28,8 +28,27 @@
 
 (defexpect lang-mult-expr-do-block
   (let [ast (az/analyze '(do (def x 3) (def y 5)))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) ["x = 3;"
-                                                             "y = 5;"])) 
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) ["let x = 3;"
+                                                             "let y = 5;"])) 
   (let [ast (az/analyze '(do (def ^Boolean x true) (def ^Long y 5)))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) ["let x: bool = true;"
                                                              "let y: i64 = 5;"])))
+
+;; bindings
+
+;; bindings - atoms
+
+(defexpect bindings-atoms
+  (let [ast (az/analyze '(def x (atom 11)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "let mut x = 11;")))
+
+;; bindings - reset!
+
+(defexpect bindings-reset
+  (let [ast (az/analyze '(do (def x (atom 11)) (reset! x 13)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) ["let mut x = 11;"
+                                                             "x = 13;"]))
+
+  (let [ast (az/analyze '(do (def ^Long x (atom 11)) (reset! x 13)))]
+    (expect (emit {:ast ast :lang ::l/rust}) ["let mut x: i64 = 11;"
+                                              "x = 13;"])))

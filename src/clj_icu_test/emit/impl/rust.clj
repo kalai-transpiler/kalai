@@ -2,6 +2,7 @@
   (:require [clj-icu-test.common :refer :all]
             [clj-icu-test.emit.interface :as iface :refer :all]
             [clj-icu-test.emit.langs :as l]
+            [clj-icu-test.emit.impl.util.rust-util :as rust-util]
             [clj-icu-test.emit.impl.util.java-type-util :as java-type-util]
             [clj-icu-test.emit.impl.util.common-type-util :as common-type-util]
             ;;[clojure.edn :as edn]
@@ -88,12 +89,15 @@
         identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
                      (str identifer-symbol))
         expression (emit complex-expr-opts)
-        is-immutable true
-        identifier-and-type (if type-str
-                              (if is-immutable
+        is-atom (rust-util/is-assignment-expr-atom (:ast complex-expr-opts))
+        is-immutable (not is-atom)
+        identifier-and-type (if is-immutable
+                              (if type-str
                                 [(str "let " identifier ":") type-str]
-                                [(str "let mut " identifier ":") type-str])
-                              [identifier])
+                                [(str "let " identifier)])
+                              (if type-str
+                                [(str "let mut " identifier ":") type-str]
+                                [(str "let mut " identifier)]))
         statement-parts (concat
                          identifier-and-type
                          ["="
