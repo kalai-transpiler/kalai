@@ -209,7 +209,6 @@
   }
 }"))
 
-
   (let [ast (az/analyze '(defn doStuff ^void [^Integer x ^Integer y] (str (+ x y)) (println "hello") 3))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
 "void doStuff(int x, int y)
@@ -217,6 +216,16 @@
   std::to_string(x + y);
   cout << \"hello\" << endl;
   3;
+}"))
+
+  (let [ast (az/analyze '(defn returnStuff ^Integer [^Integer x ^Integer y] (let [^Integer a (+ x y)] (return a))))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
+"int returnStuff(int x, int y)
+{
+  {
+    int a = x + y;
+    return a;
+  }
 }")))
 
 ;; classes

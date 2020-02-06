@@ -177,7 +177,8 @@
     Integer a = x + y;
     a * y;
   }
-}")) 
+}"))
+  
   (let [ast (az/analyze '(defn doStuff ^void [^Integer x ^Integer y] (str (+ x y)) (println "hello") 3))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
 "public void doStuff(Integer x, Integer y)
@@ -185,6 +186,16 @@
   new StringBuffer().append(x + y).toString();
   System.out.println(\"\" + \"hello\");
   3;
+}"))
+
+  (let [ast (az/analyze '(defn returnStuff ^Integer [^Integer x ^Integer y] (let [^Integer a (+ x y)] (return a))))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+"public Integer returnStuff(Integer x, Integer y)
+{
+  {
+    Integer a = x + y;
+    return a;
+  }
 }")))
 
 ;; classes

@@ -189,4 +189,14 @@
   format!(\"{}\", (x + y).to_string());
   println!(\"{}\", format!(\"{}\", \"hello\"));
   3;
+}"))
+
+  (let [ast (az/analyze '(defn returnStuff ^Integer [^Integer x ^Integer y] (let [^Integer a (+ x y)] (return a))))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+"pub fn returnStuff(x: &i32, y: &i32) -> i32
+{
+  {
+    let a: i32 = x + y;
+    return a;
+  }
 }")))
