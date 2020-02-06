@@ -52,40 +52,6 @@
     (expect (emit {:ast ast :lang ::l/java}) ["Long x = 11;"
                                               "x = 13;"])))
 
-;; static call (arithmetic operations)
-
-;; static call - +
-
-(defexpect static-call-addition
-  (let [ast (az/analyze '(+ 11 17))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/java})) "11 + 17")))
-
-;; static call - /
-
-(defexpect static-call-division
-  (let [ast (az/analyze '(/ 34 17))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/java})) "34 / 17")))
-
-;; static call - =
-
-(defexpect static-call-equals
-  (let [ast (az/analyze '(= 34 (* 2 17)))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/java})) "34 == (2 * 17)")))
-
-;; static call - convert fn names to symbols
-
-(defexpect static-call-names-to-operators
-  (let [ast (az/analyze '(quot 37 10))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/java})) "37 / 10")) 
-  (let [ast (az/analyze '(rem 37 10))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/java})) "37 % 10")))
-
-;; language - multiple operands
-
-(defexpect lang-mult-operands
-  (let [ast (az/analyze '(+ 11 17 19 23))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/java})) "11 + 17 + 19 + 23")))
-
 ;; bindings - let
 
 ;; bindings - let - 1 expression
