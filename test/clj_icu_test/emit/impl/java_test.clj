@@ -234,28 +234,6 @@
   SATURDAY
 }"))))
 
-;; return statement
-
-(defexpect return-test
-  (let [ast (az/analyze '(defn add ^Integer [^Integer x ^Integer y]
-                           (let [^Integer sum (+ x y)]
-                             (return sum))))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
-"public Integer add(Integer x, Integer y)
-{
-  {
-    Integer sum = x + y;
-    return sum;
-  }
-}")) 
-  (let [ast (az/analyze '(defn add ^Integer [^Integer x ^Integer y]
-                           (return (+ x y))))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
-            "public Integer add(Integer x, Integer y)
-{
-  return x + y;
-}")))
-
 ;; deref
 
 (defexpect deref-test

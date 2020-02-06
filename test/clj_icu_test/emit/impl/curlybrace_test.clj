@@ -172,3 +172,38 @@ else if (1 == 11)
         ast-opts (map->AstOpts {:ast ast :lang ::l/java})]
     (expect (emit ast-opts)
             "Arrays.asList(1, 2, 3)")))
+
+;; return statement
+
+(defexpect return-test
+  (let [ast (az/analyze '(defn add ^Integer [^Integer x ^Integer y]
+                           (let [^Integer sum (+ x y)]
+                             (return sum))))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
+"int add(int x, int y)
+{
+  {
+    int sum = x + y;
+    return sum;
+  }
+}")
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+"public Integer add(Integer x, Integer y)
+{
+  {
+    Integer sum = x + y;
+    return sum;
+  }
+}")) 
+  (let [ast (az/analyze '(defn add ^Integer [^Integer x ^Integer y]
+                           (return (+ x y))))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
+"int add(int x, int y)
+{
+  return x + y;
+}")
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+            "public Integer add(Integer x, Integer y)
+{
+  return x + y;
+}")))

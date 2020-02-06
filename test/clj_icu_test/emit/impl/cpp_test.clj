@@ -264,28 +264,6 @@
   SATURDAY
 };"))))
 
-;; return statement
-
-(defexpect return-test
-  (let [ast (az/analyze '(defn add ^Integer [^Integer x ^Integer y]
-                           (let [^Integer sum (+ x y)]
-                             (return sum))))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
-"int add(int x, int y)
-{
-  {
-    int sum = x + y;
-    return sum;
-  }
-}"))
-  (let [ast (az/analyze '(defn add ^Integer [^Integer x ^Integer y]
-                           (return (+ x y))))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
-"int add(int x, int y)
-{
-  return x + y;
-}")))
-
 ;; deref
 
 (defexpect deref-test
