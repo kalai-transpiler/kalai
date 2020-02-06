@@ -168,3 +168,25 @@
 
   (let [ast (az/analyze '(/ 3 (+ 5 2) (* 1 7) 23))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "3 / (5 + 2) / (1 * 7) / 23")))
+
+;; defn
+
+(defexpect defn-test
+  (let [ast (az/analyze '(defn compute ^void [^Integer x ^Integer y] (let [^Integer a (+ x y)] (* a y))))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+"pub fn compute(x: &i32, y: &i32)
+{
+  {
+    let a: i32 = x + y;
+    a * y;
+  }
+}"))
+
+  (let [ast (az/analyze '(defn doStuff ^void [^Integer x ^Integer y] (str (+ x y)) (println "hello") 3))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+"pub fn doStuff(x: &i32, y: &i32)
+{
+  format!(\"{}\", (x + y).to_string());
+  println!(\"{}\", format!(\"{}\", \"hello\"));
+  3;
+}")))

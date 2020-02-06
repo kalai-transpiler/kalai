@@ -27,7 +27,9 @@
         ;; (= Integer/TYPE class) "int"
         ;; (= Character/TYPE class) "char"
         ;; (= Boolean/TYPE class) "boolean"
-        (= Void/TYPE class) "void"
+        
+        (= Void/TYPE class) nil ;; void return types for fns do not contribute to method type signature
+        
         :else (let [canonical-name (.getCanonicalName class)] 
                 (cond                
                   ;; this is to prevent the analyzer from auto-tagging the type classes of
@@ -107,3 +109,135 @@
                                  map->AnyValOpts)
         statement (emit-statement statement-parts-opts)]
         statement))
+
+;; defn (functions)
+
+(defmethod iface/emit-defn-arg ::l/rust
+  [ast-opts]
+  {:pre [(= :binding (-> ast-opts :ast :op))]}
+  (let [ast (:ast ast-opts)
+        arg-name (-> ast :form name) 
+        type-class-opts ast-opts 
+        type-str (emit-type type-class-opts)
+        identifier-signature-parts [(str arg-name ":")
+                                    (str "&" type-str)]
+        identifier-signature (->> identifier-signature-parts
+                                  (keep identity)
+                                  (string/join " "))]
+    identifier-signature))
+
+(defmethod iface/emit-defn ::l/rust
+  [ast-opts]
+  {:pre [(= :def (-> ast-opts :ast :op))]}
+  (let [ast (:ast ast-opts)
+        fn-name (:name ast)
+        fn-ast (:init ast) 
+        fn-ast-opts (assoc ast-opts :ast fn-ast)
+        fn-return-type (if (-> ast :arglists first meta :mtype) 
+                         ;; *** this uses eval *** -- see curlybrace.clj
+                         (let [curr-ns (-> fn-ast :env :ns find-ns)
+                               metadata-form (-> ast :arglists first meta)
+                               metadata-val (binding [*ns* curr-ns]
+                                              (eval metadata-form))
+                               fn-return-type-opts (map->AstOpts {:ast metadata-val :lang (:lang ast-opts)})
+                               return-type (emit-type fn-return-type-opts)]
+                           return-type) 
+                         (emit-type fn-ast-opts))
+        ;; Note: currently not dealing with fn overloading (variadic fns in Clojure),
+        ;; so just take the first fn method
+        fn-method-first (-> fn-ast
+                            :expr
+                            :methods first)
+        fn-method-first-arg-asts (:params fn-method-first)
+        fn-method-first-args (-> (assoc ast-opts :ast fn-method-first-arg-asts)
+                                 emit-defn-args)
+        ;; Note: excluding the "public" access modifier that you would see in Java b/c
+        ;; I assume that this happens normally in C++, at least for methods
+        fn-method-first-signature-parts ["pub"
+                                         "fn"
+                                         (str fn-name "(" fn-method-first-args ")")
+                                         (when fn-return-type
+                                           "->")
+                                         fn-return-type]
+        fn-method-first-signature (->> fn-method-first-signature-parts
+                                       (keep identity)
+                                       (string/join " " ))
+        fn-method-first-body-ast (:body fn-method-first)
+        fn-method-first-body-strs (indent
+                                   (if (:statements fn-method-first-body-ast)
+                                     ;; if ast has key nesting of [:body :statements], then we have a multi-"statement" expression do block in the let form
+                                     (let [butlast-statements (:statements fn-method-first-body-ast)
+                                           last-statement (:ret fn-method-first-body-ast)
+                                           statements (concat butlast-statements [last-statement])
+                                           statement-ast-opts (map #(assoc ast-opts :ast %) statements)
+                                           statement-strs (map emit statement-ast-opts)]
+                                       statement-strs)
+                                     ;; else the let block has only one "statement" in the do block
+                                     [(emit (assoc ast-opts :ast fn-method-first-body-ast))]))
+        fn-method-first-body-strs-opts-seq (map #(-> ast-opts
+                                                     (assoc :val %)
+                                                     map->AnyValOpts)
+                                                fn-method-first-body-strs) 
+        fn-method-first-body-strs-with-semicolons (indent
+                                                   (map #(if-not (can-become-statement %)
+                                                           (:val %)
+                                                           (emit-statement %))
+                                                        fn-method-first-body-strs-opts-seq))
+        fn-method-first-body-str (string/join "\n" fn-method-first-body-strs-with-semicolons)
+        fn-method-first-str-parts [(str (indent-str-curr-level) fn-method-first-signature)
+                                   (str (indent-str-curr-level) "{")
+                                   fn-method-first-body-str
+                                   (str (indent-str-curr-level) "}")]
+        fn-method-first-str (->> fn-method-first-str-parts
+                                 (keep identity)
+                                 (string/join "\n"))]
+    fn-method-first-str))
+
+(defmethod iface/emit-str-arg ::l/rust
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        tag-class (:tag ast)
+        emitted-arg (emit ast-opts)
+        tag-class-opts (-> ast-opts
+                           (assoc :val tag-class)
+                           map->AnyValOpts)
+        casted-emitted-arg (if (is-number-type? tag-class-opts)
+                             (str "(" emitted-arg ").to_string()") 
+                             emitted-arg)]
+    casted-emitted-arg))
+
+(defmethod iface/emit-str-args ::l/rust
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args-ast (:args ast)
+        args-ast-opts (map #(assoc ast-opts :ast %) args-ast)
+        emitted-args (map emit-str-arg args-ast-opts)]
+    emitted-args))
+
+(defmethod iface/emit-str ::l/rust
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        arg-strs (emit-str-args ast-opts)
+        format-first-arg (->> (concat ["\""]
+                                      (-> (count arg-strs)
+                                          (repeat "{}"))
+                                      ["\""])
+                              (apply str))
+        format-all-args (concat [format-first-arg]
+                                arg-strs)
+        format-arg-expr (string/join ", " format-all-args)
+        format-expr-parts ["format!("
+                           format-arg-expr
+                           ")"]
+        expr (apply str format-expr-parts)]
+    expr))
+
+(defmethod iface/emit-println ::l/rust
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        arg-str (emit-str ast-opts)
+        all-arg-strs ["println!(\"{}\", "
+                      arg-str
+                      ")"]
+        command-expr (apply str all-arg-strs)]
+    command-expr))
