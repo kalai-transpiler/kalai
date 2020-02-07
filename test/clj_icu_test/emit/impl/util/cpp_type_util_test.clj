@@ -12,10 +12,9 @@
 (reset-indent-level)
 
 (defexpect scalar
-  (defexpect character
-    (let [ast (az/analyze '\0)]
-      (expect "'0'"
-              (emit (map->AstOpts {:ast ast :lang ::l/cpp}))))))
+  (let [ast (az/analyze '\0)]
+    (expect "'0'"
+            (emit (map->AstOpts {:ast ast :lang ::l/cpp})))))
 
 (defexpect vectors
   (do

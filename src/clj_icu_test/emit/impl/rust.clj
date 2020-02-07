@@ -3,11 +3,28 @@
             [clj-icu-test.emit.interface :as iface :refer :all]
             [clj-icu-test.emit.langs :as l]
             [clj-icu-test.emit.impl.util.rust-util :as rust-util]
-            [clj-icu-test.emit.impl.util.java-type-util :as java-type-util]
+            [clj-icu-test.emit.impl.util.rust-type-util :as rust-type-util]
             [clj-icu-test.emit.impl.util.common-type-util :as common-type-util]
             [clojure.edn :as edn]
             [clojure.string :as string]
-            [clojure.tools.analyzer.jvm :as az]))
+            [clojure.tools.analyzer.jvm :as az])
+  (:import [java.util List Map]))
+
+(defmethod iface/emit-complex-type [::l/rust List]
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        type-val (or (-> ast-opts :impl-state :type-class-ast :mtype)
+                     (:mtype ast))]
+    (let [type-parameter-val (second type-val)]
+      (assert (sequential? type-parameter-val))
+      (let [type-parameter-class-ast-opts (-> ast-opts
+                                              (dissoc :ast)
+                                              (assoc-in [:ast :mtype] type-parameter-val)
+                                              (assoc-in [:impl-state :type-class-ast :mtype] type-parameter-val)
+                                              )
+            type-parameter (emit-type type-parameter-class-ast-opts) 
+            type (str "Vec<" type-parameter ">")]
+        type))))
 
 (defmethod iface/emit-scalar-type ::l/rust
   [ast-opts]
@@ -116,6 +133,31 @@
                     :ast
                     :val)]
     (str "String::from(" (pr-str str-val) ")")))
+
+(defmethod iface/emit-assignment-complex-type [::l/rust :vector]
+  [ast-opts]
+  {:pre [(or (and (= :const (-> ast-opts :ast :init :op))
+                  (= :vector (-> ast-opts :ast :init :type)))
+             (= :vector (-> ast-opts :ast :init :op))
+             (= :vector (-> ast-opts :ast :type)))]}
+  (let [ast (:ast ast-opts)
+        type-class-ast (get-assignment-type-class-ast ast-opts)
+        identifier (cond
+                     (-> ast-opts :impl-state :identifier)
+                     (-> ast-opts :impl-state :identifier)
+                     
+                     :else
+                     (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
+                           (str identifer-symbol)))
+        expr-ast-opts (if (-> ast-opts :ast :init)
+                        (update-in ast-opts [:ast] :init)
+                        ast-opts)]
+    (if-not (common-type-util/is-const-vector-nested? expr-ast-opts)
+      (rust-type-util/rust-emit-assignment-vector-not-nested ast-opts)
+      (let [impl-state {:identifier identifier
+                        :type-class-ast type-class-ast}
+            expr-ast-opts-init-impl-state (update-in expr-ast-opts [:impl-state] merge impl-state)]
+        (rust-type-util/rust-emit-assignment-vector-nested expr-ast-opts-init-impl-state)))))
 
 (defmethod iface/get-custom-emitter-scalar-types ::l/rust
   [ast-opts]
