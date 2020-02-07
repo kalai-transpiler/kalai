@@ -149,6 +149,10 @@
                     :val)]
     (str "String::from(" (pr-str str-val) ")")))
 
+(defmethod iface/emit-const-scalar-type [::l/curlybrace :nil]
+  [ast-opts]
+  "None")
+
 (defmethod iface/emit-assignment-complex-type [::l/rust :vector]
   [ast-opts]
   {:pre [(or (and (= :const (-> ast-opts :ast :init :op))
@@ -202,7 +206,7 @@
 
 (defmethod iface/get-custom-emitter-scalar-types ::l/rust
   [ast-opts]
-  #{:string})
+  #{:string :char :nil})
 
 ;; defn (functions)
 
