@@ -15,7 +15,6 @@
     (expect "String::from(\"pixel\")"
             (emit (map->AstOpts {:ast ast :lang ::l/rust})))))
 
-
 (defexpect vectors
   (do
     (import 'java.util.List)
@@ -33,4 +32,16 @@
 let matrixV1: Vec<i32> = vec![7, 11, 13];
 let matrixV2: Vec<i32> = vec![17, 19, 23];
 let matrix: Vec<Vec<i32>> = vec![matrixV0, matrixV1, matrixV2];"
+              (emit (map->AstOpts {:ast ast :lang ::l/rust}))))))
+
+(defexpect maps
+  (do
+    (import 'java.util.Map)
+    (let [ast (az/analyze '(def ^{:mtype [Map [String Integer]]} numberWords {"one" 1
+                                                                              "two" 2
+                                                                              "three" 3}))]
+      (expect "let mut numberWords: HashMap<String,i32> = HashMap::new();
+numberWords.insert(String::from(\"one\"), 1);
+numberWords.insert(String::from(\"two\"), 2);
+numberWords.insert(String::from(\"three\"), 3);"
               (emit (map->AstOpts {:ast ast :lang ::l/rust}))))))

@@ -26,6 +26,21 @@
             type (str "Vec<" type-parameter ">")]
         type))))
 
+(defmethod iface/emit-complex-type [::l/rust Map]
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        type-val (:mtype ast)]
+    (let [type-parameters-val (second type-val)]
+      (assert (sequential? type-parameters-val))
+      (let [map-key-type-parameter-val (first type-parameters-val)
+            map-val-type-parameter-val (second type-parameters-val) 
+            map-key-type-parameter-class-ast-opts (assoc-in ast-opts [:ast :mtype] map-key-type-parameter-val)
+            map-val-type-parameter-class-ast-opts (assoc-in ast-opts [:ast :mtype] map-val-type-parameter-val) 
+            map-key-type-parameter (emit-type map-key-type-parameter-class-ast-opts)
+            map-val-type-parameter (emit-type map-val-type-parameter-class-ast-opts)
+            type (str "HashMap<" map-key-type-parameter "," map-val-type-parameter ">")]
+        type))))
+
 (defmethod iface/emit-scalar-type ::l/rust
   [ast-opts]
   (let [ast (:ast ast-opts)
@@ -158,6 +173,32 @@
                         :type-class-ast type-class-ast}
             expr-ast-opts-init-impl-state (update-in expr-ast-opts [:impl-state] merge impl-state)]
         (rust-type-util/rust-emit-assignment-vector-nested expr-ast-opts-init-impl-state)))))
+
+(defmethod iface/emit-assignment-complex-type [::l/rust :map]
+  [ast-opts]
+  {:pre [(or (and (= :const (-> ast-opts :ast :init :op))
+                  (= :map (-> ast-opts :ast :init :type)))
+             (= :map (-> ast-opts :ast :init :op)))]}
+  (let [ast (:ast ast-opts)
+        type-class-ast (let [default-type-class-ast (get-assignment-type-class-ast ast-opts)
+                             updated-type-class-ast (if (-> ast :form meta :mtype)
+                                                      ;; *** this uses eval *** -- see curlybrace.clj 
+                                                      (let [curr-ns (-> ast :env :ns find-ns)
+                                                            metadata-form (-> ast :form meta)
+                                                            metadata-val (binding [*ns* curr-ns]
+                                                                           (eval metadata-form))]
+                                                        (merge default-type-class-ast metadata-val))
+                                                      default-type-class-ast)]
+                         updated-type-class-ast)
+        identifier (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
+                     (str identifer-symbol))
+        expr-ast-opts (update-in ast-opts [:ast] :init)] 
+    (if-not (common-type-util/is-const-map-nested? expr-ast-opts)
+      (rust-type-util/rust-emit-assignment-map-not-nested ast-opts)
+      (let [impl-state {:identifier identifier
+                        :type-class-ast type-class-ast}
+            expr-ast-opts-init-impl-state (assoc expr-ast-opts :impl-state impl-state)]
+        (rust-type-util/rust-emit-assignment-map-nested expr-ast-opts-init-impl-state)))))
 
 (defmethod iface/get-custom-emitter-scalar-types ::l/rust
   [ast-opts]
