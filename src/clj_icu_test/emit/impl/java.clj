@@ -290,8 +290,7 @@
         ;; Note: assuming that enums are only provided as field names,
         ;; and actual values associated with each field name are not provided
         enum-field-asts (-> ast :args rest)
-        enum-field-ast-opts (map (partial assoc ast-opts :ast) enum-field-asts)
-        enum-field-strs (map emit enum-field-ast-opts)
+        enum-field-strs (map :val enum-field-asts)
         enum-field-unescaped-strs (map edn/read-string enum-field-strs)
         enum-field-symbols (map symbol enum-field-unescaped-strs)
         enum-field-indented-symbols (indent

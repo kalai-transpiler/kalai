@@ -108,7 +108,18 @@
                                  (assoc :val statement-parts)
                                  map->AnyValOpts)
         statement (emit-statement statement-parts-opts)]
-        statement))
+    statement))
+
+(defmethod iface/emit-const-scalar-type [::l/rust :string]
+  [ast-opts]
+  (let [str-val (-> ast-opts
+                    :ast
+                    :val)]
+    (str "String::from(" (pr-str str-val) ")")))
+
+(defmethod iface/get-custom-emitter-scalar-types ::l/rust
+  [ast-opts]
+  #{:string})
 
 ;; defn (functions)
 
@@ -285,8 +296,7 @@
         ;; Note: assuming that enums are only provided as field names,
         ;; and actual values associated with each field name are not provided
         enum-field-asts (-> ast :args rest)
-        enum-field-ast-opts (map (partial assoc ast-opts :ast) enum-field-asts)
-        enum-field-strs (map emit enum-field-ast-opts)
+        enum-field-strs (map :val enum-field-asts)
         enum-field-unescaped-strs (map edn/read-string enum-field-strs)
         enum-field-symbols (map symbol enum-field-unescaped-strs)
         enum-field-indented-symbols (indent
@@ -299,7 +309,7 @@
         enum-class-str-parts [(str (indent-str-curr-level) enum-class-signature)
                               (str (indent-str-curr-level) "{")
                               enum-fields-str
-                              (str (indent-str-curr-level) "};")]
+                              (str (indent-str-curr-level) "}")]
         enum-class-str (->> enum-class-str-parts
                             (keep identity)
                             (string/join "\n"))]

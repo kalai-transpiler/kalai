@@ -187,7 +187,7 @@
 "pub fn doStuff(x: &i32, y: &i32)
 {
   format!(\"{}\", (x + y).to_string());
-  println!(\"{}\", format!(\"{}\", \"hello\"));
+  println!(\"{}\", format!(\"{}\", String::from(\"hello\")));
   3;
 }"))
 
@@ -232,4 +232,4 @@ pub fn x()
   THURSDAY,
   FRIDAY,
   SATURDAY
-};"))))
+}"))))
