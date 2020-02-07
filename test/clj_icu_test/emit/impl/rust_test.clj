@@ -233,3 +233,11 @@ pub fn x()
   FRIDAY,
   SATURDAY
 }"))))
+
+;; fn invocations
+
+(defexpect strlen-test
+  (let [ast (az/analyze '(do (def ^String s "Hello, Martians") (strlen s)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+            ["let s: String = String::from(\"Hello, Martians\");"
+             "s.len();"])))

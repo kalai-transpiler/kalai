@@ -314,3 +314,14 @@
                             (keep identity)
                             (string/join "\n"))]
     enum-class-str))
+
+;; fn invocations
+
+(defmethod iface/emit-strlen ::l/rust
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-invoke-args ast-opts)
+        obj-name (first arg-strs)
+        strlen-invoke (str obj-name ".len()")]
+    strlen-invoke))
