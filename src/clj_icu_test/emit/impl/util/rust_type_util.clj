@@ -99,11 +99,11 @@
               is-immutable (not is-atom)
               identifier-and-type (if is-immutable
                                     (if type-str
-                                      [(str "let " identifier ":") type-str]
-                                      [(str "let " identifier)])
+                                      [(str "let " sub-vector-identifier ":") type-str]
+                                      [(str "let " sub-vector-identifier)])
                                     (if type-str
-                                      [(str "let mut " identifier ":") type-str]
-                                      [(str "let mut " identifier)]))
+                                      [(str "let mut " sub-vector-identifier ":") type-str]
+                                      [(str "let mut " sub-vector-identifier)]))
               statement-parts (concat
                                identifier-and-type
                                ["="
@@ -197,7 +197,7 @@
                              (str impl-state-identifier)))
                      (or (-> ast-opts :impl-state :identifier)
                          (when-let [identifer-symbol (get-assignment-identifier-symbol ast-opts)]
-                           (str identifer-symbol))))
+                           (str identifer-symbol))))        
         expr-ast (or (:init ast)
                      ast)
         expr-ast-opts (assoc ast-opts :ast expr-ast)
@@ -322,8 +322,13 @@
               map-key-type-str (emit-type map-key-type-ast-opts)
               map-val-type-str (emit-type map-val-type-ast-opts)
               type-str (str "HashMap<" map-key-type-str "," map-val-type-str ">")
-              initialize-statement-parts [type-str
-                                          identifier]
+              identifier-and-type (if type-str
+                              [(str "let mut " identifier ":") type-str]
+                              [(str "let mut " identifier)])
+              initialize-statement-parts (concat
+                                          identifier-and-type
+                                          ["="
+                                           "HashMap::new()"])
               map-put-statements (map map-put-statement key-strs val-strs)
               all-statement-data-seq (concat [initialize-statement-parts]
                                              map-put-statements)

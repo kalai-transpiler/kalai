@@ -153,6 +153,13 @@
   [ast-opts]
   "None")
 
+(defmethod iface/emit-const-complex-type [::l/rust :vector]
+  [ast-opts]
+  {:pre [(is-complex-type? ast-opts)
+         (= :vector (or (-> ast-opts :ast :type)
+                        (-> ast-opts :ast :op)))]}
+  (rust-type-util/rust-emit-const-vector-not-nested ast-opts))
+
 (defmethod iface/emit-assignment-complex-type [::l/rust :vector]
   [ast-opts]
   {:pre [(or (and (= :const (-> ast-opts :ast :init :op))

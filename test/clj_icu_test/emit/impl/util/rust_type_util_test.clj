@@ -45,3 +45,22 @@ numberWords.insert(String::from(\"one\"), 1);
 numberWords.insert(String::from(\"two\"), 2);
 numberWords.insert(String::from(\"three\"), 3);"
               (emit (map->AstOpts {:ast ast :lang ::l/rust}))))))
+
+(defexpect coll-type-nested
+  (do
+    (import '[java.util List Map Set])
+    (let [ast (az/analyze '(def ^{:mtype [Map [String [List [Character]]]]} numberSystemsMap {"LATIN" [\0 \1 \9]}))]
+      (expect "let mut numberSystemsMap: HashMap<String,Vec<char>> = HashMap::new();
+numberSystemsMap.insert(String::from(\"LATIN\"), vec!['0', '1', '9']);"
+              (emit (map->AstOpts {:ast ast :lang ::l/rust}))))))
+
+(defexpect vectors-nested-impl-recursive-fn
+  (let [ast (az/analyze '[2 3 5])
+        type-class-ast {:mtype [java.util.List [java.lang.Integer]]}
+        identifier "matrix"
+        ast-opts (map->AstOpts {:ast ast :lang ::l/rust :impl-state {:type-class-ast type-class-ast
+                                                                    :identifier identifier
+                                                                    :position-vector [0]
+                                                                    :statements []}})]
+    (expect (rust-emit-assignment-vector-nested-recursive ast-opts)
+            ["matrixV0" ["let matrixV0: Vec<i32> = vec![2, 3, 5];"]])))
