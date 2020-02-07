@@ -241,3 +241,13 @@ pub fn x()
     (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
             ["let s: String = String::from(\"Hello, Martians\");"
              "s.len();"])))
+
+;; loops (ex: while, doseq)
+
+(defexpect loops
+  (let [ast (az/analyze '(while true (println "e")))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+"while (true)
+{
+  println!(\"{}\", format!(\"{}\", String::from(\"e\")));
+}")))
