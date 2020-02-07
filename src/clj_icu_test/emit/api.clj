@@ -49,6 +49,10 @@
   [ast-opts]
   (iface/emit-const-scalar-type ast-opts))
 
+(defn get-custom-emitter-scalar-types
+  [ast-opts]
+  (iface/get-custom-emitter-scalar-types))
+
 (defn emit-const
   [ast-opts]
   (iface/emit-const ast-opts))

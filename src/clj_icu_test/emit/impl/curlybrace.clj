@@ -127,13 +127,17 @@
   [ast-opts]
   "null")
 
+(defmethod iface/get-custom-emitter-scalar-types ::l/curlybrace
+  [ast-opts]
+  #{:char :nil})
+
 (defmethod iface/emit-const ::l/curlybrace
   [ast-opts]
   {:pre [(= :const (:op (:ast ast-opts)))
          (:literal? (:ast ast-opts))]}
   (if (is-complex-type? ast-opts)
     (emit-const-complex-type ast-opts)
-    (let [custom-emitter-scalar-types #{:char :nil}
+    (let [custom-emitter-scalar-types (get-custom-emitter-scalar-types ast-opts)
           ast (:ast ast-opts)
           scalar-type (:type ast)]
       ;; Clojure's syntax literals are pretty much the same as

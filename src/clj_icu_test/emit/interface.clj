@@ -95,6 +95,9 @@ Might return nil"}
 (defmulti ^{:doc "emit a literal value that represents a \"scalar\" (non-collection) type"}
   emit-const-scalar-type const-scalar-type-dispatch)
 
+(defmulti ^{:doc "return a set of keywords for the :type field in the AST of a const (literal) input for which those types need to have their emitted forms customized for the target language"}
+  get-custom-emitter-scalar-types lang)
+
 (defmulti ^{:doc "emit a literal value"}
   emit-const lang)
 
