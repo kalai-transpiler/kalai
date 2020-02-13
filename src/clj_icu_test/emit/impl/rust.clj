@@ -489,6 +489,15 @@
         insert-invoke (apply str insert-invoke-parts)]
     insert-invoke))
 
+(defmethod iface/emit-length-strbuf ::l/rust
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-invoke-args ast-opts)
+        obj-name (first arg-strs)
+        strlen-invoke (str obj-name ".len()")]
+    strlen-invoke))
+
 ;; new
 
 (defmethod iface/emit-new ::l/rust
