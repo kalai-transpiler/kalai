@@ -465,3 +465,20 @@
         obj-name (first arg-strs)
         strlen-invoke (str obj-name ".len()")]
     strlen-invoke))
+
+;; new
+
+(defmethod iface/emit-new ::l/rust
+  [ast-opts]
+  {:pre [(= :new (:op (:ast ast-opts)))]}
+  (let [ast (:ast ast-opts)
+        new-class-name (-> ast :class :form)
+        ;; reuse invoke-args helper fns here
+        arg-strs (emit-invoke-args ast-opts)
+        arg-str-with-parens (let [arg-str (string/join ", " arg-strs)]
+                              (str "(" arg-str ")"))
+        new-str (->> [new-class-name
+                      arg-str-with-parens]
+                     (keep identity)
+                     (apply str))]
+    new-str))

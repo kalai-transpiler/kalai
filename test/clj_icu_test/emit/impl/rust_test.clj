@@ -280,3 +280,13 @@ numberWords.insert(String::from(\"three\"), 3);"
   (let [ast (az/analyze '(not (= 3 (/ 10 2))))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
             "!(3 == (10 / 2))")))
+
+;; new
+
+(defexpect new-test
+  (let [ast (az/analyze '(StringBuffer.))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+            "StringBuffer()"))
+  (let [ast (az/analyze '(StringBuffer. "Initial string value"))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+            "StringBuffer(String::from(\"Initial string value\"))")))
