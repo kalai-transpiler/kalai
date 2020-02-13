@@ -155,19 +155,19 @@
 
 (defexpect lang-nested-operands
   (let [ast (az/analyze '(+ 3 5 (+ 1 7) 23))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "3 + 5 + (1 + 7) + 23"))
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "3 + 5 + &(1 + 7) + 23"))
   (let [ast (az/analyze '(/ 3 (/ 5 2) (/ 1 7) 23))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "3 / (5 / 2) / (1 / 7) / 23"))
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "3 / &(5 / 2) / &(1 / 7) / 23"))
   (let [ast (az/analyze '(let [x 101] (+ 3 5 (+ x (+ 1 7 (+ x x))) 23)))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
 "{
   let x = 101;
-  3 + 5 + (x + (1 + 7 + (x + x))) + 23;
+  3 + 5 + &(x + &(1 + 7 + &(x + x))) + 23;
 }"))
 
 
   (let [ast (az/analyze '(/ 3 (+ 5 2) (* 1 7) 23))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "3 / (5 + 2) / (1 * 7) / 23")))
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "3 / &(5 + 2) / &(1 * 7) / 23")))
 
 ;; defn
 
@@ -251,3 +251,17 @@ pub fn x()
 {
   println!(\"{}\", format!(\"{}\", String::from(\"e\")));
 }")))
+
+;; other built-in fns (also marked with op = :static-call)
+
+(defexpect get-test
+  (let [ast (az/analyze '(do (def ^{:mtype [Map [String Integer]]} numberWords {"one" 1
+                                                                                "two" 2
+                                                                                "three" 3})
+                             (get numberWords "one")))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+            ["let mut numberWords: HashMap<String,i32> = HashMap::new();
+numberWords.insert(String::from(\"one\"), 1);
+numberWords.insert(String::from(\"two\"), 2);
+numberWords.insert(String::from(\"three\"), 3);"
+             "*numberWords.get(&String::from(\"one\")).unwrap();"])))

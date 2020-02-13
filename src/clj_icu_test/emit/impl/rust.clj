@@ -2,9 +2,10 @@
   (:require [clj-icu-test.common :refer :all]
             [clj-icu-test.emit.interface :as iface :refer :all]
             [clj-icu-test.emit.langs :as l]
+            [clj-icu-test.emit.impl.util.common-type-util :as common-type-util]
+            [clj-icu-test.emit.impl.util.curlybrace-util :as cb-util]
             [clj-icu-test.emit.impl.util.rust-util :as rust-util]
             [clj-icu-test.emit.impl.util.rust-type-util :as rust-type-util]
-            [clj-icu-test.emit.impl.util.common-type-util :as common-type-util]
             [clojure.edn :as edn]
             [clojure.string :as string]
             [clojure.tools.analyzer.jvm :as az])
@@ -214,6 +215,31 @@
 (defmethod iface/get-custom-emitter-scalar-types ::l/rust
   [ast-opts]
   #{:string :char :nil})
+
+;; "arithmetic" (built-in operators)
+
+(defmethod iface/emit-arg ::l/rust
+  [ast-opts symb]
+  (rust-util/emit-arg-ref ast-opts symb))
+
+;; other built-in fns (also marked with op = :static-call)
+
+(defmethod iface/emit-get ::l/rust
+  [ast-opts]
+  {:pre [(= :static-call (:op (:ast ast-opts)))
+         (= "get" (-> ast-opts :ast :raw-forms last first str))]}
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-args ast-opts)
+        data-structure-name-str (first arg-strs)
+        key-str (second arg-strs)
+        expr-parts ["*"
+                    data-structure-name-str
+                    ".get("
+                    key-str
+                    ").unwrap()"]
+        expr (apply str expr-parts)]
+    expr))
 
 ;; defn (functions)
 

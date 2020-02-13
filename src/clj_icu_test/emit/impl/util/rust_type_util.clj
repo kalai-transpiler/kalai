@@ -32,7 +32,7 @@
                           item-ast-opts (-> ast-opts
                                             (assoc :env (-> ast-opts :ast :env))
                                             (update-in [:impl-state :type-class-ast :mtype] second))]
-                     (map (partial emit-arg item-ast-opts) item-form-seq))
+                     (map (partial rust-util/emit-arg-val item-ast-opts) item-form-seq))
         
         
         ;; if (:literal? ast)
@@ -247,8 +247,8 @@
                           (:env ast))
         map-entry-ast-opts (assoc ast-opts :env map-entry-env)
         map-form-entry-str-seq (for [[k-form v-form] map-form-entry-seq] 
-                                 (let [k-str (emit-arg map-entry-ast-opts k-form)
-                                       v-str (emit-arg map-entry-ast-opts v-form) 
+                                 (let [k-str (rust-util/emit-arg-val map-entry-ast-opts k-form) ;; use emit-arg-val b/c Rust collections expect value arguments
+                                       v-str (rust-util/emit-arg-val map-entry-ast-opts v-form) 
                                        result [k-str v-str]]
                                    result))
         map-entry-put-statements (for [[k-str v-str :as entry] map-form-entry-str-seq]
