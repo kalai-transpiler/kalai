@@ -472,6 +472,23 @@
         strlen-invoke (str obj-name ".len()")]
     strlen-invoke))
 
+(defmethod iface/emit-insert-strbuf ::l/rust
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-invoke-args ast-opts)
+        obj-name (first arg-strs)
+        idx (nth arg-strs 1)
+        inserted-val-str (nth arg-strs 2)
+        insert-invoke-parts [obj-name
+                              ".insert("
+                              idx
+                              ", "
+                              inserted-val-str
+                              ")"]
+        insert-invoke (apply str insert-invoke-parts)]
+    insert-invoke))
+
 ;; new
 
 (defmethod iface/emit-new ::l/rust

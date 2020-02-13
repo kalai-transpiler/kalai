@@ -306,3 +306,13 @@ numberWords.insert(String::from(\"three\"), 3);"
   let mut sb: Vec<char> = String::new().chars().collect();
   sb;
 }")))
+
+;; string buffer - insert
+
+(defexpect stringbuffer-insert
+  (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] (insert-strbuf sb 0 "hello")))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+"{
+  let mut sb: Vec<char> = String::new().chars().collect();
+  sb.insert(0, String::from(\"hello\"));
+}")))
