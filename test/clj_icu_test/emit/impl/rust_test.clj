@@ -265,3 +265,11 @@ numberWords.insert(String::from(\"one\"), 1);
 numberWords.insert(String::from(\"two\"), 2);
 numberWords.insert(String::from(\"three\"), 3);"
              "*numberWords.get(&String::from(\"one\")).unwrap();"])))
+
+(defexpect nth-test
+  (let [ast (az/analyze '(do (def ^{:mtype [List [Integer]]} numbers [13 17 19 23])
+                             (nth numbers 2)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+            ["let numbers: Vec<i32> = vec![13, 17, 19, 23];"
+             "numbers[2 as usize];"]
+            )))

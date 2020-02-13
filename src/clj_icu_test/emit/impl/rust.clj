@@ -241,6 +241,22 @@
         expr (apply str expr-parts)]
     expr))
 
+(defmethod iface/emit-nth ::l/rust
+  [ast-opts]
+  {:pre [(= :static-call (:op (:ast ast-opts)))
+         (= "nth" (-> ast-opts :ast :raw-forms last first str))]}
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-args ast-opts)
+        data-structure-name-str (first arg-strs)
+        key-str (second arg-strs)
+        expr-parts [data-structure-name-str
+                    "["
+                    key-str
+                    " as usize]"]
+        expr (apply str expr-parts)]
+    expr))
+
 ;; defn (functions)
 
 (defmethod iface/emit-defn-arg ::l/rust
