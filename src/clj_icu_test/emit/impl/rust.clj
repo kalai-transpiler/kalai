@@ -87,7 +87,7 @@
                                            boolean "bool"
                                            java.lang.String "String"
                                            java.lang.Character "char"
-                                           java.lang.StringBuffer "String"}]
+                                           java.lang.StringBuffer "Vec<char>"}]
                     (when-let [transformed-type (get java-cpp-type-map class)]
                       transformed-type))
 
@@ -456,6 +456,12 @@
     enum-class-str))
 
 ;; fn invocations
+
+(defmethod iface/emit-new-strbuf ::l/rust
+  [ast-opts]
+  ;; Note: currently assuming that there are 0 args to StringBuffer,
+  ;; but can support args later
+  "String::new().chars().collect()")
 
 (defmethod iface/emit-strlen ::l/rust
   [ast-opts]

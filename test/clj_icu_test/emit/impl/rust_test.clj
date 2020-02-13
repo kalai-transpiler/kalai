@@ -290,3 +290,19 @@ numberWords.insert(String::from(\"three\"), 3);"
   (let [ast (az/analyze '(StringBuffer. "Initial string value"))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
             "StringBuffer(String::from(\"Initial string value\"))")))
+
+;; string buffer - new
+
+(defexpect stringbuffer-new
+  (let [ast (az/analyze '(new-strbuf))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+            "String::new().chars().collect()"))
+  (let [ast (az/analyze '(atom (new-strbuf)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+            "String::new().chars().collect()")) 
+  (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] sb))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+"{
+  let mut sb: Vec<char> = String::new().chars().collect();
+  sb;
+}")))
