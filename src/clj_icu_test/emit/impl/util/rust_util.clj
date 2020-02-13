@@ -65,12 +65,16 @@
                    (az/analyze symb ast-opts-env)
                    (az/analyze symb))
         symb-ast-opts (assoc ast-opts :ast symb-ast)]
-    (letfn [(rustified-arg-emit [arg-ast-opts]
-              (let [default-arg-str (emit arg-ast-opts)
-                    pass-as-reference (pass-arg-as-reference? arg-ast-opts)
-                    arg-str-parts [(when (and (= :auto-ref ref-style)
+    (letfn [(rustified-arg-prefix [arg-ast-opts]
+              (let [pass-as-reference (pass-arg-as-reference? arg-ast-opts)
+                    rust-arg-prefix (when (and (= :auto-ref ref-style)
                                               pass-as-reference)
-                                     "&")
+                                      "&")]
+                rust-arg-prefix))
+            (rustified-arg-emit [arg-ast-opts]
+              (let [default-arg-str (emit arg-ast-opts)
+                    rust-arg-prefix (rustified-arg-prefix arg-ast-opts)
+                    arg-str-parts [rust-arg-prefix
                                    default-arg-str]
                     arg-str (apply str arg-str-parts)]
                 arg-str))]
@@ -93,7 +97,7 @@
           (rustified-arg-emit symb-ast-opts)
 
           :else
-          (str "&(" (emit symb-ast-opts) ")"))
+          (str (rustified-arg-prefix symb-ast-opts) "(" (emit symb-ast-opts) ")"))
 
         ;; else, we have something that we treat like a scalar
         :else
@@ -105,4 +109,26 @@
 
 (defn emit-arg-val
   [ast-opts symb]
+  ;; emit-arg-impl currently doesn't implement any automatic inferences of references and subsequent dereferencing of those references
   (emit-arg-impl ast-opts symb :auto-val))
+
+(defn emit-args-impl
+  "Similar to curlybrace emit-args but takes an extra option (same as rust emit-arg) that indicates whether caller wants this arg as pass-by-value or pass-by-reference.  Implementation copied from curlybrace defmethod for emit-args"
+  [ast-opts ref-style]
+  {:pre [(-> ast-opts :ast :raw-forms seq)]}
+  (let [ast (:ast ast-opts)
+        raw-forms (-> ast :raw-forms)
+        raw-form-arg-symbols (-> raw-forms
+                                 last
+                                 rest)
+        raw-form-arg-symbol-ast-opts (assoc ast-opts :env (-> ast :env))
+        emitted-args (map #(emit-arg-impl raw-form-arg-symbol-ast-opts % ref-style) raw-form-arg-symbols)]
+    emitted-args))
+
+(defn emit-args-ref
+  [ast-opts]
+  (emit-args-impl ast-opts :auto-ref))
+
+(defn emit-args-val
+  [ast-opts]
+  (emit-args-impl ast-opts :auto-val))

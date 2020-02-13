@@ -155,19 +155,19 @@
 
 (defexpect lang-nested-operands
   (let [ast (az/analyze '(+ 3 5 (+ 1 7) 23))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "3 + 5 + &(1 + 7) + 23"))
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "3 + 5 + (1 + 7) + 23"))
   (let [ast (az/analyze '(/ 3 (/ 5 2) (/ 1 7) 23))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "3 / &(5 / 2) / &(1 / 7) / 23"))
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "3 / (5 / 2) / (1 / 7) / 23"))
   (let [ast (az/analyze '(let [x 101] (+ 3 5 (+ x (+ 1 7 (+ x x))) 23)))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
 "{
   let x = 101;
-  3 + 5 + &(x + &(1 + 7 + &(x + x))) + 23;
+  3 + 5 + (x + (1 + 7 + (x + x))) + 23;
 }"))
 
 
   (let [ast (az/analyze '(/ 3 (+ 5 2) (* 1 7) 23))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "3 / &(5 + 2) / &(1 * 7) / 23")))
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "3 / (5 + 2) / (1 * 7) / 23")))
 
 ;; defn
 
@@ -273,3 +273,10 @@ numberWords.insert(String::from(\"three\"), 3);"
             ["let numbers: Vec<i32> = vec![13, 17, 19, 23];"
              "numbers[2 as usize];"]
             )))
+
+;; not
+
+(defexpect not-test
+  (let [ast (az/analyze '(not (= 3 (/ 10 2))))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+            "!(3 == (10 / 2))")))

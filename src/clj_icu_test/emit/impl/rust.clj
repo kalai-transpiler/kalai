@@ -220,7 +220,11 @@
 
 (defmethod iface/emit-arg ::l/rust
   [ast-opts symb]
-  (rust-util/emit-arg-ref ast-opts symb))
+  (rust-util/emit-arg-val ast-opts symb))
+
+(defmethod iface/emit-args ::l/rust
+  [ast-opts]
+  (rust-util/emit-args-val ast-opts))
 
 ;; other built-in fns (also marked with op = :static-call)
 
@@ -230,7 +234,7 @@
          (= "get" (-> ast-opts :ast :raw-forms last first str))]}
   (let [ast (:ast ast-opts)
         args (:args ast)
-        arg-strs (emit-args ast-opts)
+        arg-strs (rust-util/emit-args-ref ast-opts)
         data-structure-name-str (first arg-strs)
         key-str (second arg-strs)
         expr-parts ["*"
