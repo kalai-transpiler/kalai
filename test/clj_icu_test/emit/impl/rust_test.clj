@@ -377,3 +377,11 @@ numberWords.insert(String::from(\"three\"), 3);"
     (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
 ["let formattedDigits: Vec<char> = vec![];"
  "formattedDigits.len();"])))
+
+;; sequential collection - append
+
+(defexpect seq-append-test
+  (let [ast (az/analyze '(do (def ^{:mtype [List [Character]]} formattedDigits []) (seq-append formattedDigits \1)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+["let formattedDigits: Vec<char> = vec![];"
+ "formattedDigits.push('1');"])))

@@ -596,6 +596,16 @@
         seq-length-invoke (str obj-name ".len()")]
     seq-length-invoke))
 
+(defmethod iface/emit-seq-append ::l/rust
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-invoke-args ast-opts)
+        obj-name (first arg-strs)
+        elem (second arg-strs)
+        seq-append-invoke (str obj-name ".push(" elem ")")]
+    seq-append-invoke))
+
 ;; new
 
 (defmethod iface/emit-new ::l/rust
