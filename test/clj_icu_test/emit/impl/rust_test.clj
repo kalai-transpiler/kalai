@@ -358,3 +358,14 @@ numberWords.insert(String::from(\"three\"), 3);"
   let mut sb_temp1: Vec<char> = String::from(\"hello\").chars().collect();
   sb.splice(0..0, sb_temp1);
 }"))))
+
+;; string - equals
+
+(defexpect str-eq-test
+  (let [ast (az/analyze '(do (def ^String s1 "house")
+                             (def ^String s2 "home")
+                             (str-eq s1 s2)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+["let s1: String = String::from(\"house\");"
+ "let s2: String = String::from(\"home\");"
+ "s1 == s2;"])))

@@ -577,6 +577,16 @@
         strlen-invoke (str obj-name ".len()")]
     strlen-invoke))
 
+(defmethod iface/emit-str-eq ::l/rust
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-invoke-args ast-opts)
+        obj-name-1 (first arg-strs)
+        obj-name-2 (second arg-strs)
+        strlen-invoke (str obj-name-1 " == " obj-name-2)]
+    strlen-invoke))
+
 ;; new
 
 (defmethod iface/emit-new ::l/rust
