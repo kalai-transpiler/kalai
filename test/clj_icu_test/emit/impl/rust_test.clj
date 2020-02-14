@@ -369,3 +369,11 @@ numberWords.insert(String::from(\"three\"), 3);"
 ["let s1: String = String::from(\"house\");"
  "let s2: String = String::from(\"home\");"
  "s1 == s2;"])))
+
+;; sequential collection - length
+
+(defexpect seq-length-test
+  (let [ast (az/analyze '(do (def ^{:mtype [List [Character]]} formattedDigits []) (seq-length formattedDigits)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+["let formattedDigits: Vec<char> = vec![];"
+ "formattedDigits.len();"])))
