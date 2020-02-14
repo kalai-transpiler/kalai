@@ -69,3 +69,10 @@
   [ast]
   (let [curr-pairs []]
     (cond-ast-test-expr-pairs-recursive ast curr-pairs)))
+
+(defn new-name
+  "Provide a new name (ex: name for a new identifier) that is based on the input name such that it is guaranteed to be unique.
+  This will use gensym provide a random output (a unique number appended to the input).
+  During testing, shadow this function with a pseudo-random fn or constant value fn to test against predictable, non-random output."
+  [name]
+  (str (gensym name)))

@@ -2,6 +2,8 @@
   (:require [clj-icu-test.common :refer :all]
             [clj-icu-test.emit.api :refer :all]
             [clj-icu-test.emit.langs :as l]
+            [clj-icu-test.emit.impl.util.curlybrace-util :as cb-util]
+            [clj-icu-test.testing :as testing]
             [clojure.tools.analyzer.jvm :as az]
             [expectations.clojure.test :refer :all])
   (:import clj_icu_test.common.AstOpts))
@@ -305,27 +307,42 @@ numberWords.insert(String::from(\"three\"), 3);"
 "{
   let mut sb: Vec<char> = String::new().chars().collect();
   sb;
-}")))
+}"))
+  (let [ast (az/analyze '(new-strbuf "hello"))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+            "String::from(\"hello\").chars().collect()")))
 
 ;; string buffer - insert
 
-(defexpect stringbuffer-insert
-  (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] (insert-strbuf sb 0 "hello")))]
+(defexpect stringbuffer-insert-char
+  (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] (insert-strbuf-char sb 0 \x)))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
 "{
   let mut sb: Vec<char> = String::new().chars().collect();
-  sb.insert(0, String::from(\"hello\"));
+  sb.insert(0, 'x');
 }")))
+
+(defexpect stringbuffer-insert-string
+  (with-redefs [cb-util/new-name (partial testing/new-name-testing-fn 1)]
+    (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] (insert-strbuf-string sb 0 "hello")))]
+      (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+"{
+  let mut sb: Vec<char> = String::new().chars().collect();
+  let mut sb_temp1: Vec<char> = String::from(\"hello\").chars().collect();
+  sb.splice(0..0, sb_temp1);
+}"))))
 
 ;; string buffer - length
 
 (defexpect stringbuffer-length
-  (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))]
-                           (insert-strbuf sb 0 "hello")
-                           (length-strbuf sb)))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+  (with-redefs [cb-util/new-name (partial testing/new-name-testing-fn 1)]
+    (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))]
+                                           (insert-strbuf-string sb 0 "hello")
+                                           (length-strbuf sb)))]
+                    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
 "{
   let mut sb: Vec<char> = String::new().chars().collect();
-  sb.insert(0, String::from(\"hello\"));
+  let mut sb_temp1: Vec<char> = String::from(\"hello\").chars().collect();
+  sb.splice(0..0, sb_temp1);
   sb.len();
-}")))
+}"))))

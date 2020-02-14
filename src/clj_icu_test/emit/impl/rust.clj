@@ -461,7 +461,15 @@
   [ast-opts]
   ;; Note: currently assuming that there are 0 args to StringBuffer,
   ;; but can support args later
-  "String::new().chars().collect()")
+  (let [ast (:ast ast-opts)
+        args (:args ast)]
+    (if (zero? (count args))
+      "String::new().chars().collect()"
+      (let [first-arg (first args)]
+        (assert (= :string (:type first-arg)))
+        (let [arg-strs (emit-invoke-args ast-opts)
+              init-val-str (first arg-strs)]
+          (str init-val-str ".chars().collect()"))))))
 
 (defmethod iface/emit-strlen ::l/rust
   [ast-opts]
@@ -472,7 +480,7 @@
         strlen-invoke (str obj-name ".len()")]
     strlen-invoke))
 
-(defmethod iface/emit-insert-strbuf ::l/rust
+(defmethod iface/emit-insert-strbuf-char ::l/rust
   [ast-opts]
   (let [ast (:ast ast-opts)
         args (:args ast)
@@ -488,6 +496,44 @@
                               ")"]
         insert-invoke (apply str insert-invoke-parts)]
     insert-invoke))
+
+(defmethod iface/emit-insert-strbuf-string ::l/rust
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-invoke-args ast-opts)
+        obj-name (first arg-strs)
+        idx (nth arg-strs 1)
+        inserted-val-str (-> (nth args 2)
+                             :val)
+
+        ;; if this emitter method was triggered by a form like (insert-strbuf-string sb 0 "hello"),
+        ;; then we want to have the Rust equivalent of a local (let block) binding
+        ;; that would look like (let [^StringBuffer sbTemp (new-strbuf "hello")] ...),
+        ;; but just take the Rust equivalent of only the binding that we care about
+        temp-obj-name (-> (str obj-name "_temp")
+                          cb-util/new-name)
+        temp-obj-symbol (with-meta (symbol temp-obj-name) {:tag StringBuffer})
+        temp-obj-binding-ast (-> (az/analyze `(let [~temp-obj-symbol (atom (new-strbuf ~inserted-val-str))]))
+                                 :bindings)
+        temp-obj-binding-ast-opts (assoc ast-opts :ast temp-obj-binding-ast)
+        temp-obj-binding-str (emit-bindings-stanza temp-obj-binding-ast-opts)
+
+        insert-invoke-parts [obj-name
+                             ".splice("
+                             idx
+                             ".."
+                             idx
+                             ", "
+                             temp-obj-name
+                             ")"]
+        insert-invoke (apply str insert-invoke-parts)
+
+        statements [temp-obj-binding-str
+                    insert-invoke]
+        statements-val-opts (map->AnyValOpts (assoc ast-opts :val statements))
+        result (emit-statements statements-val-opts)]
+    result))
 
 (defmethod iface/emit-length-strbuf ::l/rust
   [ast-opts]
