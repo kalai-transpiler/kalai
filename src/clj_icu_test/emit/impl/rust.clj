@@ -471,15 +471,6 @@
               init-val-str (first arg-strs)]
           (str init-val-str ".chars().collect()"))))))
 
-(defmethod iface/emit-strlen ::l/rust
-  [ast-opts]
-  (let [ast (:ast ast-opts)
-        args (:args ast)
-        arg-strs (emit-invoke-args ast-opts)
-        obj-name (first arg-strs)
-        strlen-invoke (str obj-name ".len()")]
-    strlen-invoke))
-
 (defmethod iface/emit-insert-strbuf-char ::l/rust
   [ast-opts]
   (let [ast (:ast ast-opts)
@@ -536,6 +527,15 @@
     result))
 
 (defmethod iface/emit-length-strbuf ::l/rust
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-invoke-args ast-opts)
+        obj-name (first arg-strs)
+        strlen-invoke (str obj-name ".len()")]
+    strlen-invoke))
+
+(defmethod iface/emit-strlen ::l/rust
   [ast-opts]
   (let [ast (:ast ast-opts)
         args (:args ast)
