@@ -117,7 +117,12 @@
   [strbuf s]
   (.insert strbuf 0 s))
 
-(defn insert-strbuf
+(defn insert-strbuf-char
+  "This fn represents inserting a char into an accumulator string buffer in the target language at a specific index."
+  [strbuf idx ch]
+  (.insert strbuf idx ch))
+
+(defn insert-strbuf-string
   "This fn represents inserting a string into an accumulator string buffer in the target language at a specific index."
   [strbuf idx s]
   (.insert strbuf idx s))

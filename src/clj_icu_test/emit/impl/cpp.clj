@@ -397,7 +397,24 @@
         rhs-expr (emit-str new-ast-opts)]
     rhs-expr))
 
-(defmethod iface/emit-insert-strbuf ::l/cpp
+(defmethod iface/emit-insert-strbuf-char ::l/cpp
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-invoke-args ast-opts)
+        obj-name (first arg-strs)
+        idx (nth arg-strs 1)
+        inserted-val-str (nth arg-strs 2)
+        insert-invoke-parts [obj-name
+                              ".insert("
+                              idx
+                              ", "
+                              inserted-val-str
+                              ")"]
+        insert-invoke (apply str insert-invoke-parts)]
+    insert-invoke))
+
+(defmethod iface/emit-insert-strbuf-string ::l/cpp
   [ast-opts]
   (let [ast (:ast ast-opts)
         args (:args ast)

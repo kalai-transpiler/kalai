@@ -744,8 +744,11 @@
       (fn-matches? fn-meta-ast "clj-icu-test.common" "prepend-strbuf")
       (emit-prepend-strbuf ast-opts)
 
-      (fn-matches? fn-meta-ast "clj-icu-test.common" "insert-strbuf")
-      (emit-insert-strbuf ast-opts)
+      (fn-matches? fn-meta-ast "clj-icu-test.common" "insert-strbuf-char")
+      (emit-insert-strbuf-char ast-opts)
+
+      (fn-matches? fn-meta-ast "clj-icu-test.common" "insert-strbuf-string")
+      (emit-insert-strbuf-string ast-opts)
 
       (fn-matches? fn-meta-ast "clj-icu-test.common" "tostring-strbuf")
       (emit-tostring-strbuf ast-opts)

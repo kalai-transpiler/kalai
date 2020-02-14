@@ -219,9 +219,13 @@
   [ast-opts]
   (iface/emit-prepend-strbuf ast-opts))
 
-(defn emit-insert-strbuf
+(defn emit-insert-strbuf-char
   [ast-opts]
-  (iface/emit-insert-strbuf ast-opts))
+  (iface/emit-insert-strbuf-char ast-opts))
+
+(defn emit-insert-strbuf-string
+  [ast-opts]
+  (iface/emit-insert-strbuf-string ast-opts))
 
 (defn emit-tostring-strbuf
   [ast-opts]

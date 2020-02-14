@@ -320,8 +320,16 @@ numberWords.put(\"three\", 3);"
 
 ;; string buffer - insert
 
-(defexpect stringbuffer-insert
-  (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] (insert-strbuf sb 0 "hello")))]
+(defexpect stringbuffer-insert-char
+  (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] (insert-strbuf-char sb 0 \x)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
+"{
+  StringBuffer sb = new StringBuffer();
+  sb.insert(0, 'x');
+}")))
+
+(defexpect stringbuffer-insert-string
+  (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] (insert-strbuf-string sb 0 "hello")))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
 "{
   StringBuffer sb = new StringBuffer();
@@ -332,7 +340,7 @@ numberWords.put(\"three\", 3);"
 
 (defexpect stringbuffer-length
   (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))]
-                           (insert-strbuf sb 0 "hello")
+                           (insert-strbuf-string sb 0 "hello")
                            (length-strbuf sb)))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
 "{

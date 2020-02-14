@@ -121,5 +121,5 @@
             ^Integer numPositions (seq-length separatorPositions)]
         (dotimes [^{:mtype Integer} idx numPositions]
           (let [^Integer position (nth separatorPositions idx)]
-            (reset! result (insert-strbuf @result position sep)))))
+            (reset! result (insert-strbuf-char @result position sep)))))
       (return (tostring-strbuf @result)))))

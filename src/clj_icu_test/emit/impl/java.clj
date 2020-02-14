@@ -364,7 +364,25 @@
         prepend-invoke (apply str prepend-invoke-parts)]
     prepend-invoke))
 
-(defmethod iface/emit-insert-strbuf ::l/java
+(defmethod iface/emit-insert-strbuf-char ::l/java
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-invoke-args ast-opts)
+        obj-name (first arg-strs)
+        idx (nth arg-strs 1)
+        inserted-val-str (nth arg-strs 2)
+        insert-invoke-parts [obj-name
+                              ".insert("
+                              idx
+                              ", "
+                              inserted-val-str
+                              ")"]
+        insert-invoke (apply str insert-invoke-parts)]
+    insert-invoke))
+
+;; copy-paste of emit-insert-strbuf-char
+(defmethod iface/emit-insert-strbuf-string ::l/java
   [ast-opts]
   (let [ast (:ast ast-opts)
         args (:args ast)

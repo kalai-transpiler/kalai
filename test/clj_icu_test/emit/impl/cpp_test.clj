@@ -264,22 +264,6 @@
   SATURDAY
 };"))))
 
-;; deref
-
-(defexpect deref-test
-  (let [ast (az/analyze '(let [x (atom 3)] @x))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
-"{
-  x = 3;
-  x;
-}"))
-  (let [ast (az/analyze '(let [x (atom 3)] x))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
-"{
-  x = 3;
-  x;
-}")))
-
 ;; fn invocations
 
 (defexpect strlen-test
@@ -356,8 +340,16 @@ numberWords.insert(std::make_pair(\"three\", 3));"
 
 ;; string buffer - insert
 
-(defexpect stringbuffer-insert
-  (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] (insert-strbuf sb 0 "hello")))]
+(defexpect stringbuffer-insert-char
+  (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] (insert-strbuf-char sb 0 \x)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
+"{
+  std::string sb = \"\";
+  sb.insert(0, 'x');
+}")))
+
+(defexpect stringbuffer-insert-string
+  (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] (insert-strbuf-string sb 0 "hello")))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
 "{
   std::string sb = \"\";
@@ -368,7 +360,7 @@ numberWords.insert(std::make_pair(\"three\", 3));"
 
 (defexpect stringbuffer-length
   (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))]
-                           (insert-strbuf sb 0 "hello")
+                           (insert-strbuf-string sb 0 "hello")
                            (length-strbuf sb)))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
 "{

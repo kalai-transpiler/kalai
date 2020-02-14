@@ -234,7 +234,13 @@ Might return nil"}
   buffer), second arg is the string that needs to be prepended"}
   emit-prepend-strbuf lang)
 
-(defmulti emit-insert-strbuf lang)
+(defmulti
+  ^{:doc "Insert a character into a string buffer at a particular index."}
+  emit-insert-strbuf-char lang)
+
+(defmulti
+  ^{:doc "Insert a string into a string buffer at a particular index."}
+  emit-insert-strbuf-string lang)
 
 (defmulti
   ^{:doc "Emit the production of a string from a string buffer in C++"}
