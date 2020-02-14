@@ -346,3 +346,15 @@ numberWords.insert(String::from(\"three\"), 3);"
   sb.splice(0..0, sb_temp1);
   sb.len();
 }"))))
+
+;; string buffer - prepend
+
+(defexpect stringbuffer-prepend
+  (with-redefs [cb-util/new-name (partial testing/new-name-testing-fn 1)]
+    (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] (prepend-strbuf sb "hello")))]
+      (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+              "{
+  let mut sb: Vec<char> = String::new().chars().collect();
+  let mut sb_temp1: Vec<char> = String::from(\"hello\").chars().collect();
+  sb.splice(0..0, sb_temp1);
+}"))))

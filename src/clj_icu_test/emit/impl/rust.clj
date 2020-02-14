@@ -471,6 +471,39 @@
               init-val-str (first arg-strs)]
           (str init-val-str ".chars().collect()"))))))
 
+(defmethod iface/emit-prepend-strbuf ::l/rust
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-invoke-args ast-opts)
+        obj-name (first arg-strs)
+        inserted-val-str (-> (nth args 1)
+                             :val)
+
+        ;; if this emitter method was triggered by a form like (insert-strbuf-string sb 0 "hello"),
+        ;; then we want to have the Rust equivalent of a local (let block) binding
+        ;; that would look like (let [^StringBuffer sbTemp (new-strbuf "hello")] ...),
+        ;; but just take the Rust equivalent of only the binding that we care about
+        temp-obj-name (-> (str obj-name "_temp")
+                          cb-util/new-name)
+        temp-obj-symbol (with-meta (symbol temp-obj-name) {:tag StringBuffer})
+        temp-obj-binding-ast (-> (az/analyze `(let [~temp-obj-symbol (atom (new-strbuf ~inserted-val-str))]))
+                                 :bindings)
+        temp-obj-binding-ast-opts (assoc ast-opts :ast temp-obj-binding-ast)
+        temp-obj-binding-str (emit-bindings-stanza temp-obj-binding-ast-opts)
+
+        insert-invoke-parts [obj-name
+                             ".splice(0..0, "
+                             temp-obj-name
+                             ")"]
+        insert-invoke (apply str insert-invoke-parts)
+
+        statements [temp-obj-binding-str
+                    insert-invoke]
+        statements-val-opts (map->AnyValOpts (assoc ast-opts :val statements))
+        result (emit-statements statements-val-opts)]
+    result))
+
 (defmethod iface/emit-insert-strbuf-char ::l/rust
   [ast-opts]
   (let [ast (:ast ast-opts)

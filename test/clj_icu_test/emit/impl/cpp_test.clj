@@ -372,7 +372,6 @@ numberWords.insert(std::make_pair(\"three\", 3));"
 ;; string buffer - prepend
 
 (defexpect stringbuffer-prepend
-
   (let [ast (az/analyze '(let [^StringBuffer sb (atom (new-strbuf))] (prepend-strbuf sb "hello")))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
 "{
