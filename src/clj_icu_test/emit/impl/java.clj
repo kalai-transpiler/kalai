@@ -361,8 +361,15 @@
                               ", "
                               prepended-val-str
                               ")"]
-        prepend-invoke (apply str prepend-invoke-parts)]
-    prepend-invoke))
+        prepend-invoke (apply str prepend-invoke-parts)
+        first-arg-str (-> ast-opts
+                          emit-invoke-args
+                          first)
+        statement-parts [first-arg-str
+                         "="
+                         prepend-invoke]
+        statement (string/join " " statement-parts)]
+    statement))
 
 (defmethod iface/emit-insert-strbuf-char ::l/java
   [ast-opts]

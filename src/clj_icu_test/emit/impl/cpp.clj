@@ -394,8 +394,15 @@
                      (assoc 1 first-arg))
         new-ast (assoc ast :args new-args)
         new-ast-opts (assoc ast-opts :ast new-ast)
-        rhs-expr (emit-str new-ast-opts)]
-    rhs-expr))
+        rhs-expr (emit-str new-ast-opts)
+        first-arg-str (-> ast-opts
+                          emit-invoke-args
+                          first)
+        statement-parts [first-arg-str
+                         "="
+                         rhs-expr]
+        statement (string/join " " statement-parts)]
+    statement))
 
 (defmethod iface/emit-insert-strbuf-char ::l/cpp
   [ast-opts]

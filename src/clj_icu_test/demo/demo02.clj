@@ -113,7 +113,7 @@
               ^Integer remainder (rem @i 10)
               ^{:mtype [List [Character]]} numberSystemDigits (get numberSystemsMap numberSystem)
               ^Character localDigit (nth numberSystemDigits remainder)]
-          (reset! result (prepend-strbuf @result localDigit))
+          (prepend-strbuf @result localDigit)
           (reset! i quotient)))
       (let [^Character sep (get groupingSeparatorsMap numberSystem)
             ^Integer numLength (length-strbuf @result)

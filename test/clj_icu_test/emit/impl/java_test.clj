@@ -315,7 +315,7 @@ numberWords.put(\"three\", 3);"
     (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
 "{
   StringBuffer sb = new StringBuffer();
-  sb.insert(0, \"hello\");
+  sb = sb.insert(0, \"hello\");
 }")))
 
 ;; string buffer - insert
@@ -384,7 +384,7 @@ numberWords.put(\"three\", 3);"
                                (while (not (= @i 0))
                                  (let [^Integer quotient (quot @i 10)
                                        ^Integer remainder (rem @i 10)]
-                                   (reset! result (prepend-strbuf @result remainder))
+                                   (prepend-strbuf @result remainder)
                                    (reset! i quotient)))
                                (return (tostring-strbuf @result))))))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
@@ -417,7 +417,7 @@ numberWords.put(\"three\", 3);"
                                (while (not (= i 0))
                                  (let [^Integer quotient (quot i 10)
                                        ^Integer remainder (rem i 10)]
-                                   (reset! result (prepend-strbuf result remainder))
+                                   (prepend-strbuf @result remainder)
                                    (reset! i quotient)))
                                (return (tostring-strbuf result))))))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))

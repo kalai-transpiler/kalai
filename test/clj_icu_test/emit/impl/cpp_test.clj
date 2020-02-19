@@ -376,7 +376,7 @@ numberWords.insert(std::make_pair(\"three\", 3));"
     (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
 "{
   std::string sb = \"\";
-  \"hello\" + sb;
+  sb = \"hello\" + sb;
 }")))
 
 ;; string - equals
@@ -416,7 +416,7 @@ numberWords.insert(std::make_pair(\"three\", 3));"
                                (while (not (= @i 0))
                                  (let [^Integer quotient (quot @i 10)
                                        ^Integer remainder (rem @i 10)]
-                                   (reset! result (prepend-strbuf @result remainder))
+                                   (prepend-strbuf @result remainder)
                                    (reset! i quotient)))
                                (return (tostring-strbuf @result))))))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
@@ -449,7 +449,7 @@ numberWords.insert(std::make_pair(\"three\", 3));"
                                (while (not (= i 0))
                                  (let [^Integer quotient (quot i 10)
                                        ^Integer remainder (rem i 10)]
-                                   (reset! result (prepend-strbuf @result remainder))
+                                   (prepend-strbuf @result remainder)
                                    (reset! i quotient)))
                                (return (tostring-strbuf @result))))))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))

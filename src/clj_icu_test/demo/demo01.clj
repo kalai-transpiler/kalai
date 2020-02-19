@@ -8,6 +8,6 @@
       (while (not (= @i 0))
         (let [^Integer quotient (quot @i 10)
               ^Integer remainder (rem @i 10)]
-          (reset! result (prepend-strbuf @result remainder))
+          (prepend-strbuf @result remainder)
           (reset! i quotient)))
       (return (tostring-strbuf @result)))))
