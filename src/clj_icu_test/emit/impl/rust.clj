@@ -477,21 +477,33 @@
         args (:args ast)
         arg-strs (emit-invoke-args ast-opts)
         obj-name (first arg-strs)
-        inserted-val-str (-> (nth args 1)
+        inserted-val-ast (nth args 1)
+        inserted-val-str (-> inserted-val-ast
                              :val)
 
-        ;; if this emitter method was triggered by a form like (insert-strbuf-string sb 0 "hello"),
+        ;; TODO: refactor the effort to create a let binding expression
+
+        ;; if this emitter method was triggered by a form like (prepend-strbuf sb "hello"),
         ;; then we want to have the Rust equivalent of a local (let block) binding
         ;; that would look like (let [^StringBuffer sbTemp (new-strbuf "hello")] ...),
-        ;; but just take the Rust equivalent of only the binding that we care about
+        ;; but just take the Rust equivalent of only the binding that we care about.
+        ;;
+        ;; Use 'str' as the fn and then replace it with new-strbuf b/c the analyzed
+        ;; form when using new-strbuf as the fn would falsely introduce a nil arg
+        ;; at the beginning of the args list.
+        ;; Use a dummy arg and then replace its AST with the AST of the value we want.
         temp-obj-name (-> (str obj-name "_temp")
                           cb-util/new-name)
         temp-obj-symbol (with-meta (symbol temp-obj-name) {:tag StringBuffer})
-        temp-obj-binding-ast (-> (az/analyze `(let [~temp-obj-symbol (atom (new-strbuf ~inserted-val-str))]))
-                                 :bindings)
+        temp-obj-ast (az/analyze `(let [~temp-obj-symbol (atom (str "replaceme"))]))
+        new-strbuf-fn-ast (-> (az/analyze '(new-strbuf))
+                              :fn)
+        temp-obj-binding-ast (-> temp-obj-ast :bindings
+                                 (assoc-in [0 :init :args 0 :fn] new-strbuf-fn-ast)
+                                 (assoc-in [0 :init :args 0 :args 0] inserted-val-ast))        
         temp-obj-binding-ast-opts (assoc ast-opts :ast temp-obj-binding-ast)
         temp-obj-binding-str (emit-bindings-stanza temp-obj-binding-ast-opts)
-
+        
         insert-invoke-parts [obj-name
                              ".splice(0..0, "
                              temp-obj-name
@@ -528,21 +540,33 @@
         arg-strs (emit-invoke-args ast-opts)
         obj-name (first arg-strs)
         idx (nth arg-strs 1)
-        inserted-val-str (-> (nth args 2)
+        inserted-val-ast (nth args 2)
+        inserted-val-str (-> inserted-val-ast
                              :val)
+
+        ;; TODO: refactor the effort to create a let binding expression
 
         ;; if this emitter method was triggered by a form like (insert-strbuf-string sb 0 "hello"),
         ;; then we want to have the Rust equivalent of a local (let block) binding
         ;; that would look like (let [^StringBuffer sbTemp (new-strbuf "hello")] ...),
-        ;; but just take the Rust equivalent of only the binding that we care about
+        ;; but just take the Rust equivalent of only the binding that we care about.
+        ;;
+        ;; Use 'str' as the fn and then replace it with new-strbuf b/c the analyzed
+        ;; form when using new-strbuf as the fn would falsely introduce a nil arg
+        ;; at the beginning of the args list.
+        ;; Use a dummy arg and then replace its AST with the AST of the value we want.
         temp-obj-name (-> (str obj-name "_temp")
                           cb-util/new-name)
         temp-obj-symbol (with-meta (symbol temp-obj-name) {:tag StringBuffer})
-        temp-obj-binding-ast (-> (az/analyze `(let [~temp-obj-symbol (atom (new-strbuf ~inserted-val-str))]))
-                                 :bindings)
+        temp-obj-ast (az/analyze `(let [~temp-obj-symbol (atom (str "replaceme"))]))
+        new-strbuf-fn-ast (-> (az/analyze '(new-strbuf))
+                              :fn)
+        temp-obj-binding-ast (-> temp-obj-ast :bindings
+                                 (assoc-in [0 :init :args 0 :fn] new-strbuf-fn-ast)
+                                 (assoc-in [0 :init :args 0 :args 0] inserted-val-ast))        
         temp-obj-binding-ast-opts (assoc ast-opts :ast temp-obj-binding-ast)
         temp-obj-binding-str (emit-bindings-stanza temp-obj-binding-ast-opts)
-
+        
         insert-invoke-parts [obj-name
                              ".splice("
                              idx
