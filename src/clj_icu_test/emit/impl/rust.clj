@@ -581,6 +581,16 @@
         result (emit-statements statements-val-opts)]
     result))
 
+(defmethod iface/emit-tostring-strbuf ::l/rust 
+  [ast-opts]
+  (let [ast (:ast ast-opts)
+        args (:args ast)
+        arg-strs (emit-invoke-args ast-opts)
+        obj-name (first arg-strs)
+        tostring-str (str obj-name
+                          ".into_iter().collect()")]
+    tostring-str))
+
 (defmethod iface/emit-length-strbuf ::l/rust
   [ast-opts]
   (let [ast (:ast ast-opts)
