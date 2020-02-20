@@ -384,7 +384,7 @@ numberWords.put(\"three\", 3);"
                                (while (not (= @i 0))
                                  (let [^Integer quotient (quot @i 10)
                                        ^Integer remainder (rem @i 10)]
-                                   (prepend-strbuf @result remainder)
+                                   (prepend-strbuf @result (str remainder))
                                    (reset! i quotient)))
                                (return (tostring-strbuf @result))))))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
@@ -400,7 +400,7 @@ numberWords.put(\"three\", 3);"
         {
           Integer quotient = (i) / 10;
           Integer remainder = (i) % 10;
-          result = result.insert(0, remainder);
+          result = result.insert(0, new StringBuffer().append(remainder).toString());
           i = quotient;
         }
       }
@@ -417,7 +417,7 @@ numberWords.put(\"three\", 3);"
                                (while (not (= i 0))
                                  (let [^Integer quotient (quot i 10)
                                        ^Integer remainder (rem i 10)]
-                                   (prepend-strbuf @result remainder)
+                                   (prepend-strbuf @result (str remainder))
                                    (reset! i quotient)))
                                (return (tostring-strbuf result))))))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
@@ -433,7 +433,7 @@ numberWords.put(\"three\", 3);"
         {
           Integer quotient = i / 10;
           Integer remainder = i % 10;
-          result = result.insert(0, remainder);
+          result = result.insert(0, new StringBuffer().append(remainder).toString());
           i = quotient;
         }
       }

@@ -385,3 +385,69 @@ numberWords.insert(String::from(\"three\"), 3);"
     (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
 ["let formattedDigits: Vec<char> = vec![];"
  "formattedDigits.push('1');"])))
+
+;; demo code
+
+(defexpect demo
+  (with-redefs [cb-util/new-name (partial testing/new-name-testing-fn 1)]
+    (let [ast (az/analyze '(defclass "NumFmt"
+                             (defn format ^String [^Integer num]
+                               (let [^Integer i (atom num)
+                                     ^StringBuffer result (atom (new-strbuf))]
+                                 (while (not (= @i 0))
+                                   (let [^Integer quotient (quot @i 10)
+                                         ^Integer remainder (rem @i 10)]
+                                     (prepend-strbuf @result (str remainder))
+                                     (reset! i quotient)))
+                                 (return (tostring-strbuf @result))))))]
+      (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+"pub fn format(num: &i32) -> String
+{
+  {
+    let mut i: i32 = num;
+    let mut result: Vec<char> = String::new().chars().collect();
+    while (!((i) == 0))
+    {
+      {
+        let quotient: i32 = (i) / 10;
+        let remainder: i32 = (i) % 10;
+        let mut result_temp1: Vec<char> = format!(\"{}\", (remainder).to_string()).chars().collect();
+        result.splice(0..0, result_temp1);
+        i = quotient;
+      }
+    }
+    return result.into_iter().collect();
+  }
+}")))
+  ;; TODO: make emitters for args to a static call / function call invoke discard the parens around derefs.
+  ;; Then this test should be removed, and test above can have a simplified output.
+  (with-redefs [cb-util/new-name (partial testing/new-name-testing-fn 1)]
+    (let [ast (az/analyze '(defclass "NumFmt"
+                             (defn format ^String [^Integer num]
+                               (let [^Integer i (atom num)
+                                     ^StringBuffer result (atom (new-strbuf))]
+                                 (while (not (= i 0))
+                                   (let [^Integer quotient (quot i 10)
+                                         ^Integer remainder (rem i 10)]
+                                     (prepend-strbuf @result (str remainder))
+                                     (reset! i quotient)))
+                                 (return (tostring-strbuf @result))))))]
+      (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+"pub fn format(num: &i32) -> String
+{
+  {
+    let mut i: i32 = num;
+    let mut result: Vec<char> = String::new().chars().collect();
+    while (!(i == 0))
+    {
+      {
+        let quotient: i32 = i / 10;
+        let remainder: i32 = i % 10;
+        let mut result_temp1: Vec<char> = format!(\"{}\", (remainder).to_string()).chars().collect();
+        result.splice(0..0, result_temp1);
+        i = quotient;
+      }
+    }
+    return result.into_iter().collect();
+  }
+}"))))
