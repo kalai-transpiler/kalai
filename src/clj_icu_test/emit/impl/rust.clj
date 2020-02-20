@@ -465,11 +465,9 @@
         args (:args ast)]
     (if (zero? (count args))
       "String::new().chars().collect()"
-      (let [first-arg (first args)]
-        (assert (= :string (:type first-arg)))
-        (let [arg-strs (emit-invoke-args ast-opts)
-              init-val-str (first arg-strs)]
-          (str init-val-str ".chars().collect()"))))))
+      (let [arg-strs (emit-invoke-args ast-opts)
+            init-val-str (first arg-strs)]
+        (str init-val-str ".chars().collect()")))))
 
 (defmethod iface/emit-prepend-strbuf ::l/rust
   [ast-opts]
