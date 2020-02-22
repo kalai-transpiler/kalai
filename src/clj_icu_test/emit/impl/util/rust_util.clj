@@ -49,6 +49,16 @@
                      (not (:literal? ast))
                      (= :arg (:local ast))))]))
 
+(defn defn-arg-as-value?
+  "Whether the defn arg should be passed by value"
+  [ast-opts]
+  (is-primitive-type? ast-opts))
+
+(defn defn-arg-as-reference?
+  "Similar to defn-arg-as-value?, but indicate whether the arg should be passed by reference"
+  [ast-opts]
+  (not (defn-arg-as-value? ast-opts)))
+
 (def VALID-RUST-ARG-REF-STYLES #{:auto-ref :auto-val})
 
 (defn- emit-arg-impl

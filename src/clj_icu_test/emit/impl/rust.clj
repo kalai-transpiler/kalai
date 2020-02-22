@@ -270,8 +270,12 @@
         arg-name (-> ast :form name) 
         type-class-opts ast-opts 
         type-str (emit-type type-class-opts)
+        type-prefix-pass-by-ref (if (rust-util/defn-arg-as-reference? ast-opts)
+                                  "&"
+                                  "")
         identifier-signature-parts [(str arg-name ":")
-                                    (str "&" type-str)]
+                                    (str type-prefix-pass-by-ref
+                                         type-str)]
         identifier-signature (->> identifier-signature-parts
                                   (keep identity)
                                   (string/join " "))]
