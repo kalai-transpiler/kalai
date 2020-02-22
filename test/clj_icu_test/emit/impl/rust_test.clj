@@ -401,7 +401,7 @@ numberWords.insert(String::from(\"three\"), 3);"
                                      (reset! i quotient)))
                                  (return (tostring-strbuf @result))))))]
       (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
-"pub fn format(num: &i32) -> String
+"pub fn format(num: i32) -> String
 {
   {
     let mut i: i32 = num;
@@ -433,7 +433,7 @@ numberWords.insert(String::from(\"three\"), 3);"
                                      (reset! i quotient)))
                                  (return (tostring-strbuf @result))))))]
       (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
-"pub fn format(num: &i32) -> String
+"pub fn format(num: i32) -> String
 {
   {
     let mut i: i32 = num;
