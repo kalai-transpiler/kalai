@@ -460,3 +460,15 @@ numberWords.insert(String::from(\"three\"), 3);"
 ["let mut numberWords: HashMap<String,i32> = HashMap::new();
 numberWords.insert(String::from(\"one\"), 1);"
  "numberWords.contains_key(&String::from(\"ten\"));"])))
+
+(defexpect invoke-test
+  (let [ast (az/analyze '(do
+                           (defn f ^Integer [^Integer a1 ^Integer a2 ^Integer a3]
+                             (return (+ a1 a2 a3)))
+                           (f 1 2 3)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+            ["pub fn f(a1: i32, a2: i32, a3: i32) -> i32
+{
+  return a1 + a2 + a3;
+}"
+             "f(1, 2, 3);"])))

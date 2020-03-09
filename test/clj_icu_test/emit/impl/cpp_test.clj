@@ -489,7 +489,6 @@ numberWords.insert(std::make_pair(\"one\", 1));"
                              (return (+ a1 a2 a3)))
                            (f 1 2 3)))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
-
             ["int f(int a1, int a2, int a3)
 {
   return a1 + a2 + a3;
