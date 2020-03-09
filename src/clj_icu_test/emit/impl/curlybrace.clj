@@ -19,7 +19,8 @@
   (let [statement-parts (:val val-opts)]
     (if (string? statement-parts)
       (let [statement statement-parts]
-        (if (= \; (last statement))
+        (if (or (= \; (last statement))
+                (string/ends-with? statement "\n}"))
           statement
           (str (indent-str-curr-level)
                statement

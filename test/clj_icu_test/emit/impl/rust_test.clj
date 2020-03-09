@@ -20,9 +20,16 @@
 
 (defexpect bindings-def 
   (let [ast (az/analyze '(def x 3))]
-    (expect "let x = 3;" (emit (map->AstOpts {:ast ast :lang ::l/rust}))))
+    (expect
+"lazy_static! {
+  static ref x = 3;
+}"
+     (emit (map->AstOpts {:ast ast :lang ::l/rust}))))
   (let [ast (az/analyze '(def ^Integer x 5))]
-    (expect "let x: i32 = 5;" (emit (map->AstOpts {:ast ast :lang ::l/rust})))))
+    (expect
+"lazy_static! {
+  static ref x: i32 = 5;
+}" (emit (map->AstOpts {:ast ast :lang ::l/rust})))))
 
 ;; language - multiple expressions
 
@@ -30,11 +37,21 @@
 
 (defexpect lang-mult-expr-do-block
   (let [ast (az/analyze '(do (def x 3) (def y 5)))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) ["let x = 3;"
-                                                             "let y = 5;"])) 
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+["lazy_static! {
+  static ref x = 3;
+}"
+"lazy_static! {
+  static ref y = 5;
+}"])) 
   (let [ast (az/analyze '(do (def ^Boolean x true) (def ^Long y 5)))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) ["let x: bool = true;"
-                                                             "let y: i64 = 5;"])))
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+["lazy_static! {
+  static ref x: bool = true;
+}"
+"lazy_static! {
+  static ref y: i64 = 5;
+}"])))
 
 ;; bindings
 
@@ -42,18 +59,26 @@
 
 (defexpect bindings-atoms
   (let [ast (az/analyze '(def x (atom 11)))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) "let mut x = 11;")))
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+"lazy_static! {
+  static ref mut x = 11;
+}")))
 
 ;; bindings - reset!
 
 (defexpect bindings-reset
   (let [ast (az/analyze '(do (def x (atom 11)) (reset! x 13)))]
-    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust})) ["let mut x = 11;"
-                                                             "x = 13;"]))
-
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+["lazy_static! {
+  static ref mut x = 11;
+}"
+ "x = 13;"]))
   (let [ast (az/analyze '(do (def ^Long x (atom 11)) (reset! x 13)))]
-    (expect (emit {:ast ast :lang ::l/rust}) ["let mut x: i64 = 11;"
-                                              "x = 13;"])))
+    (expect (emit {:ast ast :lang ::l/rust})
+["lazy_static! {
+  static ref mut x: i64 = 11;
+}"
+ "x = 13;"])))
 
 ;; bindings - let
 
@@ -210,7 +235,9 @@
     (require '[clj-icu-test.common :refer :all])
     (let [ast (az/analyze '(defclass "MyClass" (def ^Integer b 3) (defn x ^void [] (+ b 1))))]
       (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
-"let b: i32 = 3;
+"lazy_static! {
+  static ref b: i32 = 3;
+}
 
 pub fn x()
 {
@@ -241,8 +268,10 @@ pub fn x()
 (defexpect strlen-test
   (let [ast (az/analyze '(do (def ^String s "Hello, Martians") (strlen s)))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
-            ["let s: String = String::from(\"Hello, Martians\");"
-             "s.len();"])))
+["lazy_static! {
+  static ref s: String = String::from(\"Hello, Martians\");
+}"
+ "s.len();"])))
 
 ;; loops (ex: while, doseq)
 
@@ -262,19 +291,23 @@ pub fn x()
                                                                                 "three" 3})
                              (get numberWords "one")))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
-            ["let mut numberWords: HashMap<String,i32> = HashMap::new();
-numberWords.insert(String::from(\"one\"), 1);
-numberWords.insert(String::from(\"two\"), 2);
-numberWords.insert(String::from(\"three\"), 3);"
-             "*numberWords.get(&String::from(\"one\")).unwrap();"])))
+["lazy_static! {
+  static ref mut numberWords: HashMap<String,i32> = HashMap::new();
+  numberWords.insert(String::from(\"one\"), 1);
+  numberWords.insert(String::from(\"two\"), 2);
+  numberWords.insert(String::from(\"three\"), 3);
+}"
+ "*numberWords.get(&String::from(\"one\")).unwrap();"])))
 
 (defexpect nth-test
   (let [ast (az/analyze '(do (def ^{:mtype [List [Integer]]} numbers [13 17 19 23])
                              (nth numbers 2)))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
-            ["let numbers: Vec<i32> = vec![13, 17, 19, 23];"
-             "numbers[2 as usize];"]
-            )))
+["lazy_static! {
+  static ref numbers: Vec<i32> = vec![13, 17, 19, 23];
+}"
+ "numbers[2 as usize];"]
+)))
 
 ;; not
 
@@ -366,8 +399,12 @@ numberWords.insert(String::from(\"three\"), 3);"
                              (def ^String s2 "home")
                              (str-eq s1 s2)))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
-["let s1: String = String::from(\"house\");"
- "let s2: String = String::from(\"home\");"
+["lazy_static! {
+  static ref s1: String = String::from(\"house\");
+}"
+"lazy_static! {
+  static ref s2: String = String::from(\"home\");
+}"
  "s1 == s2;"])))
 
 ;; sequential collection - length
@@ -375,7 +412,9 @@ numberWords.insert(String::from(\"three\"), 3);"
 (defexpect seq-length-test
   (let [ast (az/analyze '(do (def ^{:mtype [List [Character]]} formattedDigits []) (seq-length formattedDigits)))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
-["let formattedDigits: Vec<char> = vec![];"
+["lazy_static! {
+  static ref formattedDigits: Vec<char> = vec![];
+}"
  "formattedDigits.len();"])))
 
 ;; sequential collection - append
@@ -383,7 +422,9 @@ numberWords.insert(String::from(\"three\"), 3);"
 (defexpect seq-append-test
   (let [ast (az/analyze '(do (def ^{:mtype [List [Character]]} formattedDigits []) (seq-append formattedDigits \1)))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
-["let formattedDigits: Vec<char> = vec![];"
+["lazy_static! {
+  static ref formattedDigits: Vec<char> = vec![];
+}"
  "formattedDigits.push('1');"])))
 
 ;; demo code
@@ -457,8 +498,10 @@ numberWords.insert(String::from(\"three\"), 3);"
                            (def ^{:mtype [Map [String Integer]]} numberWords {"one" 1})
                            (contains? numberWords "ten")))]
     (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
-["let mut numberWords: HashMap<String,i32> = HashMap::new();
-numberWords.insert(String::from(\"one\"), 1);"
+["lazy_static! {
+  static ref mut numberWords: HashMap<String,i32> = HashMap::new();
+  numberWords.insert(String::from(\"one\"), 1);
+}"
  "numberWords.contains_key(&String::from(\"ten\"));"])))
 
 (defexpect invoke-test

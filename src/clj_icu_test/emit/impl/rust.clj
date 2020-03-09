@@ -216,6 +216,25 @@
   [ast-opts]
   #{:string :char :nil})
 
+(defmethod iface/emit-def ::l/rust
+  [ast-opts]
+  {:pre [(= :def (:op (:ast ast-opts)))]}
+  (let [ast (:ast ast-opts)
+        rust-local-assignment-signature "let"
+        rust-global-assignment-signature "static ref"
+        assignment-str (indent
+                        (emit-assignment ast-opts))
+        local-assign-regex-pattern (re-pattern (str "\\b" rust-local-assignment-signature "\\b"))
+        global-assignment-str (if-not (re-find local-assign-regex-pattern assignment-str)
+                                assignment-str
+                                (string/replace assignment-str
+                                                local-assign-regex-pattern
+                                                rust-global-assignment-signature))
+        global-binding-stanza (string/join "\n" ["lazy_static! {"
+                                                 global-assignment-str
+                                                 "}"])]
+    global-binding-stanza))
+
 ;; "arithmetic" (built-in operators)
 
 (defmethod iface/emit-arg ::l/rust
