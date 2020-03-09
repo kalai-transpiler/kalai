@@ -489,6 +489,8 @@
 (defmethod iface/emit-prepend-strbuf ::l/rust
   [ast-opts]
   (let [ast (:ast ast-opts)
+        env (or (:env ast-opts)
+                (:env ast))
         args (:args ast)
         arg-strs (emit-invoke-args ast-opts)
         obj-name (first arg-strs)
@@ -511,8 +513,11 @@
                           cb-util/new-name)
         temp-obj-symbol (with-meta (symbol temp-obj-name) {:tag StringBuffer})
         temp-obj-ast (az/analyze `(let [~temp-obj-symbol (atom (str "replaceme"))]))
-        new-strbuf-fn-ast (-> (az/analyze '(new-strbuf))
-                              :fn)
+        new-strbuf-fn-ast (if env
+                            (-> (az/analyze '(new-strbuf) env)
+                                :fn)
+                            (-> (az/analyze '(new-strbuf))
+                                :fn))
         temp-obj-binding-ast (-> temp-obj-ast :bindings
                                  (assoc-in [0 :init :args 0 :fn] new-strbuf-fn-ast)
                                  (assoc-in [0 :init :args 0 :args 0] inserted-val-ast))        
@@ -551,6 +556,8 @@
 (defmethod iface/emit-insert-strbuf-string ::l/rust
   [ast-opts]
   (let [ast (:ast ast-opts)
+        env (or (:env ast-opts)
+                (:env ast))
         args (:args ast)
         arg-strs (emit-invoke-args ast-opts)
         obj-name (first arg-strs)
@@ -574,8 +581,11 @@
                           cb-util/new-name)
         temp-obj-symbol (with-meta (symbol temp-obj-name) {:tag StringBuffer})
         temp-obj-ast (az/analyze `(let [~temp-obj-symbol (atom (str "replaceme"))]))
-        new-strbuf-fn-ast (-> (az/analyze '(new-strbuf))
-                              :fn)
+        new-strbuf-fn-ast (if env
+                            (-> (az/analyze '(new-strbuf) env)
+                                :fn)
+                            (-> (az/analyze '(new-strbuf))
+                                :fn))
         temp-obj-binding-ast (-> temp-obj-ast :bindings
                                  (assoc-in [0 :init :args 0 :fn] new-strbuf-fn-ast)
                                  (assoc-in [0 :init :args 0 :args 0] inserted-val-ast))        
