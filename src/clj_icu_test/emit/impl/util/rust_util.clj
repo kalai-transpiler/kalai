@@ -125,11 +125,12 @@
 (defn emit-args-impl
   "Similar to curlybrace emit-args but takes an extra option (same as rust emit-arg) that indicates whether caller wants this arg as pass-by-value or pass-by-reference.  Implementation copied from curlybrace defmethod for emit-args"
   [ast-opts ref-style]
-  {:pre [(-> ast-opts :ast :raw-forms seq)]}
+  {:pre [(or (-> ast-opts :ast :raw-forms seq)
+             (-> ast-opts :ast :form seq))]}
   (let [ast (:ast ast-opts)
-        raw-forms (-> ast :raw-forms)
+        raw-forms (or (-> ast :raw-forms last)
+                      (-> ast :form))
         raw-form-arg-symbols (-> raw-forms
-                                 last
                                  rest)
         raw-form-arg-symbol-ast-opts (assoc ast-opts :env (-> ast :env))
         emitted-args (map #(emit-arg-impl raw-form-arg-symbol-ast-opts % ref-style) raw-form-arg-symbols)]

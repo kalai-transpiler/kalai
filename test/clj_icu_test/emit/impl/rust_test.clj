@@ -451,3 +451,12 @@ numberWords.insert(String::from(\"three\"), 3);"
     return result.into_iter().collect();
   }
 }"))))
+
+(defexpect contains-test
+  (let [ast (az/analyze '(do
+                           (def ^{:mtype [Map [String Integer]]} numberWords {"one" 1})
+                           (contains? numberWords "ten")))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
+["let mut numberWords: HashMap<String,i32> = HashMap::new();
+numberWords.insert(String::from(\"one\"), 1);"
+ "numberWords.contains_key(&String::from(\"ten\"));"])))

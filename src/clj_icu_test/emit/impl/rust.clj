@@ -348,6 +348,19 @@
                                  (string/join "\n"))]
     fn-method-first-str))
 
+(defmethod iface/emit-contains? ::l/rust
+  [ast-opts]
+  (let [val-arg-strs (rust-util/emit-args-val ast-opts)
+        ref-arg-strs (rust-util/emit-args-ref ast-opts)
+        coll-name-str (first val-arg-strs)
+        key-str (second ref-arg-strs)
+        expr-parts [coll-name-str
+                    ".contains_key("
+                    key-str
+                    ")"]
+        expr (apply str expr-parts)]
+    expr))
+
 (defmethod iface/emit-str-arg ::l/rust
   [ast-opts]
   (let [ast (:ast ast-opts)
