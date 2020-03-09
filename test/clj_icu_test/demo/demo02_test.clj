@@ -387,5 +387,196 @@
   }
 };"]
                 cpp-strs)))
-    )
+
+    (testing "rust"
+      (let [rust-strs (emit-util/emit-analyzed-ns-asts ast-seq ::l/rust)]
+        (expect [""
+"pub fn getDigitsMap() -> HashMap<char,i32>
+{
+  {
+    let mut m: HashMap<char,i32> = HashMap::new();
+    m.insert('٠', 0);
+    m.insert('١', 1);
+    m.insert('٢', 2);
+    m.insert('٣', 3);
+    m.insert('٤', 4);
+    m.insert('٥', 5);
+    m.insert('০', 0);
+    m.insert('٦', 6);
+    m.insert('১', 1);
+    m.insert('٧', 7);
+    m.insert('২', 2);
+    m.insert('٨', 8);
+    m.insert('৩', 3);
+    m.insert('٩', 9);
+    m.insert('৪', 4);
+    m.insert('৫', 5);
+    m.insert('৬', 6);
+    m.insert('৭', 7);
+    m.insert('৮', 8);
+    m.insert('৯', 9);
+    m.insert('0', 0);
+    m.insert('1', 1);
+    m.insert('2', 2);
+    m.insert('3', 3);
+    m.insert('4', 4);
+    m.insert('5', 5);
+    m.insert('6', 6);
+    m.insert('7', 7);
+    m.insert('8', 8);
+    m.insert('9', 9);
+    return m;
+  }
+}
+
+lazy_static! {
+  static ref digitsMap: HashMap<char,i32> = getDigitsMap();
+}
+
+pub fn parse(s: &String) -> i32
+{
+  {
+    let mut result: i32 = 0;
+    let mut sChars = s.chars(0;
+    let mut sCharsNext: Option<char> = sChars.next();
+    while (sCharsNext != None)
+    {
+      {
+        let digit: char = sCharsNext.unwrap();
+        if (digitsMap.contains_key(&digit))
+        {
+          {
+            let digitVal: i32 = *digitsMap.get(&digit).unwrap();
+            result = (10 * (result)) + digitVal;
+          }
+        }
+        sCharsNext = sChars.next();
+      }
+    }
+    return result;
+  }
+}
+
+pub fn getNumberSystemsMap() -> HashMap<String,Vec<char>>
+{
+  {
+    let mut m: HashMap<String,Vec<char>> = HashMap::new();
+    m.insert(String::from(\"LATIN\"), vec!['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
+    m.insert(String::from(\"ARABIC\"), vec!['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩']);
+    m.insert(String::from(\"BENGALI\"), vec!['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯']);
+    return m;
+  }
+}
+
+lazy_static! {
+  static ref numberSystemsMap: HashMap<String,Vec<char>> = getNumberSystemsMap();
+}
+
+pub fn getGroupingSeparatorsMap() -> HashMap<String,char>
+{
+  {
+    let mut m: HashMap<String,char> = HashMap::new();
+    m.insert(String::from(\"LATIN\"), ',');
+    m.insert(String::from(\"ARABIC\"), '٬');
+    m.insert(String::from(\"BENGALI\"), ',');
+    return m;
+  }
+}
+
+lazy_static! {
+  static ref groupingSeparatorsMap: HashMap<String,char> = getGroupingSeparatorsMap();
+}
+
+pub fn getSeparatorPositions(numLength: i32, groupingStrategy: String) -> Vec<i32>
+{
+  {
+    let mut result: Vec<i32> = vec![];
+    if (groupingStrategy == \"NONE\")
+    {
+      return result;
+    }
+    else if (groupingStrategy == \"ON_ALIGNED_3_3\")
+    {
+      {
+        let mut i: i32 = numLength - 3;
+        while (0 < (i))
+        {
+          result.push(i);
+          i = (i) - 3;
+        }
+        return result;
+      }
+    }
+    else if (groupingStrategy == \"ON_ALIGNED_3_2\")
+    {
+      {
+        let mut i: i32 = numLength - 3;
+        while (0 < (i))
+        {
+          result.push(i);
+          i = (i) - 2;
+        }
+        return result;
+      }
+    }
+    else if (groupingStrategy == \"MIN_2\")
+    {
+      if (numLength <= 4)
+      {
+        return result;
+      }
+      else
+      {
+        {
+          let mut i: i32 = numLength - 3;
+          while (0 < (i))
+          {
+            result.push(i);
+            i = (i) - 3;
+          }
+          return result;
+        }
+      }
+    }
+    else
+    {
+      return result;
+    }
+  }
+}
+
+pub fn format(num: i32, numberSystem: &String, groupingStrategy: &String) -> String
+{
+  {
+    let mut i: i32 = num;
+    let mut result: Vec<char> = String::new().chars().collect();
+    while (!((i) == 0))
+    {
+      {
+        let quotient: i32 = (i) / 10;
+        let remainder: i32 = (i) % 10;
+        let numberSystemDigits: Vec<char> = numberSystemsMap.get(numberSystem).unwrap().to_vec();
+        let localDigit: char = numberSystemDigits[remainder as usize];
+        result.insert(0, localDigit);
+        i = quotient;
+      }
+    }
+    {
+      let sep: char = *groupingSeparatorsMap.get(numberSystem).unwrap();
+      let numLength: i32 = result.len() as i32;
+      let separatorPositions: Vec<i32> = getSeparatorPositions(&numLength, groupingStrategy);
+      let numPositions: i32 = separatorPositions.len() as i32;
+      for idx in (0..numPositions)
+      {
+        {
+          let position: i32 = separatorPositions[idx as usize];
+          result.insert(position as usize, sep);
+        }
+      }
+    }
+    return result.into_iter().collect();
+  }
+}"]
+              rust-strs)))
   )
+)
