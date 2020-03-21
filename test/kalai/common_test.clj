@@ -1,8 +1,7 @@
 (ns kalai.common-test
   (:require [clojure.tools.analyzer.jvm :as az]
             [kalai.common :refer :all]
-            [expectations.clojure.test :refer :all])
-  (:import kalai.common.AstOpts))
+            [expectations.clojure.test :refer :all]))
 
 ;;
 ;; Note: Java and C++ unit tests have moved to java_test.clj and cpp_test.clj

@@ -4,22 +4,11 @@ Kalai transpiler is a source-to-source transpiler to convert Clojure to multiple
 
 The goal of Kalai is to allow useful algorithms to be encoded once and then automatically be made available natively to other target programming languages.
 
+## Rationale
+
+See [why Clojure is good for writing transpilers](https://elangocheran.com/2020/03/18/why-clojure-lisp-is-good-for-writing-transpilers/).
+
 ## Usage
-
-### Implemented target languages
-
-Implemented target languages are defined as namespaced keywords in `kalai.emit.langs`.  Currently, they are:
-
-- Rust
-- C++
-- Java
-
-Clojure supports namespaced keywords to enable the dynamic dispatch fallback hierarchies for multimethods.  The namespaced keywords for the target languages follow the Clojure derivation tree:
-
-- `::l/curlybrace` ("curly brace" languages)
-  * `::l/rust` (Rust)
-  * `::l/cpp` (C++)
-  * `::l/java` (Java)
 
 ### Supported forms
 
@@ -40,9 +29,36 @@ If you have code written in `your.namespace`, then you can emit code as follows:
 (run! println java-strs)
 ```
 
-Example demo 1 has input code at [`src/kalai/demo/demo01.clj`](./src/kalai/demo/demo01.clj) and emitter tests at [`test/kalai/demo/demo01.clj`](./test/kalai/demo/demo01_test.clj).
+Example demo 1 has input code at [`test/kalai/demo/demo01.clj`](test/kalai/demo/demo01.clj) and emitter tests at [`test/kalai/demo/demo01.clj`](./test/kalai/demo/demo01_test.clj).
 
-Example demo 2 has input code at [`src/kalai/demo/demo02.clj`](./src/kalai/demo/demo02.clj) and emitter tests at [`test/kalai/demo/demo02.clj`](./test/kalai/demo/demo02_test.clj) and logic tests at [`test/kalai/demo/demo02_logic_test.clj`](./test/kalai/demo/demo02_logic_test.clj).
+Example demo 2 has input code at [`test/kalai/demo/demo02.clj`](test/kalai/demo/demo02.clj) and emitter tests at [`test/kalai/demo/demo02.clj`](./test/kalai/demo/demo02_test.clj) and logic tests at [`test/kalai/demo/demo02_logic_test.clj`](./test/kalai/demo/demo02_logic_test.clj).
+
+### Implemented target languages
+
+- Rust
+- C++
+- Java
+- Clojure (Kalai is source compatible with Clojure)
+
+See also `kalai.emit.langs/TARGET-LANGS`
+
+## Development
+
+### Extending or adding languages
+
+Clojure supports namespaced keywords to enable the dynamic dispatch fallback hierarchies for multimethods.
+The namespaced keywords for the target languages follow the Clojure derivation tree:
+
+- `::l/curlybrace` ("curly brace" languages)
+  * `::l/rust` (Rust)
+  * `::l/cpp` (C++)
+  * `::l/java` (Java)
+
+To extend or add implementations, add multimethod definitions in `kalai.emit.impl/mylang.clj`.
+
+### Contributing
+
+Issues and Pull requests welcome!
 
 ## License
 

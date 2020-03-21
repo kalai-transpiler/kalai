@@ -1,4 +1,5 @@
 (ns kalai.demo.demo01
+  (:refer-clojure :exclude [format])
   (:require [kalai.common :refer :all]))
 
 (defclass "NumFmt"
