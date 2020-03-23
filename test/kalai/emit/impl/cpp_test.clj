@@ -1,4 +1,5 @@
 (ns kalai.emit.impl.cpp-test
+  (:refer-clojure :exclude [format])
   (:require [kalai.common :refer :all]
             [kalai.emit.api :refer :all]
             [kalai.emit.langs :as l]

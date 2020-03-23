@@ -1,6 +1,7 @@
 (ns kalai.demo.demo02
+  (:refer-clojure :exclude [format])
   (:require [kalai.common :refer :all])
-  (:import [java.util List Map]))
+  (:import (java.util List Map)))
 
 (defclass "NumFmt"
 

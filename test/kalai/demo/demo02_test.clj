@@ -5,8 +5,7 @@
             [kalai.emit.util :as emit-util]
             [clojure.test :refer [deftest testing]]
             [clojure.tools.analyzer.jvm :as az]
-            [expectations.clojure.test :refer :all])
-  (:import kalai.common.AstOpts))
+            [expectations.clojure.test :refer :all]))
 
 
 (deftest demo02
