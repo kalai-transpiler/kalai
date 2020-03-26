@@ -3,7 +3,6 @@
             [kalai.emit.impl.util.curlybrace-util :as cb-util]
             [kalai.emit.interface :as iface :refer :all]
             [kalai.emit.langs :as l]
-            [clojure.edn :as edn] 
             [clojure.string :as string]
             [clojure.tools.analyzer.jvm :as az])
   (:import [java.util List Map]))
