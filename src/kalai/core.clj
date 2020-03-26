@@ -5,12 +5,6 @@
             [kalai.emit.langs :as l]
             [kalai.compile :as compile]))
 
-;; TODO: probably a nicer way to define these! :)
-(def lang-names
-  (into {}
-        (for [[k _] (dissoc l/TARGET-LANGS ::l/curlybrace)]
-          [(name k) k])))
-
 (def cli-options
   [["-i" "--in DIRECTORY" "Input directory"
     :missing "Input directory is missing"
@@ -19,7 +13,7 @@
                "File must exist"]]
    ["-o" "--out DIRECTORY" "Output directory"
     :default "out"]
-   ["-l" "--language LANGUAGE" (str "Target language (" (str/join ", " (keys lang-names)) ")")
+   ["-l" "--language LANGUAGE" (str "Target language (" (str/join ", " (keys l/USER-TARGET-LANG-NAMES)) ")")
     :parse-fn lang-names
     :validate [some?]]
    ["-v" "--verbose" "Reports progress"]
