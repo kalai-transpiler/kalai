@@ -14,7 +14,7 @@
    ["-o" "--out DIRECTORY" "Output directory"
     :default "out"]
    ["-l" "--language LANGUAGE" (str "Target language (" (str/join ", " (keys l/USER-TARGET-LANG-NAMES)) ")")
-    :parse-fn lang-names
+    :parse-fn l/USER-TARGET-LANG-NAMES
     :validate [some?]]
    ["-v" "--verbose" "Reports progress"]
    ["-h" "--help" "Print usage information"]])

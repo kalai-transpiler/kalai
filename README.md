@@ -19,10 +19,22 @@ The forms that are currently supported are listed in [`interface.clj`](./src/kal
 If you have code written in `your.namespace`, then you can emit code as follows, assuming there is a file `your/namespace.clj` relative to where the program is run:
 
 ```clj
-lein run -i your -o someoutdir -l rust
+lein run -i yourinputfile -o someoutdir -l rust
 ```
 
 In this example, an output file will be written to `someoutdir/your/namespace.rs`.
+
+If at the root directory of this project, you can run
+
+```
+lein run -i examples/a/demo01.clj -o out -l rust
+```
+
+```
+lein run -i examples/a/demo02.clj -o out -l java
+```
+
+### Demo unit test cases
 
 Example demo 1 has input code at [`test/kalai/demo/demo01.clj`](test/kalai/demo/demo01.clj) and emitter tests at [`test/kalai/demo/demo01.clj`](./test/kalai/demo/demo01_test.clj).
 
