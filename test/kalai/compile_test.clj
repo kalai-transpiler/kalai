@@ -7,4 +7,5 @@
   (is (nil? (compile/compile-file "examples/a/demo01.clj" "out" true ::l/rust))))
 
 (deftest compile-test
+  ;; TODO: infinite loop
   (is (nil? (compile/compile {:in "./examples/a" :out "out" :language ::l/rust}))))

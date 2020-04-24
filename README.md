@@ -8,31 +8,33 @@ The goal of Kalai is to allow useful algorithms to be encoded once and then auto
 
 See [why Clojure is good for writing transpilers](https://elangocheran.com/2020/03/18/why-clojure-lisp-is-good-for-writing-transpilers/).
 
-## Usage
-
-### Supported forms
+## Supported forms
 
 The forms that are currently supported are listed in [`interface.clj`](./src/kalai/emit/interface.clj).
 
-### Example
+## Usage
 
-If you have code written in `your.namespace`, then you can emit code as follows, assuming there is a file `your/namespace.clj` relative to where the program is run:
+If you have code written in `your.namespace`, then you can emit code as follows, assuming there is a file `src/your/namespace.clj` relative to the current directory:
 
 ```clj
-lein run -i yourinputfile -o someoutdir -l rust
+lein run -i src/your/namespace.clj -o someoutdir -l rust
 ```
 
 In this example, an output file will be written to `someoutdir/your/namespace.rs`.
 
-If at the root directory of this project, you can run
+From the root directory of this project, you can run
 
 ```
 lein run -i examples/a/demo01.clj -o out -l rust
 ```
 
+creates `out/examples/a/demo01.rs`
+
 ```
 lein run -i examples/a/demo02.clj -o out -l java
 ```
+
+creates `out/examples/a/demo01.java`
 
 ### Demo unit test cases
 
