@@ -33,7 +33,10 @@
 (deftest experiment2-test
   (is (= '(function f "doc-str" [x] (clojure.lang.Numbers/inc x))
          (kn/language-concepts-sexp
-           (kn/normalize' (aj/analyze '(defn f "doc-str" [x] (inc x))))))))
+           (kn/normalize' (aj/analyze '(defn f "doc-str" [x] (inc x)))))))
+  (is (= '(lambda [x] (clojure.lang.Numbers/inc x))
+         (kn/language-concepts-sexp
+           (kn/normalize' (aj/analyze '(fn [x] (inc x))))))))
 
 (deftest a2-test
   (is (= 1

@@ -62,10 +62,10 @@
 
     ;; lambda
     (fn*
-      (pred symbol? !_) ;; optional name... do we want to support that? Does C++ have lambdas?
+      ;; optional name... do we want to support that? Does C++ have lambdas?
       ([& ?params]
        ?body))
-    (lambda &params ?body)))
+    (lambda ?params ?body)))
 
 (defn normalize' [ast]
   (e/emit-form ast))
