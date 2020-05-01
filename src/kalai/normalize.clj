@@ -4,7 +4,7 @@
             [clojure.tools.analyzer.passes.jvm.emit-form :as e]
             [clojure.tools.analyzer.jvm :as aj]))
 
-(def language-concepts
+(def language-concepts-ast
   (s/rewrite
     ;; function
     {:op :def
@@ -29,7 +29,7 @@
 
     ))
 
-(def normalize
+(def clojure-concepts-ast
   "See http://clojure.github.io/tools.analyzer.jvm/spec/quickref.html"
   (s/rewrite
     {:op :binding
@@ -48,10 +48,27 @@
 
     ))
 
+(def language-concepts-sexp
+  (s/rewrite
+    ;; function
+    (def
+      (m/and
+        ?name
+        (m/app meta {:doc ?doc}))
+      (fn*
+        ([& ?params]
+         ?body)))
+    (function ?name ?doc ?params ?body)
+
+    ;; lambda
+    (fn*
+      (pred symbol? !_) ;; optional name... do we want to support that? Does C++ have lambdas?
+      ([& ?params]
+       ?body))
+    (lambda &params ?body)))
+
 (defn normalize' [ast]
   (e/emit-form ast))
-
-
 
 (defn normalize [ast]
   ast)
