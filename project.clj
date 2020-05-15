@@ -5,6 +5,7 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :main kalai.core
   :dependencies [[expectations/clojure-test "1.2.1"]
+                 [meander/epsilon "0.0.412"]
                  [org.clojure/clojure "1.10.1"]
                  [org.clojure/tools.analyzer.jvm "1.0.0"]
                  [org.clojure/tools.cli "1.0.194"]])

@@ -1,5 +1,8 @@
 (ns kalai.emit.impl.util.curlybrace-util
-  (:require [clojure.tools.analyzer.jvm :as az]))
+  (:require [kalai.common :refer :all]
+            [kalai.emit.interface :as iface :refer :all]
+            [clojure.tools.analyzer.jvm :as az])
+  (:import [kalai.common AstOpts]))
 
 (defn unwrap-with-meta
   "Given an AstOpts, unwrap the :with-meta operation at the root of the AST to
@@ -76,3 +79,25 @@
   During testing, shadow this function with a pseudo-random fn or constant value fn to test against predictable, non-random output."
   [name]
   (str (gensym name)))
+
+
+(defn asts->ast-opts
+  "Convert a seq of AST maps using a template AstOpts to a seq of AstOpts records"
+  [^AstOpts template asts]
+  (map (partial assoc template :ast) asts))
+
+(defn emit-asts
+  "Emit a seq of AST maps using a template AstOpts. See asts->ast-opts"
+  [^AstOpts template asts]
+  (->> asts
+       (asts->ast-opts template)
+       (map emit)))
+
+(defn strs->stmt-strs
+  "Convert strings to become statements, using a template for AnyValOpts. Template can be AstOpts or AnyValOpts."
+  [template strs]
+  (let [all-val-opts (->> strs
+                          (map (partial assoc template :val))
+                          (map map->AnyValOpts))
+        stmt-strs (map emit-statement all-val-opts)]
+    stmt-strs))

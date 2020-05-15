@@ -1,4 +1,3 @@
-
 (ns kalai.emit.impl.java
   (:require [kalai.common :refer :all]
             [kalai.emit.interface :as iface :refer :all]
@@ -7,7 +6,9 @@
             [kalai.emit.impl.util.common-type-util :as common-type-util]
             [clojure.edn :as edn]
             [clojure.string :as string]
-            [clojure.tools.analyzer.jvm :as az])
+            [clojure.tools.analyzer.jvm :as az]
+            [meander.epsilon :as m]
+            [meander.strategy.epsilon :as s])
   (:import [java.util List Map]))
 
 (defmethod iface/emit-complex-type [::l/java List]
@@ -211,13 +212,9 @@
   (let [ast (:ast ast-opts)
         args (:args ast)
         arg-strs (emit-args ast-opts)
-        data-structure-name-str (first arg-strs)
-        key-str (second arg-strs)
-        expr-parts [data-structure-name-str
-                    ".get("
-                    key-str
-                    ")"]
-        expr (apply str expr-parts)]
+        expr (m/match arg-strs
+               (?data-structure-name-str ?key-str)
+               (str ?data-structure-name-str ".get(" ?key-str ")"))]
     expr))
 
 (defmethod iface/emit-nth ::l/java
@@ -227,13 +224,9 @@
   (let [ast (:ast ast-opts)
         args (:args ast)
         arg-strs (emit-args ast-opts)
-        data-structure-name-str (first arg-strs)
-        key-str (second arg-strs)
-        expr-parts [data-structure-name-str
-                    ".get("
-                    key-str
-                    ")"]
-        expr (apply str expr-parts)]
+        expr (m/match arg-strs
+               (?data-structure-name-str ?key-str)
+               (str ?data-structure-name-str ".get(" ?key-str ")"))]
     expr))
 
 ;; classes (or modules or namespaces)

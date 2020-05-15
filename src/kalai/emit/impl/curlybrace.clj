@@ -4,7 +4,9 @@
             [kalai.emit.interface :as iface :refer :all]
             [kalai.emit.langs :as l]
             [clojure.string :as string]
-            [clojure.tools.analyzer.jvm :as az])
+            [clojure.tools.analyzer.jvm :as az]
+            [meander.epsilon :as m]
+            [meander.strategy.epsilon :as s])
   (:import [java.util List Map]))
 
 ;;
@@ -180,15 +182,13 @@
   [ast-opts]
   {:pre [(= :do (:op (:ast ast-opts)))]}
   (let [ast (:ast ast-opts)
-        stmts (:statements ast)
-        stmts-ast-opts (map (partial assoc ast-opts :ast) stmts)
-        stmt-emitted-lines (map emit stmts-ast-opts)
-        last-stmt (:ret ast)
-        last-emitted-line (emit (assoc ast-opts :ast last-stmt))
-        last-emitted-line-val-opts (map->AnyValOpts (assoc ast-opts :val last-emitted-line))
-        last-emitted-line-as-stmt (emit-statement last-emitted-line-val-opts)
-        all-lines (concat stmt-emitted-lines [last-emitted-line-as-stmt])]
-    all-lines))
+        all-stmt-asts (m/match ast
+                             {:statements ?stmts
+                              :ret ?last-stmt}
+                             (concat ?stmts [?last-stmt]))
+        all-stmt-emitted-lines (cb-util/emit-asts ast-opts all-stmt-asts)
+        all-stmt-strs (cb-util/strs->stmt-strs ast-opts all-stmt-emitted-lines)]
+    all-stmt-strs))
 
 (defmethod iface/emit-if ::l/curlybrace
   [ast-opts]
