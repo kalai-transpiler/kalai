@@ -487,10 +487,11 @@
             body-strs (indent
                        (if (:statements body-ast)
                          ;; if ast has key nesting of [:body :statements], then we have a multi-"statement" expression do block in the let form
-                         (let [butlast-statements (:statements body-ast)
-                               last-statement (:ret body-ast)
-                               statements (concat butlast-statements [last-statement])
-                               statement-strs (cb-util/emit-asts ast-opts statements)]
+                         (let [all-stmt-asts (m/match body-ast
+                                               {:statements ?stmts
+                                                :ret ?last-stmt}
+                                               (concat ?stmts [?last-stmt]))
+                               statement-strs (cb-util/emit-asts ast-opts all-stmt-asts)]
                            statement-strs)
                          ;; else the let block has only one "statement" in the do block
                          [(emit (assoc ast-opts :ast body-ast))]))

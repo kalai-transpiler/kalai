@@ -1,5 +1,6 @@
 (ns kalai.emit.impl.java
   (:require [kalai.common :refer :all]
+            [kalai.emit.impl.util.curlybrace-util :as cb-util]
             [kalai.emit.interface :as iface :refer :all]
             [kalai.emit.langs :as l]
             [kalai.emit.impl.util.java-type-util :as java-type-util]
@@ -176,11 +177,11 @@
         fn-method-first-body-strs (indent
                                    (if (:statements fn-method-first-body-ast)
                                      ;; if ast has key nesting of [:body :statements], then we have a multi-"statement" expression do block in the let form
-                                     (let [butlast-statements (:statements fn-method-first-body-ast)
-                                           last-statement (:ret fn-method-first-body-ast)
-                                           statements (concat butlast-statements [last-statement])
-                                           statement-ast-opts (map #(assoc ast-opts :ast %) statements)
-                                           statement-strs (map emit statement-ast-opts)]
+                                     (let [all-stmt-asts (m/match fn-method-first-body-ast
+                                                           {:statements ?stmts
+                                                            :ret ?last-stmt}
+                                                           (concat ?stmts [?last-stmt]))
+                                           statement-strs (cb-util/emit-asts ast-opts all-stmt-asts)]
                                        statement-strs)
                                      ;; else the let block has only one "statement" in the do block
                                      [(emit (assoc ast-opts :ast fn-method-first-body-ast))]))
