@@ -153,9 +153,7 @@
   [val-opts]
   {:pre [(= kalai.common.AnyValOpts (class val-opts))]}
   (let [statement-parts-seq (:val val-opts)
-        statement-parts-opts-seq (for [statement-parts statement-parts-seq]
-                                   (assoc val-opts :val statement-parts))
-        statement-strs (map emit-statement statement-parts-opts-seq)
+        statement-strs (cb-util/strs->stmt-strs val-opts statement-parts-seq)
         all-statements-str (string/join "\n" statement-strs)]
     all-statements-str))
 
@@ -492,8 +490,7 @@
                          (let [butlast-statements (:statements body-ast)
                                last-statement (:ret body-ast)
                                statements (concat butlast-statements [last-statement])
-                               statement-ast-opts (map #(assoc ast-opts :ast %) statements)
-                               statement-strs (map emit statement-ast-opts)]
+                               statement-strs (cb-util/emit-asts ast-opts statements)]
                            statement-strs)
                          ;; else the let block has only one "statement" in the do block
                          [(emit (assoc ast-opts :ast body-ast))]))
@@ -800,9 +797,7 @@
         ;; when we only look at (-> ast :body :then :statements)
         statements (:statements then-ast)
         body-strs (indent
-                   (let [statement-ast-opts (map #(assoc ast-opts :ast %) statements)
-                         statement-strs (map emit statement-ast-opts)]
-                     statement-strs))
+                   (cb-util/emit-asts ast-opts statements))
         body-strs-opts-seq (map #(-> ast-opts
                                      (assoc :val %)
                                      map->AnyValOpts)
