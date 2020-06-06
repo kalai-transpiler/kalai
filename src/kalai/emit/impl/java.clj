@@ -7,8 +7,14 @@
             [kalai.emit.impl.util.common-type-util :as common-type-util]
             [clojure.edn :as edn]
             [clojure.string :as string]
-            [clojure.tools.analyzer.jvm :as az])
+            [clojure.tools.analyzer.jvm :as az]
+            [meander.strategy.epsilon :as s])
   (:import [java.util List Map]))
+
+(def emit-complex-type
+  (s/rewrite
+    ()
+    (List T)))
 
 (defmethod iface/emit-complex-type [::l/java List]
   [ast-opts]
@@ -137,6 +143,8 @@
                         :type-class-ast type-class-ast}
             expr-ast-opts-init-impl-state (assoc expr-ast-opts :impl-state impl-state)]
         (java-type-util/java-emit-assignment-map-nested expr-ast-opts-init-impl-state)))))
+
+
 
 (defmethod iface/emit-defn ::l/java 
   [ast-opts]
