@@ -1,4 +1,3 @@
-
 (ns kalai.emit.impl.java
   (:require [kalai.common :refer :all]
             [kalai.emit.interface :as iface :refer :all]
@@ -6,15 +5,8 @@
             [kalai.emit.impl.util.java-type-util :as java-type-util]
             [kalai.emit.impl.util.common-type-util :as common-type-util]
             [clojure.edn :as edn]
-            [clojure.string :as string]
-            [clojure.tools.analyzer.jvm :as az]
-            [meander.strategy.epsilon :as s])
+            [clojure.string :as string])
   (:import [java.util List Map]))
-
-(def emit-complex-type
-  (s/rewrite
-    ()
-    (List T)))
 
 (defmethod iface/emit-complex-type [::l/java List]
   [ast-opts]

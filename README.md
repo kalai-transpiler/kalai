@@ -69,6 +69,15 @@ To extend or add implementations, add multimethod definitions in `kalai.emit.imp
 
 Issues and Pull requests welcome!
 
+### Implementation strategy
+
+Multiple passes:
+* Leverage tools analyzer to parse and emit canonical forms
+* Pattern match for concepts we support
+* Language specific ast converter
+* Condense and beautify
+* Stringification
+
 ## License
 
 Copyright © 2020 The Kalai Authors.
