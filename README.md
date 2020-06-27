@@ -89,3 +89,10 @@ http://www.eclipse.org/legal/epl-2.0.
 This Source Code may also be made available under the following Secondary
 Licenses when the conditions for such availability set forth in the Eclipse
 Public License, v. 2.0 are satisfied: Unicode License (https://www.unicode.org/license.html).
+
+
+## TODO!!!!
+
+* Types!!!
+* Extend the canonical ast to support loop/while etc
+* Start compiling our output files

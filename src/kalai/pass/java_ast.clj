@@ -1,5 +1,6 @@
 (ns kalai.pass.java-ast
-  (:require [meander.strategy.epsilon :as s]))
+  (:require [meander.strategy.epsilon :as s]
+            [meander.epsilon :as m]))
 
 ;;; -------- language constructs to syntax
 ;; expanded s-expressions below
@@ -43,9 +44,13 @@
 
 ;; half Clojure half Java
 (def expression
-  (m/rewrite
+  (s/rewrite
+    ;; operator usage
+    (operator ?op ?x ?y)
+    (j/operator ?op ?x ?y)
+
     ;; function invocation
-    (?f . !args ...)
+    (invoke ?f . !args ...)
     (j/invocation ?f !args)
 
     ;; lambda function
@@ -54,20 +59,27 @@
 
     ;; are there really other statements?
     ?x
-    (j/statement ?x)))
+    (j/statement ?x)
+
+    ?else ~(throw (ex-info "FAIL" {:else ?else}))))
 
 (def variable
-  (m/rewrite
+  (s/rewrite
     [!x !y ...]
-    (j/variable !x (j/assignment !y)) ...))
+    ((j/variable !x (j/assignment !y)) ...)
+    ?else ~(throw (ex-info "FAIL" {:else ?else}))))
 
 ;; input Clojure form, output java taxonomy
 ;; Clojure form are kind of something statementy in Java
 (def form
   (s/rewrite
+    ;; return
+    (return ?x)
+    (j/expression-statement (j/return (m/app expression ?x)))
+
     ;; set! is the assignment statement
     (set! ?variable ?expression)
-    (j/assignment ?variable (m/app expression ?expression))
+    (j/expression-statement (j/assignment ?variable (m/app expression ?expression)))
 
     ;; conditional
     ;; note: we don't know what to do with assignment, maybe disallow them
@@ -82,25 +94,31 @@
 
     ;; do form
     (do . !xs ...)
-    (j/block (m/app statement !xs) ...)
+    (j/block (m/app expression !xs) ...)
 
     ;; let form
     (let [!bindings ..?n] . !xs ..?m)
-    (j/block (m/app const !bindings) ..?n (m/app expression !xs) ..?m)))
+    (j/block (m/app variable !bindings) ..?n (m/app expression !xs) ..?m)
+
+    ?else ~(throw (ex-info "FAIL" {:else ?else}))))
 
 (def top-level-form
   (s/choice
     (s/rewrite
       ;; function definition
-      (function ?name ?docstring ?body)
-      (j/function ?name ?docstring ?body))
+      (function ?return-type ?name ?docstring ?params . !body ...)
+      (j/function ?return-type ?name ?docstring ?params
+                  (j/block . (m/app form !body) ...)))
     (s/rewrite
       (assignment ?name ?value)
-      (j/assignment ?name ?value))))
+      (j/assignment ?name ?value))
+    (s/rewrite
+      ?else ~(throw (ex-info "FAIL" {:else ?else})))))
 
 ;; entry point, nominally a file (seq of forms) for now
 (def java-class
   (s/rewrite
     (namespace ?ns-name . !forms ...)
     (j/class ?ns-name
-             (j/block . (m/app top-level-form !forms) ...))))
+             (j/block . (m/app top-level-form !forms) ...))
+    ?else ~(throw (ex-info "FAIL" {:else ?else}))))

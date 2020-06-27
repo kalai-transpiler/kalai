@@ -4,6 +4,9 @@
             [kalai.emit.langs :as l]
             [kalai.pass.analyze :as analyze]
             [kalai.pass.ast-patterns :as ast-patterns]
+            [kalai.pass.java-ast :as java-ast]
+            [kalai.pass.java-condense :as java-condense]
+            [kalai.pass.java-string :as java-string]
             [clojure.tools.analyzer.jvm :as az]
             [clojure.tools.analyzer.jvm.utils :as azu]
             [clojure.string :as str]
@@ -25,23 +28,22 @@
       (.mkdirs (io/file (.getParent output-file)))
       (spit output-file (str/join \newline strs)))))
 
-;; NEXT TIME:
-; * make test case!
-; ** (compile-file-new "examples/a/demo01.clj")
-; * maybe more concepts? maybe more java out?
-
-(defn compile-file-new [file-path & [out verbose lang]]
+(defn compile-source-file [file-path & [out verbose lang]]
   (with-redefs [azu/ns-url ns-url]
     (-> file-path
         (analyze/analyze)
         (ast-patterns/namespace-forms)
-        ;;(java-ast/java-ast)
-        ;;(java-condense/java-condense)
-        ;;(java-string/java-string)
-        )))
+        (java-ast/java-class)
+        (java-condense/condense)
+        (java-string/stringify))))
 
+(defn write-target-file [s file-path out lang]
+  (let [output-file (io/file (str out "/" (str/replace file-path #"\.clj[csx]?$" "") (ext lang)))]
+    (.mkdirs (io/file (.getParent output-file)))
+    (spit output-file s)))
 
-(defn compile [{:keys [in out verbose language]}]
+(defn compile [{:keys [in out language]}]
   (doseq [^File file (file-seq (io/file in))
-          :when (not (.isDirectory file))]
-    (compile-file (str file) out verbose language)))
+          :when (not (.isDirectory file))
+          :let [s (compile-source-file (str file))]]
+    (write-target-file s (str file) out language)))
