@@ -47,26 +47,35 @@
   (s/rewrite
     ;; operator usage
     (operator ?op ?x ?y)
-    (j/operator ?op ?x ?y)
+    (j/operator ?op (m/app expression ?x) (m/app expression ?y))
+
+    (operator ?op ?x ?y)
+    (j/operator ?op (m/app expression ?x) (m/app expression ?y))
+
+    (invoke clojure.core/deref ?x)
+    (m/app expression ?x)
+
+    ;; TEMPORARY
+    (invoke atom ?x)
+    (m/app expression ?x)
 
     ;; function invocation
     (invoke ?f . !args ...)
-    (j/invocation ?f !args)
+    (j/invocation ?f [(m/app expression !args) ...])
 
+    ;; TODO:
     ;; lambda function
     (lambda ?name ?docstring ?body)
     (j/lambda ?name ?docstring ?body)
 
     ;; are there really other statements?
     ?x
-    (j/statement ?x)
-
-    ?else ~(throw (ex-info "FAIL" {:else ?else}))))
+    ?x))
 
 (def variable
   (s/rewrite
-    [!x !y ...]
-    ((j/variable !x (j/assignment !y)) ...)
+    [?var ?init]
+    (j/variable ?var (j/assignment ?init))
     ?else ~(throw (ex-info "FAIL" {:else ?else}))))
 
 ;; input Clojure form, output java taxonomy
@@ -76,6 +85,15 @@
     ;; return
     (return ?x)
     (j/expression-statement (j/return (m/app expression ?x)))
+
+    ;;loop
+    ;;(loop ?bindings ?body)
+    ;;(j/while true (j/block ?body))
+
+    ;; while
+    (while ?condition . !body ...)
+    (j/while (m/app expression ?condition)
+             (j/block . (m/app form !body) ...))
 
     ;; set! is the assignment statement
     (set! ?variable ?expression)
@@ -89,18 +107,19 @@
       (j/block (m/app form !?else)))
 
     ;; mutable variable scope
-    (with-local-vars [!bindings ..?n] . !xs ..?m)
-    (j/block (m/app variable !bindings) ..?n (m/app expression !xs) ..?m)
+    #_(with-local-vars [!bindings ..?n] . !xs ..?m)
+    #_(j/block . (m/app variable [!var !init]) ..?n
+             (m/app form ?body))
 
+    ;; TODO: should probably make children expression-statements
     ;; do form
     (do . !xs ...)
-    (j/block (m/app expression !xs) ...)
+    (j/block . (m/app form !xs) ...)
 
-    ;; let form
-    (let [!bindings ..?n] . !xs ..?m)
-    (j/block (m/app variable !bindings) ..?n (m/app expression !xs) ..?m)
+    (assignment ?name ?value)
+    (j/assignment ?name (m/app expression ?value))
 
-    ?else ~(throw (ex-info "FAIL" {:else ?else}))))
+    ?else (m/app expression ?else)))
 
 (def top-level-form
   (s/choice

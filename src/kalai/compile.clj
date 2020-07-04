@@ -34,6 +34,7 @@
         (analyze/analyze)
         (ast-patterns/namespace-forms)
         (java-ast/java-class)
+        (doto (prn "SPY"))
         (java-condense/condense)
         (java-string/stringify))))
 

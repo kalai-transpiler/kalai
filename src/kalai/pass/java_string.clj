@@ -6,8 +6,11 @@
 
 ;;;; These are helpers
 
+(defn- parens [x]
+  (str "(" x ")"))
+
 (defn- param-list [params]
-  (str "(" (str/join ", " params) ")"))
+  (parens (str/join ", " params)))
 
 (defn- space-separated [& xs]
   (str/join " " xs))
@@ -20,11 +23,14 @@
 
 (defn block-str [& xs]
   (str "{"
+       \newline
        (str/join \newline (map stringify xs))
+       \newline
        "}"))
 
 (defn assignment-str [variable-name value]
-  (str "int " variable-name "=" value))
+  (expression-statement-str
+    (str "int " variable-name "=" (stringify value))))
 
 #_(defn const [bindings]
   (str "const" Type x "=" initialValue))
@@ -39,7 +45,7 @@
 #_(defn conditional [test then else] )
 
 (defn invocation-str [function-name args]
-  (str function-name (param-list args)))
+  (str function-name (param-list (map stringify args))))
 
 (defn function-str [return-type name doc params body]
   (space-separated 'public 'static
@@ -53,7 +59,7 @@
                    (stringify body)))
 
 (defn operator-str [op x y]
-  (str x op y))
+  (str (stringify x) op (stringify y)))
 
 (defn class-str [class-name body]
   (space-separated 'public 'class class-name
@@ -61,6 +67,10 @@
 
 (defn return-str [x]
   (space-separated 'return (stringify x)))
+
+(defn while-str [condition body]
+  (space-separated 'while (parens (stringify condition))
+                   (stringify body)))
 
 ;;;; This is the main entry point
 
@@ -72,12 +82,15 @@
    'j/assignment assignment-str
    'j/block block-str
    'j/expression-statement expression-statement-str
-   'j/return return-str})
+   'j/return return-str
+   'j/while while-str})
 
 (def stringify
   (s/match
     (?x . !more ...)
     (let [f (get str-fn-map ?x)]
-      (apply f !more))
+      (if f
+        (apply f !more)
+        (throw (ex-info (str "Missing function: " ?x) {:form [?x !more]}))))
 
     ?else (str ?else)))

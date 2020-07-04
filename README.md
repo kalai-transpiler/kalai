@@ -96,3 +96,7 @@ Public License, v. 2.0 are satisfied: Unicode License (https://www.unicode.org/l
 * Types!!!
 * Extend the canonical ast to support loop/while etc
 * Start compiling our output files
+* Indentation
+* Variable casing
+* We have a recur hanging out in our loop
+* Side-effect expression statements are not detected (connect nested statement forms)
