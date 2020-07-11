@@ -15,6 +15,9 @@
 (defn- space-separated [& xs]
   (str/join " " xs))
 
+(defn- line-separated [& xs]
+  (str/join \newline xs))
+
 
 ;;;; These are what our symbols should resolve to
 
@@ -22,11 +25,10 @@
   (str (stringify x) ";"))
 
 (defn block-str [& xs]
-  (str "{"
-       \newline
-       (str/join \newline (map stringify xs))
-       \newline
-       "}"))
+  (line-separated
+    "{"
+    (apply line-separated (map stringify xs))
+    "}"))
 
 (defn assignment-str [variable-name value]
   (expression-statement-str
@@ -48,22 +50,29 @@
   (str function-name (param-list (map stringify args))))
 
 (defn function-str [return-type name doc params body]
-  (space-separated 'public 'static
-                   return-type
-                   name
-                   (param-list (for [param params]
-                                 (str (or (some-> param meta :tag)
-                                          "var")
-                                      " "
-                                      param)))
-                   (stringify body)))
+  (str
+    (space-separated 'public 'static
+                     return-type
+                     name)
+    (space-separated (param-list (for [param params]
+                                   (str (or (some-> param meta :tag)
+                                            "var")
+                                        " "
+                                        param)))
+                     (stringify body))))
 
 (defn operator-str [op x y]
-  (str (stringify x) op (stringify y)))
+  (parens
+    (str (stringify x) op (stringify y))))
 
-(defn class-str [class-name body]
-  (space-separated 'public 'class class-name
-                   (stringify body)))
+(defn class-str [ns-name body]
+  (let [parts (str/split (str ns-name) #"\.")
+        package-name (str/join "." (butlast parts))
+        class-name (last parts)]
+    (line-separated
+      (expression-statement-str (space-separated 'package package-name))
+      (space-separated 'public 'class class-name
+                       (stringify body)))))
 
 (defn return-str [x]
   (space-separated 'return (stringify x)))
@@ -71,6 +80,18 @@
 (defn while-str [condition body]
   (space-separated 'while (parens (stringify condition))
                    (stringify body)))
+
+(defn if-str
+  ([test then]
+   (line-separated
+     (space-separated 'if (parens (stringify test)))
+     (stringify then)))
+  ([test then else]
+   (line-separated
+     (space-separated 'if (parens (stringify test)))
+     (stringify then)
+     'else
+     (stringify else))))
 
 ;;;; This is the main entry point
 
@@ -83,7 +104,8 @@
    'j/block block-str
    'j/expression-statement expression-statement-str
    'j/return return-str
-   'j/while while-str})
+   'j/while while-str
+   'j/if if-str})
 
 (def stringify
   (s/match

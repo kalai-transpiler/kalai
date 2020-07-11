@@ -78,9 +78,7 @@
     (j/variable ?var (j/assignment ?init))
     ?else ~(throw (ex-info "FAIL" {:else ?else}))))
 
-;; input Clojure form, output java taxonomy
-;; Clojure form are kind of something statementy in Java
-(def form
+(def statement
   (s/rewrite
     ;; return
     (return ?x)
@@ -93,7 +91,7 @@
     ;; while
     (while ?condition . !body ...)
     (j/while (m/app expression ?condition)
-             (j/block . (m/app form !body) ...))
+             (j/block . (m/app statement !body) ...))
 
     ;; set! is the assignment statement
     (set! ?variable ?expression)
@@ -101,25 +99,29 @@
 
     ;; conditional
     ;; note: we don't know what to do with assignment, maybe disallow them
-    (if ?test ?then . !?else ...)
-    (j/if (test ?test)
-      (j/block (m/app form ?then))
-      (j/block (m/app form !?else)))
+    (if ?test ?then)
+    (j/if (m/app expression ?test)
+      (j/block (m/app statement ?then)))
+
+    (if ?test ?then ?else)
+    (j/if (m/app expression ?test)
+      (j/block (m/app statement ?then))
+      (j/block (m/app statement ?else)))
 
     ;; mutable variable scope
     #_(with-local-vars [!bindings ..?n] . !xs ..?m)
     #_(j/block . (m/app variable [!var !init]) ..?n
-             (m/app form ?body))
+               (m/app statement ?body))
 
     ;; TODO: should probably make children expression-statements
     ;; do form
     (do . !xs ...)
-    (j/block . (m/app form !xs) ...)
+    (j/block . (m/app statement !xs) ...)
 
     (assignment ?name ?value)
     (j/assignment ?name (m/app expression ?value))
 
-    ?else (m/app expression ?else)))
+    ?else (j/expression-statement (m/app expression ?else))))
 
 (def top-level-form
   (s/choice
@@ -127,7 +129,7 @@
       ;; function definition
       (function ?return-type ?name ?docstring ?params . !body ...)
       (j/function ?return-type ?name ?docstring ?params
-                  (j/block . (m/app form !body) ...)))
+                  (j/block . (m/app statement !body) ...)))
     (s/rewrite
       (assignment ?name ?value)
       (j/assignment ?name ?value))

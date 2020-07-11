@@ -90,13 +90,26 @@ This Source Code may also be made available under the following Secondary
 Licenses when the conditions for such availability set forth in the Eclipse
 Public License, v. 2.0 are satisfied: Unicode License (https://www.unicode.org/license.html).
 
+## Notes
+
+You CAN type hint and metadata let symbols,
+but not if they bind primitive values.
 
 ## TODO!!!!
 
 * Types!!!
-* Extend the canonical ast to support loop/while etc
 * Start compiling our output files
 * Indentation
 * Variable casing
-* We have a recur hanging out in our loop
-* Side-effect expression statements are not detected (connect nested statement forms)
+* Condensation:
+  - For math:
+    - Clojure always boils down to 2 arg java fn
+    - we boil up as an operator
+    - we want condense to group them back up to avoid redundant parens
+  - Also want to handle redundant nesting
+* "For loops"
+* We think we have most of the proof of concept language concepts, but we need to hook up the tests
+  - atoms?? is that what we use for mutable fields?
+  - are there alternatives based on metadata?
+  - our own wrapper for atom? call it mutable?
+* println should be System.out.println (and others!)

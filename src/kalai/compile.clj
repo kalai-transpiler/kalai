@@ -4,6 +4,7 @@
             [kalai.emit.langs :as l]
             [kalai.pass.analyze :as analyze]
             [kalai.pass.ast-patterns :as ast-patterns]
+            [kalai.pass.breturn :as breturn]
             [kalai.pass.java-ast :as java-ast]
             [kalai.pass.java-condense :as java-condense]
             [kalai.pass.java-string :as java-string]
@@ -33,6 +34,7 @@
     (-> file-path
         (analyze/analyze)
         (ast-patterns/namespace-forms)
+        (breturn/annotate-returns)
         (java-ast/java-class)
         (doto (prn "SPY"))
         (java-condense/condense)

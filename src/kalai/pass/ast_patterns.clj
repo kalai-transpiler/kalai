@@ -53,9 +53,14 @@
     (clojure.lang.Numbers/dec ?x)
     (operator - (m/app inner-form ?x) 1)
 
-    ;; TODO
     (do . !more ...)
     (do . (m/app inner-form !more) ...)
+
+    (if ?test ?then)
+    (if (m/app inner-form ?test) (m/app inner-form ?then))
+
+    (if ?test ?then ?else)
+    (if (m/app inner-form ?test) (m/app inner-form ?then) (m/app inner-form ?else))
 
     ;; careful, this catches a lot!
     (?f . !args ...)
