@@ -1,7 +1,6 @@
 (ns kalai.pass.d3-java-condense
   (:require [meander.strategy.epsilon :as s]))
 
-;; TODO
 (def rewrite
   (s/bottom-up
     (s/rewrite
