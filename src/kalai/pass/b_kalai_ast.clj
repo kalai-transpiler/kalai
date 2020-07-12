@@ -1,4 +1,4 @@
-(ns kalai.pass.ast-patterns
+(ns kalai.pass.b-kalai-ast
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]))
 
@@ -20,9 +20,42 @@
     (return ?x)
     (return (m/app inner-form ?x))
 
+    ;; Clojure (while)
     (loop* [] (if ?conditional (do . !body ... (recur))))
     (while (m/app inner-form ?conditional)
       . (m/app inner-form !body) ...)
+
+    ;; Clojure (dotimes) -> (let [...] (while ...))
+    (let* [?auto (clojure.lang.RT/longCast ?n)]
+      (loop* [?sym 0]
+        (if (clojure.lang.Numbers/lt ?sym ?auto)
+          (do . !body ... (recur (clojure.lang.Numbers/unchecked_inc ?sym))))))
+    (let* [?sym 0]
+      (while (operator < ?sym ?auto)
+        . (m/app inner-form !body) ...
+        (operator ++ ?sym)))
+
+    ;; Clojure (doseq) -> (foreach)
+    (loop* [?seq (clojure.core/seq ?xs)
+            ?chunk nil
+            ?chunkn 0
+            ?i 0]
+      (if (clojure.lang.Numbers/lt ?i ?chunkn)
+        (let* [?sym (.nth ?chunk ?i)]
+          (do . !body ... (recur ?seq ?chunk ?chunkn (clojure.lang.Numbers/unchecked_inc ?i))))
+        (let* [?as (clojure.core/seq ?seq)]
+          (if ?as
+            (let* [?bs ?as]
+              (if (clojure.core/chunked-seq? ?bs)
+                (let* [?cs (clojure.core/chunk-first ?bs)]
+                  (recur
+                    (clojure.core/chunk-rest ?bs)
+                    ?cs
+                    (clojure.lang.RT/intCast (clojure.lang.RT/count ?cs))
+                    (clojure.lang.RT/intCast 0)))
+                (let* [?sym (clojure.core/first ?bs)]
+                  (do . !body ... (recur (clojure.core/next ?bs) nil 0 0)))))))))
+    (foreach ?sym ?xs . !body ...)
 
     ;;(loop* ?bindings ?body)
     ;;(loop ?bindings (m/app inner-form ?body))
@@ -92,7 +125,7 @@
       (if ?test ?x ?y)))
 
 ;; entry point, nominally a file (seq of forms) for now
-(def namespace-forms
+(def rewrite
   (s/rewrite
     ((do (clojure.core/in-ns ('quote ?ns-name)) & _)
      . !forms ...)

@@ -1,4 +1,4 @@
-(ns kalai.pass.breturn
+(ns kalai.pass.c-annotate-return
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]))
 
@@ -18,7 +18,7 @@
 
     ?else (return ?else)))
 
-(def annotate-returns
+(def rewrite
   (s/rewrite
     (function ?return-type ?name ?docstring ?params . !statements ... ?return)
     (function ?return-type ?name ?docstring ?params . !statements ... (m/app return ?return))

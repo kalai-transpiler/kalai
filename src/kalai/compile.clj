@@ -2,12 +2,13 @@
   (:refer-clojure :exclude [compile])
   (:require [kalai.emit.util :as emit.util]
             [kalai.emit.langs :as l]
-            [kalai.pass.analyze :as analyze]
-            [kalai.pass.ast-patterns :as ast-patterns]
-            [kalai.pass.breturn :as breturn]
-            [kalai.pass.java-ast :as java-ast]
-            [kalai.pass.java-condense :as java-condense]
-            [kalai.pass.java-string :as java-string]
+            [kalai.pass.a-analyze :as a-analyze]
+            [kalai.pass.b-kalai-ast :as b-kalai-ast]
+            [kalai.pass.c-annotate-return :as c-annotate-return]
+            [kalai.pass.d1-java-syntax :as d1-java-syntax]
+            [kalai.pass.d2-java-syslib :as d2-java-syslib]
+            [kalai.pass.d3-java-condense :as d3-java-condense]
+            [kalai.pass.d4-java-string :as d4-java-string]
             [clojure.tools.analyzer.jvm :as az]
             [clojure.tools.analyzer.jvm.utils :as azu]
             [clojure.string :as str]
@@ -32,13 +33,14 @@
 (defn compile-source-file [file-path & [out verbose lang]]
   (with-redefs [azu/ns-url ns-url]
     (-> file-path
-        (analyze/analyze)
-        (ast-patterns/namespace-forms)
-        (breturn/annotate-returns)
-        (java-ast/java-class)
-        (doto (prn "SPY"))
-        (java-condense/condense)
-        (java-string/stringify))))
+        (a-analyze/analyze)
+        (b-kalai-ast/rewrite)
+        (c-annotate-return/rewrite)
+        (d1-java-syntax/rewrite)
+        (d2-java-syslib/rewrite)
+        (d3-java-condense/rewrite)
+        ;;(doto (prn 'SPY))
+        (d4-java-string/stringify-entry))))
 
 (defn write-target-file [s file-path out lang]
   (let [output-file (io/file (str out "/" (str/replace file-path #"\.clj[csx]?$" "") (ext lang)))]

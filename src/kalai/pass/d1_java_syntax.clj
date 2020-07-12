@@ -1,4 +1,4 @@
-(ns kalai.pass.java-ast
+(ns kalai.pass.d1-java-syntax
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]))
 
@@ -61,7 +61,7 @@
 
     ;; function invocation
     (invoke ?f . !args ...)
-    (j/invocation ?f [(m/app expression !args) ...])
+    (j/invoke ?f [(m/app expression !args) ...])
 
     ;; TODO:
     ;; lambda function
@@ -92,6 +92,10 @@
     (while ?condition . !body ...)
     (j/while (m/app expression ?condition)
              (j/block . (m/app statement !body) ...))
+
+    ;; foreach
+    (foreach & ?more)
+    (j/for & ?more)
 
     ;; set! is the assignment statement
     (set! ?variable ?expression)
@@ -137,7 +141,7 @@
       ?else ~(throw (ex-info "FAIL" {:else ?else})))))
 
 ;; entry point, nominally a file (seq of forms) for now
-(def java-class
+(def rewrite
   (s/rewrite
     (namespace ?ns-name . !forms ...)
     (j/class ?ns-name

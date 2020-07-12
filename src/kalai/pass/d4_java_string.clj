@@ -1,6 +1,7 @@
-(ns kalai.pass.java-string
+(ns kalai.pass.d4-java-string
   (:require [meander.strategy.epsilon :as s]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.pprint :as pprint]))
 
 (declare stringify)
 
@@ -46,7 +47,7 @@
 
 #_(defn conditional [test then else] )
 
-(defn invocation-str [function-name args]
+(defn invoke-str [function-name args]
   (str function-name (param-list (map stringify args))))
 
 (defn function-str [return-type name doc params body]
@@ -61,9 +62,9 @@
                                         param)))
                      (stringify body))))
 
-(defn operator-str [op x y]
+(defn operator-str [op & xs]
   (parens
-    (str (stringify x) op (stringify y))))
+    (str/join op (map stringify xs))))
 
 (defn class-str [ns-name body]
   (let [parts (str/split (str ns-name) #"\.")
@@ -81,6 +82,10 @@
   (space-separated 'while (parens (stringify condition))
                    (stringify body)))
 
+;; TODO
+(defn for-str [& args]
+  (space-separated 'for (parens args)))
+
 (defn if-str
   ([test then]
    (line-separated
@@ -96,23 +101,34 @@
 ;;;; This is the main entry point
 
 (def str-fn-map
-  {'j/class class-str
-   'j/operator operator-str
-   'j/function function-str
-   'j/invocation invocation-str
-   'j/assignment assignment-str
-   'j/block block-str
+  {'j/class                class-str
+   'j/operator             operator-str
+   'j/function             function-str
+   'j/invoke               invoke-str
+   'j/assignment           assignment-str
+   'j/block                block-str
    'j/expression-statement expression-statement-str
-   'j/return return-str
-   'j/while while-str
-   'j/if if-str})
+   'j/return               return-str
+   'j/while                while-str
+   'j/for                  for-str
+   'j/if                   if-str})
 
 (def stringify
   (s/match
-    (?x . !more ...)
+    (?x . !more ... :as ?form)
     (let [f (get str-fn-map ?x)]
       (if f
         (apply f !more)
-        (throw (ex-info (str "Missing function: " ?x) {:form [?x !more]}))))
+        (throw (ex-info (str "Missing function: " ?x) {:form ?form}))))
 
     ?else (str ?else)))
+
+(defn stringify-entry [form]
+  (try
+    (stringify form)
+    (catch Exception ex
+      (println "Inner form:")
+      (pprint/pprint (:form (ex-data ex)))
+      (println "Outer form:")
+      (pprint/pprint form)
+      (throw ex))))

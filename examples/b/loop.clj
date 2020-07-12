@@ -4,6 +4,8 @@
             [clojure.tools.analyzer.jvm :as az]))
 
 (defn add ^Long [^Long a ^Long b]
+  (doseq [i 10]
+    (println i))
   (let [x (atom 0)]
     (while (< @x 10)
       (println (inc @x))
