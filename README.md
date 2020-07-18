@@ -95,9 +95,24 @@ Public License, v. 2.0 are satisfied: Unicode License (https://www.unicode.org/l
 You CAN type hint and metadata let symbols,
 but not if they bind primitive values.
 
+Aggregate types will be composed of "primitive types" (types that are defined in Kalai as universal across languages).
+Doing so follows Clojure's data simplicity principle: don't complext plain data with types.
+To support new concepts (for example StringBuffer), users will need to add to the Kalai supported types and implement code for each of the target languages.
+We should minimize the effort required from users to extend Kalai, which would be done through user supplied data/functions.
+We could provide a type aliasing feature:
+`(alias Z [kmap [klong kstring]])` => (def ^:kalai-alias Z ...) => In the AST, remove the def (don't emit it)
+`(def ^{:t Z} x)` => In the AST, replace Z with the value of Z => `(def ^{:t [kmap [klong kstring]] x)`
+
+`(def ^{:t '[kmap [klong ^:const ^:opt kstr]]} x)`
+Notes on type names: don't want them to collide with Clojure words or user expectations of target language names.
+They must be quoted.
+Collection types go in nested vectors.
+
 ## TODO!!!!
 
 * Types!!!
+  - Mutable <-- motivation is Rust, is `^:const` good or bad?
+  - Generic Types?
 * Start compiling our output files
 * Indentation
 * Variable casing
@@ -108,8 +123,10 @@ but not if they bind primitive values.
     - we want condense to group them back up to avoid redundant parens
   - Also want to handle redundant nesting
 * "For loops"
+* Other concepts?
 * We think we have most of the proof of concept language concepts, but we need to hook up the tests
   - atoms?? is that what we use for mutable fields?
   - are there alternatives based on metadata?
   - our own wrapper for atom? call it mutable?
 * println should be System.out.println (and others!)
+* Rust etc
