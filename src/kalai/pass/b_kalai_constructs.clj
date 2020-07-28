@@ -1,8 +1,6 @@
-(ns kalai.pass.b-kalai-ast
+(ns kalai.pass.b-kalai-constructs
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]))
-
-;;;;;; these are tools analyzer ast patterns of constructs that we support
 
 (def operator
   '{clojure.lang.Numbers/add                    +
@@ -17,15 +15,16 @@
 (def inner-form
   "Clauses from most specific to least specific order."
   (s/rewrite
+    ;; TODO: do we still need this? return gets annotated later...
     (return ?x)
     (return (m/app inner-form ?x))
 
-    ;; Clojure (while)
+    ;; while -> while
     (loop* [] (if ?conditional (do . !body ... (recur))))
     (while (m/app inner-form ?conditional)
       . (m/app inner-form !body) ...)
 
-    ;; Clojure (dotimes) -> (let [...] (while ...))
+    ;; dotimes -> (let [...] (while ...))
     (let* [?auto (clojure.lang.RT/longCast ?n)]
       (loop* [?sym 0]
         (if (clojure.lang.Numbers/lt ?sym ?auto)
@@ -35,7 +34,7 @@
         . (m/app inner-form !body) ...
         (operator ++ ?sym)))
 
-    ;; Clojure (doseq) -> (foreach)
+    ;; doseq -> foreach
     (loop* [?seq (clojure.core/seq ?xs)
             ?chunk nil
             ?chunkn 0
@@ -57,44 +56,48 @@
                   (do . !body ... (recur (clojure.core/next ?bs) nil 0 0)))))))))
     (foreach ?sym ?xs . !body ...)
 
+    ;; loop -> ???
     ;;(loop* ?bindings ?body)
     ;;(loop ?bindings (m/app inner-form ?body))
-    #_
-    (let*
-      [!var (.setDynamic (clojure.lang.Var/create)) ..?n]
-      (do
-        . (clojure.lang.Var/pushThreadBindings (clojure.core/hash-map !var !init)) ..?n
-        (try
-          ?body
-          (finally (clojure.lang.Var/popThreadBindings)))))
-    #_
-    (do
-      (assignment)
-      (m/app inner-form ?body))
 
+
+    ;; with-local-vars -> assignment
+    #_(let*
+        [!var (.setDynamic (clojure.lang.Var/create)) ..?n]
+        (do
+          . (clojure.lang.Var/pushThreadBindings (clojure.core/hash-map !var !init)) ..?n
+          (try
+            ?body
+            (finally (clojure.lang.Var/popThreadBindings)))))
+    #_(do
+        (assignment)
+        (m/app inner-form ?body))
+
+    ;; let -> assignment
     (let* [!var !init] ?body)
     (do
       . (assignment !var (m/app inner-form !init)) ...
       (m/app inner-form ?body))
 
+    ;; operators
     ((m/pred operator ?op) ?x ?y)
     (operator (m/app operator ?op) (m/app inner-form ?x) (m/app inner-form ?y))
-
     (clojure.lang.Numbers/inc ?x)
     (operator + (m/app inner-form ?x) 1)
-
     (clojure.lang.Numbers/dec ?x)
     (operator - (m/app inner-form ?x) 1)
 
+    ;; TODO: should these be unwrapped here?
     (do . !more ...)
     (do . (m/app inner-form !more) ...)
 
+    ;; conditionals
     (if ?test ?then)
     (if (m/app inner-form ?test) (m/app inner-form ?then))
-
     (if ?test ?then ?else)
     (if (m/app inner-form ?test) (m/app inner-form ?then) (m/app inner-form ?else))
 
+    ;; invoke
     ;; careful, this catches a lot!
     (?f . !args ...)
     (invoke ?f . (m/app inner-form !args) ...)
@@ -118,13 +121,6 @@
 
     ?else ~(throw (ex-info "fail" {:input ?else}))))
 
-
-#_(def clojure-concepts-sexp
-    (s/rewrite
-      (if ?test ?x ?y)
-      (if ?test ?x ?y)))
-
-;; entry point, nominally a file (seq of forms) for now
 (def rewrite
   (s/rewrite
     ((do (clojure.core/in-ns ('quote ?ns-name)) & _)
