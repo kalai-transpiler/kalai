@@ -2,6 +2,8 @@
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]))
 
+(declare inner-form)
+
 (def operator
   '{clojure.lang.Numbers/add                    +
     clojure.lang.Numbers/unchecked_int_subtract -
@@ -12,13 +14,19 @@
     clojure.lang.Numbers/gt                     >
     clojure.lang.Numbers/gte                    >=})
 
-(def inner-form
-  "Clauses from most specific to least specific order."
+(def operators
   (s/rewrite
-    ;; TODO: do we still need this? return gets annotated later...
-    (return ?x)
-    (return (m/app inner-form ?x))
+    ((m/pred operator ?op) ?x ?y)
+    (operator (m/app operator ?op) (m/app inner-form ?x) (m/app inner-form ?y))
 
+    (clojure.lang.Numbers/inc ?x)
+    (operator + (m/app inner-form ?x) 1)
+
+    (clojure.lang.Numbers/dec ?x)
+    (operator - (m/app inner-form ?x) 1)))
+
+(def loops
+  (s/rewrite
     ;; while -> while
     (loop* [] (if ?conditional (do . !body ... (recur))))
     (while (m/app inner-form ?conditional)
@@ -59,56 +67,70 @@
     ;; loop -> ???
     ;;(loop* ?bindings ?body)
     ;;(loop ?bindings (m/app inner-form ?body))
+    ))
 
-
-    ;; with-local-vars -> assignment
-    #_(let*
-        [!var (.setDynamic (clojure.lang.Var/create)) ..?n]
-        (do
-          . (clojure.lang.Var/pushThreadBindings (clojure.core/hash-map !var !init)) ..?n
-          (try
-            ?body
-            (finally (clojure.lang.Var/popThreadBindings)))))
-    #_(do
-        (assignment)
-        (m/app inner-form ?body))
-
+(def assignments
+  (s/rewrite
     ;; let -> assignment
     (let* [!var !init] ?body)
     (do
       . (assignment !var (m/app inner-form !init)) ...
       (m/app inner-form ?body))
 
-    ;; operators
-    ((m/pred operator ?op) ?x ?y)
-    (operator (m/app operator ?op) (m/app inner-form ?x) (m/app inner-form ?y))
-    (clojure.lang.Numbers/inc ?x)
-    (operator + (m/app inner-form ?x) 1)
-    (clojure.lang.Numbers/dec ?x)
-    (operator - (m/app inner-form ?x) 1)
+    ;; with-local-vars -> assignment
+    (let* [!var (.setDynamic (clojure.lang.Var/create)) ..?n]
+      (do
+        (clojure.lang.Var/pushThreadBindings (clojure.core/hash-map . !var !init ..?n))
+        (try
+          ?body
+          (finally (clojure.lang.Var/popThreadBindings)))))
+    (do
+      . (assignment !var (m/app inner-form !init)) ...
+      (m/app inner-form ?body))
+
+    (var-get ?x)
+    ?x
+
+    (var-set ?var ?x)
+    (assignment ?var ?x)))
+
+(def conditionals
+  (s/rewrite
+    (if ?test ?then)
+    (if (m/app inner-form ?test) (m/app inner-form ?then))
+
+    (if ?test ?then ?else)
+    (if (m/app inner-form ?test) (m/app inner-form ?then) (m/app inner-form ?else))))
+
+(def misc
+  (s/rewrite
+    ;; TODO: do we still need this? return gets annotated later...
+    (return ?x)
+    (return (m/app inner-form ?x))
 
     ;; TODO: should these be unwrapped here?
     (do . !more ...)
     (do . (m/app inner-form !more) ...)
 
-    ;; conditionals
-    (if ?test ?then)
-    (if (m/app inner-form ?test) (m/app inner-form ?then))
-    (if ?test ?then ?else)
-    (if (m/app inner-form ?test) (m/app inner-form ?then) (m/app inner-form ?else))
-
     ;; invoke
     ;; careful, this catches a lot!
     (?f . !args ...)
-    (invoke ?f . (m/app inner-form !args) ...)
+    (invoke ?f . (m/app inner-form !args) ...)))
 
-    ?else ?else))
+(def inner-form
+  "Clauses must be ordered from most to least specific."
+  (s/choice
+    loops
+    assignments
+    operators
+    conditionals
+    misc
+    s/pass))
 
 (def top-level-form
   (s/rewrite
     ;; function
-    (def
-      ?name
+    (def ?name
       (fn*
         ((m/and [& ?params] (m/app meta {:tag ?return-type :doc ?doc}))
          . !body-forms ...)))
