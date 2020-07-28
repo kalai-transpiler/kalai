@@ -4,7 +4,7 @@
             [clojure.tools.analyzer.jvm :as az]
             [clojure.tools.analyzer.passes.jvm.emit-form :as e]))
 
-(deftest testit
+(deftest assignments-test
   (is (= '(do (assignment x 1)
               (assignment y 2)
               (operator + x y))
