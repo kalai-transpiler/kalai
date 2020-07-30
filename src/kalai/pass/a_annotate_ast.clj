@@ -11,9 +11,7 @@
                     %)
                  ast))
 
-(def rewrite
-  "There is contextual information in the AST that is not available in s-expressions.
-  The purpose of this pass is to capture that information and modify the s-expressions to contain what we need."
+(def type-aliases
   (s/bottom-up
     (s/rewrite
       ;; replace type aliases with their definition
@@ -25,7 +23,7 @@
       ;;->
       {:name ~(with-meta ?name (assoc ?name-meta :t ?kalias))
        :meta ?meta
-       & ?ast}
+       &     ?ast}
 
       ;; erase type aliases from the AST
       [!before ..?n
@@ -35,5 +33,10 @@
       ;;->
       [!before ..?n !after ..?m]
 
-      ;; otherwise do nothing
+      ;; otherwise leave the ast as is
       ?else ?else)))
+
+(def rewrite
+  "There is contextual information in the AST that is not available in s-expressions.
+  The purpose of this pass is to capture that information and modify the s-expressions to contain what we need."
+  type-aliases)

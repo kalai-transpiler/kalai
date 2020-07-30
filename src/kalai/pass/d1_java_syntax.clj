@@ -122,28 +122,43 @@
     (do . !xs ...)
     (j/block . (m/app statement !xs) ...)
 
-    (assignment ?name ?value)
-    (j/assignment ?name (m/app expression ?value))
+    (init (and ?name (m/app meta {:t ?t :tag ?type})))
+    (j/init ~(or ?t ?type) ?name)
+
+    (init (and ?name (m/app meta {:t ?t :tag ?type})) ?value)
+    (j/init ?type ?name (m/app expression ?value))
+
+    (assign ?name ?value)
+    (j/assign ?name (m/app expression ?value))
 
     ?else (j/expression-statement (m/app expression ?else))))
 
+(def function
+  (s/rewrite
+    ;; function definition
+    (function ?return-type ?name ?docstring ?params . !body ...)
+    (j/function ?return-type ?name ?docstring ?params
+                (j/block . (m/app statement !body) ...))))
+
+(def init
+  (s/rewrite
+    (init ?name)
+    (j/init ?name)
+
+    (init ?name (m/app expression ?value))
+    (j/init ?name (m/app expression ?value))))
+
 (def top-level-form
   (s/choice
-    (s/rewrite
-      ;; function definition
-      (function ?return-type ?name ?docstring ?params . !body ...)
-      (j/function ?return-type ?name ?docstring ?params
-                  (j/block . (m/app statement !body) ...)))
-    (s/rewrite
-      (assignment ?name ?value)
-      (j/assignment ?name ?value))
+    function
+    init
     (s/rewrite
       ?else ~(throw (ex-info "FAIL" {:else ?else})))))
 
-;; entry point, nominally a file (seq of forms) for now
 (def rewrite
   (s/rewrite
     (namespace ?ns-name . !forms ...)
     (j/class ?ns-name
              (j/block . (m/app top-level-form !forms) ...))
+
     ?else ~(throw (ex-info "FAIL" {:else ?else}))))

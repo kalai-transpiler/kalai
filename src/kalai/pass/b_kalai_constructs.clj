@@ -71,28 +71,78 @@
 
 (def assignments
   (s/rewrite
-    ;; let -> assignment
-    (let* [!var !init] ?body)
-    (do
-      . (assignment !var (m/app inner-form !init)) ...
-      (m/app inner-form ?body))
-
-    ;; with-local-vars -> assignment
+    ;; with-local-vars
     (let* [!var (.setDynamic (clojure.lang.Var/create)) ..?n]
       (do
         (clojure.lang.Var/pushThreadBindings (clojure.core/hash-map . !var !init ..?n))
         (try
           ?body
           (finally (clojure.lang.Var/popThreadBindings)))))
+    ;;->
     (do
-      . (assignment !var (m/app inner-form !init)) ...
+      . (init !var (m/app inner-form !init)) ..?n
       (m/app inner-form ?body))
+
+    ;; let
+    (let* [!var !init ...] ?body)
+    ;;->
+    (do
+      . (init !var (m/app inner-form !init)) ...
+      (m/app inner-form ?body))
+
+    ;; def
+    (def ?name ?value)
+    (init ?name ?value)
+
+    ;; def with no value
+    (def ?name)
+    (init ?name)
+
+    ;; TODO: Clojure has nuanced concepts of state...
+    ;; should we boil them all down to assignment, provide equivalent abstractions, or only support 1?
+    ;; currently boiling them all down to basic assignment.
 
     (var-get ?x)
     ?x
 
     (var-set ?var ?x)
-    (assignment ?var ?x)))
+    (assign ?var ?x)
+
+    (reset! ?a ?x)
+    (assign ?a ?x)
+
+    (ref-set ?r ?x)
+    (assign ?r ?x)
+
+    (swap! ?a ?f & ?args)
+    (assign ?a (invoke ?f ?a & ?args))
+
+    (alter ?r ?f & ?args)
+    (assign ?r (invoke ?f ?r & ?args))
+
+    (alter-var-root ?v ?f & ?args)
+    (assign ?v (invoke ?f ?v & ?args))
+
+    (send ?a ?f & ?args)
+    (assign ?a (invoke ?f ?a & ?args))
+
+    (send-off ?a ?f & ?args)
+    (assign ?a (invoke ?f ?a & ?args))
+
+    (atom ?x)
+    ?x
+
+    (ref ?x)
+    ?x
+
+    (agent ?x)
+    ?x
+
+    (deref ?x)
+    ?x
+
+    (clojure.core/deref ?x)
+    ?x))
 
 (def conditionals
   (s/rewrite
@@ -118,7 +168,7 @@
     (invoke ?f . (m/app inner-form !args) ...)))
 
 (def inner-form
-  "Clauses must be ordered from most to least specific."
+  "Ordered from most to least specific."
   (s/choice
     loops
     assignments
@@ -129,24 +179,31 @@
 
 (def top-level-form
   (s/rewrite
-    ;; function
+    ;; defn
     (def ?name
       (fn*
         ((m/and [& ?params] (m/app meta {:tag ?return-type :doc ?doc}))
          . !body-forms ...)))
+    ;;->
     (function ?return-type ?name ?doc ?params
               . (m/app inner-form !body-forms) ...)
 
-    ;; check the canonical form
+    ;; def
     (def ?name ?value)
     (assignment ?name ?value)
+
+    ;; def with no value
+    (def ?name)
+    (variable ?name)
 
     ?else ~(throw (ex-info "fail" {:input ?else}))))
 
 (def rewrite
   (s/rewrite
+    ;; ns
     ((do (clojure.core/in-ns ('quote ?ns-name)) & _)
      . !forms ...)
+    ;;->
     (namespace ?ns-name . (m/app top-level-form !forms) ...)
 
     ?else ~(throw (ex-info "fail" {:input ?else}))))

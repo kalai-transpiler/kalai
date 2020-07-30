@@ -3,4 +3,7 @@
 
 (defn side-effect ^Long []
       (let [x 2]
-           (return x)))
+           (return x))
+      (let [y (atom 2)]
+           (reset! y 3)
+           (swap! y + 4)))

@@ -31,9 +31,13 @@
     (apply line-separated (map stringify xs))
     "}"))
 
-(defn assignment-str [variable-name value]
+(defn assign-str [variable-name value]
   (expression-statement-str
-    (str "int " variable-name "=" (stringify value))))
+    (str variable-name "=" (stringify value))))
+
+(defn init-str [type variable-name value]
+  (expression-statement-str
+    (str type variable-name "=" (stringify value))))
 
 #_(defn const [bindings]
   (str "const" Type x "=" initialValue))
@@ -105,7 +109,8 @@
    'j/operator             operator-str
    'j/function             function-str
    'j/invoke               invoke-str
-   'j/assignment           assignment-str
+   'j/init                 init-str
+   'j/assign               assign-str
    'j/block                block-str
    'j/expression-statement expression-statement-str
    'j/return               return-str
