@@ -26,8 +26,7 @@
     (operator - (m/app inner-form ?x) 1)))
 
 (def loops
-  (fn [x] x)
-  #_(s/rewrite
+  (s/rewrite
     ;; while -> while
     (loop* [] (if ?conditional (do . !body ... (recur))))
     (while (m/app inner-form ?conditional)
@@ -87,11 +86,6 @@
 
 (def assignments
   (s/rewrite
-
-    ;; TODO: delete me when choice works
-    (do . !more ...)
-    (do . (m/app inner-form !more) ...)
-
     ;; with-local-vars
     (let* [!sym (.setDynamic (clojure.lang.Var/create)) ..?n]
       (do
