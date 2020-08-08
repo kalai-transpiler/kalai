@@ -2,8 +2,8 @@
   (:refer-clojure :exclude [compile])
   (:require [kalai.emit.util :as emit.util]
             [kalai.emit.langs :as l]
-            [kalai.pass.a-annotate-ast :as a-analyze]
-            [kalai.pass.b-kalai-constructs :as b-kalai-ast]
+            [kalai.pass.a-annotate-ast :as a-annotate-ast]
+            [kalai.pass.b-kalai-constructs :as b-kalai-constructs]
             [kalai.pass.c-annotate-return :as c-annotate-return]
             [kalai.pass.d1-java-syntax :as d1-java-syntax]
             [kalai.pass.d2-java-syslib :as d2-java-syslib]
@@ -31,21 +31,34 @@
       (.mkdirs (io/file (.getParent output-file)))
       (spit output-file (str/join \newline strs)))))
 
-(defn rewriters [ast]
-  (-> ast
-      (a-analyze/rewrite)
-      (e/emit-form)
-      (b-kalai-ast/rewrite)
-      (c-annotate-return/rewrite)
-      (d1-java-syntax/rewrite)
-      (d2-java-syslib/rewrite)
-      (d3-java-condense/rewrite)
-      ;;(doto (prn 'SPY))
-      (d4-java-string/stringify-entry)))
+(defn spy [x]
+  (doto x (prn 'SPY)))
+
+(defn rewriters [asts]
+  (->> asts
+       (map a-annotate-ast/rewrite)
+       (map e/emit-form)
+       ;;(spy)
+       (b-kalai-constructs/rewrite)
+       ;;(spy)
+       (c-annotate-return/rewrite)
+       (d1-java-syntax/rewrite)
+       ;;(spy)
+       (d2-java-syslib/rewrite)
+       (d3-java-condense/rewrite)
+       ;;(spy)
+       (d4-java-string/stringify-entry)))
+
+;;(e/emit-form (az/analyze '(defn test-function [] (do (def x true) (def y 5)))))
+
+(defn compile-forms [forms]
+  (-> (map az/analyze forms)
+      (rewriters)))
 
 (defn compile-source-file [file-path & [out verbose lang]]
   (with-redefs [azu/ns-url ns-url]
     (-> (az/analyze-ns file-path)
+        ;; probably need (->> (map rewriters)) here
         (rewriters))))
 
 (defn write-target-file [s file-path out lang]

@@ -37,7 +37,7 @@
 
 (defn init-str [type variable-name value]
   (expression-statement-str
-    (str type variable-name "=" (stringify value))))
+    (space-separated type variable-name "=" (stringify value))))
 
 #_(defn const [bindings]
   (str "const" Type x "=" initialValue))

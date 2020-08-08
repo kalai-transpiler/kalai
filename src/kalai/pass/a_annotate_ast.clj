@@ -28,7 +28,7 @@
       ;; erase type aliases from the AST
       [!before ..?n
        {:op   :def
-        :meta {:val {:kalias _}}}
+        :meta {:val {:kalias (m/pred (complement nil?))}}}
        . !after ..?m]
       ;;->
       [!before ..?n !after ..?m]

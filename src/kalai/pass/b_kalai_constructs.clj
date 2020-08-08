@@ -26,7 +26,8 @@
     (operator - (m/app inner-form ?x) 1)))
 
 (def loops
-  (s/rewrite
+  (fn [x] x)
+  #_(s/rewrite
     ;; while -> while
     (loop* [] (if ?conditional (do . !body ... (recur))))
     (while (m/app inner-form ?conditional)
@@ -69,30 +70,57 @@
     ;;(loop ?bindings (m/app inner-form ?body))
     ))
 
+(def ref-symbol?
+  #{'atom
+    'ref
+    'agent
+    'clojure.core/atom
+    'clojure.core/ref
+    'clojure.core/agent})
+
+(def ref-form?
+  (s/rewrite
+    (m/pred ref-symbol? ?x)
+    ?x
+
+    ?else false))
+
 (def assignments
   (s/rewrite
+
+    ;; TODO: delete me when choice works
+    (do . !more ...)
+    (do . (m/app inner-form !more) ...)
+
     ;; with-local-vars
-    (let* [!var (.setDynamic (clojure.lang.Var/create)) ..?n]
+    (let* [!sym (.setDynamic (clojure.lang.Var/create)) ..?n]
       (do
-        (clojure.lang.Var/pushThreadBindings (clojure.core/hash-map . !var !init ..?n))
+        (clojure.lang.Var/pushThreadBindings (clojure.core/hash-map . !sym !init ..?n))
         (try
           ?body
           (finally (clojure.lang.Var/popThreadBindings)))))
     ;;->
     (do
-      . (init !var (m/app inner-form !init)) ..?n
+      . (init !sym (m/app inner-form !init)) ..?n
       (m/app inner-form ?body))
 
+    ;; (atom 3)
     ;; let
-    (let* [!var !init ...] ?body)
+    (let* [!sym !init ...] ?body)
     ;;->
     (do
-      . (init !var (m/app inner-form !init)) ...
+      . (init (m/app (fn hint-const [sym]
+                       ;;; TODO not quite right yet
+                       (if (ref-form? !init)
+                         sym
+                         (with-meta sym {:const true})))
+                     !sym)
+              (m/app inner-form !init)) ...
       (m/app inner-form ?body))
 
     ;; def
     (def ?name ?value)
-    (init ?name ?value)
+    (init ?name (m/app inner-form ?value))
 
     ;; def with no value
     (def ?name)
@@ -129,13 +157,7 @@
     (send-off ?a ?f & ?args)
     (assign ?a (invoke ?f ?a & ?args))
 
-    (atom ?x)
-    ?x
-
-    (ref ?x)
-    ?x
-
-    (agent ?x)
+    (m/pred ref-symbol? ?x)
     ?x
 
     (deref ?x)
@@ -167,22 +189,28 @@
     (?f . !args ...)
     (invoke ?f . (m/app inner-form !args) ...)))
 
+;; TODO: choice does not work as expected, only the first rule works
 (def inner-form
   "Ordered from most to least specific."
   (s/choice
-    loops
     assignments
+    loops
     operators
     conditionals
     misc
     s/pass))
 
+;; TODO: use this everywhere!
+(defn always-meta [x]
+  (or (meta x) {}))
+
 (def top-level-form
   (s/rewrite
+    ;; TODO: only matching single arity is a problem.... maybe convert Kalai functions to multi-arity
     ;; defn
     (def ?name
       (fn*
-        ((m/and [& ?params] (m/app meta {:tag ?return-type :doc ?doc}))
+        ((m/and [& ?params] (m/app always-meta {:tag ?return-type :doc ?doc}))
          . !body-forms ...)))
     ;;->
     (function ?return-type ?name ?doc ?params
@@ -190,14 +218,16 @@
 
     ;; def
     (def ?name ?value)
-    (assignment ?name ?value)
+    (init ?name (m/app inner-form ?value))
 
     ;; def with no value
     (def ?name)
     (variable ?name)
 
-    ?else ~(throw (ex-info "fail" {:input ?else}))))
+    ?else ~(throw (ex-info "fail" {:else ?else}))))
 
+
+;; takes a sequence of forms, returns a single form
 (def rewrite
   (s/rewrite
     ;; ns
@@ -206,4 +236,4 @@
     ;;->
     (namespace ?ns-name . (m/app top-level-form !forms) ...)
 
-    ?else ~(throw (ex-info "fail" {:input ?else}))))
+    ?else ~(throw (ex-info "fail" {:else ?else}))))

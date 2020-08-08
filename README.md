@@ -110,23 +110,20 @@ Collection types go in nested vectors.
 
 ## TODO!!!!
 
+* We think we have most of the proof of concept language concepts, but we need to hook up the tests
+  - want to use expectations but cider has no notion of expectations
+  - what granularities are we using
+  - workflows (developer and CI)
+  - refactoring test
+  - salvaging existing tests
+  - working with big strings... is that really what we want?
+* Rust etc
+* Expand syslib
 * Types!!!
   - Mutable <-- motivation is Rust, is `^:const` good or bad?
-  - Generic Types?
+  - Generic Types [[]] -> <<>> translation
 * Start compiling our output files
-* Indentation
-* Variable casing
-* Condensation:
-  - For math:
-    - Clojure always boils down to 2 arg java fn
-    - we boil up as an operator
-    - we want condense to group them back up to avoid redundant parens
-  - Also want to handle redundant nesting
 * "For loops"
 * Other concepts?
-* We think we have most of the proof of concept language concepts, but we need to hook up the tests
-  - atoms?? is that what we use for mutable fields?
-  - are there alternatives based on metadata?
-  - our own wrapper for atom? call it mutable?
-* println should be System.out.println (and others!)
-* Rust etc
+* Variable casing (when to snake-camel-kebab-case)
+* Indentation

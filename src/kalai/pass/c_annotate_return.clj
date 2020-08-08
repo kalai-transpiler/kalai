@@ -19,6 +19,7 @@
     ?else (return ?else)))
 
 (def rewrite
+  ;; TODO: this isn't quite right, functions only live in namespaces
   (s/rewrite
     (function ?return-type ?name ?docstring ?params . !statements ... ?return)
     (function ?return-type ?name ?docstring ?params . !statements ... (m/app return ?return))

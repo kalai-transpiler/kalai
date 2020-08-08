@@ -122,11 +122,11 @@
     (do . !xs ...)
     (j/block . (m/app statement !xs) ...)
 
-    (init (and ?name (m/app meta {:t ?t :tag ?type})))
+    (init (m/and ?name (m/app meta {:t ?t :tag ?type})))
     (j/init ~(or ?t ?type) ?name)
 
-    (init (and ?name (m/app meta {:t ?t :tag ?type})) ?value)
-    (j/init ?type ?name (m/app expression ?value))
+    (init (m/and ?name (m/app meta {:t ?t :tag ?type})) ?value)
+    (j/init ~(or ?t ?type) ?name (m/app expression ?value))
 
     (assign ?name ?value)
     (j/assign ?name (m/app expression ?value))
@@ -142,11 +142,11 @@
 
 (def init
   (s/rewrite
-    (init ?name)
-    (j/init ?name)
+    (init (m/and ?name (m/app meta {:t ?type})))
+    (j/init ?type ?name)
 
-    (init ?name (m/app expression ?value))
-    (j/init ?name (m/app expression ?value))))
+    (init (m/and ?name (m/app meta {:t ?type})) (m/app expression ?value))
+    (j/init ?type ?name (m/app expression ?value))))
 
 (def top-level-form
   (s/choice
