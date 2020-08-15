@@ -20,10 +20,10 @@
                  (inc column))
                s1'
                s2')
-        [line column idx]))))
+        [line column]))))
 
 (defn pretty-str-diff [s1 s2]
-  (let [[line column idx] (divergence s1 s2)
+  (let [[line column] (divergence s1 s2)
         lines1 (string/split-lines s1)
         lines2 (string/split-lines s2)
         line1 (nth lines1 (dec line))
@@ -42,6 +42,37 @@
          d2 \newline
          spaces \^ \newline)))
 
+(defn better= [msg form]
+  (assert (= 3 (count form)))
+  (let [[_ expected actual] form]
+    `(let [expected# ~expected
+           actual# ~actual
+           result# (= expected# actual#)]
+       (if result#
+         (clojure.test/do-report
+           {:type :pass
+            :message ~msg})
+         (if (and (string? expected#) (string? actual#))
+           (clojure.test/do-report
+             {:type     :fail
+              :message  (pretty-str-diff expected# actual#)
+              :expected '~'=
+              ;; TODO: Cursive relies on (not (= ...)) shape for visual diff)
+              :actual   '~'not=})
+           (let [m# (expectations/compare-expr expected# actual# '~expected '~actual)]
+             (assoc m#
+               :type :fail
+               :message (expectations/->failure-message m#)
+               :expected '~'=
+               :actual '~'not=))))
+       result#)))
+
+(defmethod clojure.test/assert-expr '= [msg form]
+  (better= msg form))
+
+(defmethod clojure.test/assert-expr 'clojure.test/= [msg form]
+  (better= msg form))
+
 (defmacro is= [x y]
   `(when (not= ~x ~y)
      (clojure.test/do-report
@@ -56,16 +87,3 @@
              :message (expectations/->failure-message m#)
              :expected '~'=
              :actual '~'not=))))))
-
-#_(
-   (deftest t
-     (is= "hahaha\nhohoho\nhehehe"
-          "hahaha\nhohoho\nhXhehe"))
-
-   (deftest tt
-     (is= '(atom 1)
-          '(atom 2)))
-
-   (deftest ttt
-     (is= #{1 2}
-          (conj #{1 3} 4))))

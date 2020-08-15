@@ -1,4 +1,4 @@
-(ns kalai.pass.d3-java-condense
+(ns kalai.pass.java3-condense
   (:require [meander.strategy.epsilon :as s]))
 
 (def rewrite

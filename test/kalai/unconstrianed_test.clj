@@ -1,60 +1,147 @@
 (ns kalai.unconstrianed-test
   (:require [clojure.test :refer [deftest testing is]]
-            [kalai.compile :as c]
-            [clojure.tools.analyzer.jvm :as az]
-            [clojure.tools.analyzer.passes.jvm.emit-form :as e]
-            [kalai.placation :as p]
-            [clojure.string :as str]
-            [meander.epsilon :as m]))
+            [kalai.test-helpers :refer [top-level-form inner-form]]))
 
-(defn as-ns [form]
-  (list
-    '(ns test-package.test-class)
-    form))
+(deftest t1
+  (top-level-form
+    '(def ^{:t "int"} x 3)
+    ;;->
+    "int x = 3;"))
 
-(defn as-function [form]
-  (list
-    '(ns test-package.test-class)
-    (list 'defn 'test-function [] form)))
+(deftest t15
+  (top-level-form
+    '(def ^Integer x)
+    ;;->
+    "Integer x;"))
 
-(defn remove-class [s]
-  (->> s
-       (str/split-lines)
-       (drop 2)
-       (butlast)
-       (str/join \newline)))
+(deftest t16
+  (top-level-form
+    '(defn f ^Integer [^Integer x]
+       (inc x))
+    ;;->
+    "public static Integer f(Integer x) {
+return (x+1);
+}"))
 
-(defn remove-function [s]
-  (->> s
-       (str/split-lines)
-       (drop 3)
-       (drop-last 2)
-       (str/join \newline)))
+(deftest t165
+  (top-level-form
+    '(defn f
+       (^int [^int x]
+        (inc x))
+       (^int [^int x ^int y]
+        (+ x y)))
+    ;;->
+    "public static int f(int x) {
+return (x+1);
+}
+public static int f(int x, int y) {
+return (x+y);
+}"))
 
-;; this is a macro to get line number for free
-(defmacro assert-top-level-form [{:keys [input expected]}]
-  `(->> (as-ns ~input)
-        (c/compile-forms)
-        (remove-class)
-        (p/is= ~expected)))
+;; Tim proposes: let's not support void!!!
+;; It's not necessary for writing programs... returning null is equivalent.
+;; If you want to write a side effect function, it should have a return type Object and return null.
+;; That means Kalai can continue to follow the do it the Clojure way mantra.
+(deftest t17
+  (top-level-form
+    '(defn f ^void [^int x]
+       (inc x))
+    ;;->
+    "public static void f(int x) {
+(x+1);
+}"))
 
-(defmacro assert-inner-form [{:keys [input expected]}]
-  `(->> (as-function ~input)
-        (c/compile-forms)
-        (remove-function)
-        (p/is= ~expected)))
+(deftest t2
+  (inner-form
+    '(do (def ^{:t "Boolean"} x true)
+         (def ^{:t "Long"} y 5))
+    ;;->
+    "Boolean x = true;
+Long y = 5;"))
 
+(deftest t3
+  (inner-form
+    '(let [^int x 1])
+    ;;->
+    "int x = 1;"))
 
-;; maybe we want to test the compiler on inner forms
+(deftest t4-5
+  (inner-form
+    '(if true 1 2)
+    ;;->
+    "if (true)
+{
+1;
+}
+else
+{
+2;
+}"))
 
-(deftest bindings-def
-  (assert-top-level-form
-    {:input    '(def ^{:t "int"} x 3)
-     :expected "int x = 3;"}))
+(deftest t4
+  (inner-form
+    '(doseq [x [1 2 3 4]]
+       (println x))
+    ;;->
+    ""))
 
-(deftest bindings-def2
-  (assert-inner-form
-    {:input    '(do (def ^{:t "Boolean"} x true)
-                    (def ^{:t "Long"} y 5))
-     :expected "Boolean x = true;
-Long y = 5;"}))
+(deftest t5
+  (inner-form
+    '(dotimes [x 5]
+       (println x))
+    ;;->
+    ""))
+
+(deftest t3
+  (inner-form
+    '(while true
+       (println x))
+    ;;->
+    "while (true) {
+System.out.println(x);
+}"))
+
+(deftest test6
+  (inner-form
+    '(cond true 1
+           false 2
+           :else 3)
+    ;;->
+    "if (true)
+{
+1;
+}
+else
+{
+if (false)
+{
+2;
+}
+else
+{
+if (:else)
+{
+3;
+}
+}
+}"))
+
+(deftest test7
+  (inner-form
+    '(case 1
+       1 :a
+       2 :b)
+    ;;->
+    ""))
+
+(deftest test75
+  (inner-form
+    '(def x {:a "asdf"})
+    ;;->
+    ""))
+
+(deftest test8
+  (inner-form
+    '(assoc {:a 1} :b 2)
+    ;;->
+    ""))

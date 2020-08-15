@@ -4,14 +4,15 @@
             [kalai.emit.langs :as l]
             [kalai.pass.a-annotate-ast :as a-annotate-ast]
             [kalai.pass.b-kalai-constructs :as b-kalai-constructs]
-            [kalai.pass.c-annotate-return :as c-annotate-return]
-            [kalai.pass.d1-java-syntax :as d1-java-syntax]
-            [kalai.pass.d2-java-syslib :as d2-java-syslib]
-            [kalai.pass.d3-java-condense :as d3-java-condense]
-            [kalai.pass.d4-java-string :as d4-java-string]
+            [kalai.pass.c-flatten-groups :as c-flatten-groups]
+            [kalai.pass.d-annotate-return :as d-annotate-return]
+            [kalai.pass.java1-syntax :as java1-syntax]
+            [kalai.pass.java2-syslib :as java2-syslib]
+            [kalai.pass.java3-condense :as java3-condense]
+            [kalai.pass.java4-string :as java4-string]
             [clojure.tools.analyzer.jvm :as az]
             [clojure.tools.analyzer.jvm.utils :as azu]
-            [clojure.tools.analyzer.passes.jvm.emit-form :as e]
+            [clojure.tools.analyzer.passes.jvm.emit-form :as azef]
             [clojure.string :as str]
             [clojure.java.io :as io])
   (:import (java.io File)))
@@ -37,17 +38,18 @@
 (defn rewriters [asts]
   (->> asts
        (map a-annotate-ast/rewrite)
-       (map e/emit-form)
+       (map azef/emit-form)
        ;;(spy)
        (b-kalai-constructs/rewrite)
+       (c-flatten-groups/rewrite)
        ;;(spy)
-       (c-annotate-return/rewrite)
-       (d1-java-syntax/rewrite)
+       (d-annotate-return/rewrite)
+       (spy)
+       (java1-syntax/rewrite)
+       (java2-syslib/rewrite)
+       (java3-condense/rewrite)
        ;;(spy)
-       (d2-java-syslib/rewrite)
-       (d3-java-condense/rewrite)
-       ;;(spy)
-       (d4-java-string/stringify-entry)))
+       (java4-string/stringify-entry)))
 
 ;;(e/emit-form (az/analyze '(defn test-function [] (do (def x true) (def y 5)))))
 

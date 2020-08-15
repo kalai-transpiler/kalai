@@ -1,4 +1,4 @@
-(ns kalai.pass.d1-java-syntax
+(ns kalai.pass.java1-syntax
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]))
 
@@ -136,7 +136,7 @@
 (def function
   (s/rewrite
     ;; function definition
-    (function ?return-type ?name ?docstring ?params . !body ...)
+    (function ?name ?return-type ?docstring ?params . !body ...)
     (j/function ?return-type ?name ?docstring ?params
                 (j/block . (m/app statement !body) ...))))
 

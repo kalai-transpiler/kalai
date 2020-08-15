@@ -1,4 +1,4 @@
-(ns kalai.pass.c-annotate-return
+(ns kalai.pass.d-annotate-return
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]))
 
@@ -18,10 +18,15 @@
 
     ?else (return ?else)))
 
-(def rewrite
+(def maybe-function
   ;; TODO: this isn't quite right, functions only live in namespaces
   (s/rewrite
-    (function ?return-type ?name ?docstring ?params . !statements ... ?return)
-    (function ?return-type ?name ?docstring ?params . !statements ... (m/app return ?return))
+    (function ?name ?return-type ?docstring ?params . !statements ... ?return)
+    (function ?name ?return-type ?docstring ?params . !statements ... (m/app return ?return))
 
     ?else ?else))
+
+(def rewrite
+  (s/rewrite
+    (namespace ?name . (m/app maybe-function !f) ...)
+    (namespace ?name . (m/app maybe-function !f) ...)))

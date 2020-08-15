@@ -22,6 +22,9 @@
     (clojure.lang.Numbers/inc ?x)
     (operator + (m/app inner-form ?x) 1)
 
+    (clojure.lang.Numbers/unchecked_inc ?x)
+    (operator + (m/app inner-form ?x) 1)
+
     (clojure.lang.Numbers/dec ?x)
     (operator - (m/app inner-form ?x) 1)))
 
@@ -204,11 +207,17 @@
     ;; defn
     (def ?name
       (fn*
-        ((m/and [& ?params] (m/app always-meta {:tag ?return-type :doc ?doc}))
-         . !body-forms ...)))
+        .
+        ((m/and [& !params]
+                (m/app always-meta {:tag !return-type :doc !doc}))
+         . !body-forms ..!n)
+
+        ..?m))
     ;;->
-    (function ?return-type ?name ?doc ?params
-              . (m/app inner-form !body-forms) ...)
+    (group
+      .
+      (function ?name . !return-type !doc !params . (m/app inner-form !body-forms) ..!n)
+      ..?m)
 
     ;; def
     (def ?name ?value)

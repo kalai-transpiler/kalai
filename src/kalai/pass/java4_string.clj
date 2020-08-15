@@ -1,4 +1,4 @@
-(ns kalai.pass.d4-java-string
+(ns kalai.pass.java4-string
   (:require [meander.strategy.epsilon :as s]
             [clojure.string :as str]
             [clojure.pprint :as pprint]))
