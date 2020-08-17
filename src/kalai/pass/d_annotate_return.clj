@@ -4,8 +4,18 @@
 
 (def return
   (s/rewrite
-    (do . !statements ... ?return)
-    (do . !statements ... (m/app return ?return))
+    (do . !statements ... ?last)
+    (do . !statements ... (m/app return ?last))
+
+    (while ?condition . !statements ...)
+    (group
+      (while ?condition . !statements ...)
+      (return nil))
+
+    (foreach ?bindings . !statements ...)
+    (group
+      (foreach ?bindings . !statements ...)
+      (return nil))
 
     (if ?condition ?then)
     (if ?condition (m/app return ?then))
@@ -13,20 +23,22 @@
     (if ?condition ?then ?else)
     (if ?condition (m/app return ?then) (m/app return ?else))
 
+    (init ?name ?value)
+    (init ?name ?value)
+
     (return ?expression)
     (return ?expression)
 
     ?else (return ?else)))
 
 (def maybe-function
-  ;; TODO: this isn't quite right, functions only live in namespaces
   (s/rewrite
-    (function ?name ?return-type ?docstring ?params . !statements ... ?return)
-    (function ?name ?return-type ?docstring ?params . !statements ... (m/app return ?return))
+    (function ?name ?return-type ?docstring ?params . !statements ... ?last)
+    (function ?name ?return-type ?docstring ?params . !statements ... (m/app return ?last))
 
     ?else ?else))
 
 (def rewrite
   (s/rewrite
-    (namespace ?name . (m/app maybe-function !f) ...)
-    (namespace ?name . (m/app maybe-function !f) ...)))
+    (namespace ?name . !function ...)
+    (namespace ?name . (m/app maybe-function !function) ...)))

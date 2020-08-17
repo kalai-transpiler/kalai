@@ -1,7 +1,7 @@
 (ns kalai.test-helpers
   (:require [clojure.test :refer :all]
             [kalai.compile :as c]
-            [kalai.placation]
+    ;;[kalai.placation]
             [clojure.string :as str]))
 
 (defn as-ns [form]
@@ -10,7 +10,7 @@
 
 (defn as-function [form]
   (list '(ns test-package.test-class)
-        (list 'defn 'test-function [] form)))
+        (list 'defn 'test-function [] form nil)))
 
 (defn remove-class [s]
   (->> s
@@ -23,19 +23,13 @@
   (->> s
        (str/split-lines)
        (drop 3)
-       (drop-last 2)
+       (drop-last 3)
        (str/join \newline)))
 
 (defmacro top-level-form [input expected]
-  `(-> (as-ns ~input)
-       (c/compile-forms)
-       (remove-class)
-       (~'= ~expected)
-       (is)))
+  `(is (= ~expected
+          (remove-class (c/compile-forms (as-ns ~input))))))
 
 (defmacro inner-form [input expected]
-  `(-> (as-function ~input)
-       (c/compile-forms)
-       (remove-function)
-       (= ~expected)
-       (is)))
+  `(is (= ~expected
+          (remove-function (c/compile-forms (as-function ~input))))))

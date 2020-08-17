@@ -19,11 +19,14 @@
 (defn- line-separated [& xs]
   (str/join \newline xs))
 
+(defn statement [s]
+  (str s ";"))
+
 
 ;;;; These are what our symbols should resolve to
 
 (defn expression-statement-str [x]
-  (str (stringify x) ";"))
+  (statement (stringify x)))
 
 (defn block-str [& xs]
   (line-separated
@@ -32,24 +35,25 @@
     "}"))
 
 (defn assign-str [variable-name value]
-  (expression-statement-str
-    (str variable-name "=" (stringify value))))
+  (statement (str variable-name "=" (stringify value))))
 
-(defn init-str [type variable-name value]
-  (expression-statement-str
-    (space-separated type variable-name "=" (stringify value))))
+(defn init-str
+  ([type variable-name]
+   (statement (space-separated type variable-name)))
+  ([type variable-name value]
+   (statement (space-separated type variable-name "=" (stringify value)))))
 
 #_(defn const [bindings]
-  (str "const" Type x "=" initialValue))
+    (str "const" Type x "=" initialValue))
 
 #_(defn test* [x]
-  ;; could be a boolean expression
-  (str x "==" y)
-  ;; or just a value
-  (str x))
+    ;; could be a boolean expression
+    (str x "==" y)
+    ;; or just a value
+    (str x))
 
 
-#_(defn conditional [test then else] )
+#_(defn conditional [test then else])
 
 (defn invoke-str [function-name args]
   (str function-name (param-list (map stringify args))))
@@ -75,7 +79,7 @@
         package-name (str/join "." (butlast parts))
         class-name (last parts)]
     (line-separated
-      (expression-statement-str (space-separated 'package package-name))
+      (statement (space-separated 'package package-name))
       (space-separated 'public 'class class-name
                        (stringify body)))))
 
@@ -102,6 +106,12 @@
      'else
      (stringify else))))
 
+(defn ternary-str
+  [test then else]
+  (space-separated (parens (stringify test))
+                   "?" (stringify then)
+                   ":" (stringify else)))
+
 ;;;; This is the main entry point
 
 (def str-fn-map
@@ -116,7 +126,8 @@
    'j/return               return-str
    'j/while                while-str
    'j/for                  for-str
-   'j/if                   if-str})
+   'j/if                   if-str
+   'j/ternary              ternary-str})
 
 (def stringify
   (s/match
@@ -126,7 +137,7 @@
         (apply f !more)
         (throw (ex-info (str "Missing function: " ?x) {:form ?form}))))
 
-    ?else (str ?else)))
+    ?else (pr-str ?else)))
 
 (defn stringify-entry [form]
   (try

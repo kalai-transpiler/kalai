@@ -37,13 +37,20 @@
 
 (defn rewriters [asts]
   (->> asts
-       (map a-annotate-ast/rewrite)
+
+       ;; TODO: annotate isn't quite right, bottom up is too much
+       ;;(map a-annotate-ast/rewrite)
+
        (map azef/emit-form)
        ;;(spy)
        (b-kalai-constructs/rewrite)
        (c-flatten-groups/rewrite)
-       ;;(spy)
+       (spy)
        (d-annotate-return/rewrite)
+
+       ;; this is a repeat because returns can create groups
+       (c-flatten-groups/rewrite)
+
        (spy)
        (java1-syntax/rewrite)
        (java2-syslib/rewrite)

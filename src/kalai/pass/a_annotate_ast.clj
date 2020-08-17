@@ -12,13 +12,17 @@
                  ast))
 
 (def type-aliases
+  ;; TODO: bottom-up is too slow, as it steps through EVERYTHING, not just the ast nodes
   (s/bottom-up
     (s/rewrite
       ;; replace type aliases with their definition
-      {:name (m/and ?name (m/app meta {:t (m/pred symbol? ?t) & ?name-meta}))
-       :meta {:keys [!as ..?n {:val :t} . !bs ..?m]
-              :vals [!cs ..?n {:var (m/app #(:kalias (meta %)) ?kalias)} . !ds ..?m]
-              :as   ?meta}
+      ;; TODO: while this mostly works, sometimes it breaks, and we should do a more specific walk anyhow (only traverse maps)
+      #_#_
+      {:name (m/and (m/pred some? ?name)
+                    (m/app meta {:t (m/pred symbol? ?t) & ?name-meta}))
+       :meta (m/and (m/pred some? ?meta)
+                    {:keys [!as ..?n {:val :t} . !bs ..?m]
+                     :vals [!cs ..?n {:var (m/app #(:kalias (meta %)) ?kalias)} . !ds ..?m]})
        &     ?ast}
       ;;->
       {:name ~(with-meta ?name (assoc ?name-meta :t ?kalias))

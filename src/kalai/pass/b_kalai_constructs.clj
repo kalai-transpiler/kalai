@@ -40,10 +40,11 @@
       (loop* [?sym 0]
         (if (clojure.lang.Numbers/lt ?sym ?auto)
           (do . !body ... (recur (clojure.lang.Numbers/unchecked_inc ?sym))))))
-    (let* [?sym 0]
-      (while (operator < ?sym ?auto)
+    (group
+      (init ~(with-meta ?sym {:t 'int}) 0)
+      (while (operator < ?sym ?n)
         . (m/app inner-form !body) ...
-        (operator ++ ?sym)))
+        (assign ?sym (operator + ?sym 1))))
 
     ;; doseq -> foreach
     (loop* [?seq (clojure.core/seq ?xs)
@@ -186,12 +187,11 @@
     (?f . !args ...)
     (invoke ?f . (m/app inner-form !args) ...)))
 
-;; TODO: choice does not work as expected, only the first rule works
 (def inner-form
   "Ordered from most to least specific."
   (s/choice
-    assignments
     loops
+    assignments
     operators
     conditionals
     misc
@@ -225,7 +225,7 @@
 
     ;; def with no value
     (def ?name)
-    (variable ?name)
+    (init ?name)
 
     ?else ~(throw (ex-info "fail" {:else ?else}))))
 

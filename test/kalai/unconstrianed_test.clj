@@ -40,7 +40,7 @@ return (x+y);
 
 ;; Tim proposes: let's not support void!!!
 ;; It's not necessary for writing programs... returning null is equivalent.
-;; If you want to write a side effect function, it should have a return type Object and return null.
+;; If you want to write a side effect function, it should return type Object and return null.
 ;; That means Kalai can continue to follow the do it the Clojure way mantra.
 (deftest t17
   (top-level-form
@@ -90,15 +90,19 @@ else
     '(dotimes [x 5]
        (println x))
     ;;->
-    ""))
+    "int x = 0;
+while ((x<5)) {
+System.out.println(x);
+x=(x+1);
+}"))
 
 (deftest t3
   (inner-form
     '(while true
-       (println x))
+       (println "hi"))
     ;;->
     "while (true) {
-System.out.println(x);
+System.out.println(\"hi\");
 }"))
 
 (deftest test6
@@ -136,9 +140,10 @@ if (:else)
 
 (deftest test75
   (inner-form
-    '(def x {:a "asdf"})
+    '(def ^{:t ['String 'String]} x {:a "asdf"})
     ;;->
-    ""))
+    "x = new HashMap<String,String>();
+x.add(\":a\", \"asdf\""))
 
 (deftest test8
   (inner-form
