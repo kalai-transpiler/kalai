@@ -1,5 +1,6 @@
 (ns kalai.pass.java4-string
   (:require [meander.strategy.epsilon :as s]
+            [meander.epsilon :as m]
             [clojure.string :as str]
             [clojure.pprint :as pprint]))
 
@@ -112,6 +113,15 @@
                    "?" (stringify then)
                    ":" (stringify else)))
 
+(defn switch-str
+  [x clauses]
+  (space-separated 'switch (parens (stringify x))
+                   (stringify clauses)))
+
+(defn case-str [x then]
+  (str (space-separated "case" (stringify x) ":" (stringify then))
+       \newline "break;"))
+
 ;;;; This is the main entry point
 
 (def str-fn-map
@@ -127,7 +137,9 @@
    'j/while                while-str
    'j/for                  for-str
    'j/if                   if-str
-   'j/ternary              ternary-str})
+   'j/ternary              ternary-str
+   'j/switch               switch-str
+   'j/case                 case-str})
 
 (def stringify
   (s/match
@@ -136,6 +148,8 @@
       (if f
         (apply f !more)
         (throw (ex-info (str "Missing function: " ?x) {:form ?form}))))
+
+    (m/pred keyword? ?k) (pr-str (str ?k))
 
     ?else (pr-str ?else)))
 

@@ -136,7 +136,12 @@ if (:else)
        1 :a
        2 :b)
     ;;->
-    ""))
+    "switch (1) {
+case 1 : \":a\";
+break;
+case 2 : \":b\";
+break;
+}"))
 
 (deftest test75
   (inner-form

@@ -170,7 +170,13 @@
     (if (m/app inner-form ?test) (m/app inner-form ?then))
 
     (if ?test ?then ?else)
-    (if (m/app inner-form ?test) (m/app inner-form ?then) (m/app inner-form ?else))))
+    (if (m/app inner-form ?test) (m/app inner-form ?then) (m/app inner-form ?else))
+
+    (let* [?auto ?x]
+      (case* ?auto ?shift ?mask
+             ?default ;;often (throw (new java.lang.IllegalArgumentException (clojure.core/str "No matching clause: " ?auto)))
+             ?imap ?switch-type ?tt ?skip-check))
+    (case (m/app inner-form ?x) ?imap)))
 
 (def misc
   (s/rewrite
@@ -191,9 +197,9 @@
   "Ordered from most to least specific."
   (s/choice
     loops
+    conditionals
     assignments
     operators
-    conditionals
     misc
     s/pass))
 

@@ -75,6 +75,11 @@
     (if ?condition ?then ?else)
     (j/ternary (m/app expression ?condition) (m/app expression ?then) (m/app expression ?else))
 
+    ;; TODO: how to do this? maybe through variable assignment?
+    (case ?x {& (m/seqable [!k [_ !v]] ...)})
+    (j/switch (m/app expression ?x)
+              (j/block . (j/case !k (j/expression-statement (m/app expression !v))) ...))
+
     ?x
     ?x))
 
@@ -101,7 +106,6 @@
       (j/for & ?more)
 
       ;; conditional
-      ;; note: we don't know what to do with assignment, maybe disallow them
       (if ?test ?then)
       (j/if (m/app expression ?test)
         (j/block (m/app statement ?then)))
@@ -110,6 +114,10 @@
       (j/if (m/app expression ?test)
         (j/block (m/app statement ?then))
         (j/block (m/app statement ?else)))
+
+      (case ?x {& (m/seqable [!k [_ !v]] ...)})
+      (j/switch (m/app expression ?x)
+                (j/block . (j/case !k (j/expression-statement (m/app expression !v))) ...))
 
       (do . !xs ...)
       (j/block . (m/app statement !xs) ...)

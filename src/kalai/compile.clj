@@ -14,7 +14,8 @@
             [clojure.tools.analyzer.jvm.utils :as azu]
             [clojure.tools.analyzer.passes.jvm.emit-form :as azef]
             [clojure.string :as str]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [clojure.pprint :as pprint])
   (:import (java.io File)))
 
 (def ext {::l/rust ".rs"
@@ -33,19 +34,17 @@
       (spit output-file (str/join \newline strs)))))
 
 (defn spy [x]
-  (doto x (prn 'SPY)))
+  (doto x #(do (println "SPY")
+               (pprint/pprint %))))
 
 (defn rewriters [asts]
   (->> asts
-
-       ;; TODO: annotate isn't quite right, bottom up is too much
-       ;;(map a-annotate-ast/rewrite)
-
+       (map a-annotate-ast/rewrite)
        (map azef/emit-form)
        ;;(spy)
        (b-kalai-constructs/rewrite)
        (c-flatten-groups/rewrite)
-       (spy)
+       ;;(spy)
        (d-annotate-return/rewrite)
 
        ;; this is a repeat because returns can create groups
