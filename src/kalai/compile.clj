@@ -15,7 +15,7 @@
             [clojure.tools.analyzer.passes.jvm.emit-form :as azef]
             [clojure.string :as str]
             [clojure.java.io :as io]
-            [clojure.pprint :as pprint])
+            [puget.printer :as puget])
   (:import (java.io File)))
 
 (def ext {::l/rust ".rs"
@@ -34,8 +34,7 @@
       (spit output-file (str/join \newline strs)))))
 
 (defn spy [x]
-  (doto x #(do (println "SPY")
-               (pprint/pprint %))))
+  (doto x puget/cprint))
 
 (defn rewriters [asts]
   (->> asts
