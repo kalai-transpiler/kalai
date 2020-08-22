@@ -14,6 +14,9 @@
     clojure.lang.Numbers/gt                     >
     clojure.lang.Numbers/gte                    >=})
 
+(defn always-meta [x]
+  (or (meta x) {}))
+
 (def operators
   (s/rewrite
     ((m/pred operator ?op) ?x ?y)
@@ -41,7 +44,7 @@
         (if (clojure.lang.Numbers/lt ?sym ?auto)
           (do . !body ... (recur (clojure.lang.Numbers/unchecked_inc ?sym))))))
     (group
-      (init ~(with-meta ?sym {:t 'int}) 0)
+      (init true 'int ?sym 0)
       (while (operator < ?sym ?n)
         . (m/app inner-form !body) ...
         (assign ?sym (operator + ?sym 1))))
@@ -52,7 +55,8 @@
             ?chunkn 0
             ?i 0]
       (if (clojure.lang.Numbers/lt ?i ?chunkn)
-        (let* [?sym (.nth ?chunk ?i)]
+        (let* [(m/and ?sym (m/app always-meta {:tag ?tag
+                                               :type ?type})) (.nth ?chunk ?i)]
           (do . !body ... (recur ?seq ?chunk ?chunkn (clojure.lang.Numbers/unchecked_inc ?i))))
         (let* [?as (clojure.core/seq ?seq)]
           (if ?as
@@ -66,7 +70,7 @@
                     (clojure.lang.RT/intCast 0)))
                 (let* [?sym (clojure.core/first ?bs)]
                   (do . !body ... (recur (clojure.core/next ?bs) nil 0 0)))))))))
-    (foreach ?sym ?xs . !body ...)
+    (foreach ~(or ?type ?tag) ?sym ?xs . (m/app inner-form !body) ...)
 
     ;; loop -> ???
     ;;(loop* ?bindings ?body)
@@ -74,55 +78,53 @@
     ))
 
 (def ref-symbol?
-  #{'atom
-    'ref
-    'agent
-    'clojure.core/atom
-    'clojure.core/ref
-    'clojure.core/agent})
+  '#{atom
+     ref
+     agent
+     clojure.core/atom
+     clojure.core/ref
+     clojure.core/agent})
 
 (def ref-form?
   (s/rewrite
-    (m/pred ref-symbol? ?x)
-    ?x
-
+    ((m/pred ref-symbol? ?x) _) true
     ?else false))
+
+(def as-init
+  (s/rewrite
+    [(m/and ?name (m/app always-meta {:tag ?tag, :t ?type}))
+     (m/and ?x (m/app ref-form? ?mutable))]
+    (init ?mutable ~(or ?tag ?type) ?name (m/app inner-form ?x))))
+
+(def def-init
+  (s/rewrite
+    (def ?name ?value)
+    (m/app as-init [?name ?value])
+
+    (def (m/and ?name (m/app always-meta {:tag ?tag, :t ?type})))
+    (init false ~(or ?tag ?type) ?name)))
 
 (def assignments
   (s/rewrite
     ;; with-local-vars
-    (let* [!sym (.setDynamic (clojure.lang.Var/create)) ..?n]
+    (let* [_ (.setDynamic (clojure.lang.Var/create)) ..?n]
       (do
-        (clojure.lang.Var/pushThreadBindings (clojure.core/hash-map . !sym !init ..?n))
+        (clojure.lang.Var/pushThreadBindings (clojure.core/hash-map . !sym !x ..?n))
         (try
           ?body
           (finally (clojure.lang.Var/popThreadBindings)))))
     ;;->
     (do
-      . (init !sym (m/app inner-form !init)) ..?n
+      . (m/app as-init [!sym !x]) ..?n
       (m/app inner-form ?body))
 
-    ;; (atom 3)
     ;; let
-    (let* [!sym !init ...] ?body)
+    (let* [!sym !x ...]
+      ?body)
     ;;->
     (do
-      . (init (m/app (fn hint-const [sym]
-                       ;;; TODO not quite right yet
-                       (if (ref-form? !init)
-                         sym
-                         (with-meta sym {:const true})))
-                     !sym)
-              (m/app inner-form !init)) ...
+      . (m/app as-init [!sym !x]) ...
       (m/app inner-form ?body))
-
-    ;; def
-    (def ?name ?value)
-    (init ?name (m/app inner-form ?value))
-
-    ;; def with no value
-    (def ?name)
-    (init ?name)
 
     ;; TODO: Clojure has nuanced concepts of state...
     ;; should we boil them all down to assignment, provide equivalent abstractions, or only support 1?
@@ -132,13 +134,13 @@
     ?x
 
     (var-set ?var ?x)
-    (assign ?var ?x)
+    (assign ?var (m/app inner-form ?x))
 
     (reset! ?a ?x)
-    (assign ?a ?x)
+    (assign ?a (m/app inner-form ?x))
 
     (ref-set ?r ?x)
-    (assign ?r ?x)
+    (assign ?r (m/app inner-form ?x))
 
     (swap! ?a ?f & ?args)
     (assign ?a (invoke ?f ?a & ?args))
@@ -155,8 +157,9 @@
     (send-off ?a ?f & ?args)
     (assign ?a (invoke ?f ?a & ?args))
 
-    (m/pred ref-symbol? ?x)
-    ?x
+    ;; (atom (+ 1 2))
+    ((m/pred ref-symbol? _) ?x)
+    (m/app inner-form ?x)
 
     (deref ?x)
     ?x
@@ -199,15 +202,12 @@
     loops
     conditionals
     assignments
+    def-init
     operators
     misc
     s/pass))
 
-;; TODO: use this everywhere!
-(defn always-meta [x]
-  (or (meta x) {}))
-
-(def top-level-form
+(def def-function
   (s/rewrite
     ;; TODO: only matching single arity is a problem.... maybe convert Kalai functions to multi-arity
     ;; defn
@@ -223,17 +223,13 @@
     (group
       .
       (function ?name . !return-type !doc !params . (m/app inner-form !body-forms) ..!n)
-      ..?m)
+      ..?m)))
 
-    ;; def
-    (def ?name ?value)
-    (init ?name (m/app inner-form ?value))
-
-    ;; def with no value
-    (def ?name)
-    (init ?name)
-
-    ?else ~(throw (ex-info "fail" {:else ?else}))))
+(def top-level-form
+  (s/choice
+    def-function
+    def-init
+    (s/rewrite ?else ~(throw (ex-info "fail" {:else ?else})))))
 
 
 ;; takes a sequence of forms, returns a single form

@@ -92,8 +92,16 @@
                    (stringify body)))
 
 ;; TODO
-(defn for-str [& args]
-  (space-separated 'for (parens args)))
+
+
+
+(defn foreach-str [sym-type sym xs body]
+  (space-separated 'for (parens (space-separated sym-type sym ":" xs))
+                   (stringify body)))
+
+(defn for-str [initialization termination increment body]
+  (space-separated 'for (parens (str/join "; " (map stringify [initialization termination increment])))
+                   (stringify body)))
 
 (defn if-str
   ([test then]
@@ -136,6 +144,7 @@
    'j/return               return-str
    'j/while                while-str
    'j/for                  for-str
+   'j/foreach              foreach-str
    'j/if                   if-str
    'j/ternary              ternary-str
    'j/switch               switch-str

@@ -117,13 +117,19 @@ Collection types go in nested vectors.
   - refactoring test
   - salvaging existing tests
   - working with big strings... is that really what we want?
+* Fix the annotate AST
 * Rust etc
 * Expand syslib
 * Types!!!
   - Mutable <-- motivation is Rust, is `^:const` good or bad?
   - Generic Types [[]] -> <<>> translation
+  - Keyword support
 * Start compiling our output files
 * "For loops"
 * Other concepts?
 * Variable casing (when to snake-camel-kebab-case)
 * Indentation
+* Do we support first class enums?
+  - Without it you lose type strictness
+  - Namespaced keywords?
+  - Would require user declaration form

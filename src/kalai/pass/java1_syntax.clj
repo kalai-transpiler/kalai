@@ -83,13 +83,14 @@
     ?x
     ?x))
 
+
 (def init
   (s/rewrite
-    (init (m/and ?name (m/app meta {:t ?type :tag ?tag})))
-    (j/init ~(or ?type ?tag) ?name)
+    (init ?mut ?type ?name)
+    (j/init ?type ?name)
 
-    (init (m/and ?name (m/app meta {:t ?type :tag ?tag})) (m/app expression ?value))
-    (j/init ~(or ?type ?tag) ?name (m/app expression ?value))))
+    (init ?mut ?type ?name ?x)
+    (j/init ?type ?name (m/app expression ?x))))
 
 (def statement
   (s/choice
@@ -102,8 +103,9 @@
       (j/while (m/app expression ?condition)
                (j/block . (m/app statement !body) ...))
 
-      (foreach & ?more)
-      (j/for & ?more)
+      (foreach ?type ?sym ?xs . !body ...)
+      (j/foreach ?type ?sym ?xs
+                 (j/block . (m/app statement !body) ...))
 
       ;; conditional
       (if ?test ?then)

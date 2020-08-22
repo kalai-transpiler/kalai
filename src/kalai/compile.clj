@@ -40,16 +40,12 @@
   (->> asts
        (map a-annotate-ast/rewrite)
        (map azef/emit-form)
-       ;;(spy)
        (b-kalai-constructs/rewrite)
        (c-flatten-groups/rewrite)
-       ;;(spy)
        (d-annotate-return/rewrite)
-
-       ;; this is a repeat because returns can create groups
-       (c-flatten-groups/rewrite)
-
+       (c-flatten-groups/rewrite) ;; repeat because returns can create groups
        (spy)
+
        (java1-syntax/rewrite)
        (java2-syslib/rewrite)
        (java3-condense/rewrite)

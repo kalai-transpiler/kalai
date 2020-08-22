@@ -65,7 +65,7 @@ Long y = 5;"))
     ;;->
     "int x = 1;"))
 
-(deftest t4-5
+(deftest t3-1
   (inner-form
     '(if true 1 2)
     ;;->
@@ -78,12 +78,59 @@ else
 2;
 }"))
 
+
+;; ambiguous in the face of mutability
+(let [x [1 2 3]]
+  (conj x 4)
+  x)
+;=>
+
+;; must be atoms
+#_(let [x (atom [1 2 3])]
+  (swap! x conj 4)
+  @x)
+
+#_(let [^int ^:mut x (mut [1 2 3])]
+  (mconj x 4)
+  x)
+
+(deftest t3-1-1
+  (inner-form
+    '(let [^int x (atom 0)]
+       (reset! x (+ @x 2)))
+    ;;->
+    "{
+int x = 0;
+x=(x+2);
+}"
+    ))
+
+#_(let [^:mut x (mut [1 2 3])]
+  (mconj x 4)
+  x)
+#_(let [x (Vector. 1 2 3)])
+
+#_(mlet [x [1 2 3]]
+      (mconj x 4))
+
+
+(deftest t3-2
+  (inner-form
+    [1 2]
+    ;;->
+    ;;"Vector<Integer> v = new Vector<>(); v.add(1); v.add(2);" ;;possible
+    "new Vector<Integer>().add(1).add(2)" ;; requires non-core
+    ))
+
 (deftest t4
   (inner-form
-    '(doseq [x [1 2 3 4]]
+    '(doseq [^int x [1 2 3 4]]
        (println x))
     ;;->
-    ""))
+    "for (int x : [1 2 3 4]) {
+System.out.println(x);
+System.out.println(x);
+}"))
 
 (deftest t5
   (inner-form
@@ -123,12 +170,19 @@ if (false)
 }
 else
 {
-if (:else)
+if (\":else\")
 {
 3;
 }
 }
 }"))
+
+(deftest test6*
+  (inner-form
+    '(:k {:k 1})
+    ;;->
+    "zzz"
+    ))
 
 (deftest test7
   (inner-form
@@ -145,7 +199,7 @@ break;
 
 (deftest test75
   (inner-form
-    '(def ^{:t ['String 'String]} x {:a "asdf"})
+    '(def ^{:t [String String]} x {:a "asdf"})
     ;;->
     "x = new HashMap<String,String>();
 x.add(\":a\", \"asdf\""))
