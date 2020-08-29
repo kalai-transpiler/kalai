@@ -111,18 +111,20 @@ Collection types go in nested vectors.
 ## TODO!!!!
 
 * We think we have most of the proof of concept language concepts, but we need to hook up the tests
-  - want to use expectations but cider has no notion of expectations
-  - what granularities are we using
+  - pleasant cider testing
   - workflows (developer and CI)
-  - refactoring test
   - salvaging existing tests
-  - working with big strings... is that really what we want?
+  - indenting strings and comparing ignoring leading space
+  - elseif
+  - run the output through the native language compiler
+  - fix 'lein test' to be command line runnable
 * Persistent data structures
   - all languages have a library, but not everyone wants the dependency
   - performance goals
   - would like to support both, choose the mutability that you want
   - need to differentiate (probably by atoms)
   - consider our own macros
+  - maps/sets/vectors conj/assoc/update etc
 * Fix the annotate AST
 * Rust etc
 * Expand syslib

@@ -49,6 +49,8 @@
         . (m/app inner-form !body) ...
         (assign ?sym (operator + ?sym 1))))
 
+    ;; bug in meander compiler, disabling for now
+    #_#_
     ;; doseq -> foreach
     (loop* [?seq (clojure.core/seq ?xs)
             ?chunk nil
@@ -57,7 +59,7 @@
       (if (clojure.lang.Numbers/lt ?i ?chunkn)
         (let* [(m/and ?sym (m/app always-meta {:tag ?tag
                                                :type ?type})) (.nth ?chunk ?i)]
-          (do . !body ... (recur ?seq ?chunk ?chunkn (clojure.lang.Numbers/unchecked_inc ?i))))
+          (do ?body (recur ?seq ?chunk ?chunkn (clojure.lang.Numbers/unchecked_inc ?i))))
         (let* [?as (clojure.core/seq ?seq)]
           (if ?as
             (let* [?bs ?as]
@@ -69,8 +71,8 @@
                     (clojure.lang.RT/intCast (clojure.lang.RT/count ?cs))
                     (clojure.lang.RT/intCast 0)))
                 (let* [?sym (clojure.core/first ?bs)]
-                  (do . !body ... (recur (clojure.core/next ?bs) nil 0 0)))))))))
-    (foreach ~(or ?type ?tag) ?sym ?xs . (m/app inner-form !body) ...)
+                  (do ?body (recur (clojure.core/next ?bs) nil 0 0)))))))))
+    (foreach ~(or ?type ?tag) ?sym ?xs (m/app inner-form ?body))
 
     ;; loop -> ???
     ;;(loop* ?bindings ?body)

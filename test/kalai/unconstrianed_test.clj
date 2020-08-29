@@ -142,7 +142,8 @@ x=(x+2);
       ))
 
 (deftest t4
-  (inner-form
+  ;; disabled while waiting for bugfix meander #133
+  #_(inner-form
     '(doseq [^int x [1 2 3 4]]
        (println x))
     ;;->
