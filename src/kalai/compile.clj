@@ -36,21 +36,26 @@
 (defn spy [x]
   (doto x puget/cprint))
 
-(defn rewriters [asts]
+(defn asts->kalai [asts]
   (->> asts
        (map a-annotate-ast/rewrite)
        (map azef/emit-form)
        (b-kalai-constructs/rewrite)
        (c-flatten-groups/rewrite)
        (d-annotate-return/rewrite)
-       (c-flatten-groups/rewrite) ;; repeat because returns can create groups
-       (spy)
+       ;; repeat because returns can create groups
+       (c-flatten-groups/rewrite)))
 
+(defn kalai->java [k]
+  (->> k
        (java1-syntax/rewrite)
        (java2-syslib/rewrite)
        (java3-condense/rewrite)
-       ;;(spy)
        (java4-string/stringify-entry)))
+
+(defn rewriters [asts]
+  (->> (asts->kalai asts)
+       (kalai->java)))
 
 ;;(e/emit-form (az/analyze '(defn test-function [] (do (def x true) (def y 5)))))
 
