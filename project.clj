@@ -4,6 +4,9 @@
   :license {:name "EPL-2.0"
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :main kalai.core
+  ;; default stack size produces a stackoverflow expection when compiling some meander expressions,
+  ;; so making it explicitly larger
+  :jvm-opts ["-Xss2m"]
   :dependencies [[expectations "2.1.10"]
                  [expectations/clojure-test "1.2.1"]
                  [org.clojure/clojure "1.10.1"]
