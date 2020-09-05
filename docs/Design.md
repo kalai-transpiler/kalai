@@ -2,6 +2,14 @@
 
 ## Overview
 
+Multiple passes occur to incrementally transform Clojure to the target representations.
+
+* Leverage tools analyzer to parse and emit canonical forms
+* Pattern match for concepts we support
+* Language specific ast converter
+* Condense and beautify
+* Stringification
+
 ## Strategy
 ### Nano pass
 ### ASTs vs s-expressions
@@ -15,6 +23,7 @@
 * Ecosystem
 * Simplicity
 * Everything works together
+* See [why Clojure is good for writing transpilers](https://elangocheran.com/2020/03/18/why-clojure-lisp-is-good-for-writing-transpilers/)
 
 #### Rewriting (meander)
 * Declarative
@@ -59,3 +68,21 @@
     
 ## Strategy of mutable vs immutable
 ## Strategy for types, alias, metadata
+
+## Notes
+
+In Clojure you can type hint and metadata let symbols,
+but not if they bind primitive values.
+
+Aggregate types will be composed of "primitive types" (types that are defined in Kalai as universal across languages).
+Doing so follows Clojure's data simplicity principle: don't complext plain data with types.
+To support new concepts (for example StringBuffer), users will need to add to the Kalai supported types and implement code for each of the target languages.
+We should minimize the effort required from users to extend Kalai, which would be done through user supplied data/functions.
+We could provide a type aliasing feature:
+`(alias Z [kmap [klong kstring]])` => (def ^:kalai-alias Z ...) => In the AST, remove the def (don't emit it)
+`(def ^{:t Z} x)` => In the AST, replace Z with the value of Z => `(def ^{:t [kmap [klong kstring]] x)`
+
+`(def ^{:t '[kmap [klong ^:const ^:opt kstr]]} x)`
+Notes on type names: don't want them to collide with Clojure words or user expectations of target language names.
+They must be quoted.
+Collection types go in nested vectors.

@@ -1,16 +1,36 @@
 # Kalai Transpiler
 
-Kalai transpiler is a source-to-source transpiler to convert Clojure to multiple target languages (Rust, C++, Java, ...).
+Kalai is a source-to-source transpiler from Clojure to other languages (Rust, C++, Java, ...).
 
 The goal of Kalai is to allow useful algorithms to be encoded once and then automatically be made available natively to other target programming languages.
 
 ## Rationale
 
-See [why Clojure is good for writing transpilers](https://elangocheran.com/2020/03/18/why-clojure-lisp-is-good-for-writing-transpilers/).
+[Rationale](./docs/Rationale.md)
 
 ## Supported forms
 
-The forms that are currently supported are listed in [`interface.clj`](./src/kalai/emit/interface.clj).
+Kalai supports the majority of Clojure language constructs.
+
+Namespaces translate to classes,
+functions translate to static functions,
+defs and lets translate to variables,
+atoms translate to mutable data structures,
+data literals default to equivalent persistent data structures via libraries when used.
+
+Kalai expressly disallows top-level forms other than `defn` and `def`.
+For example:
+
+```clojure
+(ns foo.bar)
+(println "hi")
+```
+
+While valid in Clojure,
+most target languages disallow code execution during compilation,
+so Kalai will reject this code.
+
+A formal grammar will be provided in the future.
 
 ## Usage
 
@@ -51,32 +71,26 @@ Example demo 2 has input code at [`test/kalai/demo/demo02.clj`](test/kalai/demo/
 
 See also `kalai.emit.langs/TARGET-LANGS`
 
+## Documentation
+
+[Rationale](./docs/Rationale.md)
+[Design](./docs/Design.md)
+[TODO](./docs/TODO.md)
+
 ## Development
 
 ### Extending or adding languages
 
-Clojure supports namespaced keywords to enable the dynamic dispatch fallback hierarchies for multimethods.
-The namespaced keywords for the target languages follow the Clojure derivation tree:
+To target another language, provide a language specific pass.
+See [pass](src/kalai/pass).
 
-- `::l/curlybrace` ("curly brace" languages)
-  * `::l/rust` (Rust)
-  * `::l/cpp` (C++)
-  * `::l/java` (Java)
+### Implementation
 
-To extend or add implementations, add multimethod definitions in `kalai.emit.impl/mylang.clj`.
+See [Design](docs/Design.md).
 
 ### Contributing
 
-Issues and Pull requests welcome!
-
-### Implementation strategy
-
-Multiple passes:
-* Leverage tools analyzer to parse and emit canonical forms
-* Pattern match for concepts we support
-* Language specific ast converter
-* Condense and beautify
-* Stringification
+Issues and Pull requests are welcome!
 
 ## License
 
@@ -89,30 +103,3 @@ http://www.eclipse.org/legal/epl-2.0.
 This Source Code may also be made available under the following Secondary
 Licenses when the conditions for such availability set forth in the Eclipse
 Public License, v. 2.0 are satisfied: Unicode License (https://www.unicode.org/license.html).
-
-## Notes
-
-You CAN type hint and metadata let symbols,
-but not if they bind primitive values.
-
-Aggregate types will be composed of "primitive types" (types that are defined in Kalai as universal across languages).
-Doing so follows Clojure's data simplicity principle: don't complext plain data with types.
-To support new concepts (for example StringBuffer), users will need to add to the Kalai supported types and implement code for each of the target languages.
-We should minimize the effort required from users to extend Kalai, which would be done through user supplied data/functions.
-We could provide a type aliasing feature:
-`(alias Z [kmap [klong kstring]])` => (def ^:kalai-alias Z ...) => In the AST, remove the def (don't emit it)
-`(def ^{:t Z} x)` => In the AST, replace Z with the value of Z => `(def ^{:t [kmap [klong kstring]] x)`
-
-`(def ^{:t '[kmap [klong ^:const ^:opt kstr]]} x)`
-Notes on type names: don't want them to collide with Clojure words or user expectations of target language names.
-They must be quoted.
-Collection types go in nested vectors.
-
-## Documentation
-
-[Rationale](./docs/Rationale.md)
-[Design](./docs/Design.md)
-[TODO](./docs/TODO.md)
-
-
-
