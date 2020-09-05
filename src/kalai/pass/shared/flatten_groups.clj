@@ -1,4 +1,4 @@
-(ns kalai.pass.c-flatten-groups
+(ns kalai.pass.shared.flatten-groups
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]))
 

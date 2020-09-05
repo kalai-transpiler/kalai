@@ -1,6 +1,6 @@
-(ns kalai.unconstrianed-test
+(ns kalai.pass.java-test
   (:require [clojure.test :refer [deftest testing is]]
-            [kalai.test-helpers :refer [top-level-form inner-form]]))
+            [kalai.pass.test-helpers :refer [top-level-form inner-form]]))
 
 (deftest t1
   (top-level-form
@@ -39,8 +39,9 @@ return (x+1);
     '(function f nil nil []
        (do
          (init true int x 0)
-         (assign x (invoke inc x))
-         (return x)))
+         (group
+           (assign x (invoke inc x))
+           (return x))))
     ;;->
     "public static  f() {
 int x = 0;
@@ -241,7 +242,11 @@ System.out.println(x);
     '(dotimes [x 5]
        (println x))
     ;;->
-    '(init true int x 0)
+    '(group
+       (init true int x 0)
+       (while (operator < x 5)
+         (invoke println x)
+         (assign x (operator + x 1))))
     ;;->
     "int x = 0;
 while ((x<5)) {

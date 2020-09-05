@@ -2,17 +2,10 @@
   (:refer-clojure :exclude [compile])
   (:require [kalai.emit.util :as emit.util]
             [kalai.emit.langs :as l]
-            [kalai.pass.a-annotate-ast :as a-annotate-ast]
-            [kalai.pass.b-kalai-constructs :as b-kalai-constructs]
-            [kalai.pass.c-flatten-groups :as c-flatten-groups]
-            [kalai.pass.d-annotate-return :as d-annotate-return]
-            [kalai.pass.java1-syntax :as java1-syntax]
-            [kalai.pass.java2-syslib :as java2-syslib]
-            [kalai.pass.java3-condense :as java3-condense]
-            [kalai.pass.java4-string :as java4-string]
+            [kalai.pass.kalai.pipeline :as kalai-pipeline]
+            [kalai.pass.java.pipeline :as java-pipeline]
             [clojure.tools.analyzer.jvm :as az]
             [clojure.tools.analyzer.jvm.utils :as azu]
-            [clojure.tools.analyzer.passes.jvm.emit-form :as azef]
             [clojure.string :as str]
             [clojure.java.io :as io]
             [puget.printer :as puget])
@@ -36,27 +29,9 @@
 (defn spy [x]
   (doto x puget/cprint))
 
-(defn asts->kalai [asts]
-  (->> asts
-       (map a-annotate-ast/rewrite)
-       (map azef/emit-form)
-       (b-kalai-constructs/rewrite)
-       (d-annotate-return/rewrite)
-       ;; repeat because returns can create groups
-       (c-flatten-groups/rewrite)))
-
-(defn kalai->java [k]
-  (->> k
-       (java1-syntax/rewrite)
-       (java2-syslib/rewrite)
-       (java3-condense/rewrite)
-       (java4-string/stringify-entry)))
-
 (defn rewriters [asts]
-  (->> (asts->kalai asts)
-       (kalai->java)))
-
-;;(e/emit-form (az/analyze '(defn test-function [] (do (def x true) (def y 5)))))
+  (->> (kalai-pipeline/asts->kalai asts)
+       (java-pipeline/kalai->java)))
 
 (defn compile-forms [forms]
   (-> (map az/analyze forms)
@@ -65,7 +40,6 @@
 (defn compile-source-file [file-path & [out verbose lang]]
   (with-redefs [azu/ns-url ns-url]
     (-> (az/analyze-ns file-path)
-        ;; probably need (->> (map rewriters)) here
         (rewriters))))
 
 (defn write-target-file [s file-path out lang]

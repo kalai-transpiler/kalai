@@ -1,4 +1,4 @@
-(ns kalai.pass.a-annotate-ast
+(ns kalai.pass.kalai.a-annotate-ast
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]
             [clojure.walk :as walk]))

@@ -1,4 +1,4 @@
-(ns kalai.pass.d-annotate-return
+(ns kalai.pass.kalai.d-annotate-return
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]))
 

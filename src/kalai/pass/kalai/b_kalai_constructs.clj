@@ -1,4 +1,4 @@
-(ns kalai.pass.b-kalai-constructs
+(ns kalai.pass.kalai.b-kalai-constructs
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]))
 

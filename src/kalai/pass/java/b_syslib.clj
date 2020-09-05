@@ -1,4 +1,4 @@
-(ns kalai.pass.java2-syslib
+(ns kalai.pass.java.b-syslib
   (:require [meander.strategy.epsilon :as s]))
 
 ;; If do do this before syntax, we can remove j/invoke... is that good or bad?

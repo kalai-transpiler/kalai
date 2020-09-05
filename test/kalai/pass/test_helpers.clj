@@ -1,7 +1,9 @@
-(ns kalai.test-helpers
+(ns kalai.pass.test-helpers
   (:require [clojure.test :refer :all]
             [kalai.compile :as c]
-    ;;[kalai.placation]
+            [kalai.pass.kalai.pipeline :as kalai-pipeline]
+            [kalai.pass.java.pipeline :as java-pipeline]
+            #_[kalai.placation]
             [clojure.string :as str]
             [clojure.tools.analyzer.jvm :as az]))
 
@@ -35,12 +37,12 @@
 
 (defn test-form [input kalai-s-expression expected as remove-kalai remove-java]
   `(let [asts# (map az/analyze (~as ~input))
-         a2b# (c/asts->kalai asts#)]
+         a2b# (kalai-pipeline/asts->kalai asts#)]
      (and
        (testing "compiling to kalai"
          (or (is (= ~kalai-s-expression (~remove-kalai a2b#)))
              (println "Clojure to Kalai failed")))
-       (let [b2c# (c/kalai->java a2b#)]
+       (let [b2c# (java-pipeline/kalai->java a2b#)]
          (and
            (testing "compiling kalai to java"
              (or

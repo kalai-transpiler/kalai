@@ -1,4 +1,4 @@
-(ns kalai.pass.java1-syntax
+(ns kalai.pass.java.a-syntax
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]))
 
