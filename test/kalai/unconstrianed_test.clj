@@ -30,6 +30,24 @@
 return (x+1);
 }"))
 
+(deftest t17
+  (top-level-form
+    '(defn f []
+       (let [^int x (atom 0)]
+         (swap! x inc)))
+    ;;->
+    '(function f nil nil []
+       (do
+         (init true int x 0)
+         (assign x (invoke inc x))
+         (return x)))
+    ;;->
+    "public static  f() {
+int x = 0;
+x=inc(x);
+return x;
+}"))
+
 (deftest t165
   (top-level-form
     '(defn f
@@ -52,17 +70,82 @@ return (x+y);
 ;; It's not necessary for writing programs... returning null is equivalent.
 ;; If you want to write a side effect function, it should return type Object and return null.
 ;; That means Kalai can continue to follow the do it the Clojure way mantra.
+#_
 (deftest t17
   (top-level-form
     '(defn f ^void [^int x]
-       (inc x))
+       (println x))
     ;;->
     '(function f void nil [x]
-               (operator + x 1))
+               (println x))
     ;;->
     "public static void f(int x) {
-  (x+1);
-  }"))
+(x+1);
+}"))
+
+(deftest t18
+  (inner-form
+    '(let [^int x (atom 1)
+           ^int y (atom 2)
+           ^int z 1]
+       (reset! x 3)
+       (+ @x (deref y)))
+    ;;->
+    '(do
+       (init true int x 1)
+       (init true int y 2)
+       (init false int z 1)
+       (do
+         (assign x 3)
+         (operator + x y)))
+    ;;->
+    "{
+int x = 1;
+int y = 2;
+int z = 1;
+{
+x=3;
+(x+y);
+}
+}"))
+
+(deftest t19
+  (inner-form
+    '(with-local-vars [^int x 1
+                       ^int y 2]
+       (+ (var-get x) (var-get y)))
+    ;;->
+    '(do
+       (init true int x 1)
+       (init true int y 2)
+       (operator + x y))
+    ;;->
+    "{
+int x = 1;
+int y = 2;
+(x+y);
+}"))
+
+#_
+(deftest t111
+  (top-level-form
+    '(do (def ^{:kalias '[kmap [klong kstring]]} T)
+         (def ^{:t T} x))
+    ;;->
+    '()
+    ;;->
+    ""))
+
+;; this test covers type erasure, but we have disabled that
+;; as the bottom up traversal does too much (slow)
+#_
+(deftest t112
+  (top-level-form
+    '(do (def ^{:t ['kmap ['klong 'kstring]]} x))
+    ;;->
+    '()
+    ;;->
+    ""))
 
 (deftest t2
   (inner-form
@@ -142,17 +225,14 @@ x=(x+2);
       ))
 
 (deftest t4
-  ;; disabled while waiting for bugfix meander #133
-  #_(inner-form
+  (inner-form
     '(doseq [^int x [1 2 3 4]]
        (println x))
     ;;->
     '(foreach int x [1 2 3 4]
-              (invoke println x)
               (invoke println x))
     ;;->
     "for (int x : [1 2 3 4]) {
-System.out.println(x);
 System.out.println(x);
 }"))
 

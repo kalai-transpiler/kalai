@@ -41,7 +41,6 @@
        (map a-annotate-ast/rewrite)
        (map azef/emit-form)
        (b-kalai-constructs/rewrite)
-       (c-flatten-groups/rewrite)
        (d-annotate-return/rewrite)
        ;; repeat because returns can create groups
        (c-flatten-groups/rewrite)))

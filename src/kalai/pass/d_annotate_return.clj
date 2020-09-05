@@ -26,6 +26,9 @@
     (init ?name ?value)
     (init ?name ?value)
 
+    (group . !expession ... ?last)
+    (group . !expession ... (m/app return ?last))
+
     (return ?expression)
     (return ?expression)
 

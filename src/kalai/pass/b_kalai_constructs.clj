@@ -49,8 +49,6 @@
         . (m/app inner-form !body) ...
         (assign ?sym (operator + ?sym 1))))
 
-    ;; bug in meander compiler, disabling for now
-    #_#_
     ;; doseq -> foreach
     (loop* [?seq (clojure.core/seq ?xs)
             ?chunk nil
@@ -95,13 +93,17 @@
 (def as-init
   (s/rewrite
     [(m/and ?name (m/app always-meta {:tag ?tag, :t ?type}))
-     (m/and ?x (m/app ref-form? ?mutable))]
-    (init ?mutable ~(or ?tag ?type) ?name (m/app inner-form ?x))))
+     (m/and ?x (m/app ref-form? ?mutable))
+     ?force-mutable]
+    (init ~(or ?mutable ?force-mutable)
+          ~(or ?tag ?type)
+          ?name
+          (m/app inner-form ?x))))
 
 (def def-init
   (s/rewrite
     (def ?name ?value)
-    (m/app as-init [?name ?value])
+    (m/app as-init [?name ?value false])
 
     (def (m/and ?name (m/app always-meta {:tag ?tag, :t ?type})))
     (init false ~(or ?tag ?type) ?name)))
@@ -117,7 +119,7 @@
           (finally (clojure.lang.Var/popThreadBindings)))))
     ;;->
     (do
-      . (m/app as-init [!sym !x]) ..?n
+      . (m/app as-init [!sym !x true]) ..?n
       (m/app inner-form ?body))
 
     ;; let
@@ -125,7 +127,7 @@
       ?body)
     ;;->
     (do
-      . (m/app as-init [!sym !x]) ...
+      . (m/app as-init [!sym !x false]) ...
       (m/app inner-form ?body))
 
     ;; TODO: Clojure has nuanced concepts of state...
@@ -145,7 +147,9 @@
     (assign ?r (m/app inner-form ?x))
 
     (swap! ?a ?f & ?args)
-    (assign ?a (invoke ?f ?a & ?args))
+    (group
+      (assign ?a (invoke ?f ?a & ?args))
+      ?a)
 
     (alter ?r ?f & ?args)
     (assign ?r (invoke ?f ?r & ?args))
@@ -211,7 +215,6 @@
 
 (def def-function
   (s/rewrite
-    ;; TODO: only matching single arity is a problem.... maybe convert Kalai functions to multi-arity
     ;; defn
     (def ?name
       (fn*
@@ -222,7 +225,7 @@
 
         ..?m))
     ;;->
-    (group
+    (group ;; multiple arity definitions are grouped together
       .
       (function ?name . !return-type !doc !params . (m/app inner-form !body-forms) ..!n)
       ..?m)))
@@ -235,7 +238,7 @@
 
 
 ;; takes a sequence of forms, returns a single form
-(def rewrite
+(def rewrite-namespace
   (s/rewrite
     ;; ns
     ((do (clojure.core/in-ns ('quote ?ns-name)) & _)
@@ -244,3 +247,15 @@
     (namespace ?ns-name . (m/app top-level-form !forms) ...)
 
     ?else ~(throw (ex-info "fail" {:else ?else}))))
+
+(def remove-groups
+  "Remove groups surrounding the multiple arities of a single function"
+  (s/rewrite
+    (namespace ?ns-name
+               .
+               (m/or (group . !stuff ...) !stuff) ...)
+    (namespace ?ns-name
+               .
+               !stuff ...)))
+
+(def rewrite (comp remove-groups rewrite-namespace))
