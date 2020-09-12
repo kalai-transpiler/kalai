@@ -27,7 +27,7 @@
                (return (operator + x 1)))
     ;;->
     "public static Integer f(Integer x) {
-return (x+1);
+return (x + 1);
 }"))
 
 (deftest t17
@@ -45,7 +45,7 @@ return (x+1);
     ;;->
     "public static  f() {
 int x = 0;
-x=inc(x);
+x = inc(x);
 return x;
 }"))
 
@@ -61,10 +61,10 @@ return x;
                (return (operator + x 1)))
     ;;->
     "public static int f(int x) {
-return (x+1);
+return (x + 1);
 }
 public static int f(int x, int y) {
-return (x+y);
+return (x + y);
 }"))
 
 ;; Tim proposes: let's not support void!!!
@@ -105,8 +105,8 @@ int x = 1;
 int y = 2;
 int z = 1;
 {
-x=3;
-(x+y);
+x = 3;
+(x + y);
 }
 }"))
 
@@ -124,7 +124,7 @@ x=3;
     "{
 int x = 1;
 int y = 2;
-(x+y);
+(x + y);
 }"))
 
 #_
@@ -204,7 +204,7 @@ else
     ;;->
     "{
 int x = 0;
-x=(x+2);
+x = (x + 2);
 }"
     ))
 
@@ -230,11 +230,18 @@ x=(x+2);
     '(doseq [^int x [1 2 3 4]]
        (println x))
     ;;->
-    '(foreach int x [1 2 3 4]
+    '(foreach int x (persistent-vector 1 2 3 4)
               (invoke println x))
     ;;->
-    "for (int x : [1 2 3 4]) {
+    "{
+PersistentVector tmp1 = new PersistentVector();
+tmp1.add(1);
+tmp1.add(2);
+tmp1.add(3);
+tmp1.add(4);
+for (int x : tmp1) {
 System.out.println(x);
+}
 }"))
 
 (deftest t5
@@ -249,9 +256,9 @@ System.out.println(x);
          (assign x (operator + x 1))))
     ;;->
     "int x = 0;
-while ((x<5)) {
+while ((x < 5)) {
 System.out.println(x);
-x=(x+1);
+x = (x + 1);
 }"))
 
 (deftest t3
@@ -306,7 +313,8 @@ if (\":else\")
       ))
 
 (deftest test7
-  (inner-form
+  ;; TODO: fix case data literals
+  #_(inner-form
     '(case 1
        1 :a
        2 :b)
@@ -325,6 +333,9 @@ break;
   #_(inner-form
       '(def ^{:t [String String]} x {:a "asdf"})
       ;;->
+      (init false [String String] x
+            (hash-map :a "asdf"))
+      ;;->
       "x = new HashMap<String,String>();
   x.add(\":a\", \"asdf\""))
 
@@ -333,3 +344,38 @@ break;
       '(assoc {:a 1} :b 2)
       ;;->
       ""))
+
+(deftest ternary
+  (inner-form
+    '(+ (if true 1 2)
+        (if true
+          (if true 3 4)
+          5))
+    ;;->
+    '(operator +
+               (if true 1 2)
+               (if true
+                 (if true 3 4)
+                 5))
+    ;;->
+    "((true ? 1 : 2) + (true ? (true ? 3 : 4) : 5));"))
+
+(deftest nested-group
+  #_(inner-form
+    '(+ 1 (swap! x inc))
+    ;;->
+    '(operator +
+               1
+               (group (assign x (invoke inc x))
+                      x))
+    ;;->
+    "int x = (x + 1);
+(1 + x);"))
+
+(deftest if-expr-do
+  #_(inner-form
+    '(+ (if true (do 1 2)) 4)
+    ;;->
+    '()
+    ;;->
+    ""))

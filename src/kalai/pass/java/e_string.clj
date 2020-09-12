@@ -1,8 +1,9 @@
-(ns kalai.pass.java.d-string
+(ns kalai.pass.java.e-string
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]
             [clojure.string :as str]
-            [clojure.pprint :as pprint]))
+            [clojure.pprint :as pprint]
+            [puget.printer :as puget]))
 
 (declare stringify)
 
@@ -36,7 +37,7 @@
     "}"))
 
 (defn assign-str [variable-name value]
-  (statement (str variable-name "=" (stringify value))))
+  (statement (str variable-name " = " (stringify value))))
 
 (defn init-str
   ([type variable-name]
@@ -73,7 +74,8 @@
 
 (defn operator-str [op & xs]
   (parens
-    (str/join op (map stringify xs))))
+    (apply space-separated
+      (interpose op (map stringify xs)))))
 
 (defn class-str [ns-name body]
   (let [parts (str/split (str ns-name) #"\.")
@@ -96,7 +98,7 @@
 
 
 (defn foreach-str [sym-type sym xs body]
-  (space-separated 'for (parens (space-separated sym-type sym ":" xs))
+  (space-separated 'for (parens (space-separated sym-type sym ":" (stringify xs)))
                    (stringify body)))
 
 (defn for-str [initialization termination increment body]
@@ -117,9 +119,11 @@
 
 (defn ternary-str
   [test then else]
-  (space-separated (parens (stringify test))
-                   "?" (stringify then)
-                   ":" (stringify else)))
+  (parens
+    (space-separated
+      (stringify test)
+      "?" (stringify then)
+      ":" (stringify else))))
 
 (defn switch-str
   [x clauses]
@@ -129,6 +133,13 @@
 (defn case-str [x then]
   (str (space-separated "case" (stringify x) ":" (stringify then))
        \newline "break;"))
+
+(defn method-str [method object & args]
+  (str object "." method (param-list args)))
+
+(defn new-str [class-name & args]
+  (space-separated
+    "new" (str class-name (param-list args))))
 
 ;;;; This is the main entry point
 
@@ -148,7 +159,9 @@
    'j/if                   if-str
    'j/ternary              ternary-str
    'j/switch               switch-str
-   'j/case                 case-str})
+   'j/case                 case-str
+   'j/method               method-str
+   'j/new                  new-str})
 
 (def stringify
   (s/match
@@ -167,7 +180,7 @@
     (stringify form)
     (catch Exception ex
       (println "Inner form:")
-      (pprint/pprint (:form (ex-data ex)))
+      (puget/cprint (:form (ex-data ex)))
       (println "Outer form:")
-      (pprint/pprint form)
+      (puget/cprint form)
       (throw ex))))

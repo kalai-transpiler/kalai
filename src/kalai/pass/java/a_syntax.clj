@@ -42,9 +42,35 @@
 ;; statements can contain expressions
 ;; block must contain statements (not expressions)
 
+(def c (atom 0))
+(defn gensym2 [s]
+  (symbol (str s (swap! c inc))))
+
 ;; half Clojure half Java
 (def expression
   (s/rewrite
+    (m/and (persistent-vector . !x ...)
+           (m/let [?t (gensym2 "tmp")]))
+    (group
+      (j/init PersistentVector ?t (j/new PersistentVector))
+      . (j/expression-statement (j/method add ?t !x)) ...
+      ?t)
+
+    (m/and (persistent-map . !k !v ...)
+           (m/let [?t (gensym2 "tmp")]))
+    (group
+      (j/init PersistentMap ?t (j/new PersistentMap))
+      . (j/expression-statement (j/method put ?t !k !v)) ...
+      ?t)
+
+    (m/and (persistent-set . !x ...)
+           (m/let [?t (gensym2 "tmp")]))
+    (group
+      (j/init PersistentSet ?t (j/new PersistentSet))
+      . (j/expression-statement (j/method add ?t !x)) ...
+      ?t)
+
+
     ;; operator usage
     (operator ?op ?x ?y)
     (j/operator ?op (m/app expression ?x) (m/app expression ?y))
@@ -104,7 +130,7 @@
                (j/block . (m/app statement !body) ...))
 
       (foreach ?type ?sym ?xs . !body ...)
-      (j/foreach ?type ?sym ?xs
+      (j/foreach ?type ?sym (m/app expression ?xs)
                  (j/block . (m/app statement !body) ...))
 
       ;; conditional
@@ -150,3 +176,28 @@
              (j/block . (m/app top-level-form !forms) ...))
 
     ?else ~(throw (ex-info "Expected a namespace" {:else ?else}))))
+
+
+#_(def z
+    (s/rewrite
+      (j/expression-statement
+        (j/operator + 1 (group (assign x (invoke inc x)) x)))
+      (m/let [?g ~(gensym "tmp")]
+        (j/expression-statement
+          (assign x (invoke inc x))
+          (init ?g x)
+          (j/operator + 1 ?g)))))
+
+#_(def zz
+    (s/rewrite
+      (j/expression-statement . !x ... ?last)
+      (j/block . !x ... (j/expression-statement ?last))))
+
+;; bubble groups first? need to find expressions to do that done
+#_(def expr
+    (s/rewrite
+      (!x ...)))
+
+;; for swap, assignment actually does return a result, so no need for a group
+;; for if, we need a group -- do we? what about ternaries?
+;; need do and doto

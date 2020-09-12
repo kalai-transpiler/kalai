@@ -49,6 +49,8 @@
         . (m/app inner-form !body) ...
         (assign ?sym (operator + ?sym 1))))
 
+    ;; TODO: test with
+    ;;;; (doseq [x [1 2]] (println x) (println x))
     ;; doseq -> foreach
     (loop* [?seq (clojure.core/seq ?xs)
             ?chunk nil
@@ -225,15 +227,16 @@
 
         ..?m))
     ;;->
-    (group ;; multiple arity definitions are grouped together
-      .
-      (function ?name . !return-type !doc !params . (m/app inner-form !body-forms) ..!n)
-      ..?m)))
+    (arity-group . (function ?name . !return-type !doc (m/app #(apply list %) !params) .
+                             (m/app inner-form !body-forms) ..!n)
+                 ..?m)))
 
 (def top-level-form
   (s/choice
     def-function
     def-init
+    ;; TODO: update docs and examples
+    inner-form
     (s/rewrite ?else ~(throw (ex-info "fail" {:else ?else})))))
 
 
@@ -244,7 +247,9 @@
     ((do (clojure.core/in-ns ('quote ?ns-name)) & _)
      . !forms ...)
     ;;->
-    (namespace ?ns-name . (m/app top-level-form !forms) ...)
+    (namespace ?ns-name .
+               (m/app top-level-form !forms)
+               ...)
 
     ?else ~(throw (ex-info "fail" {:else ?else}))))
 
@@ -253,7 +258,7 @@
   (s/rewrite
     (namespace ?ns-name
                .
-               (m/or (group . !stuff ...) !stuff) ...)
+               (m/or (arity-group . !stuff ...) !stuff) ...)
     (namespace ?ns-name
                .
                !stuff ...)))

@@ -12,9 +12,9 @@
       (while ?condition . !statements ...)
       (return nil))
 
-    (foreach ?bindings . !statements ...)
+    (foreach ?t ?sym ?xs ?body)
     (group
-      (foreach ?bindings . !statements ...)
+      (foreach ?t ?sym ?xs ?body)
       (return nil))
 
     (if ?condition ?then)
@@ -23,11 +23,10 @@
     (if ?condition ?then ?else)
     (if ?condition (m/app return ?then) (m/app return ?else))
 
-    (init ?name ?value)
-    (init ?name ?value)
-
-    (group . !expession ... ?last)
-    (group . !expession ... (m/app return ?last))
+    ;; TODO: I think group is redundant with do
+    (group . !statements ... ?last)
+    ;; TODO: does annotating statements help?
+    (group . !statements ... (m/app return ?last))
 
     (return ?expression)
     (return ?expression)
