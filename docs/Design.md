@@ -86,3 +86,8 @@ We could provide a type aliasing feature:
 Notes on type names: don't want them to collide with Clojure words or user expectations of target language names.
 They must be quoted.
 Collection types go in nested vectors.
+
+Turning data literals into s-expressions, cannot use data literals in intermediate s-expressions.
+groups of statements in place of expressions are raised to above the statement,
+assigned to a temp variable in scope.
+Similar to return (identifying statements) but different.. context can be in the statement, and statements can have child statements.

@@ -15,6 +15,9 @@
   - need to differentiate (probably by atoms)
   - consider our own macros
   - maps/sets/vectors conj/assoc/update etc
+  - import when needed
+  - fix data literal tests
+  - temp variable creation and test helper clean up
 * Fix the annotate AST
 * Rust etc
 * Expand syslib
