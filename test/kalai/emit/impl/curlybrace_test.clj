@@ -4,7 +4,8 @@
             [kalai.emit.langs :as l]
             [clojure.tools.analyzer.jvm :as az]
             [expectations.clojure.test :refer :all])
-  (:import kalai.common.AstOpts))
+  (:import kalai.common.AstOpts
+           (host HostClass)))
 
 ;; static call (arithmetic operations)
 
@@ -233,4 +234,17 @@ else if (1 == 11)
 "{
   x = 3;
   x;
+}")))
+
+;; host-interop
+
+(defexpect host-interop-test
+  (let [ast (az/analyze '(let [^Integer x 1
+                               ^Integer inst (.example HostClass x)
+                               ] (return inst)))]
+    (expect (emit (map->AstOpts {:ast ast :lang ::l/curlybrace}))
+"{
+  Integer x = 1;
+  inst = HostClass.example(x)
+  return inst;
 }")))

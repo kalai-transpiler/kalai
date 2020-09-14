@@ -928,6 +928,18 @@
         emitted-form-str (emit analyzed-form-ast-opts)]
     emitted-form-str))
 
+;; host interop
+
+(defmethod iface/emit-host-interop ::l/curlybrace
+  [ast-opts]
+  {:pre [(= :host-interop (:op (:ast ast-opts)))]}
+  (let [ast (:ast ast-opts)
+        target (-> ast :target :form)
+        method (:m-or-f ast)
+        ;; todo: accept args
+        host-str (str target "." method "()")]
+    host-str))
+
 ;; entry point
 
 (defmethod iface/emit ::l/curlybrace

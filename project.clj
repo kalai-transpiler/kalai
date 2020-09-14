@@ -7,4 +7,5 @@
   :dependencies [[expectations/clojure-test "1.2.1"]
                  [org.clojure/clojure "1.10.1"]
                  [org.clojure/tools.analyzer.jvm "1.0.0"]
-                 [org.clojure/tools.cli "1.0.194"]])
+                 [org.clojure/tools.cli "1.0.194"]]
+  :java-source-paths ["test/interop"])
