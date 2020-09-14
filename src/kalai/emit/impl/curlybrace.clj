@@ -60,7 +60,7 @@
                                   )
         ast-type (or (:type ast)
                      (:op ast))
-        non-scalar-types #{:seq :vector :map :set :record}
+        non-scalar-types #{:seq :vector :map :set :record :host-interop}
         is-non-scalar-type (get non-scalar-types ast-type)
         is-complex-type (or is-non-scalar-type
                             is-type-user-defined)]
@@ -967,6 +967,7 @@
       :loop (emit-loop ast-opts)
       :new (emit-new ast-opts)
       :with-meta (emit-with-meta ast-opts)
+      :host-interop (emit-host-interop ast-opts)
       :else (cond 
               (:raw-forms ast)
               (emit (assoc ast-opts :ast (-> ast :raw-forms)))))))
