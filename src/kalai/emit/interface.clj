@@ -293,6 +293,10 @@ Might return nil"}
 is important, it will have been gotten elsewhere (ex: emit-assignment* fns)."}
   emit-with-meta lang)
 
+(defmulti
+  ^{:doc "Emit calls into host functions and classes"}
+  emit-host-interop lang)
+
 ;; entry point
 
 (defmulti emit lang)

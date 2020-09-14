@@ -283,6 +283,10 @@
   [ast-opts]
   (iface/emit-with-meta ast-opts))
 
+(defn emit-host-interop
+  [ast-opts]
+  (iface/emit-host-interop ast-opts))
+
 (defn emit
   [ast-opts]
   (iface/emit ast-opts))
