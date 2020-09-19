@@ -17,7 +17,8 @@
   - maps/sets/vectors conj/assoc/update etc
   - import when needed
   - fix data literal tests
-  - temp variable creation and test helper clean up
+* operator and language specific transformation (e.g. = in Clojure is either .equals java or ==)
+* temp variable creation and test helper clean up (gensym)
 * Fix the annotate AST
 * Rust etc
 * Expand syslib

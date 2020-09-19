@@ -57,7 +57,7 @@
 
 #_(defn conditional [test then else])
 
-(defn invoke-str [function-name args]
+(defn invoke-str [function-name & args]
   (str function-name (param-list (map stringify args))))
 
 (defn function-str [return-type name doc params body]
@@ -135,7 +135,7 @@
        \newline "break;"))
 
 (defn method-str [method object & args]
-  (str object "." method (param-list args)))
+  (str object "." method (param-list (map stringify args))))
 
 (defn new-str [class-name & args]
   (space-separated

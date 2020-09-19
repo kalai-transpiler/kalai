@@ -91,3 +91,12 @@ Turning data literals into s-expressions, cannot use data literals in intermedia
 groups of statements in place of expressions are raised to above the statement,
 assigned to a temp variable in scope.
 Similar to return (identifying statements) but different.. context can be in the statement, and statements can have child statements.
+
+Keywords as functions:
+Try to convert to get, up to the user to use contains if they want a boolean
+
+Truthiness:
+Hope types save us! Wrap boolean around things we don't know
+
+Equality:
+== .equals (but needs to be nil safe)

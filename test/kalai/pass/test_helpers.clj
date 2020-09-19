@@ -14,7 +14,7 @@
 
 (defn as-function [form]
   (list '(ns test-package.test-class)
-        (list 'defn 'test-function [] form nil)))
+        (list 'defn 'test-function [] (list 'do form) nil)))
 
 (defn remove-kalai-class [s]
   (nth s 2))

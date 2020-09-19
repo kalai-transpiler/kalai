@@ -53,7 +53,7 @@
            (m/let [?t (gensym2 "tmp")]))
     (group
       (j/init PersistentVector ?t (j/new PersistentVector))
-      . (j/expression-statement (j/method add ?t !x)) ...
+      . (j/expression-statement (j/method add ?t (m/app expression !x))) ...
       ?t)
 
     (m/and (persistent-map . !k !v ...)
@@ -88,7 +88,10 @@
 
     ;; function invocation
     (invoke ?f . !args ...)
-    (j/invoke ?f [(m/app expression !args) ...])
+    (j/invoke ?f . (m/app expression !args) ...)
+
+    (method ?method ?object . !args ...)
+    (j/method ?method (m/app expression ?object) . (m/app expression !args) ...)
 
     ;; TODO: lambda function
     (lambda ?name ?docstring ?body)

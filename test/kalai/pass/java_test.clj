@@ -208,22 +208,89 @@ x = (x + 2);
 }"
     ))
 
-#_(let [^:mut x (mut [1 2 3])]
-    (mconj x 4)
-    x)
-#_(let [x (Vector. 1 2 3)])
-
-#_(mlet [x [1 2 3]]
-        (mconj x 4))
-
-
 (deftest t3-2
   #_(inner-form
-      [1 2]
-      ;;->
-      ;;"Vector<Integer> v = new Vector<>(); v.add(1); v.add(2);" ;;possible
-      "new Vector<Integer>().add(1).add(2)" ;; requires non-core
-      ))
+    (atom [1 2])
+    ;;->
+    '(mutable-vector 1 2)
+    ;;->
+    "PersistentVector tmp1 = new PersistentVector();
+tmp1.add(1);
+tmp1.add(2);
+tmp1;
+"))
+
+
+(deftest t3-2-1
+  (inner-form
+    [1 2]
+    ;;->
+    '(persistent-vector 1 2)
+    ;;->
+    "PersistentVector tmp1 = new PersistentVector();
+tmp1.add(1);
+tmp1.add(2);
+tmp1;"))
+
+(deftest t3-2-2
+  (inner-form
+    {1 2 3 4}
+    ;;->
+    '(persistent-map 1 2 3 4)
+    ;;->
+    "PersistentMap tmp1 = new PersistentMap();
+tmp1.put(1, 2);
+tmp1.put(3, 4);
+tmp1;"))
+
+(deftest t3-2-3
+  (inner-form
+    #{1 2}
+    ;;->
+    '(persistent-set 1 2)
+    ;;->
+    "PersistentSet tmp1 = new PersistentSet();
+tmp1.add(1);
+tmp1.add(2);
+tmp1;"))
+
+(deftest t3-2-1-1
+  (inner-form
+    '(let [^{:t kvector} x [1 2]]
+       (println x))
+    ;;->
+    '(do
+       (init false kvector x
+         (persistent-vector 1 2))
+       (invoke println x))
+    ;;->
+    "{
+PersistentVector tmp1 = new PersistentVector();
+tmp1.add(1);
+tmp1.add(2);
+kvector x = tmp1;
+System.out.println(x);
+}"))
+
+(deftest t3-2-1-1-1
+  (inner-form
+    '(let [^{:t kvector} x [1 [2]]]
+       (println x))
+    ;;->
+    '(do
+       (init false kvector x
+             (persistent-vector 1 (persistent-vector 2)))
+       (invoke println x))
+    ;;->
+    "{
+PersistentVector tmp1 = new PersistentVector();
+tmp1.add(1);
+PersistentVector tmp2 = new PersistentVector();
+tmp2.add(2);
+tmp1.add(tmp2);
+kvector x = tmp1;
+System.out.println(x);
+}"))
 
 (deftest t4
   (inner-form
@@ -233,15 +300,13 @@ x = (x + 2);
     '(foreach int x (persistent-vector 1 2 3 4)
               (invoke println x))
     ;;->
-    "{
-PersistentVector tmp1 = new PersistentVector();
+    "PersistentVector tmp1 = new PersistentVector();
 tmp1.add(1);
 tmp1.add(2);
 tmp1.add(3);
 tmp1.add(4);
 for (int x : tmp1) {
 System.out.println(x);
-}
 }"))
 
 (deftest t5
@@ -306,11 +371,14 @@ if (\":else\")
 }"))
 
 (deftest test6*
-  #_(inner-form
-      '(:k {:k 1})
-      ;;->
-      "zzz"
-      ))
+  (inner-form
+    '(:k {:k 1})
+    ;;->
+    '(method get (persistent-map :k 1) :k)
+    ;;->
+    "PersistentMap tmp1 = new PersistentMap();
+tmp1.put(\":k\", 1);
+tmp1.get(\":k\");"))
 
 (deftest test7
   ;; TODO: fix case data literals

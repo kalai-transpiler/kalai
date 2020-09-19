@@ -11,7 +11,7 @@
       (m/and {} (m/seqable [!k !v] ...))
       (persistent-map . !k !v ...)
 
-      (m/and #{} (m/seqable [!k ...]))
+      (m/and #{} (m/seqable !k ...))
       (persistent-set . !k ...)
 
       ?else ?else)))
