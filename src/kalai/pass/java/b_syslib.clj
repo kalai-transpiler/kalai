@@ -10,19 +10,29 @@
   {#'clojure.core/println
    'System.out.println})
 
+;; Note: For Kalai code to execute as Clojure in a REPL,
+;; interop needs to be backed by Java classes,
+;; therefore any new abstract logical operation that we want to support across target languages
+;; must have a Java implementation.
+;; For that reason forcing a Java class to exist as the key in the map makes that requirement explicit
+;; while being an alternative to a more heavyweight version of defining interfaces and polymorphic dispatch
+;; (for example multi-methods)
+;; It doesn't allow us to share repetitive transpiled support in the way that multi-methods do.
+
 (def c
   '{StringBuffer [StringBuffer {append append
                                 length length}]})
 
 (def rust
-  '{StringBuffer [String {(.append ?x)          (push_str ?x)
-                          length                length
-                          (.toString ?x)        ?x
-                          (.insert ?x ?idx ?s2) (r/block
-                                                  (m/let [t (gensym "tmp")]
-                                                         (r/assign t ?x)
-                                                         (r/invoke truncate t ?idx)
-                                                         (r/invoke push_str t ?s2)))}]})
+  '{StringBuffer [String {(new)                   (String::new)
+                          (.append ^Character ?x) (.push_str ?x)
+                          (.length)               (.length)
+                          (.toString ?x)          ?x
+                          (.insert ?x ?idx ?s2)   (r/block
+                                                    (m/let [t (gensym "tmp")]
+                                                           (r/assign t ?x)
+                                                           (r/invoke truncate t ?idx)
+                                                           (r/invoke push_str t ?s2)))}]})
 
 (def rewrite
   (s/bottom-up
