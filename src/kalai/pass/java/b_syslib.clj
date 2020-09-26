@@ -24,7 +24,7 @@
                                 length length}]})
 
 (def rust
-  '{StringBuffer [String {(new)                   (String::new)
+  '{StringBuffer [String {(new)                   ("String::new")
                           (.append ^Character ?x) (.push_str ?x)
                           (.length)               (.length)
                           (.toString ?x)          ?x
