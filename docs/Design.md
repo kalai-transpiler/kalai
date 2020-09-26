@@ -92,6 +92,19 @@ groups of statements in place of expressions are raised to above the statement,
 assigned to a temp variable in scope.
 Similar to return (identifying statements) but different.. context can be in the statement, and statements can have child statements.
 
+When using data literals of sets and maps, the ordering of output statements
+may not necessarily correspond to the ordering of elements in the source code,
+due to Clojure's reader interpreting data literals before any other library or tool
+or our code can see it.
+
+When writing tests note that the output ordering might change,
+even if you just append items to the end of the input.
+This is due to our use of the default Clojure reader which parses data literals
+into maps and sets with no inherent order.
+This ordering should be consistent.
+
+
+
 Keywords as functions:
 Try to convert to get, up to the user to use contains if they want a boolean
 
@@ -100,3 +113,37 @@ Hope types save us! Wrap boolean around things we don't know
 
 Equality:
 == .equals (but needs to be nil safe)
+
+Match a single group inside an s-expression:
+    (!before ... (group . !tmp-init ... ?tmp-variable) . !after ...)
+
+Match all the groups inside an s-expression:
+    ((m/or (group . !tmp-init ... !tmp-variable)
+           !tmp-variable) ...)
+
+If statements bubbling:
+
+# Patterns
+
+When we have an input form that represents an expression,
+but must be written in terms of multiple forms,
+we put that collection in a group,
+in order to have one and only one return value.
+However, because that group is in an expression position,
+we should only have one form, which should be an expression form.
+In order to achieve that we move all but the last form to
+preceed the current expression statement,
+declare a temp variable to store the result of the initialization,
+and put the temp variable in the original expression position.
+To do create the temp variable, we have a gensym2 function that looks like:
+
+    (def c (atom 0))
+    (defn gensym2 [s]
+      (symbol (str s (swap! c inc))))
+      
+The auto-increment on the gensym2 suffix enables deterministic tests.
+
+We create the group of forms that the input expands to,
+then we run the raise-forms pass to separate the return expression
+in the group from the preceeding initialization statements in the group.
+We require that the very next pass must flatten groups (remove any remaining).

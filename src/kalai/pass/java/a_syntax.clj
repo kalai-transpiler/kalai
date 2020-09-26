@@ -46,6 +46,8 @@
 (defn gensym2 [s]
   (symbol (str s (swap! c inc))))
 
+(declare statement)
+
 ;; half Clojure half Java
 (def expression
   (s/rewrite
@@ -60,16 +62,17 @@
            (m/let [?t (gensym2 "tmp")]))
     (group
       (j/init PersistentMap ?t (j/new PersistentMap))
-      . (j/expression-statement (j/method put ?t !k !v)) ...
+      . (j/expression-statement (j/method put ?t
+                                          (m/app expression !k)
+                                          (m/app expression !v))) ...
       ?t)
 
     (m/and (persistent-set . !x ...)
            (m/let [?t (gensym2 "tmp")]))
     (group
       (j/init PersistentSet ?t (j/new PersistentSet))
-      . (j/expression-statement (j/method add ?t !x)) ...
+      . (j/expression-statement (j/method add ?t (m/app expression !x))) ...
       ?t)
-
 
     ;; operator usage
     (operator ?op ?x ?y)
@@ -77,14 +80,6 @@
 
     (operator ?op ?x ?y)
     (j/operator ?op (m/app expression ?x) (m/app expression ?y))
-
-    ;; TODO: these shouldn't be necessary, kalai_constructs will have handled them... try removing
-    (invoke clojure.core/deref ?x)
-    (m/app expression ?x)
-
-    ;; TEMPORARY
-    (invoke atom ?x)
-    (m/app expression ?x)
 
     ;; function invocation
     (invoke ?f . !args ...)
@@ -98,11 +93,33 @@
     (j/lambda ?name ?docstring ?body)
 
     ;; conditionals as an expression must be ternaries, but ternaries cannot contain bodies
-    (if ?condition ?then)
-    (j/ternary (m/app expression ?condition) (m/app expression ?then) nil)
+    ;;(if ?condition ?then)
+    ;;(j/ternary (m/app expression ?condition) (m/app expression ?then) nil)
 
-    (if ?condition ?then ?else)
-    (j/ternary (m/app expression ?condition) (m/app expression ?then) (m/app expression ?else))
+    ;;(if ?condition ?then ?else)
+    ;;(j/ternary (m/app expression ?condition) (m/app expression ?then) (m/app expression ?else))
+
+    (m/and (if ?condition ?then)
+           (m/let [?t (gensym2 "tmp")]))
+    (group
+      (j/init 'int ?t)
+      (j/if (m/app expression ?condition)
+        (j/block (j/assign ?t (m/app expression ?then))))
+      ?t)
+
+    (m/and (if ?condition ?then ?else)
+           (m/let [?t (gensym2 "tmp")]))
+    (group
+      (j/init 'int ?t)
+      (j/if (m/app expression ?condition)
+        (j/block (j/assign ?t (m/app expression ?then)))
+        (j/block (j/assign ?t (m/app expression ?else))))
+      ?t)
+
+    ;; faithfully reproduce Clojure semantics for do as a collection of
+    ;; side-effect statements and a return expression
+    (do . !x ... ?last)
+    (group . (m/app statement !x) ... (m/app expression ?last))
 
     ;; TODO: how to do this? maybe through variable assignment?
     (case ?x {& (m/seqable [!k [_ !v]] ...)})
@@ -111,7 +128,6 @@
 
     ?x
     ?x))
-
 
 (def init
   (s/rewrite
@@ -179,28 +195,3 @@
              (j/block . (m/app top-level-form !forms) ...))
 
     ?else ~(throw (ex-info "Expected a namespace" {:else ?else}))))
-
-
-#_(def z
-    (s/rewrite
-      (j/expression-statement
-        (j/operator + 1 (group (assign x (invoke inc x)) x)))
-      (m/let [?g ~(gensym "tmp")]
-        (j/expression-statement
-          (assign x (invoke inc x))
-          (init ?g x)
-          (j/operator + 1 ?g)))))
-
-#_(def zz
-    (s/rewrite
-      (j/expression-statement . !x ... ?last)
-      (j/block . !x ... (j/expression-statement ?last))))
-
-;; bubble groups first? need to find expressions to do that done
-#_(def expr
-    (s/rewrite
-      (!x ...)))
-
-;; for swap, assignment actually does return a result, so no need for a group
-;; for if, we need a group -- do we? what about ternaries?
-;; need do and doto

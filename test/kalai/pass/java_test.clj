@@ -292,6 +292,69 @@ kvector x = tmp1;
 System.out.println(x);
 }"))
 
+(deftest t3-2-1-1-1-1
+  (inner-form
+    '(let [^{:t kvector} x [1 [2] 3 [[4]]]]
+       (println x))
+    ;;->
+    '(do
+       (init false kvector x
+         (persistent-vector 1
+           (persistent-vector 2)
+           3
+           (persistent-vector
+             (persistent-vector 4))))
+       (invoke println x))
+    ;;->
+    "{
+PersistentVector tmp1 = new PersistentVector();
+tmp1.add(1);
+PersistentVector tmp2 = new PersistentVector();
+tmp2.add(2);
+tmp1.add(tmp2);
+tmp1.add(3);
+PersistentVector tmp3 = new PersistentVector();
+PersistentVector tmp4 = new PersistentVector();
+tmp4.add(4);
+tmp3.add(tmp4);
+tmp1.add(tmp3);
+kvector x = tmp1;
+System.out.println(x);
+}"))
+
+(deftest t3-2-1-1-1-1-2
+  (inner-form
+    '(let [^{:t kvector} x {1 [{2 3} #{4 [5 6]}]}]
+       (println x))
+    ;;->
+    '(do
+       (init false kvector x
+         (persistent-map 1
+           (persistent-vector
+             (persistent-map 2 3)
+             (persistent-set
+               4
+               (persistent-vector 5 6)))))
+       (invoke println x))
+    ;;->
+    "{
+PersistentMap tmp1 = new PersistentMap();
+PersistentVector tmp2 = new PersistentVector();
+PersistentMap tmp3 = new PersistentMap();
+tmp3.put(2, 3);
+tmp2.add(tmp3);
+PersistentSet tmp4 = new PersistentSet();
+tmp4.add(4);
+PersistentVector tmp5 = new PersistentVector();
+tmp5.add(5);
+tmp5.add(6);
+tmp4.add(tmp5);
+tmp2.add(tmp4);
+tmp1.put(1, tmp2);
+kvector x = tmp1;
+System.out.println(x);
+}"))
+
 (deftest t4
   (inner-form
     '(doseq [^int x [1 2 3 4]]
@@ -426,7 +489,38 @@ break;
                  (if true 3 4)
                  5))
     ;;->
-    "((true ? 1 : 2) + (true ? (true ? 3 : 4) : 5));"))
+    "int tmp1;
+if (true)
+{
+tmp1 = 1;
+}
+else
+{
+tmp1 = 2;
+}
+int tmp2;
+if (true)
+{
+int tmp3;
+if (true)
+{
+tmp3 = 3;
+}
+else
+{
+tmp3 = 4;
+}
+{
+tmp2 = tmp3;
+}
+}
+else
+{
+tmp2 = 5;
+}
+(tmp1 + tmp2);"
+    ;;"((true ? 1 : 2) + (true ? (true ? 3 : 4) : 5));"
+    ))
 
 (deftest nested-group
   #_(inner-form
@@ -441,9 +535,89 @@ break;
 (1 + x);"))
 
 (deftest if-expr-do
-  #_(inner-form
-    '(+ (if true (do 1 2)) 4)
+  (inner-form
+    '(+ (if true (do (println 1) 2)) 4)
     ;;->
-    '()
+    '(operator +
+       (if true
+         (do
+           (invoke println 1)
+           2))
+       4)
     ;;->
-    ""))
+    "int tmp1;
+if (true)
+{
+System.out.println(1);
+{
+tmp1 = 2;
+}
+}
+(tmp1 + 4);"))
+
+
+(deftest if-expr-do-2
+  (inner-form
+    '(+ ^int (if true 1 ^int (if false 2 3)) 4)
+    ;;->
+    '(operator +
+               (if true 1 (if false 2 3))
+               4)
+    ;;->
+
+    "int tmp1;
+if (true)
+{
+tmp1 = 1;
+}
+else
+{
+int tmp2;
+if (false)
+{
+tmp2 = 2;
+}
+else
+{
+tmp2 = 3;
+}
+{
+tmp1 = tmp2;
+}
+}
+(tmp1 + 4);"))
+
+(deftest if-expr-do-2-2
+  (inner-form
+    '(+ ^int (if true 1 ^int (if false 2 [3])) 4)
+    ;;->
+    '(operator +
+               (if true 1 (if false 2 (persistent-vector 3)))
+               4)
+    ;;->
+
+    "int tmp1;
+if (true)
+{
+tmp1 = 1;
+}
+else
+{
+int tmp2;
+if (false)
+{
+tmp2 = 2;
+}
+else
+{
+PersistentVector tmp3 = new PersistentVector();
+tmp3.add(3);
+{
+tmp2 = tmp3;
+}
+}
+{
+tmp1 = tmp2;
+}
+}
+(tmp1 + 4);"))

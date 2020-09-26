@@ -10,7 +10,7 @@
   (set (map m (distinct (flatten c)))))
 
 (def rewrite
-  (s/rewrite
+  #_(s/rewrite
     (m/and
       ?c
       (j/class
