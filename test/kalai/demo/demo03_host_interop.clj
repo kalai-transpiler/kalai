@@ -5,5 +5,5 @@
 (defclass "HostInterop"
           (defn printEnvVariables ^String
             []
-            (let [^String envEditor (java.lang.System/getenv "EDITOR")]
+            (let [^String envEditor (System/getenv "EDITOR")]
               (return envEditor))))
