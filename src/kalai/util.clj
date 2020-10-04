@@ -3,7 +3,7 @@
             [meander.syntax.epsilon :as syntax]
             [meander.match.syntax.epsilon :as match]))
 
-(defn match-type-fn [t x]
+(defn- match-type-fn [t x]
   (some-> x
           meta
           :tag

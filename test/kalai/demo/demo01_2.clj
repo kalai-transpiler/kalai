@@ -1,7 +1,7 @@
 (ns kalai.demo.demo01-2)
 
-(defn format ^String [^Integer num]
-  (let [^int i (atom num)
+(defn format ^String [^int num]
+  (let [i (atom num)
         ^StringBuffer result (StringBuffer.)]
     (while (not (= @i 0))
       (let [^int quotient (quot @i 10)

@@ -106,9 +106,9 @@
 
 (def maybe-function
   (s/rewrite
-    (j/function ?name ?return-type ?docstring ?params
+    (j/function ?name ?params
                 (j/block . !statements ...))
-    (j/function ?name ?return-type ?docstring ?params
+    (j/function ?name ?params
                 (j/block . (m/app statement !statements) ...))
     ?else ?else))
 

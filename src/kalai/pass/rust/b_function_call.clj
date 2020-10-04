@@ -1,4 +1,4 @@
-(ns kalai.pass.rust.b-syslib
+(ns kalai.pass.rust.b-function-call
   (:require [kalai.util]
             [meander.strategy.epsilon :as s]))
 

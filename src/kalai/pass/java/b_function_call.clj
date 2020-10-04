@@ -1,4 +1,4 @@
-(ns kalai.pass.java.b-syslib
+(ns kalai.pass.java.b-function-call
   (:require [meander.strategy.epsilon :as s]))
 
 ;; If do do this before syntax, we can remove j/invoke... is that good or bad?
@@ -15,17 +15,16 @@
 ;; (for example multi-methods)
 ;; It doesn't allow us to share repetitive transpiled support in the way that multi-methods do.
 
-
-
-
-
-
-
 (def rewrite
   (s/bottom-up
     (s/rewrite
-      ;; should be clojure.core/println
+      ;; TODO: should be the var clojure.core/println
       (j/invoke println & ?more)
       (j/invoke System.out.println & ?more)
 
-      ?else ?else)))
+      ?else
+      ?else)))
+
+;; TODO: user extension point, is dynamic var good?
+;; can it be more data driven?
+(def ^:dynamic *user*)

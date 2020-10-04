@@ -104,9 +104,35 @@ into maps and sets with no inherent order.
 This ordering should be consistent.
 
 
+## Keywords
 
-Keywords as functions:
-Try to convert to get, up to the user to use contains if they want a boolean
+Keywords are treated as strings.
+
+When using keywords as functions, there are some caveats:
+Convert to get, which is only defined for maps.
+(We could provide set specific interop mappings for get in the future).
+Do not use with sets, instead use `contains?`.
+Use contains if you want a boolean.
+
+
+## Mappings (function-call.clj)
+
+This part of the pass pipeline considers "function call"
+as defined in terms of what most target languages think of.
+For example: println
+For anti example: + - * / are functions in Clojure but are operators in target languages.
+We adopt the Clojure view that constructors and methods are functions.
+Methods are functions of objects with args.
+Constructors are static functions.
+
+  * Core core
+    - println
+  * Kalai provided things
+  * OOP (Interop)
+    - constructors and methods
+  * User provided things!
+
+Operators are kinda different kinda similar (constructs), part of the syntax
 
 Truthiness:
 Hope types save us! Wrap boolean around things we don't know

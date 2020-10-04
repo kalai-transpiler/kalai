@@ -35,8 +35,8 @@
 
 (def maybe-function
   (s/rewrite
-    (function ?name ?return-type ?docstring ?params . !statements ... ?last)
-    (function ?name ?return-type ?docstring ?params . !statements ... (m/app return ?last))
+    (function ?name ?params . !statements ... ?last)
+    (function ?name ?params . !statements ... (m/app return ?last))
 
     ?else ?else))
 

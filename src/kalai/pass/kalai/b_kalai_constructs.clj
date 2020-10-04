@@ -44,7 +44,7 @@
         (if (clojure.lang.Numbers/lt ?sym ?auto)
           (do . !body ... (recur (clojure.lang.Numbers/unchecked_inc ?sym))))))
     (group
-      (init true 'int ?sym 0)
+      (init true ~(with-meta ?sym {:t 'int}) 0)
       (while (operator < ?sym ?n)
         . (m/app inner-form !body) ...
         (assign ?sym (operator + ?sym 1))))
@@ -57,8 +57,7 @@
             ?chunkn 0
             ?i 0]
       (if (clojure.lang.Numbers/lt ?i ?chunkn)
-        (let* [(m/and ?sym (m/app always-meta {:tag ?tag
-                                               :type ?type})) (.nth ?chunk ?i)]
+        (let* [?sym (.nth ?chunk ?i)]
           (do ?body (recur ?seq ?chunk ?chunkn (clojure.lang.Numbers/unchecked_inc ?i))))
         (let* [?as (clojure.core/seq ?seq)]
           (if ?as
@@ -72,7 +71,7 @@
                     (clojure.lang.RT/intCast 0)))
                 (let* [?sym (clojure.core/first ?bs)]
                   (do ?body (recur (clojure.core/next ?bs) nil 0 0)))))))))
-    (foreach ~(or ?type ?tag) ?sym ?xs (m/app inner-form ?body))
+    (foreach ?sym ?xs (m/app inner-form ?body))
 
     ;; loop -> ???
     ;;(loop* ?bindings ?body)
@@ -94,21 +93,18 @@
 
 (def as-init
   (s/rewrite
-    [(m/and ?name (m/app always-meta {:tag ?tag, :t ?type}))
-     (m/and ?x (m/app ref-form? ?mutable))
-     ?force-mutable]
-    (init ~(or ?mutable ?force-mutable)
-          ~(or ?tag ?type)
+    [?name ?x ?force-mutable]
+    (init ~(or (ref-form? ?x) ?force-mutable)
           ?name
           (m/app inner-form ?x))))
 
 (def def-init
   (s/rewrite
-    (def ?name ?value)
-    (m/app as-init [?name ?value false])
+    (def ?name ?form)
+    (m/app as-init [?name ?form false])
 
-    (def (m/and ?name (m/app always-meta {:tag ?tag, :t ?type})))
-    (init false ~(or ?tag ?type) ?name)))
+    (def ?name)
+    (init false ?name)))
 
 (def assignments
   (s/rewrite
@@ -219,15 +215,11 @@
   (s/rewrite
     ;; defn
     (def ?name
-      (fn*
-        .
-        ((m/and [& !params]
-                (m/app always-meta {:tag !return-type :doc !doc}))
-         . !body-forms ..!n)
-
+      (fn* .
+        (!params . !body-forms ..!n)
         ..?m))
     ;;->
-    (arity-group . (function ?name . !return-type !doc (m/app #(apply list %) !params) .
+    (arity-group . (function ?name . (preserve !params) .
                              (m/app inner-form !body-forms) ..!n)
                  ..?m)))
 

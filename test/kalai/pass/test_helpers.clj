@@ -27,7 +27,7 @@
        (str/join \newline)))
 
 (defn remove-kalai-function [s]
-  (second (nth (remove-kalai-class s) 5)))
+  (second (nth (remove-kalai-class s) 3)))
 
 (defn remove-java-function [s]
   (->> s

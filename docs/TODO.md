@@ -1,12 +1,24 @@
 # TODO
 
 * Types!!!
-  - Mutable <-- motivation is Rust, is `^:const` good or bad?
+  - define common types
+    - supporting universals: numeric types should be signed
+    - add a pass to convert Java types to target language types
+      * depends on choosing another language, too boring in Java
+      - Boxed and primitives need to be unified
+      - If it's hard to work with both primitives and Boxed, we can
+        fall back to only using Boxed
   - Generic Types [[]] -> <<>> translation
-  - Keyword support
+    - we added <<>> but data literal transformation intercepts
+    - the nested vector notation
+  - Mutable
+    - in a let binding
+      * depends on choosing Rust as our next target language
+    - mutable data literals (see test t3-2)
   - Aliasing
-  - int doesn't exist in all languages... kint -> int64 etc???
 * Interop
+  - expand the "function-call" pass (core/interop/kalai/custom)
+    * depends on us choosing another target language
   - see if starter code for rust and python works
   - implementing this probably requires implementing support for
     a second target language to ensure we are not doing Java

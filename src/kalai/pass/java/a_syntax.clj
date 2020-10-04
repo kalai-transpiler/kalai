@@ -46,33 +46,44 @@
 (defn gensym2 [s]
   (symbol (str s (swap! c inc))))
 
+(defn get-type [expr]
+  (let [{:keys [t tag]} (meta expr)]
+    (or t
+        tag
+        (when (and (seq? expr) (seq expr))
+          (get-type (last expr)))
+        (type expr))))
+
+(defn tmp [type]
+  (with-meta (gensym2 "tmp") {:t type}))
+
 (declare statement)
 
 ;; half Clojure half Java
 (def expression
   (s/rewrite
     (m/and (persistent-vector . !x ...)
-           (m/let [?t (gensym2 "tmp")]))
+           (m/let [?tmp (tmp 'PersistentVector)]))
     (group
-      (j/init PersistentVector ?t (j/new PersistentVector))
-      . (j/expression-statement (j/method add ?t (m/app expression !x))) ...
-      ?t)
+      (j/init ?tmp (j/new PersistentVector))
+      . (j/expression-statement (j/method add ?tmp (m/app expression !x))) ...
+      ?tmp)
 
     (m/and (persistent-map . !k !v ...)
-           (m/let [?t (gensym2 "tmp")]))
+           (m/let [?tmp (tmp 'PersistentMap)]))
     (group
-      (j/init PersistentMap ?t (j/new PersistentMap))
-      . (j/expression-statement (j/method put ?t
+      (j/init ?tmp (j/new PersistentMap))
+      . (j/expression-statement (j/method put ?tmp
                                           (m/app expression !k)
                                           (m/app expression !v))) ...
-      ?t)
+      ?tmp)
 
     (m/and (persistent-set . !x ...)
-           (m/let [?t (gensym2 "tmp")]))
+           (m/let [?tmp (tmp 'PersistentSet)]))
     (group
-      (j/init PersistentSet ?t (j/new PersistentSet))
-      . (j/expression-statement (j/method add ?t (m/app expression !x))) ...
-      ?t)
+      (j/init ?tmp (j/new PersistentSet))
+      . (j/expression-statement (j/method add ?tmp (m/app expression !x))) ...
+      ?tmp)
 
     ;; operator usage
     (operator ?op ?x ?y)
@@ -100,21 +111,21 @@
     ;;(j/ternary (m/app expression ?condition) (m/app expression ?then) (m/app expression ?else))
 
     (m/and (if ?condition ?then)
-           (m/let [?t (gensym2 "tmp")]))
+           (m/let [?tmp (tmp (get-type ?then))]))
     (group
-      (j/init 'int ?t)
+      (j/init ?tmp)
       (j/if (m/app expression ?condition)
-        (j/block (j/assign ?t (m/app expression ?then))))
-      ?t)
+        (j/block (j/assign ?tmp (m/app expression ?then))))
+      ?tmp)
 
     (m/and (if ?condition ?then ?else)
-           (m/let [?t (gensym2 "tmp")]))
+           (m/let [?tmp (tmp (get-type ?then))]))
     (group
-      (j/init 'int ?t)
+      (j/init ?tmp)
       (j/if (m/app expression ?condition)
-        (j/block (j/assign ?t (m/app expression ?then)))
-        (j/block (j/assign ?t (m/app expression ?else))))
-      ?t)
+        (j/block (j/assign ?tmp (m/app expression ?then)))
+        (j/block (j/assign ?tmp (m/app expression ?else))))
+      ?tmp)
 
     ;; faithfully reproduce Clojure semantics for do as a collection of
     ;; side-effect statements and a return expression
@@ -131,11 +142,11 @@
 
 (def init
   (s/rewrite
-    (init ?mut ?type ?name)
-    (j/init ?type ?name)
+    (init ?mut ?name)
+    (j/init ?name)
 
-    (init ?mut ?type ?name ?x)
-    (j/init ?type ?name (m/app expression ?x))))
+    (init ?mut ?name ?x)
+    (j/init ?name (m/app expression ?x))))
 
 (def statement
   (s/choice
@@ -148,8 +159,8 @@
       (j/while (m/app expression ?condition)
                (j/block . (m/app statement !body) ...))
 
-      (foreach ?type ?sym ?xs . !body ...)
-      (j/foreach ?type ?sym (m/app expression ?xs)
+      (foreach ?sym ?xs . !body ...)
+      (j/foreach ?sym (m/app expression ?xs)
                  (j/block . (m/app statement !body) ...))
 
       ;; conditional
@@ -177,8 +188,8 @@
 (def function
   (s/rewrite
     ;; function definition
-    (function ?name ?return-type ?docstring ?params . !body ...)
-    (j/function ?return-type ?name ?docstring ?params
+    (function ?name ?params . !body ...)
+    (j/function ?name ?params
                 (j/block . (m/app statement !body) ...))))
 
 (def top-level-form

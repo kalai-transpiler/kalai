@@ -6,7 +6,7 @@
   (top-level-form
     '(def ^{:t "int"} x 3)
     ;;->
-    '(init false "int" x 3)
+    '(init false x 3)
     ;;->
     "int x = 3;"))
 
@@ -14,7 +14,7 @@
   (top-level-form
     '(def ^Integer x)
     ;;->
-    '(init false Integer x)
+    '(init false x)
     ;;->
     "Integer x;"))
 
@@ -23,7 +23,7 @@
     '(defn f ^Integer [^Integer x]
        (inc x))
     ;;->
-    '(function f Integer nil [x]
+    '(function f [x]
                (return (operator + x 1)))
     ;;->
     "public static Integer f(Integer x) {
@@ -32,18 +32,18 @@ return (x + 1);
 
 (deftest t17
   (top-level-form
-    '(defn f []
+    '(defn f ^int []
        (let [^int x (atom 0)]
          (swap! x inc)))
     ;;->
-    '(function f nil nil []
+    '(function f []
        (do
-         (init true int x 0)
+         (init true x 0)
          (group
            (assign x (invoke inc x))
            (return x))))
     ;;->
-    "public static  f() {
+    "public static int f() {
 int x = 0;
 x = inc(x);
 return x;
@@ -57,7 +57,7 @@ return x;
        (^int [^int x ^int y]
         (+ x y)))
     ;;->
-    '(function f int nil [x]
+    '(function f [x]
                (return (operator + x 1)))
     ;;->
     "public static int f(int x) {
@@ -93,9 +93,9 @@ return (x + y);
        (+ @x (deref y)))
     ;;->
     '(do
-       (init true int x 1)
-       (init true int y 2)
-       (init false int z 1)
+       (init true x 1)
+       (init true y 2)
+       (init false z 1)
        (do
          (assign x 3)
          (operator + x y)))
@@ -117,8 +117,8 @@ x = 3;
        (+ (var-get x) (var-get y)))
     ;;->
     '(do
-       (init true int x 1)
-       (init true int y 2)
+       (init true x 1)
+       (init true y 2)
        (operator + x y))
     ;;->
     "{
@@ -126,6 +126,9 @@ int x = 1;
 int y = 2;
 (x + y);
 }"))
+
+;; this test covers type erasure, but we have disabled that
+;; as the bottom up traversal does too much (slow)
 
 #_
 (deftest t111
@@ -137,16 +140,13 @@ int y = 2;
     ;;->
     ""))
 
-;; this test covers type erasure, but we have disabled that
-;; as the bottom up traversal does too much (slow)
-#_
 (deftest t112
   (top-level-form
-    '(do (def ^{:t ['kmap ['klong 'kstring]]} x))
+    '(do (def ^{:t {:map [:long :string]}} x))
     ;;->
-    '()
+    '(init false x)
     ;;->
-    ""))
+    "Map<Long,String> x;"))
 
 (deftest t2
   (inner-form
@@ -154,8 +154,8 @@ int y = 2;
          (def ^{:t "Long"} y 5))
     ;;->
     '(do
-       (init false "Boolean" x true)
-       (init false "Long" y 5))
+       (init false x true)
+       (init false y 5))
     ;;->
 
     ;; TODO: condense could have stripped
@@ -170,7 +170,7 @@ Long y = 5;
        x)
     ;;->
     '(do
-       (init false int x 1)
+       (init false x 1)
        x)
     ;;->
     "{
@@ -199,7 +199,7 @@ else
        (reset! x (+ @x 2)))
     ;;->
     '(do
-       (init true int x 0)
+       (init true x 0)
        (assign x (operator + x 2)))
     ;;->
     "{
@@ -260,7 +260,7 @@ tmp1;"))
        (println x))
     ;;->
     '(do
-       (init false kvector x
+       (init false x
          (persistent-vector 1 2))
        (invoke println x))
     ;;->
@@ -268,7 +268,7 @@ tmp1;"))
 PersistentVector tmp1 = new PersistentVector();
 tmp1.add(1);
 tmp1.add(2);
-kvector x = tmp1;
+Vector x = tmp1;
 System.out.println(x);
 }"))
 
@@ -278,7 +278,7 @@ System.out.println(x);
        (println x))
     ;;->
     '(do
-       (init false kvector x
+       (init false x
              (persistent-vector 1 (persistent-vector 2)))
        (invoke println x))
     ;;->
@@ -288,7 +288,7 @@ tmp1.add(1);
 PersistentVector tmp2 = new PersistentVector();
 tmp2.add(2);
 tmp1.add(tmp2);
-kvector x = tmp1;
+Vector x = tmp1;
 System.out.println(x);
 }"))
 
@@ -298,7 +298,7 @@ System.out.println(x);
        (println x))
     ;;->
     '(do
-       (init false kvector x
+       (init false x
          (persistent-vector 1
            (persistent-vector 2)
            3
@@ -318,7 +318,7 @@ PersistentVector tmp4 = new PersistentVector();
 tmp4.add(4);
 tmp3.add(tmp4);
 tmp1.add(tmp3);
-kvector x = tmp1;
+Vector x = tmp1;
 System.out.println(x);
 }"))
 
@@ -328,7 +328,7 @@ System.out.println(x);
        (println x))
     ;;->
     '(do
-       (init false kvector x
+       (init false x
          (persistent-map 1
            (persistent-vector
              (persistent-map 2 3)
@@ -351,7 +351,7 @@ tmp5.add(6);
 tmp4.add(tmp5);
 tmp2.add(tmp4);
 tmp1.put(1, tmp2);
-kvector x = tmp1;
+Vector x = tmp1;
 System.out.println(x);
 }"))
 
@@ -360,7 +360,7 @@ System.out.println(x);
     '(doseq [^int x [1 2 3 4]]
        (println x))
     ;;->
-    '(foreach int x (persistent-vector 1 2 3 4)
+    '(foreach x (persistent-vector 1 2 3 4)
               (invoke println x))
     ;;->
     "PersistentVector tmp1 = new PersistentVector();
@@ -378,7 +378,7 @@ System.out.println(x);
        (println x))
     ;;->
     '(group
-       (init true int x 0)
+       (init true x 0)
        (while (operator < x 5)
          (invoke println x)
          (assign x (operator + x 1))))
@@ -443,6 +443,17 @@ if (\":else\")
 tmp1.put(\":k\", 1);
 tmp1.get(\":k\");"))
 
+(deftest test6**
+  (inner-form
+    '(:k #{:k})
+    ;;->
+    '(method get (persistent-set :k) :k)
+    ;;->
+    "PersistentSet tmp1 = new PersistentSet();
+tmp1.add(\":k\");
+tmp1.get(\":k\");"))
+
+
 (deftest test7
   ;; TODO: fix case data literals
   #_(inner-form
@@ -464,7 +475,7 @@ break;
   #_(inner-form
       '(def ^{:t [String String]} x {:a "asdf"})
       ;;->
-      (init false [String String] x
+      (init false x
             (hash-map :a "asdf"))
       ;;->
       "x = new HashMap<String,String>();
@@ -489,7 +500,7 @@ break;
                  (if true 3 4)
                  5))
     ;;->
-    "int tmp1;
+    "long tmp1;
 if (true)
 {
 tmp1 = 1;
@@ -498,10 +509,10 @@ else
 {
 tmp1 = 2;
 }
-int tmp2;
+long tmp2;
 if (true)
 {
-int tmp3;
+long tmp3;
 if (true)
 {
 tmp3 = 3;
@@ -536,6 +547,7 @@ tmp2 = 5;
 
 (deftest if-expr-do
   (inner-form
+    ;; TODO: rewrite does not preserve form meta type hint
     '(+ (if true (do (println 1) 2)) 4)
     ;;->
     '(operator +
@@ -545,7 +557,7 @@ tmp2 = 5;
            2))
        4)
     ;;->
-    "int tmp1;
+    "long tmp1;
 if (true)
 {
 System.out.println(1);
@@ -558,21 +570,21 @@ tmp1 = 2;
 
 (deftest if-expr-do-2
   (inner-form
-    '(+ ^int (if true 1 ^int (if false 2 3)) 4)
+    '(+ (if true 1 (if false 2 3)) 4)
     ;;->
     '(operator +
                (if true 1 (if false 2 3))
                4)
     ;;->
 
-    "int tmp1;
+    "long tmp1;
 if (true)
 {
 tmp1 = 1;
 }
 else
 {
-int tmp2;
+long tmp2;
 if (false)
 {
 tmp2 = 2;
@@ -589,21 +601,21 @@ tmp1 = tmp2;
 
 (deftest if-expr-do-2-2
   (inner-form
-    '(+ ^int (if true 1 ^int (if false 2 [3])) 4)
+    '(+ (if true 1 (if false 2 [3])) 4)
     ;;->
     '(operator +
                (if true 1 (if false 2 (persistent-vector 3)))
                4)
     ;;->
 
-    "int tmp1;
+    "long tmp1;
 if (true)
 {
 tmp1 = 1;
 }
 else
 {
-int tmp2;
+long tmp2;
 if (false)
 {
 tmp2 = 2;

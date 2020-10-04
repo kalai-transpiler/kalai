@@ -1,6 +1,6 @@
 (ns kalai.pass.java.pipeline
   (:require [kalai.pass.java.a-syntax :as java1-syntax]
-            [kalai.pass.java.b-syslib :as java2-syslib]
+            [kalai.pass.java.b-function-call :as java2-syslib]
             [kalai.pass.java.c-condense :as java3-condense]
             [kalai.pass.java.e-string :as java4-string]
             [kalai.pass.shared.flatten-groups :as flatten-groups]
