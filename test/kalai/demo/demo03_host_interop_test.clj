@@ -3,6 +3,7 @@
             [kalai.emit.api :refer :all]
             [kalai.emit.langs :as l]
             [kalai.emit.util :as emit-util]
+            [kalai.placation]
             [clojure.test :refer [deftest testing]]
             [clojure.tools.analyzer.jvm :as az]
             [clojure.pprint :refer :all]
@@ -15,7 +16,6 @@
             ast-opts-seq (->> ast-seq
                               (map #(assoc {} :ast % :lang ::l/java))
                               (map map->AstOpts))]
-        (println (nth ast-seq 0))
         (expect [""
 "public class HostInterop
 {
