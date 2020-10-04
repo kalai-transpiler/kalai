@@ -4,6 +4,13 @@
   - Mutable <-- motivation is Rust, is `^:const` good or bad?
   - Generic Types [[]] -> <<>> translation
   - Keyword support
+  - Aliasing
+  - int doesn't exist in all languages... kint -> int64 etc???
+* Interop
+  - see if starter code for rust and python works
+  - implementing this probably requires implementing support for
+    a second target language to ensure we are not doing Java
+    specific things  
 * We think we have most of the proof of concept language concepts, but we need to hook up the tests
   - pleasant cider testing
   - workflows (developer and CI)

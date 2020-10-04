@@ -147,3 +147,25 @@ We create the group of forms that the input expands to,
 then we run the raise-forms pass to separate the return expression
 in the group from the preceeding initialization statements in the group.
 We require that the very next pass must flatten groups (remove any remaining).
+
+In choosing how to support fn invocations to interop methods
+  - 2 options:
+    * make users use Clojure's Java interop in the input code
+    * create wrapper fns like in the current impl
+  - What about cases where there are many overrides (ex: StringBuffer.insert()) ?
+    * this seems like an argument for defining interop in the input source code using Java interop
+    * what if there are operations that the Java APIs don't support?
+      (hypothetically: what if there should be a StringBuffer.insert for a DateTime object)
+      -> we can always reserve the right to create a wrapper fn and have ppl transpile
+  - What is important in a syslib?
+    * IO (files/streams/reading/writing)
+    * StringBuffer
+    * Dates and date manipulation
+  - What is important for client libs?
+    * sockets, http, connections, listening
+    * database clients
+    * UIs (too hard!)
+  - How do users create mappings?
+    * provide a function (a Meander rewrite rule) that converts s-expressions
+
+We are mapping target language s-expressions (usually Interop or Clojure core functions) to target language syntax s-expressions
