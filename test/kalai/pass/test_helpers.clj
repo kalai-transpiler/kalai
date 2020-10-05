@@ -14,7 +14,7 @@
 
 (defn as-function [form]
   (list '(ns test-package.test-class)
-        (list 'defn 'test-function [] (list 'do form) nil)))
+        (list 'defn 'test-function ^{:t "void"} [] (list 'do form) nil)))
 
 (defn remove-kalai-class [s]
   (nth s 2))
@@ -46,7 +46,6 @@
            (testing "compiling to kalai"
              (or (is (= ~kalai-s-expression (~remove-kalai a2b#)))
                  (println "Clojure to Kalai failed")))
-           (reset! a-syntax/c 0)
            (let [b2c# (java-pipeline/kalai->java a2b#)]
              (and
                (testing "compiling kalai to java"

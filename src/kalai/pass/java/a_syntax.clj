@@ -1,5 +1,6 @@
 (ns kalai.pass.java.a-syntax
-  (:require [meander.strategy.epsilon :as s]
+  (:require [kalai.util :as u]
+            [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]))
 
 ;;; -------- language constructs to syntax
@@ -45,14 +46,6 @@
 (def c (atom 0))
 (defn gensym2 [s]
   (symbol (str s (swap! c inc))))
-
-(defn get-type [expr]
-  (let [{:keys [t tag]} (meta expr)]
-    (or t
-        tag
-        (when (and (seq? expr) (seq expr))
-          (get-type (last expr)))
-        (type expr))))
 
 (defn tmp [type]
   (with-meta (gensym2 "tmp") {:t type}))
@@ -111,7 +104,7 @@
     ;;(j/ternary (m/app expression ?condition) (m/app expression ?then) (m/app expression ?else))
 
     (m/and (if ?condition ?then)
-           (m/let [?tmp (tmp (get-type ?then))]))
+           (m/let [?tmp (tmp (u/get-type ?then))]))
     (group
       (j/init ?tmp)
       (j/if (m/app expression ?condition)
@@ -119,7 +112,7 @@
       ?tmp)
 
     (m/and (if ?condition ?then ?else)
-           (m/let [?tmp (tmp (get-type ?then))]))
+           (m/let [?tmp (tmp (u/get-type ?then))]))
     (group
       (j/init ?tmp)
       (j/if (m/app expression ?condition)

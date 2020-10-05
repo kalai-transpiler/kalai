@@ -37,11 +37,11 @@ return (x + 1);
          (swap! x inc)))
     ;;->
     '(function f []
-       (do
-         (init true x 0)
-         (group
-           (assign x (invoke inc x))
-           (return x))))
+               (do
+                 (init true x 0)
+                 (group
+                   (assign x (invoke inc x))
+                   (return x))))
     ;;->
     "public static int f() {
 int x = 0;
@@ -67,21 +67,16 @@ public static int f(int x, int y) {
 return (x + y);
 }"))
 
-;; Tim proposes: let's not support void!!!
-;; It's not necessary for writing programs... returning null is equivalent.
-;; If you want to write a side effect function, it should return type Object and return null.
-;; That means Kalai can continue to follow the do it the Clojure way mantra.
-#_
 (deftest t17
-  (top-level-form
-    '(defn f ^void [^int x]
-       (println x))
-    ;;->
-    '(function f void nil [x]
-               (println x))
-    ;;->
-    "public static void f(int x) {
-(x+1);
+    (top-level-form
+      '(defn f ^{:t :void} [^int x]
+         (println x))
+      ;;->
+      '(function f [x]
+                 (invoke println x))
+      ;;->
+      "public static void f(int x) {
+System.out.println(x);
 }"))
 
 (deftest t18
@@ -130,15 +125,14 @@ int y = 2;
 ;; this test covers type erasure, but we have disabled that
 ;; as the bottom up traversal does too much (slow)
 
-#_
-(deftest t111
-  (top-level-form
-    '(do (def ^{:kalias '[kmap [klong kstring]]} T)
-         (def ^{:t T} x))
-    ;;->
-    '()
-    ;;->
-    ""))
+#_(deftest t111
+    (top-level-form
+      '(do (def ^{:kalias '[kmap [klong kstring]]} T)
+           (def ^{:t T} x))
+      ;;->
+      '()
+      ;;->
+      ""))
 
 (deftest t112
   (top-level-form
@@ -151,9 +145,11 @@ int y = 2;
 (deftest t2
   (inner-form
     '(do (def ^{:t "Boolean"} x true)
+         (def x true)
          (def ^{:t "Long"} y 5))
     ;;->
     '(do
+       (init false x true)
        (init false x true)
        (init false y 5))
     ;;->
@@ -161,6 +157,7 @@ int y = 2;
     ;; TODO: condense could have stripped
     "{
 Boolean x = true;
+bool x = true;
 Long y = 5;
 }"))
 
@@ -210,15 +207,15 @@ x = (x + 2);
 
 (deftest t3-2
   #_(inner-form
-    (atom [1 2])
-    ;;->
-    '(mutable-vector 1 2)
-    ;;->
-    "PersistentVector tmp1 = new PersistentVector();
-tmp1.add(1);
-tmp1.add(2);
-tmp1;
-"))
+      (atom [1 2])
+      ;;->
+      '(mutable-vector 1 2)
+      ;;->
+      "PersistentVector tmp1 = new PersistentVector();
+  tmp1.add(1);
+  tmp1.add(2);
+  tmp1;
+  "))
 
 
 (deftest t3-2-1
@@ -261,7 +258,7 @@ tmp1;"))
     ;;->
     '(do
        (init false x
-         (persistent-vector 1 2))
+             (persistent-vector 1 2))
        (invoke println x))
     ;;->
     "{
@@ -299,11 +296,11 @@ System.out.println(x);
     ;;->
     '(do
        (init false x
-         (persistent-vector 1
-           (persistent-vector 2)
-           3
-           (persistent-vector
-             (persistent-vector 4))))
+             (persistent-vector 1
+                                (persistent-vector 2)
+                                3
+                                (persistent-vector
+                                  (persistent-vector 4))))
        (invoke println x))
     ;;->
     "{
@@ -329,12 +326,12 @@ System.out.println(x);
     ;;->
     '(do
        (init false x
-         (persistent-map 1
-           (persistent-vector
-             (persistent-map 2 3)
-             (persistent-set
-               4
-               (persistent-vector 5 6)))))
+             (persistent-map 1
+                             (persistent-vector
+                               (persistent-map 2 3)
+                               (persistent-set
+                                 4
+                                 (persistent-vector 5 6)))))
        (invoke println x))
     ;;->
     "{
@@ -453,10 +450,8 @@ tmp1.get(\":k\");"))
 tmp1.add(\":k\");
 tmp1.get(\":k\");"))
 
-
 (deftest test7
-  ;; TODO: fix case data literals
-  #_(inner-form
+  (inner-form
     '(case 1
        1 :a
        2 :b)
@@ -473,10 +468,10 @@ break;
 
 (deftest test75
   #_(inner-form
-      '(def ^{:t [String String]} x {:a "asdf"})
+      '(def ^{:t {:map [:string :string]}} x (atom {:a "asdf"}))
       ;;->
-      (init false x
-            (hash-map :a "asdf"))
+      '(init false x
+             (mutable-map :a "asdf"))
       ;;->
       "x = new HashMap<String,String>();
   x.add(\":a\", \"asdf\""))
@@ -485,9 +480,14 @@ break;
   #_(inner-form
       '(assoc {:a 1} :b 2)
       ;;->
+      '()
+      ;;->
       ""))
 
 (deftest ternary
+  ;; For simple expressions, a true ternary could be used instead
+  ;; "((true ? 1 : 2) + (true ? (true ? 3 : 4) : 5));"
+  ;; But for now we are taking the more general approach which handles expressions.
   (inner-form
     '(+ (if true 1 2)
         (if true
@@ -529,21 +529,19 @@ else
 {
 tmp2 = 5;
 }
-(tmp1 + tmp2);"
-    ;;"((true ? 1 : 2) + (true ? (true ? 3 : 4) : 5));"
-    ))
+(tmp1 + tmp2);"))
 
 (deftest nested-group
   #_(inner-form
-    '(+ 1 (swap! x inc))
-    ;;->
-    '(operator +
-               1
-               (group (assign x (invoke inc x))
-                      x))
-    ;;->
-    "int x = (x + 1);
-(1 + x);"))
+      '(+ 1 (swap! x inc))
+      ;;->
+      '(operator +
+                 1
+                 (group (assign x (invoke inc x))
+                        x))
+      ;;->
+      "int x = (x + 1);
+  (1 + x);"))
 
 (deftest if-expr-do
   (inner-form
@@ -551,11 +549,11 @@ tmp2 = 5;
     '(+ (if true (do (println 1) 2)) 4)
     ;;->
     '(operator +
-       (if true
-         (do
-           (invoke println 1)
-           2))
-       4)
+               (if true
+                 (do
+                   (invoke println 1)
+                   2))
+               4)
     ;;->
     "long tmp1;
 if (true)

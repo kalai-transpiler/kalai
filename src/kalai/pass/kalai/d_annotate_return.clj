@@ -1,5 +1,6 @@
 (ns kalai.pass.kalai.d-annotate-return
-  (:require [meander.strategy.epsilon :as s]
+  (:require [kalai.util :as u]
+            [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]))
 
 (def return
@@ -31,14 +32,16 @@
     (return ?expression)
     (return ?expression)
 
-    ?else (return ?else)))
+    ?else
+    (return ?else)))
 
 (def maybe-function
   (s/rewrite
-    (function ?name ?params . !statements ... ?last)
+    (function ?name (m/pred (complement u/void?) ?params) . !statements ... ?last)
     (function ?name ?params . !statements ... (m/app return ?last))
 
-    ?else ?else))
+    ?else
+    ?else))
 
 (def rewrite
   (s/rewrite

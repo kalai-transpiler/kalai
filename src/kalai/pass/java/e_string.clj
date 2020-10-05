@@ -46,6 +46,7 @@
    "kset"      "Set"
    "vector"    "Vector"
    "kvector"   "Vector"
+   "kbool"     "bool"
    "kbyte"     "byte"
    "kchar"     "char"
    "kint"      "int"
@@ -58,11 +59,17 @@
   {java.util.Map     "Map"
    java.util.Set     "Set"
    java.util.Vector  "Vector"
+   java.lang.Boolean "bool"
    java.lang.Long    "long"
    java.lang.Integer "int"
    java.lang.Float   "float"
    java.lang.Double  "double"
    java.lang.String  "string"})
+
+(defn jtype [t]
+  (or
+    (get java-types t)
+    (last (str/split (str t) " "))))
 
 (defn ktype* [s]
   (or (get ktypes s)
@@ -74,16 +81,17 @@
       (string? t) (ktype* t)
       (symbol? t) (ktype* (name t))
       (keyword? t) (ktype* (name t))
-      (class? t) (ktype* (get java-types t))
+      (class? t) (ktype* (jtype t))
       ;; TODO: We've lost the source line:column of the form at this point,
       ;; it would be nice to preserve it for better error reporting
-      :else (println "WARNING: missing type detected"))
+      :else (println "WARNING: missing type detected" t))
     "TYPE_MISSING"))
 
 (defn box [s]
   (case s
     "int" "Integer"
     "char" "Character"
+    "bool" "Boolean"
     (str/capitalize s)))
 
 (def type-str*
@@ -93,21 +101,27 @@
           \< (str/join \, (for [t ?ts]
                             (type-str* [:boxed t])))
           \>)
+
     [:boxed ?t]
     ~(str (box (ktype ?t)))
+
     ?t
     ~(str (ktype ?t))))
 
 ;; Types are allowed to flow through the pipeline as metadata
-(defn type-str [x]
-  (let [{:keys [t tag]} (meta x)]
-    (type-str* (or t tag "TYPE_MISSING"))))
+(defn type-str
+  ([x]
+   (let [{:keys [t tag]} (meta x)]
+     (type-str* (or t tag))))
+  ([x y]
+   (let [{:keys [t tag]} (meta x)]
+     (type-str* (or t tag (u/get-type y))))))
 
 (defn init-str
   ([variable-name]
    (statement (space-separated (type-str variable-name) variable-name)))
   ([variable-name value]
-   (statement (space-separated (type-str variable-name) variable-name "=" (stringify value)))))
+   (statement (space-separated (type-str variable-name value) variable-name "=" (stringify value)))))
 
 #_(defn const [bindings]
     (str "const" Type x "=" initialValue))

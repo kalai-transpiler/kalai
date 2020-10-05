@@ -14,9 +14,6 @@
     clojure.lang.Numbers/gt                     >
     clojure.lang.Numbers/gte                    >=})
 
-(defn always-meta [x]
-  (or (meta x) {}))
-
 (def operators
   (s/rewrite
     ((m/pred operator ?op) ?x ?y)
@@ -183,7 +180,7 @@
       (case* ?auto ?shift ?mask
              ?default ;;often (throw (new java.lang.IllegalArgumentException (clojure.core/str "No matching clause: " ?auto)))
              ?imap ?switch-type ?tt ?skip-check))
-    (case (m/app inner-form ?x) ?imap)))
+    (case (m/app inner-form ?x) (preserve ?imap))))
 
 (def misc
   (s/rewrite

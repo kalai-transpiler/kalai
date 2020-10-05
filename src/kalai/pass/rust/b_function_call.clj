@@ -11,16 +11,16 @@
       (r/construct StringBuffer)
       (r/construct String)
 
-      (r/method append (u/match-type StringBuffer ?this) ?x)
+      (r/method append (u/of-type StringBuffer ?this) ?x)
       (r/method push_str ?this ?x)
 
-      (r/method length (u/match-type StringBuffer ?this))
+      (r/method length (u/of-type StringBuffer ?this))
       (r/method len ?this)
 
-      (r/method toString (u/match-type StringBuffer ?this))
+      (r/method toString (u/of-type StringBuffer ?this))
       ?this
 
-      (r/method insert (u/match-type StringBuffer ?this) ?idx ?s2)
+      (r/method insert (u/of-type StringBuffer ?this) ?idx ?s2)
       (r/block
         (m/let [t (gensym "tmp")]
                (r/assign t ?this)

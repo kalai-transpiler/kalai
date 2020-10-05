@@ -1,4 +1,5 @@
-(ns kalai.demo.demo01-2)
+(ns kalai.demo.demo01-2
+  (:refer-clojure :exclude [format]))
 
 (defn format ^String [^long num]
   (let [i (atom num)
