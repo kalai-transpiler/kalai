@@ -69,7 +69,7 @@
 (defn jtype [t]
   (or
     (get java-types t)
-    (last (str/split (str t) " "))))
+    (last (str/split (str t) #" "))))
 
 (defn ktype* [s]
   (or (get ktypes s)
