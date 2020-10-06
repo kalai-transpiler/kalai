@@ -210,23 +210,22 @@ x = (x + 2);
     ))
 
 (deftest t3-2
-  #_(inner-form
-      (atom [1 2])
-      ;;->
-      '(mutable-vector 1 2)
-      ;;->
-      "PersistentVector tmp1 = new PersistentVector();
-  tmp1.add(1);
-  tmp1.add(2);
-  tmp1;
-  "))
-
+  (inner-form
+    ;; TODO: should infer from atom
+    '(def x (atom ^:mut [1 2]))
+    ;;->
+    '(init true x [1 2])
+    ;;->
+    "Vector tmp1 = new Vector();
+tmp1.add(1);
+tmp1.add(2);
+Vector x = tmp1;"))
 
 (deftest t3-2-1
   (inner-form
     [1 2]
     ;;->
-    '(persistent-vector 1 2)
+    [1 2]
     ;;->
     "PersistentVector tmp1 = new PersistentVector();
 tmp1.add(1);
@@ -237,7 +236,7 @@ tmp1;"))
   (inner-form
     {1 2 3 4}
     ;;->
-    '(persistent-map 1 2 3 4)
+    {1 2 3 4}
     ;;->
     "PersistentMap tmp1 = new PersistentMap();
 tmp1.put(1, 2);
@@ -248,7 +247,7 @@ tmp1;"))
   (inner-form
     #{1 2}
     ;;->
-    '(persistent-set 1 2)
+    #{1 2}
     ;;->
     "PersistentSet tmp1 = new PersistentSet();
 tmp1.add(1);
@@ -261,8 +260,7 @@ tmp1;"))
        (println x))
     ;;->
     '(do
-       (init false x
-             (persistent-vector 1 2))
+       (init false x [1 2])
        (invoke println x))
     ;;->
     "{
@@ -279,8 +277,7 @@ System.out.println(x);
        (println x))
     ;;->
     '(do
-       (init false x
-             (persistent-vector 1 (persistent-vector 2)))
+       (init false x [1 [2]])
        (invoke println x))
     ;;->
     "{
@@ -300,11 +297,7 @@ System.out.println(x);
     ;;->
     '(do
        (init false x
-             (persistent-vector 1
-                                (persistent-vector 2)
-                                3
-                                (persistent-vector
-                                  (persistent-vector 4))))
+             [1 [2] 3 [[4]]])
        (invoke println x))
     ;;->
     "{
@@ -330,12 +323,7 @@ System.out.println(x);
     ;;->
     '(do
        (init false x
-             (persistent-map 1
-                             (persistent-vector
-                               (persistent-map 2 3)
-                               (persistent-set
-                                 4
-                                 (persistent-vector 5 6)))))
+             {1 [{2 3} #{4 [5 6]}]})
        (invoke println x))
     ;;->
     "{
@@ -361,7 +349,7 @@ System.out.println(x);
     '(doseq [^int x [1 2 3 4]]
        (println x))
     ;;->
-    '(foreach x (persistent-vector 1 2 3 4)
+    '(foreach x [1 2 3 4]
               (invoke println x))
     ;;->
     "PersistentVector tmp1 = new PersistentVector();
@@ -438,7 +426,7 @@ if (\":else\")
   (inner-form
     '(:k {:k 1})
     ;;->
-    '(method get (persistent-map :k 1) :k)
+    '(method get {:k 1} :k)
     ;;->
     "PersistentMap tmp1 = new PersistentMap();
 tmp1.put(\":k\", 1);
@@ -448,7 +436,7 @@ tmp1.get(\":k\");"))
   (inner-form
     '(:k #{:k})
     ;;->
-    '(method get (persistent-set :k) :k)
+    '(method get #{:k} :k)
     ;;->
     "PersistentSet tmp1 = new PersistentSet();
 tmp1.add(\":k\");
@@ -606,7 +594,7 @@ tmp1 = tmp2;
     '(+ (if true 1 (if false 2 [3])) 4)
     ;;->
     '(operator +
-               (if true 1 (if false 2 (persistent-vector 3)))
+               (if true 1 (if false 2 [3]))
                4)
     ;;->
 

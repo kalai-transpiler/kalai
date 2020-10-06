@@ -180,7 +180,7 @@
       (case* ?auto ?shift ?mask
              ?default ;;often (throw (new java.lang.IllegalArgumentException (clojure.core/str "No matching clause: " ?auto)))
              ?imap ?switch-type ?tt ?skip-check))
-    (case (m/app inner-form ?x) (preserve ?imap))))
+    (case (m/app inner-form ?x) ?imap)))
 
 (def misc
   (s/rewrite
@@ -216,7 +216,7 @@
         (!params . !body-forms ..!n)
         ..?m))
     ;;->
-    (arity-group . (function ?name . (preserve !params) .
+    (arity-group . (function ?name . !params .
                              (m/app inner-form !body-forms) ..!n)
                  ..?m)))
 

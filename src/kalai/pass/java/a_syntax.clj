@@ -1,7 +1,8 @@
 (ns kalai.pass.java.a-syntax
   (:require [kalai.util :as u]
             [meander.strategy.epsilon :as s]
-            [meander.epsilon :as m]))
+            [meander.epsilon :as m])
+  (:import (java.util HashSet)))
 
 ;;; -------- language constructs to syntax
 ;; expanded s-expressions below
@@ -55,27 +56,40 @@
 ;; half Clojure half Java
 (def expression
   (s/rewrite
-    (m/and (persistent-vector . !x ...)
-           (m/let [?tmp (tmp 'PersistentVector)]))
+    ;; data literals
+    (m/and [!x ...]
+           (m/app meta ?meta)
+           (m/let [?t (if (:mut ?meta)
+                        'Vector
+                        'PersistentVector)
+                   ?tmp (tmp ?t)]))
     (group
-      (j/init ?tmp (j/new PersistentVector))
+      (j/init ?tmp (j/new ?t))
       . (j/expression-statement (j/method add ?tmp (m/app expression !x))) ...
       ?tmp)
 
-    (m/and (persistent-map . !k !v ...)
-           (m/let [?tmp (tmp 'PersistentMap)]))
+    (m/and (m/and {} (m/seqable [!k !v] ...))
+           (m/app meta ?meta)
+           (m/let [?t (if (:mut ?meta)
+                        'HashMap
+                        'PersistentMap)
+                   ?tmp (tmp ?t)]))
     (group
-      (j/init ?tmp (j/new PersistentMap))
+      (j/init ?tmp (j/new ?t))
       . (j/expression-statement (j/method put ?tmp
                                           (m/app expression !k)
                                           (m/app expression !v))) ...
       ?tmp)
 
-    (m/and (persistent-set . !x ...)
-           (m/let [?tmp (tmp 'PersistentSet)]))
+    (m/and (m/and #{} (m/seqable !k ...))
+           (m/app meta ?meta)
+           (m/let [?t (if (:mut ?meta)
+                        'HashSet
+                        'PersistentSet)
+                   ?tmp (tmp ?t)]))
     (group
-      (j/init ?tmp (j/new PersistentSet))
-      . (j/expression-statement (j/method add ?tmp (m/app expression !x))) ...
+      (j/init ?tmp (j/new ?t))
+      . (j/expression-statement (j/method add ?tmp (m/app expression !k))) ...
       ?tmp)
 
     ;; operator usage
