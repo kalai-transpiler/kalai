@@ -131,7 +131,7 @@ int y = 2;
       (def ^{:t T} x))
     ;;->
     '(namespace test-package.test-class
-       (init false x))
+                (init false x))
     ;;->
     "package test-package;
 public class test-class {
@@ -459,14 +459,14 @@ break;
 }"))
 
 (deftest test75
-  #_(inner-form
-      '(def ^{:t {:map [:string :string]}} x (atom {:a "asdf"}))
-      ;;->
-      '(init false x
-             (mutable-map :a "asdf"))
-      ;;->
-      "x = new HashMap<String,String>();
-  x.add(\":a\", \"asdf\""))
+  (inner-form
+    '(def ^{:t {:map [:string :string]}} x {:a "asdf"})
+    ;;->
+    '(init false x {:a "asdf"})
+    ;;->
+    "PersistentMap tmp1 = new PersistentMap();
+tmp1.put(\":a\", \"asdf\");
+Map<String,String> x = tmp1;"))
 
 (deftest test8
   #_(inner-form
