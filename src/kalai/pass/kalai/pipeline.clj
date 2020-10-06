@@ -4,18 +4,14 @@
             [kalai.pass.kalai.d-annotate-return :as d-annotate-return]
             [kalai.pass.kalai.e-data-literals :as e-data-literals]
             [kalai.pass.kalai.f-keyword-set-map-functions :as f]
-            [clojure.tools.analyzer.passes.jvm.emit-form :as azef]
-            [puget.printer :as puget]))
-
-(defn spy [x]
-  (doto x puget/cprint))
+            [clojure.tools.analyzer.passes.jvm.emit-form :as azef]))
 
 (defn asts->kalai [asts]
   (->> asts
        (map a-annotate-ast/rewrite)
+       (remove nil?)
        (map azef/emit-form)
        (b-kalai-constructs/rewrite)
        (d-annotate-return/rewrite)
        (e-data-literals/rewrite)
-       (f/rewrite)
-       ))
+       (f/rewrite)))

@@ -1,6 +1,6 @@
 (ns kalai.pass.java-test
   (:require [clojure.test :refer [deftest testing is]]
-            [kalai.pass.test-helpers :refer [top-level-form inner-form]]))
+            [kalai.pass.test-helpers :refer [ns-form top-level-form inner-form]]))
 
 (deftest t1
   (top-level-form
@@ -68,14 +68,14 @@ return (x + y);
 }"))
 
 (deftest t17
-    (top-level-form
-      '(defn f ^{:t :void} [^int x]
-         (println x))
-      ;;->
-      '(function f [x]
-                 (invoke println x))
-      ;;->
-      "public static void f(int x) {
+  (top-level-form
+    '(defn f ^{:t :void} [^int x]
+       (println x))
+    ;;->
+    '(function f [x]
+               (invoke println x))
+    ;;->
+    "public static void f(int x) {
 System.out.println(x);
 }"))
 
@@ -124,15 +124,19 @@ int y = 2;
 
 ;; this test covers type erasure, but we have disabled that
 ;; as the bottom up traversal does too much (slow)
-
-#_(deftest t111
-    (top-level-form
-      '(do (def ^{:kalias '[kmap [klong kstring]]} T)
-           (def ^{:t T} x))
-      ;;->
-      '()
-      ;;->
-      ""))
+(deftest t111
+  (ns-form
+    '((ns test-package.test-class)
+      (def ^{:kalias {:map [:long :string]}} T)
+      (def ^{:t T} x))
+    ;;->
+    '(namespace test-package.test-class
+       (init false x))
+    ;;->
+    "package test-package;
+public class test-class {
+Map<Long,String> x;
+}"))
 
 (deftest t112
   (top-level-form

@@ -26,9 +26,6 @@
       (.mkdirs (io/file (.getParent output-file)))
       (spit output-file (str/join \newline strs)))))
 
-(defn spy [x]
-  (doto x puget/cprint))
-
 (defn rewriters [asts]
   (->> (kalai-pipeline/asts->kalai asts)
        (java-pipeline/kalai->java)))

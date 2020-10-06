@@ -1,7 +1,11 @@
 (ns kalai.util
   (:require [meander.epsilon :as m]
             [meander.syntax.epsilon :as syntax]
-            [meander.match.syntax.epsilon :as match]))
+            [meander.match.syntax.epsilon :as match]
+            [puget.printer :as puget]))
+
+(defn spy [x]
+  (doto x puget/cprint))
 
 (defn match-type? [t x]
   (or

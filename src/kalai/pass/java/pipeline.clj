@@ -4,11 +4,7 @@
             [kalai.pass.java.c-condense :as java3-condense]
             [kalai.pass.java.e-string :as java4-string]
             [kalai.pass.shared.flatten-groups :as flatten-groups]
-            [kalai.pass.shared.raise-stuff :as raise-stuff]
-            [puget.printer :as puget]))
-
-(defn spy [x]
-  (doto x puget/cprint))
+            [kalai.pass.shared.raise-stuff :as raise-stuff]))
 
 (defn kalai->java [k]
   (->> k

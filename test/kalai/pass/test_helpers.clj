@@ -58,6 +58,10 @@
                    (or (is (= a2c# b2c#))
                        (println "Clojure to Java failed")))))))))))
 
+(defmacro ns-form [input kalai-s-expression expected]
+  (test-form input kalai-s-expression expected
+             identity identity identity))
+
 (defmacro top-level-form [input kalai-s-expression expected]
   (test-form input kalai-s-expression expected
              as-ns remove-kalai-class remove-java-class))
