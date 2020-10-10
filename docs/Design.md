@@ -67,6 +67,80 @@ Multiple passes occur to incrementally transform Clojure to the target represent
 ## Statements/expressions
     
 ## Strategy of mutable vs immutable
+
+(defn mess [^{:t :int
+              :mut true
+              :ref true} a]
+  (let [^{:t {:vector [int]}} z (atom ^:mut [3 4])
+        ^{:t :int} i (atom 0)
+        ^{:t :int} j a]
+    (swap! z conj 5)
+    (swap! z conj 6)
+    (count @z)))
+    
+Even though we apply the word mutable to bindings and to data collections
+it is tricky to recognize that the opposite of a mutable binding
+is a constant.
+The opposite of an mutable collection is a immutable collection,
+but a persistent one implies extra functionality above immutability.
+The default is persistent.
+Annotating ^:mut on a collection gives you a mutable collection.
+You cannot annotate ^:mut on non-collection literals such as numbers
+or strings, both because Clojure does not allow it, and because
+it doesn't make sense in Kalai either.
+When it comes to annotating types in Kalai,
+we know that we have the type and the mutability to annotate.
+C++ and Java are examples of this.
+Because of Rust we also have to annotate whether it is a reference type.
+C++ might be similar to Rust in this regard.
+If you want to pass by mutable ref, you should pass an atom,
+so that the Clojure code behaves the same as the target language code.
+You can still pass a non-mutable ref (for Rust) in which case you
+shouldn't pass an atom.
+Mutability correlates with atoms.
+Use of deref is to make sure Clojure behavior matches target language behavior,
+Metadata, including type hints, is to make sure that target language
+syntax is complete and compiles and works.
+A mutable pass by reference implies reference.
+In other words, in the metadata map, keyword mut true implies that
+keyword ref is true, but there is no inverse implication, as
+ref can be true while mut is false.
+
+```rust
+let mut m = HashMap::new();
+&m.insert(k, v);
+printer_fn(&m);
+
+pub printer_fn(m: &HashMap) {
+   println!("{}", m);
+}
+```
+
+```clojure
+(defn printer-fn [^:ref ^{:t :map} m]
+  (println m)
+  ...)
+
+(defn fn2 [^:ref ^:mut ^{:t :map} m]
+  (println @m)
+  ...)
+
+(defn printer-fn3 [^{:t :map} m]
+  (println m)
+  ...)
+
+;; m should have ^:mut on it
+(let [m (atom ^:mut {})]
+  (swap! m assoc k v)
+  (printer-fn @^:ref m)
+
+  (printer-fn @^:ref m)
+  (fn2 ^:mut ^:ref m)
+  (printer-fn3 @m))
+```
+
+
+
 ## Strategy for types, alias, metadata
 
 ## Notes
@@ -78,14 +152,35 @@ Aggregate types will be composed of "primitive types" (types that are defined in
 Doing so follows Clojure's data simplicity principle: don't complext plain data with types.
 To support new concepts (for example StringBuffer), users will need to add to the Kalai supported types and implement code for each of the target languages.
 We should minimize the effort required from users to extend Kalai, which would be done through user supplied data/functions.
-We could provide a type aliasing feature:
-`(alias Z [kmap [klong kstring]])` => (def ^:kalai-alias Z ...) => In the AST, remove the def (don't emit it)
-`(def ^{:t Z} x)` => In the AST, replace Z with the value of Z => `(def ^{:t [kmap [klong kstring]] x)`
 
-`(def ^{:t '[kmap [klong ^:const ^:opt kstr]]} x)`
-Notes on type names: don't want them to collide with Clojure words or user expectations of target language names.
-They must be quoted.
-Collection types go in nested vectors.
+Types can be supplied as either type hints (which is metadata `{:tag type}`),
+or Kalai specific metadata `{:t type}`.
+Kalai specific metadata is sometimes necessary because
+1. Number literals in Clojure are strictly longs and doubles,
+   and cannot be typehinted as ints/floats.
+   But these are useful types for many target languages.
+2. Representing generic types 
+
+Types can be supplied as Java types, classes, keywords or symbols.
+Keywords are convenient to work with.
+Types are accepted as presented, and left to the final stage in
+the language specific pipelines to be converted where necessary.
+Kalai makes no attempt to validate the types at present.
+
+Generic types, also known as parameterized types (including collection types)
+are represented as a map containing a single key value pair:
+`{:map [:long :string]}`
+where the key is the parent type (generic type)
+and the value is the type parameters (child types).
+This notation is sufficient to represent the tree like nesting of types,
+Information about the type nodes is captured in metadata if required,
+which enables us to use the simple structure.
+`(def ^{:t '{kmap [klong ^:mut ^:opt kstr]}} x)`
+
+We provide a type aliasing feature:
+`(def ^{:t Z} x)` => In the AST, replace Z with the value of Z => `(def ^{:t {:map [:long :string]} x)`
+`(def ^{:kalias _} Z)` => In the AST, remove the def (don't emit it)
+
 
 Turning data literals into s-expressions, cannot use data literals in intermediate s-expressions.
 groups of statements in place of expressions are raised to above the statement,

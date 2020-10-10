@@ -1,16 +1,7 @@
 (ns kalai.pass.kalai.a-annotate-ast
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]
-            [clojure.walk :as walk]
             [clojure.tools.analyzer.ast :as ast]))
-
-(defn trim-ast
-  "When you don't want to look at the entire thing"
-  [ast]
-  (walk/postwalk #(if (map? %)
-                    (dissoc % :column :line :file :env)
-                    %)
-                 ast))
 
 (def substitute-aliased-types
   (s/rewrite

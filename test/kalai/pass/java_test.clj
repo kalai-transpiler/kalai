@@ -2,7 +2,9 @@
   (:require [clojure.test :refer [deftest testing is]]
             [kalai.pass.test-helpers :refer [ns-form top-level-form inner-form]]))
 
-(deftest t1
+;; # Creating Variables
+
+(deftest init1-test
   (top-level-form
     '(def ^{:t "int"} x 3)
     ;;->
@@ -10,64 +12,97 @@
     ;;->
     "int x = 3;"))
 
-(deftest t15
-  (top-level-form
-    '(def ^Integer x)
-    ;;->
-    '(init false x)
-    ;;->
-    "Integer x;"))
+(deftest init2-test
+    (top-level-form
+      '(def ^Integer x)
+      ;;->
+      '(init false x)
+      ;;->
+      "Integer x;"))
 
-(deftest t16
-  (top-level-form
-    '(defn f ^Integer [^Integer x]
-       (inc x))
+(deftest init3-test
+  (inner-form
+    '(let [^int x 1]
+       x)
     ;;->
-    '(function f [x]
-               (return (operator + x 1)))
+    '(do
+       (init false x 1)
+       x)
     ;;->
-    "public static Integer f(Integer x) {
-return (x + 1);
+    "{
+int x = 1;
+x;
 }"))
 
-(deftest t17
-  (top-level-form
-    '(defn f ^int []
-       (let [^int x (atom 0)]
-         (swap! x inc)))
-    ;;->
-    '(function f []
-               (do
-                 (init true x 0)
-                 (group
-                   (assign x (invoke inc x))
-                   (return x))))
-    ;;->
-    "public static int f() {
+;; # Functions
+
+(deftest function-test
+  (testing
+    "In Kalai, you repesent a function just how you would in Clojure"
+    (top-level-form
+      '(defn f ^Integer [^Integer x]
+         (inc x))
+      ;;->
+      '(function f [x]
+                 (return (operator + x 1)))
+      ;;->
+      "public static Integer f(Integer x) {
+return (x + 1);
+}")))
+
+(deftest function2-test
+  (testing
+    "Some Clojure forms expand to multiple statements.
+    The way Kalai deals with this is by..."
+
+    "A function with no argument and a mutable local variable,
+    and returning a Clojure form that expands to multiple statements."
+    (top-level-form
+      '(defn f ^int []
+         (let [^int x (atom 0)]
+           (swap! x inc)))
+      ;;->
+      '(function f []
+                 (do
+                   (init true x 0)
+                   (group
+                     (assign x (invoke inc x))
+                     (return x))))
+      ;;->
+      "public static int f() {
 int x = 0;
 x = inc(x);
 return x;
-}"))
+}")))
 
-(deftest t165
-  (top-level-form
-    '(defn f
-       (^int [^int x]
-        (inc x))
-       (^int [^int x ^int y]
-        (+ x y)))
+;; Multiple arity aka overloaded methods
+(deftest function3-test
+  (ns-form
+    '((ns test-package.test-class)
+      (defn f
+        (^int [^int x]
+         (inc x))
+        (^int [^int x ^int y]
+         (+ x y))))
     ;;->
-    '(function f [x]
-               (return (operator + x 1)))
+    '(namespace test-package.test-class
+      (function f [x]
+                (return (operator + x 1)))
+      (function f [x y]
+                (return (operator + x y))))
     ;;->
-    "public static int f(int x) {
+    "package test-package;
+public class test-class {
+public static int f(int x) {
 return (x + 1);
 }
 public static int f(int x, int y) {
 return (x + y);
+}
 }"))
 
-(deftest t17
+;; Custom type void does not return a value
+(deftest function4-test
   (top-level-form
     '(defn f ^{:t :void} [^int x]
        (println x))
@@ -79,7 +114,23 @@ return (x + y);
 System.out.println(x);
 }"))
 
-(deftest t18
+;; # Local variables
+
+(deftest local-variables-test
+  (inner-form
+    '(let [^int x (atom 0)]
+       (reset! x (+ @x 2)))
+    ;;->
+    '(do
+       (init true x 0)
+       (assign x (operator + x 2)))
+    ;;->
+    "{
+int x = 0;
+x = (x + 2);
+}"))
+
+(deftest local-variables2-test
   (inner-form
     '(let [^int x (atom 1)
            ^int y (atom 2)
@@ -105,7 +156,7 @@ x = 3;
 }
 }"))
 
-(deftest t19
+(deftest local-variables3-test
   (inner-form
     '(with-local-vars [^int x 1
                        ^int y 2]
@@ -122,9 +173,35 @@ int y = 2;
 (x + y);
 }"))
 
-;; this test covers type erasure, but we have disabled that
-;; as the bottom up traversal does too much (slow)
-(deftest t111
+;; # Types
+
+;; Exhibits the generosity of our type system
+(deftest primitives-types-test
+  (inner-form
+    '(do (def ^{:t :Boolean} x true)
+         (def x true)
+         (def ^{:t "Long"} y 5))
+    ;;->
+    '(do
+       (init false x true)
+       (init false x true)
+       (init false y 5))
+    ;;->
+    "{
+Boolean x = true;
+bool x = true;
+Long y = 5;
+}"))
+
+(deftest generic-types-test
+  (top-level-form
+    '(do (def ^{:t {:map [:long :string]}} x))
+    ;;->
+    '(init false x)
+    ;;->
+    "Map<Long,String> x;"))
+
+(deftest type-aliasing-test
   (ns-form
     '((ns test-package.test-class)
       (def ^{:kalias {:map [:long :string]}} T)
@@ -138,123 +215,8 @@ public class test-class {
 Map<Long,String> x;
 }"))
 
-(deftest t112
-  (top-level-form
-    '(do (def ^{:t {:map [:long :string]}} x))
-    ;;->
-    '(init false x)
-    ;;->
-    "Map<Long,String> x;"))
-
-(deftest t2
-  (inner-form
-    '(do (def ^{:t "Boolean"} x true)
-         (def x true)
-         (def ^{:t "Long"} y 5))
-    ;;->
-    '(do
-       (init false x true)
-       (init false x true)
-       (init false y 5))
-    ;;->
-
-    ;; TODO: condense could have stripped
-    "{
-Boolean x = true;
-bool x = true;
-Long y = 5;
-}"))
-
-(deftest t3-0
-  (inner-form
-    '(let [^int x 1]
-       x)
-    ;;->
-    '(do
-       (init false x 1)
-       x)
-    ;;->
-    "{
-int x = 1;
-x;
-}"))
-
-(deftest t3-1
-  (inner-form
-    '(if true 1 2)
-    ;;->
-    '(if true 1 2)
-    ;;->
-    "if (true)
-{
-1;
-}
-else
-{
-2;
-}"))
-
-(deftest t3-1-1
-  (inner-form
-    '(let [^int x (atom 0)]
-       (reset! x (+ @x 2)))
-    ;;->
-    '(do
-       (init true x 0)
-       (assign x (operator + x 2)))
-    ;;->
-    "{
-int x = 0;
-x = (x + 2);
-}"
-    ))
-
-(deftest t3-2
-  (inner-form
-    ;; TODO: should infer from atom
-    '(def x (atom ^:mut [1 2]))
-    ;;->
-    '(init true x [1 2])
-    ;;->
-    "Vector tmp1 = new Vector();
-tmp1.add(1);
-tmp1.add(2);
-Vector x = tmp1;"))
-
-(deftest t3-2-1
-  (inner-form
-    [1 2]
-    ;;->
-    [1 2]
-    ;;->
-    "PersistentVector tmp1 = new PersistentVector();
-tmp1.add(1);
-tmp1.add(2);
-tmp1;"))
-
-(deftest t3-2-2
-  (inner-form
-    {1 2 3 4}
-    ;;->
-    {1 2 3 4}
-    ;;->
-    "PersistentMap tmp1 = new PersistentMap();
-tmp1.put(1, 2);
-tmp1.put(3, 4);
-tmp1;"))
-
-(deftest t3-2-3
-  (inner-form
-    #{1 2}
-    ;;->
-    #{1 2}
-    ;;->
-    "PersistentSet tmp1 = new PersistentSet();
-tmp1.add(1);
-tmp1.add(2);
-tmp1;"))
-
-(deftest t3-2-1-1
+;; unparameterized form
+(deftest generic-types2-test
   (inner-form
     '(let [^{:t kvector} x [1 2]]
        (println x))
@@ -271,7 +233,115 @@ Vector x = tmp1;
 System.out.println(x);
 }"))
 
-(deftest t3-2-1-1-1
+(deftest generic-types3-test
+  (inner-form
+    '(def ^{:t {:map [:string :string]}} x {:a "asdf"})
+    ;;->
+    '(init false x {:a "asdf"})
+    ;;->
+    "PersistentMap tmp1 = new PersistentMap();
+tmp1.put(\":a\", \"asdf\");
+Map<String,String> x = tmp1;"))
+
+;; # Conditionals
+
+(deftest conditional-test
+  (inner-form
+    '(if true 1 2)
+    ;;->
+    '(if true 1 2)
+    ;;->
+    "if (true)
+{
+1;
+}
+else
+{
+2;
+}"))
+
+;; # Data Literals
+
+(deftest data-literals-test
+  (inner-form
+    [1 2]
+    ;;->
+    [1 2]
+    ;;->
+    "PersistentVector tmp1 = new PersistentVector();
+tmp1.add(1);
+tmp1.add(2);
+tmp1;"))
+
+;; selecting between Vector and PersistentVector
+(deftest data-literals2-test
+  (inner-form
+    '(def x ^:mut [1 2])
+    ;;->
+    '(init false x [1 2])
+    ;;->
+    "Vector tmp1 = new Vector();
+tmp1.add(1);
+tmp1.add(2);
+Vector x = tmp1;"))
+
+(deftest data-literals3-test
+  (inner-form
+    '(let [x ^:mut [1 2]]
+       x)
+    ;;->
+    '(do
+       (init false x [1 2])
+       x)
+    ;;->
+    "{
+Vector tmp1 = new Vector();
+tmp1.add(1);
+tmp1.add(2);
+Vector x = tmp1;
+x;
+}"))
+
+(deftest data-literals4-test
+  (inner-form
+    '(let [^:mut x ^:mut [1 2]]
+       x)
+    ;;->
+    '(do
+       (init false x [1 2])
+       x)
+    ;;->
+    "{
+Vector tmp1 = new Vector();
+tmp1.add(1);
+tmp1.add(2);
+Vector x = tmp1;
+x;
+}"))
+
+(deftest data-literals5-test
+  (inner-form
+    {1 2 3 4}
+    ;;->
+    {1 2 3 4}
+    ;;->
+    "PersistentMap tmp1 = new PersistentMap();
+tmp1.put(1, 2);
+tmp1.put(3, 4);
+tmp1;"))
+
+(deftest data-literals6-test
+  (inner-form
+    #{1 2}
+    ;;->
+    #{1 2}
+    ;;->
+    "PersistentSet tmp1 = new PersistentSet();
+tmp1.add(1);
+tmp1.add(2);
+tmp1;"))
+
+(deftest data-literals7-test
   (inner-form
     '(let [^{:t kvector} x [1 [2]]]
        (println x))
@@ -290,7 +360,7 @@ Vector x = tmp1;
 System.out.println(x);
 }"))
 
-(deftest t3-2-1-1-1-1
+(deftest data-literals8-test
   (inner-form
     '(let [^{:t kvector} x [1 [2] 3 [[4]]]]
        (println x))
@@ -316,7 +386,7 @@ Vector x = tmp1;
 System.out.println(x);
 }"))
 
-(deftest t3-2-1-1-1-1-2
+(deftest data-literals9-test
   (inner-form
     '(let [^{:t kvector} x {1 [{2 3} #{4 [5 6]}]}]
        (println x))
@@ -344,7 +414,7 @@ Vector x = tmp1;
 System.out.println(x);
 }"))
 
-(deftest t4
+(deftest foreach-test
   (inner-form
     '(doseq [^int x [1 2 3 4]]
        (println x))
@@ -361,7 +431,7 @@ for (int x : tmp1) {
 System.out.println(x);
 }"))
 
-(deftest t5
+(deftest for-loop-test
   (inner-form
     '(dotimes [x 5]
        (println x))
@@ -378,7 +448,7 @@ System.out.println(x);
 x = (x + 1);
 }"))
 
-(deftest t3
+(deftest while-loop-test
   (inner-form
     '(while true
        (println "hi"))
@@ -390,7 +460,7 @@ x = (x + 1);
 System.out.println(\"hi\");
 }"))
 
-(deftest test6
+(deftest conditional2-test
   (inner-form
     '(cond true 1
            false 2
@@ -422,7 +492,7 @@ if (\":else\")
 }
 }"))
 
-(deftest test6*
+(deftest keywords-as-functions-test
   (inner-form
     '(:k {:k 1})
     ;;->
@@ -432,7 +502,7 @@ if (\":else\")
 tmp1.put(\":k\", 1);
 tmp1.get(\":k\");"))
 
-(deftest test6**
+(deftest keywords-as-functions2-test
   (inner-form
     '(:k #{:k})
     ;;->
@@ -442,7 +512,7 @@ tmp1.get(\":k\");"))
 tmp1.add(\":k\");
 tmp1.get(\":k\");"))
 
-(deftest test7
+(deftest switch-case-test
   (inner-form
     '(case 1
        1 :a
@@ -458,17 +528,7 @@ case 2 : \":b\";
 break;
 }"))
 
-(deftest test75
-  (inner-form
-    '(def ^{:t {:map [:string :string]}} x {:a "asdf"})
-    ;;->
-    '(init false x {:a "asdf"})
-    ;;->
-    "PersistentMap tmp1 = new PersistentMap();
-tmp1.put(\":a\", \"asdf\");
-Map<String,String> x = tmp1;"))
-
-(deftest test8
+(deftest function-calls-test
   #_(inner-form
       '(assoc {:a 1} :b 2)
       ;;->
@@ -476,7 +536,7 @@ Map<String,String> x = tmp1;"))
       ;;->
       ""))
 
-(deftest ternary
+(deftest conditional-expression-test
   ;; For simple expressions, a true ternary could be used instead
   ;; "((true ? 1 : 2) + (true ? (true ? 3 : 4) : 5));"
   ;; But for now we are taking the more general approach which handles expressions.
@@ -523,7 +583,7 @@ tmp2 = 5;
 }
 (tmp1 + tmp2);"))
 
-(deftest nested-group
+(deftest nested-group-test
   #_(inner-form
       '(+ 1 (swap! x inc))
       ;;->
@@ -535,9 +595,8 @@ tmp2 = 5;
       "int x = (x + 1);
   (1 + x);"))
 
-(deftest if-expr-do
+(deftest conditional-expression2-test
   (inner-form
-    ;; TODO: rewrite does not preserve form meta type hint
     '(+ (if true (do (println 1) 2)) 4)
     ;;->
     '(operator +
@@ -558,7 +617,7 @@ tmp1 = 2;
 (tmp1 + 4);"))
 
 
-(deftest if-expr-do-2
+(deftest conditional-expression3-test
   (inner-form
     '(+ (if true 1 (if false 2 3)) 4)
     ;;->
@@ -589,7 +648,7 @@ tmp1 = tmp2;
 }
 (tmp1 + 4);"))
 
-(deftest if-expr-do-2-2
+(deftest conditional-expression4-test
   (inner-form
     '(+ (if true 1 (if false 2 [3])) 4)
     ;;->
@@ -597,7 +656,6 @@ tmp1 = tmp2;
                (if true 1 (if false 2 [3]))
                4)
     ;;->
-
     "long tmp1;
 if (true)
 {

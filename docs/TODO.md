@@ -1,28 +1,41 @@
 # TODO
 
 * Types!!!
-  - define common types
+  - Document target language type conversions (when added)
+  - Validate types and narrow the set of accepted types
+  - Define common types
     - supporting universals: numeric types should be signed
     - add a pass to convert Java types to target language types
       * depends on choosing another language, too boring in Java
       - Boxed and primitives need to be unified
-      - If it's hard to work with both primitives and Boxed, we can
-        fall back to only using Boxed
-  - Generic Types [[]] -> <<>> translation
-    - we added <<>> but data literal transformation intercepts
-    - the nested vector notation
+      - If it's hard to work with both primitives and Boxed,
+        we can fall back to only using Boxed
   - Mutable
-    - in a let binding
-      * depends on choosing Rust as our next target language
-    - mutable data literals (see test t3-2)
-  - Aliasing
+    - infer that atoms imply the variable (symbol) is mutable 
+    * depends on choosing Rust as our next target language
+      to push this for non-collection types
+    - implement swap! and reset!
+    - For java, immutable bindings should have the `final` type modifier
+* Test organization
+  - better names for tests
+  - grouping functionality
+  - generate docsy from tests
+    - new test directory
+    - split up into more namespaces
+    - don't show the Kalai intermediate syntax
+    - markdown inversion
+    - GitHub action
+    - local action
+* Expressions inside data literals
+  - {1 (+ 1 2)}
 * Interop
   - expand the "function-call" pass (core/interop/kalai/custom)
     * depends on us choosing another target language
   - see if starter code for rust and python works
   - implementing this probably requires implementing support for
     a second target language to ensure we are not doing Java
-    specific things  
+    specific things
+* Match demo1  
 * We think we have most of the proof of concept language concepts, but we need to hook up the tests
   - pleasant cider testing
   - workflows (developer and CI)
