@@ -12,5 +12,5 @@
                  [org.clojure/clojure "1.10.1"]
                  [org.clojure/tools.analyzer.jvm "1.1.0"]
                  [org.clojure/tools.cli "1.0.194"]
-                 [meander/epsilon "0.0.480"]
+                 [meander/epsilon "0.0.512"]
                  [mvxcvi/puget "1.3.1"]])

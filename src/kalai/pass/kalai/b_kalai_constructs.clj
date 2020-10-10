@@ -29,6 +29,29 @@
     (clojure.lang.Numbers/dec ?x)
     (operator - (m/app inner-form ?x) 1)))
 
+(def data-literals
+  "Data literals are mostly unchanged,
+  except that data literals may contain expressions inside them.
+  Metadata from the original object must propagate."
+  (s/rewrite
+    (m/and [!k ...]
+           (m/app meta ?meta))
+    (m/app with-meta
+           [(m/app inner-form !k) ...]
+           ?meta)
+
+    (m/and (m/map-of !k !v)
+           (m/app meta ?meta))
+    (m/app with-meta
+           (m/map-of (m/app inner-form !k) (m/app inner-form !v))
+           ?meta)
+
+    (m/and (m/set-of !k)
+           (m/app meta ?meta))
+    (m/app with-meta
+           (m/set-of (m/app inner-form !k))
+           ?meta)))
+
 (def ref-symbol?
   '#{atom
      ref
@@ -210,6 +233,7 @@
     assignments
     def-init
     operators
+    data-literals
     misc
     s/pass))
 

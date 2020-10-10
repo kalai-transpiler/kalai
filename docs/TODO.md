@@ -19,8 +19,6 @@
     - markdown inversion
     - GitHub action
     - local action
-* Expressions inside data literals
-  - {1 (+ 1 2)}
 * Interop
   - expand the "function-call" pass (core/interop/kalai/custom)
     * depends on us choosing another target language

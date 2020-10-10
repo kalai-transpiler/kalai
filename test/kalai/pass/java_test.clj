@@ -415,6 +415,19 @@ final Vector x = tmp1;
 System.out.println(x);
 }"))
 
+(deftest data-literals10-test
+  (inner-form
+    '{"key" (+ 1 2)}
+    ;;->
+    '{"key" (operator
+              +
+              1
+              2)}
+    ;;->
+    "final PersistentMap tmp1 = new PersistentMap();
+tmp1.put(\"key\", (1 + 2));
+tmp1;"))
+
 (deftest foreach-test
   (inner-form
     '(doseq [^int x [1 2 3 4]]
