@@ -32,3 +32,10 @@
 
 (defn void? [expr]
   (#{:void 'void "void"} (get-type expr)))
+
+(defn set-meta
+  "If v is truthy, sets k to v in meta of x"
+  [x k v]
+  (if v
+    (with-meta x (assoc (meta x) k v))
+    x))

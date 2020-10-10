@@ -10,14 +10,7 @@
       - Boxed and primitives need to be unified
       - If it's hard to work with both primitives and Boxed,
         we can fall back to only using Boxed
-  - Mutable
-    - infer that atoms imply the variable (symbol) is mutable 
-    * depends on choosing Rust as our next target language
-      to push this for non-collection types
-    - implement swap! and reset!
-    - For java, immutable bindings should have the `final` type modifier
 * Test organization
-  - better names for tests
   - grouping functionality
   - generate docsy from tests
     - new test directory

@@ -40,20 +40,20 @@
   (statement (str variable-name " = " (stringify value))))
 
 (def ktypes
-  {"map"       "Map"
-   "kmap"      "Map"
-   "set"       "Set"
-   "kset"      "Set"
-   "vector"    "Vector"
-   "kvector"   "Vector"
-   "kbool"     "bool"
-   "kbyte"     "byte"
-   "kchar"     "char"
-   "kint"      "int"
-   "klong"     "long"
-   "kfloat"    "float"
-   "kdouble"   "double"
-   "kstring"   "string"})
+  {"map"     "Map"
+   "kmap"    "Map"
+   "set"     "Set"
+   "kset"    "Set"
+   "vector"  "Vector"
+   "kvector" "Vector"
+   "kbool"   "bool"
+   "kbyte"   "byte"
+   "kchar"   "char"
+   "kint"    "int"
+   "klong"   "long"
+   "kfloat"  "float"
+   "kdouble" "double"
+   "kstring" "string"})
 
 (def java-types
   {java.util.Map     "Map"
@@ -108,14 +108,20 @@
     ?t
     ~(str (ktype ?t))))
 
+(defn type-modifiers [s mut]
+  (cond->> s
+           (not mut) (space-separated "final")))
+
 ;; Types are allowed to flow through the pipeline as metadata
 (defn type-str
-  ([x]
-   (let [{:keys [t tag]} (meta x)]
-     (type-str* (or t tag))))
-  ([x y]
-   (let [{:keys [t tag]} (meta x)]
-     (type-str* (or t tag (u/get-type y))))))
+  ([variable]
+   (let [{:keys [t tag mut]} (meta variable)]
+     (-> (type-str* (or t tag))
+         (type-modifiers mut))))
+  ([variable value]
+   (let [{:keys [t tag mut]} (meta variable)]
+     (-> (type-str* (or t tag (u/get-type value)))
+         (type-modifiers mut)))))
 
 (defn init-str
   ([variable-name]

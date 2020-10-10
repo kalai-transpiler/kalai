@@ -8,17 +8,17 @@
   (top-level-form
     '(def ^{:t "int"} x 3)
     ;;->
-    '(init false x 3)
+    '(init x 3)
     ;;->
-    "int x = 3;"))
+    "final int x = 3;"))
 
 (deftest init2-test
     (top-level-form
       '(def ^Integer x)
       ;;->
-      '(init false x)
+      '(init x)
       ;;->
-      "Integer x;"))
+      "final Integer x;"))
 
 (deftest init3-test
   (inner-form
@@ -26,11 +26,11 @@
        x)
     ;;->
     '(do
-       (init false x 1)
+       (init x 1)
        x)
     ;;->
     "{
-int x = 1;
+final int x = 1;
 x;
 }"))
 
@@ -46,7 +46,7 @@ x;
       '(function f [x]
                  (return (operator + x 1)))
       ;;->
-      "public static Integer f(Integer x) {
+      "public static final Integer f(final Integer x) {
 return (x + 1);
 }")))
 
@@ -64,12 +64,12 @@ return (x + 1);
       ;;->
       '(function f []
                  (do
-                   (init true x 0)
+                   (init x 0)
                    (group
                      (assign x (invoke inc x))
                      (return x))))
       ;;->
-      "public static int f() {
+      "public static final int f() {
 int x = 0;
 x = inc(x);
 return x;
@@ -93,10 +93,10 @@ return x;
     ;;->
     "package test-package;
 public class test-class {
-public static int f(int x) {
+public static final int f(final int x) {
 return (x + 1);
 }
-public static int f(int x, int y) {
+public static final int f(final int x, final int y) {
 return (x + y);
 }
 }"))
@@ -110,7 +110,7 @@ return (x + y);
     '(function f [x]
                (invoke println x))
     ;;->
-    "public static void f(int x) {
+    "public static final void f(final int x) {
 System.out.println(x);
 }"))
 
@@ -122,7 +122,7 @@ System.out.println(x);
        (reset! x (+ @x 2)))
     ;;->
     '(do
-       (init true x 0)
+       (init x 0)
        (assign x (operator + x 2)))
     ;;->
     "{
@@ -139,9 +139,9 @@ x = (x + 2);
        (+ @x (deref y)))
     ;;->
     '(do
-       (init true x 1)
-       (init true y 2)
-       (init false z 1)
+       (init x 1)
+       (init y 2)
+       (init z 1)
        (do
          (assign x 3)
          (operator + x y)))
@@ -149,7 +149,7 @@ x = (x + 2);
     "{
 int x = 1;
 int y = 2;
-int z = 1;
+final int z = 1;
 {
 x = 3;
 (x + y);
@@ -163,8 +163,8 @@ x = 3;
        (+ (var-get x) (var-get y)))
     ;;->
     '(do
-       (init true x 1)
-       (init true y 2)
+       (init x 1)
+       (init y 2)
        (operator + x y))
     ;;->
     "{
@@ -183,23 +183,23 @@ int y = 2;
          (def ^{:t "Long"} y 5))
     ;;->
     '(do
-       (init false x true)
-       (init false x true)
-       (init false y 5))
+       (init x true)
+       (init x true)
+       (init y 5))
     ;;->
     "{
-Boolean x = true;
-bool x = true;
-Long y = 5;
+final Boolean x = true;
+final bool x = true;
+final Long y = 5;
 }"))
 
 (deftest generic-types-test
   (top-level-form
     '(do (def ^{:t {:map [:long :string]}} x))
     ;;->
-    '(init false x)
+    '(init x)
     ;;->
-    "Map<Long,String> x;"))
+    "final Map<Long,String> x;"))
 
 (deftest type-aliasing-test
   (ns-form
@@ -208,11 +208,11 @@ Long y = 5;
       (def ^{:t T} x))
     ;;->
     '(namespace test-package.test-class
-                (init false x))
+                (init x))
     ;;->
     "package test-package;
 public class test-class {
-Map<Long,String> x;
+final Map<Long,String> x;
 }"))
 
 ;; unparameterized form
@@ -222,14 +222,14 @@ Map<Long,String> x;
        (println x))
     ;;->
     '(do
-       (init false x [1 2])
+       (init x [1 2])
        (invoke println x))
     ;;->
     "{
-PersistentVector tmp1 = new PersistentVector();
+final PersistentVector tmp1 = new PersistentVector();
 tmp1.add(1);
 tmp1.add(2);
-Vector x = tmp1;
+final Vector x = tmp1;
 System.out.println(x);
 }"))
 
@@ -237,11 +237,11 @@ System.out.println(x);
   (inner-form
     '(def ^{:t {:map [:string :string]}} x {:a "asdf"})
     ;;->
-    '(init false x {:a "asdf"})
+    '(init x {:a "asdf"})
     ;;->
-    "PersistentMap tmp1 = new PersistentMap();
+    "final PersistentMap tmp1 = new PersistentMap();
 tmp1.put(\":a\", \"asdf\");
-Map<String,String> x = tmp1;"))
+final Map<String,String> x = tmp1;"))
 
 ;; # Conditionals
 
@@ -268,7 +268,7 @@ else
     ;;->
     [1 2]
     ;;->
-    "PersistentVector tmp1 = new PersistentVector();
+    "final PersistentVector tmp1 = new PersistentVector();
 tmp1.add(1);
 tmp1.add(2);
 tmp1;"))
@@ -278,12 +278,12 @@ tmp1;"))
   (inner-form
     '(def x ^:mut [1 2])
     ;;->
-    '(init false x [1 2])
+    '(init x [1 2])
     ;;->
-    "Vector tmp1 = new Vector();
+    "final Vector tmp1 = new Vector();
 tmp1.add(1);
 tmp1.add(2);
-Vector x = tmp1;"))
+final Vector x = tmp1;"))
 
 (deftest data-literals3-test
   (inner-form
@@ -291,32 +291,35 @@ Vector x = tmp1;"))
        x)
     ;;->
     '(do
-       (init false x [1 2])
+       (init x [1 2])
        x)
     ;;->
     "{
-Vector tmp1 = new Vector();
+final Vector tmp1 = new Vector();
 tmp1.add(1);
 tmp1.add(2);
-Vector x = tmp1;
+final Vector x = tmp1;
 x;
 }"))
 
 (deftest data-literals4-test
   (inner-form
-    '(let [^:mut x ^:mut [1 2]]
-       x)
+    '(let [x (atom ^:mut [1 2])]
+       (reset! x ^:mut [3 4]))
     ;;->
     '(do
-       (init false x [1 2])
-       x)
+       (init x [1 2])
+       (assign x [3 4]))
     ;;->
     "{
-Vector tmp1 = new Vector();
+final Vector tmp1 = new Vector();
 tmp1.add(1);
 tmp1.add(2);
 Vector x = tmp1;
-x;
+final Vector tmp2 = new Vector();
+tmp2.add(3);
+tmp2.add(4);
+x = tmp2;
 }"))
 
 (deftest data-literals5-test
@@ -325,7 +328,7 @@ x;
     ;;->
     {1 2 3 4}
     ;;->
-    "PersistentMap tmp1 = new PersistentMap();
+    "final PersistentMap tmp1 = new PersistentMap();
 tmp1.put(1, 2);
 tmp1.put(3, 4);
 tmp1;"))
@@ -336,7 +339,7 @@ tmp1;"))
     ;;->
     #{1 2}
     ;;->
-    "PersistentSet tmp1 = new PersistentSet();
+    "final PersistentSet tmp1 = new PersistentSet();
 tmp1.add(1);
 tmp1.add(2);
 tmp1;"))
@@ -347,16 +350,16 @@ tmp1;"))
        (println x))
     ;;->
     '(do
-       (init false x [1 [2]])
+       (init x [1 [2]])
        (invoke println x))
     ;;->
     "{
-PersistentVector tmp1 = new PersistentVector();
+final PersistentVector tmp1 = new PersistentVector();
 tmp1.add(1);
-PersistentVector tmp2 = new PersistentVector();
+final PersistentVector tmp2 = new PersistentVector();
 tmp2.add(2);
 tmp1.add(tmp2);
-Vector x = tmp1;
+final Vector x = tmp1;
 System.out.println(x);
 }"))
 
@@ -366,23 +369,22 @@ System.out.println(x);
        (println x))
     ;;->
     '(do
-       (init false x
-             [1 [2] 3 [[4]]])
+       (init x [1 [2] 3 [[4]]])
        (invoke println x))
     ;;->
     "{
-PersistentVector tmp1 = new PersistentVector();
+final PersistentVector tmp1 = new PersistentVector();
 tmp1.add(1);
-PersistentVector tmp2 = new PersistentVector();
+final PersistentVector tmp2 = new PersistentVector();
 tmp2.add(2);
 tmp1.add(tmp2);
 tmp1.add(3);
-PersistentVector tmp3 = new PersistentVector();
-PersistentVector tmp4 = new PersistentVector();
+final PersistentVector tmp3 = new PersistentVector();
+final PersistentVector tmp4 = new PersistentVector();
 tmp4.add(4);
 tmp3.add(tmp4);
 tmp1.add(tmp3);
-Vector x = tmp1;
+final Vector x = tmp1;
 System.out.println(x);
 }"))
 
@@ -392,25 +394,24 @@ System.out.println(x);
        (println x))
     ;;->
     '(do
-       (init false x
-             {1 [{2 3} #{4 [5 6]}]})
+       (init x {1 [{2 3} #{4 [5 6]}]})
        (invoke println x))
     ;;->
     "{
-PersistentMap tmp1 = new PersistentMap();
-PersistentVector tmp2 = new PersistentVector();
-PersistentMap tmp3 = new PersistentMap();
+final PersistentMap tmp1 = new PersistentMap();
+final PersistentVector tmp2 = new PersistentVector();
+final PersistentMap tmp3 = new PersistentMap();
 tmp3.put(2, 3);
 tmp2.add(tmp3);
-PersistentSet tmp4 = new PersistentSet();
+final PersistentSet tmp4 = new PersistentSet();
 tmp4.add(4);
-PersistentVector tmp5 = new PersistentVector();
+final PersistentVector tmp5 = new PersistentVector();
 tmp5.add(5);
 tmp5.add(6);
 tmp4.add(tmp5);
 tmp2.add(tmp4);
 tmp1.put(1, tmp2);
-Vector x = tmp1;
+final Vector x = tmp1;
 System.out.println(x);
 }"))
 
@@ -422,7 +423,7 @@ System.out.println(x);
     '(foreach x [1 2 3 4]
               (invoke println x))
     ;;->
-    "PersistentVector tmp1 = new PersistentVector();
+    "final PersistentVector tmp1 = new PersistentVector();
 tmp1.add(1);
 tmp1.add(2);
 tmp1.add(3);
@@ -437,7 +438,7 @@ System.out.println(x);
        (println x))
     ;;->
     '(group
-       (init true x 0)
+       (init x 0)
        (while (operator < x 5)
          (invoke println x)
          (assign x (operator + x 1))))
@@ -498,7 +499,7 @@ if (\":else\")
     ;;->
     '(method get {:k 1} :k)
     ;;->
-    "PersistentMap tmp1 = new PersistentMap();
+    "final PersistentMap tmp1 = new PersistentMap();
 tmp1.put(\":k\", 1);
 tmp1.get(\":k\");"))
 
@@ -508,7 +509,7 @@ tmp1.get(\":k\");"))
     ;;->
     '(method get #{:k} :k)
     ;;->
-    "PersistentSet tmp1 = new PersistentSet();
+    "final PersistentSet tmp1 = new PersistentSet();
 tmp1.add(\":k\");
 tmp1.get(\":k\");"))
 
@@ -670,7 +671,7 @@ tmp2 = 2;
 }
 else
 {
-PersistentVector tmp3 = new PersistentVector();
+final PersistentVector tmp3 = new PersistentVector();
 tmp3.add(3);
 {
 tmp2 = tmp3;

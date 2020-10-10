@@ -1,6 +1,7 @@
 (ns kalai.pass.kalai.b-kalai-constructs
   (:require [meander.strategy.epsilon :as s]
-            [meander.epsilon :as m]))
+            [meander.epsilon :as m]
+            [kalai.util :as u]))
 
 (declare inner-form)
 
@@ -28,6 +29,26 @@
     (clojure.lang.Numbers/dec ?x)
     (operator - (m/app inner-form ?x) 1)))
 
+(def ref-symbol?
+  '#{atom
+     ref
+     agent
+     clojure.core/atom
+     clojure.core/ref
+     clojure.core/agent})
+
+(defn ref-form? [x]
+  (and (seq? x)
+       (ref-symbol? (first x))))
+
+(defn as-init
+  [?name ?x mutability]
+  (list 'init
+        (u/set-meta ?name :mut
+                    (or (= mutability :mutable)
+                        (ref-form? ?x)))
+        (inner-form ?x)))
+
 (def loops
   (s/rewrite
     ;; while -> while
@@ -41,7 +62,9 @@
         (if (clojure.lang.Numbers/lt ?sym ?auto)
           (do . !body ... (recur (clojure.lang.Numbers/unchecked_inc ?sym))))))
     (group
-      (init true ~(with-meta ?sym {:t 'int}) 0)
+      (init ~(with-meta ?sym {:t 'int
+                              :mut true})
+            0)
       (while (operator < ?sym ?n)
         . (m/app inner-form !body) ...
         (assign ?sym (operator + ?sym 1))))
@@ -68,40 +91,22 @@
                     (clojure.lang.RT/intCast 0)))
                 (let* [?sym (clojure.core/first ?bs)]
                   (do ?body (recur (clojure.core/next ?bs) nil 0 0)))))))))
-    (foreach ?sym ?xs (m/app inner-form ?body))
+    (foreach (m/app u/set-meta ?sym :mut true)
+             ?xs
+             (m/app inner-form ?body))
 
     ;; loop -> ???
     ;;(loop* ?bindings ?body)
     ;;(loop ?bindings (m/app inner-form ?body))
     ))
 
-(def ref-symbol?
-  '#{atom
-     ref
-     agent
-     clojure.core/atom
-     clojure.core/ref
-     clojure.core/agent})
-
-(def ref-form?
-  (s/rewrite
-    ((m/pred ref-symbol? ?x) _) true
-    ?else false))
-
-(def as-init
-  (s/rewrite
-    [?name ?x ?force-mutable]
-    (init ~(or (ref-form? ?x) ?force-mutable)
-          ?name
-          (m/app inner-form ?x))))
-
 (def def-init
   (s/rewrite
     (def ?name ?form)
-    (m/app as-init [?name ?form false])
+    (m/app as-init ?name ?form :immutable)
 
     (def ?name)
-    (init false ?name)))
+    (init ?name)))
 
 (def assignments
   (s/rewrite
@@ -114,7 +119,7 @@
           (finally (clojure.lang.Var/popThreadBindings)))))
     ;;->
     (do
-      . (m/app as-init [!sym !x true]) ..?n
+      . (m/app as-init !sym !x :mutable) ..?n
       (m/app inner-form ?body))
 
     ;; let
@@ -122,7 +127,7 @@
       ?body)
     ;;->
     (do
-      . (m/app as-init [!sym !x false]) ...
+      . (m/app as-init !sym !x :immutable) ...
       (m/app inner-form ?body))
 
     ;; TODO: Clojure has nuanced concepts of state...
