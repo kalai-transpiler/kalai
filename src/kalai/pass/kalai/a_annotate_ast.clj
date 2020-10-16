@@ -1,7 +1,8 @@
 (ns kalai.pass.kalai.a-annotate-ast
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]
-            [clojure.tools.analyzer.ast :as ast]))
+            [clojure.tools.analyzer.ast :as ast]
+            [kalai.util :as u]))
 
 (def substitute-aliased-types
   (s/rewrite
@@ -18,6 +19,17 @@
     ;;->
     {:name ~(with-meta ?name (assoc ?name-meta :t ?kalias))
      :meta ?meta
+     &     ?ast}
+
+    ;; annotate vars with their var as metadata so they can be identified later in the pipeline
+    {:op   :var
+     :var  (m/pred some? ?var)
+     :form (m/pred some? ?form)
+     &     ?ast}
+    ;;->
+    {:op   :var
+     :var  ?var
+     :form (m/app u/set-meta ?form :var ?var)
      &     ?ast}
 
     ;; otherwise leave the ast as is

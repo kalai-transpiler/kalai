@@ -71,7 +71,7 @@ return (x + 1);
       ;;->
       "public static final int f() {
 int x = 0;
-x = inc(x);
+x = (x + 1);
 return x;
 }")))
 
@@ -543,12 +543,24 @@ break;
 }"))
 
 (deftest function-calls-test
-  #_(inner-form
-      '(assoc {:a 1} :b 2)
-      ;;->
-      '()
-      ;;->
-      ""))
+  (inner-form
+    '(assoc {:a 1} :b 2)
+    ;;->
+    '(invoke assoc {:a 1} :b 2)
+    ;;->
+    "final PersistentMap tmp1 = new PersistentMap();
+tmp1.put(\":a\", 1);
+tmp1.put(\":b\", 2);"))
+
+(deftest function-calls2-test
+  (inner-form
+    '(update {:a 1} :a inc)
+    ;;->
+    '(invoke update {:a 1} :a inc)
+    ;;->
+    "final PersistentMap tmp1 = new PersistentMap();
+tmp1.put(\":a\", 1);
+tmp1.put(\":a\", (tmp1.get(\":a\") + 1));"))
 
 (deftest conditional-expression-test
   ;; For simple expressions, a true ternary could be used instead

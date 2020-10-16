@@ -1,10 +1,12 @@
 (ns kalai.pass.java.b-function-call
-  (:require [meander.strategy.epsilon :as s]))
+  (:require [meander.strategy.epsilon :as s]
+            [meander.epsilon :as m]))
 
-;; If do do this before syntax, we can remove j/invoke... is that good or bad?
+;; TODO: user extension point, is dynamic var good?
+;; can it be more data driven?
+(def ^:dynamic *user*)
 
-;; TODO: I don't believe at this level we can identify (let [println #()] (println)) is not System.out.println
-;; We might have to address this at the ast level, or somehow force fully qualified Clojure core functions.
+;; If we do this before syntax, we can remove j/invoke... is that good or bad?
 
 ;; Note: For Kalai code to execute as Clojure in a REPL,
 ;; interop needs to be backed by Java classes,
@@ -18,13 +20,26 @@
 (def rewrite
   (s/bottom-up
     (s/rewrite
-      ;; TODO: should be the var clojure.core/println
-      (j/invoke println & ?more)
+      ;; note that inc may be expanded to java interop or not depending how it is used
+      (j/invoke (m/app meta {:var ~#'inc}) ?x)
+      (j/operator + ?x 1)
+
+      (j/invoke (m/app meta {:var ~#'println}) & ?more)
       (j/invoke System.out.println & ?more)
+
+      (j/invoke (m/app meta {:var ~#'assoc}) & ?more)
+      (j/method put & ?more)
+
+      (j/invoke (m/app meta {:var ~#'dissoc}) & ?more)
+      (j/method remove & ?more)
+
+      (j/invoke (m/app meta {:var ~#'conj}) & ?more)
+      (j/method add & ?more)
+
+      (j/invoke (m/app meta {:var ~#'update}) ?obj ?k ?f & ?args)
+      (j/method put ?obj ?k
+                ;; TODO: this is a bit wierd
+                (m/app rewrite (j/invoke ?f (j/method get ?obj ?k) & ?args)))
 
       ?else
       ?else)))
-
-;; TODO: user extension point, is dynamic var good?
-;; can it be more data driven?
-(def ^:dynamic *user*)
