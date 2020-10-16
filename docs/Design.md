@@ -229,20 +229,27 @@ Constructors are static functions.
 
 Operators are kinda different kinda similar (constructs), part of the syntax
 
-Truthiness:
+Symbols like `inc` resolve to vars like `clojure.core/inc`.
+Therefore we need to annotate them in the AST,
+so that when replacing function calls with target language equivalents,
+we replace the right things (not some locally scoped name).
+
+## Truthiness
+
 Hope types save us! Wrap boolean around things we don't know
 
-Equality:
+## Equality
+
 == .equals (but needs to be nil safe)
 
 Match a single group inside an s-expression:
+
     (!before ... (group . !tmp-init ... ?tmp-variable) . !after ...)
 
 Match all the groups inside an s-expression:
+
     ((m/or (group . !tmp-init ... !tmp-variable)
            !tmp-variable) ...)
-
-If statements bubbling:
 
 # Patterns
 
