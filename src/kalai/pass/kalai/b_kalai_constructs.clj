@@ -52,23 +52,20 @@
            (m/set-of (m/app inner-form !k))
            ?meta)))
 
-(def ref-symbol?
-  '#{atom
-     ref
-     agent
-     clojure.core/atom
-     clojure.core/ref
-     clojure.core/agent})
+(def ref-vars
+  #{#'atom
+    #'ref
+    #'agent})
 
 (defn ref-form? [x]
   (and (seq? x)
-       (ref-symbol? (first x))))
+       (ref-vars (:var (meta (first x))))))
 
 (defn as-init
   [?name ?x mutability]
   (list 'init
         (u/set-meta ?name :mut
-                    (or (= mutability :mutable)
+                    (or (#{:mutable} mutability)
                         (ref-form? ?x)))
         (inner-form ?x)))
 
@@ -157,43 +154,40 @@
     ;; should we boil them all down to assignment, provide equivalent abstractions, or only support 1?
     ;; currently boiling them all down to basic assignment.
 
-    (var-get ?x)
+    ((u/var ~#'var-get) ?x)
     ?x
 
-    (var-set ?var ?x)
+    ((u/var ~#'var-set) ?var ?x)
     (assign ?var (m/app inner-form ?x))
 
-    (reset! ?a ?x)
+    ((u/var ~#'reset!) ?a ?x)
     (assign ?a (m/app inner-form ?x))
 
-    (ref-set ?r ?x)
+    ((u/var ~#'ref-set) ?r ?x)
     (assign ?r (m/app inner-form ?x))
 
-    (swap! ?a ?f & ?args)
+    ((u/var ~#'swap!) ?a ?f . !args ...)
     (group
-      (assign ?a (invoke ?f ?a & ?args))
+      (assign ?a (invoke ?f ?a . (m/app inner-form !args) ...))
       ?a)
 
-    (alter ?r ?f & ?args)
-    (assign ?r (invoke ?f ?r & ?args))
+    ((u/var ~#'alter) ?r ?f . !args ...)
+    (assign ?r (invoke ?f ?r . (m/app inner-form !args) ...))
 
-    (alter-var-root ?v ?f & ?args)
-    (assign ?v (invoke ?f ?v & ?args))
+    ((u/var ~#'alter-var-root) ?v ?f . !args ...)
+    (assign ?v (invoke ?f ?v . (m/app inner-form !args) ...))
 
-    (send ?a ?f & ?args)
-    (assign ?a (invoke ?f ?a & ?args))
+    ((u/var ~#'send) ?a ?f . !args ...)
+    (assign ?a (invoke ?f ?a . (m/app inner-form !args) ...))
 
-    (send-off ?a ?f & ?args)
-    (assign ?a (invoke ?f ?a & ?args))
+    ((u/var ~#'send-off) ?a ?f . !args ...)
+    (assign ?a (invoke ?f ?a . (m/app inner-form !args) ...))
 
     ;; (atom (+ 1 2))
-    ((m/pred ref-symbol? _) ?x)
+    ((u/var (m/pred ref-vars)) ?x)
     (m/app inner-form ?x)
 
-    (deref ?x)
-    ?x
-
-    (clojure.core/deref ?x)
+    ((u/var ~#'deref) ?x)
     ?x))
 
 (def conditionals

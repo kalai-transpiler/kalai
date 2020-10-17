@@ -1,13 +1,12 @@
-(ns examples.a.demo01
-  (:refer-clojure :exclude [format])
-  (:require [kalai.common :refer :all]))
+(ns a.demo01
+  (:refer-clojure :exclude [format]))
 
 (defn format ^String [^Integer num]
-      (let [^Integer i (atom num)
-            ^StringBuffer result (atom (new-strbuf))]
+      (let [i (atom num)
+            ^StringBuffer result (StringBuffer.)]
            (while (not (= @i 0))
-                  (let [^Integer quotient (quot @i 10)
-                        ^Integer remainder (rem @i 10)]
-                       (prepend-strbuf @result remainder)
+                  (let [^int quotient (quot @i 10)
+                        ^int remainder (rem @i 10)]
+                       (.insert (int 0) result remainder)
                        (reset! i quotient)))
-           (return (tostring-strbuf @result))))
+           (.toString result)))

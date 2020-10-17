@@ -1,7 +1,4 @@
-(ns examples.b.loop
-  (:require [kalai.common :refer :all]
-            [clojure.tools.analyzer.passes.jvm.emit-form :as e]
-            [clojure.tools.analyzer.jvm :as az]))
+(ns b.loop)
 
 (defn add ^Long [^Long a ^Long b]
   (doseq [i 10]

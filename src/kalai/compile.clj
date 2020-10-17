@@ -18,13 +18,20 @@
 (defn ns-url [file-path]
   (io/as-url (io/file file-path)))
 
+;; Initial implementation
+
 (defn compile-file [file-path out verbose lang]
   (with-redefs [azu/ns-url ns-url]
     (let [asts (az/analyze-ns file-path)
           strs (emit.util/emit-analyzed-ns-asts asts lang)
-          output-file (io/file (str out "/" (str/replace file-path #"\.clj[csx]?$" "") (ext lang)))]
+          output-file (io/file (str out "/"
+                                    (str/replace file-path #"\.clj[csx]?$" "")
+                                    (ext lang)))]
       (.mkdirs (io/file (.getParent output-file)))
       (spit output-file (str/join \newline strs)))))
+
+
+;; Proposed rewriting s-expressions pipeline implementation
 
 (defn rewriters [asts]
   (->> (kalai-pipeline/asts->kalai asts)

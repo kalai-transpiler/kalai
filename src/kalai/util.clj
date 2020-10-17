@@ -21,6 +21,12 @@
     `(match/pred #(match-type? ~t %) ~x)
     &form))
 
+(m/defsyntax var [v]
+  (case (::syntax/phase &env)
+    :meander/match
+    `(m/app meta {:var ~v})
+    &form))
+
 (defn get-type [expr]
   (let [{:keys [t tag]} (meta expr)]
     (or t
