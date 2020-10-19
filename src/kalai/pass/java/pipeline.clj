@@ -4,7 +4,8 @@
             [kalai.pass.java.c-condense :as java3-condense]
             [kalai.pass.java.e-string :as java4-string]
             [kalai.pass.shared.flatten-groups :as flatten-groups]
-            [kalai.pass.shared.raise-stuff :as raise-stuff]))
+            [kalai.pass.shared.raise-stuff :as raise-stuff]
+            [kalai.util :as u]))
 
 (defn kalai->java [k]
   (->> k

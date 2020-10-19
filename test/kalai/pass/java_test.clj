@@ -44,10 +44,10 @@ x;
          (inc x))
       ;;->
       '(function f [x]
-                 (return (operator + x 1)))
+                 (return (operator ++ x)))
       ;;->
       "public static final Integer f(final Integer x) {
-return (x + 1);
+return ++x;
 }")))
 
 (deftest function2-test
@@ -87,14 +87,14 @@ return x;
     ;;->
     '(namespace test-package.test-class
       (function f [x]
-                (return (operator + x 1)))
+                (return (operator ++ x)))
       (function f [x y]
                 (return (operator + x y))))
     ;;->
     "package test-package;
 public class test-class {
 public static final int f(final int x) {
-return (x + 1);
+return ++x;
 }
 public static final int f(final int x, final int y) {
 return (x + y);
@@ -542,6 +542,29 @@ case 2 : \":b\";
 break;
 }"))
 
+(deftest interop-test
+  (inner-form
+    '(let [a (new String)
+           b (String.)]
+       (.length a)
+       (. b length))
+    ;;->
+    '(do
+       (init a (new String))
+       (init b (new String))
+       (do
+         (method length a)
+         (method length b)))
+    ;;->
+    "{
+final String a = new String();
+final String b = new String();
+{
+a.length();
+b.length();
+}
+}"))
+
 (deftest function-calls-test
   (inner-form
     '(assoc {:a 1} :b 2)
@@ -707,3 +730,11 @@ tmp1 = tmp2;
 }
 }
 (tmp1 + 4);"))
+
+(deftest operator-test
+  (inner-form
+    '(not (= 1 (inc 1)))
+    ;;->
+    '(operator ! (operator == 1 (operator ++ 1)))
+    ;;->
+    "!(1 == ++1);"))

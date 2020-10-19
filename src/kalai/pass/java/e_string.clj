@@ -153,10 +153,13 @@
                                    (space-separated (type-str param) param)))
                      (stringify body))))
 
-(defn operator-str [op & xs]
-  (parens
-    (apply space-separated
-           (interpose op (map stringify xs)))))
+(defn operator-str
+  ([op x]
+   (str op (stringify x)))
+  ([op x & xs]
+   (parens
+     (apply space-separated
+            (interpose op (map stringify (cons x xs)))))))
 
 (defn class-str [ns-name body]
   (let [parts (str/split (str ns-name) #"\.")
@@ -255,9 +258,14 @@
           (puget/cprint ?form)
           (throw (ex-info (str "Missing function: " ?x) {:form ?form})))))
 
-    (m/pred keyword? ?k) (pr-str (str ?k))
+    (m/pred keyword? ?k)
+    (pr-str (str ?k))
 
-    ?else (pr-str ?else)))
+    (m/pred char? ?c)
+    (str \' ?c \')
+
+    ?else
+    (pr-str ?else)))
 
 (defn stringify-entry [form]
   (try

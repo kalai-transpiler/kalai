@@ -4,8 +4,12 @@
             [meander.match.syntax.epsilon :as match]
             [puget.printer :as puget]))
 
-(defn spy [x]
-  (doto x puget/cprint))
+(defn spy
+  ([x] (spy nil x))
+  ([label x]
+   (when label
+     (println label))
+   (doto x puget/cprint)))
 
 (defn match-type? [t x]
   (or
@@ -31,10 +35,18 @@
   (let [{:keys [t tag]} (meta expr)]
     (or t
         tag
-        ;; TODO: only for do and let, not function call
         (when (and (seq? expr) (seq expr))
-          (get-type (last expr)))
-        (type expr))))
+          (case (first expr)
+            ;; TODO: this suggests we need some type inference
+            (j/new) (second expr)
+            (j/block j/invoke do if) (get-type (last expr))
+            (do
+              (println "WARNING: missing type for" (pr-str expr))
+              "MISSING_TYPE")))
+        (when (not (symbol? expr))
+          (type expr))
+        (do (println "WARNING: missing type for" (pr-str expr))
+            "MISSING_TYPE"))))
 
 (defn void? [expr]
   (#{:void 'void "void"} (get-type expr)))

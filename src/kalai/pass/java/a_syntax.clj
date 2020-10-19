@@ -92,12 +92,13 @@
       . (j/expression-statement (j/method add ?tmp (m/app expression !k))) ...
       ?tmp)
 
-    ;; operator usage
-    (operator ?op ?x ?y)
-    (j/operator ?op (m/app expression ?x) (m/app expression ?y))
+    ;; interop
+    (new ?c . !args ...)
+    (j/new ?c . (m/app expression !args) ...)
 
-    (operator ?op ?x ?y)
-    (j/operator ?op (m/app expression ?x) (m/app expression ?y))
+    ;; operator usage
+    (operator ?op . !args ...)
+    (j/operator ?op . (m/app expression !args) ...)
 
     ;; function invocation
     (invoke ?f . !args ...)
@@ -144,8 +145,8 @@
     (j/switch (m/app expression ?x)
               (j/block . (j/case !k (j/expression-statement (m/app expression !v))) ...))
 
-    ?x
-    ?x))
+    ?else
+    ?else))
 
 (def init
   (s/rewrite
@@ -190,7 +191,8 @@
       (assign ?name ?value)
       (j/assign ?name (m/app expression ?value))
 
-      ?else (j/expression-statement (m/app expression ?else)))))
+      ?else
+      (j/expression-statement (m/app expression ?else)))))
 
 (def function
   (s/rewrite

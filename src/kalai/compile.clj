@@ -8,7 +8,8 @@
             [clojure.tools.analyzer.jvm.utils :as azu]
             [clojure.string :as str]
             [clojure.java.io :as io]
-            [puget.printer :as puget])
+            [puget.printer :as puget]
+            [clojure.java.shell :as sh])
   (:import (java.io File)))
 
 (def ext {::l/rust ".rs"
@@ -56,3 +57,16 @@
           :when (not (.isDirectory file))
           :let [s (compile-source-file (str file))]]
     (write-target-file s (str file) out language)))
+
+(defn compile-target-file [file-path language]
+  (let [{:keys [exit out err]} (sh/sh "javac" (str file-path))]
+    (if (zero? exit)
+      nil
+      (do
+        (println out)
+        (println err)))))
+
+(defn target-compile [{:keys [in out language]}]
+  (doseq [^File file (file-seq (io/file out))
+          :when (not (.isDirectory file))]
+    (compile-target-file file language)))
