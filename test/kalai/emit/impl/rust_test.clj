@@ -432,7 +432,7 @@ pub fn x()
 (defexpect demo
   (with-redefs [cb-util/new-name (partial testing/new-name-testing-fn 1)]
     (let [ast (az/analyze '(defclass "NumFmt"
-                             (defn format ^String [^Integer num]
+                             (defn format2 ^String [^Integer num]
                                (let [^Integer i (atom num)
                                      ^StringBuffer result (atom (new-strbuf))]
                                  (while (not (= @i 0))
@@ -442,7 +442,7 @@ pub fn x()
                                      (reset! i quotient)))
                                  (return (tostring-strbuf @result))))))]
       (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
-"pub fn format(num: i32) -> String
+"pub fn format2(num: i32) -> String
 {
   {
     let mut i: i32 = num;
@@ -464,7 +464,7 @@ pub fn x()
   ;; Then this test should be removed, and test above can have a simplified output.
   (with-redefs [cb-util/new-name (partial testing/new-name-testing-fn 1)]
     (let [ast (az/analyze '(defclass "NumFmt"
-                             (defn format ^String [^Integer num]
+                             (defn format2 ^String [^Integer num]
                                (let [^Integer i (atom num)
                                      ^StringBuffer result (atom (new-strbuf))]
                                  (while (not (= i 0))
@@ -474,7 +474,7 @@ pub fn x()
                                      (reset! i quotient)))
                                  (return (tostring-strbuf @result))))))]
       (expect (emit (map->AstOpts {:ast ast :lang ::l/rust}))
-"pub fn format(num: i32) -> String
+"pub fn format2(num: i32) -> String
 {
   {
     let mut i: i32 = num;

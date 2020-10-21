@@ -234,6 +234,13 @@ Therefore we need to annotate them in the AST,
 so that when replacing function calls with target language equivalents,
 we replace the right things (not some locally scoped name).
 
+Operators have a further complication;
+in Clojure everything is a function,
+so it is possible to write a higher order function,
+and pass an "operator".
+Operators as values will need to be replaced with wrapper functions,
+either through provided interop or by the user.
+
 ## Truthiness
 
 Hope types save us! Wrap boolean around things we don't know
@@ -260,7 +267,7 @@ in order to have one and only one return value.
 However, because that group is in an expression position,
 we should only have one form, which should be an expression form.
 In order to achieve that we move all but the last form to
-preceed the current expression statement,
+before the current expression statement,
 declare a temp variable to store the result of the initialization,
 and put the temp variable in the original expression position.
 To do create the temp variable, we have a gensym2 function that looks like:

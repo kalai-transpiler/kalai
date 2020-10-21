@@ -1,5 +1,6 @@
 (ns kalai.pass.java.b-function-call
-  (:require [meander.strategy.epsilon :as s]
+  (:require [kalai.util :as u]
+            [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]))
 
 ;; TODO: user extension point, is dynamic var good?
@@ -20,26 +21,9 @@
 (def rewrite
   (s/bottom-up
     (s/rewrite
-      ;; note that inc may be expanded to java interop or not depending how it is used
-      (j/invoke (m/app meta {:var ~#'inc}) ?x)
-      (j/operator + ?x 1)
 
-      (j/invoke (m/app meta {:var ~#'println}) & ?more)
+      (j/invoke (u/var ~#'println) & ?more)
       (j/invoke System.out.println & ?more)
-
-      (j/invoke (m/app meta {:var ~#'assoc}) & ?more)
-      (j/method put & ?more)
-
-      (j/invoke (m/app meta {:var ~#'dissoc}) & ?more)
-      (j/method remove & ?more)
-
-      (j/invoke (m/app meta {:var ~#'conj}) & ?more)
-      (j/method add & ?more)
-
-      (j/invoke (m/app meta {:var ~#'update}) ?obj ?k ?f & ?args)
-      (j/method put ?obj ?k
-                ;; TODO: this is a bit wierd
-                (m/app rewrite (j/invoke ?f (j/method get ?obj ?k) & ?args)))
 
       ?else
       ?else)))

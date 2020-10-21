@@ -22,7 +22,7 @@
 
       (r/method insert (u/of-type StringBuffer ?this) ?idx ?s2)
       (r/block
-        (m/let [t (gensym "tmp")]
+        (m/let [t (u/tmp StringBuffer)]
                (r/assign t ?this)
                (r/invoke truncate t ?idx)
                (r/invoke push_str t ?s2))))))

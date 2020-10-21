@@ -6,58 +6,6 @@
 
 (declare inner-form)
 
-;; TODO: these need to be annotated with the methods proper, like vars
-(def binary-operator
-  '{clojure.lang.Numbers/add                    +
-    clojure.lang.Numbers/unchecked_int_subtract -
-    clojure.lang.Numbers/multiply               *
-    clojure.lang.Numbers/divide                 /
-    clojure.lang.Util/equiv                     ==
-    clojure.lang.Numbers/lt                     <
-    clojure.lang.Numbers/lte                    <=
-    clojure.lang.Numbers/gt                     >
-    clojure.lang.Numbers/gte                    >=
-    clojure.lang.Numbers/quotient               /
-    clojure.lang.Numbers/remainder              %})
-
-(def operators
-  (s/rewrite
-    ;; not really an operator, but kinda
-    (clojure.lang.RT/intCast ?x)
-    ~(clojure.lang.RT/intCast ?x)
-
-    ;; binary operators
-    ((m/pred binary-operator ?op) ?x ?y)
-    (operator (m/app binary-operator ?op)
-              (m/app inner-form ?x)
-              (m/app inner-form ?y))
-
-    ;; unitary operators
-    (not ?x)
-    (operator '! (m/app inner-form ?x))
-
-    (clojure.lang.Numbers/inc ?x)
-    (operator '++ (m/app inner-form ?x))
-
-    (clojure.lang.Numbers/unchecked_inc ?x)
-    (operator '++ (m/app inner-form ?x))
-
-    (clojure.lang.Numbers/dec ?x)
-    (operator '-- (m/app inner-form ?x))
-
-    ;; varity operators
-    (and)
-    true
-
-    (and . !args ...)
-    (operator '&& . (m/app inner-form !args) ...)
-
-    (or)
-    false
-
-    (or . !args ...)
-    (operator '|| . (m/app inner-form !args) ...)))
-
 (def data-literals
   "Data literals are mostly unchanged,
   except that data literals may contain expressions inside them.
@@ -116,7 +64,7 @@
             0)
       (while (operator < ?sym ?n)
         . (m/app inner-form !body) ...
-        (assign ?sym (operator + ?sym 1))))
+        (assign ?sym (operator ++ ?sym))))
 
     ;; TODO: test with
     ;;;; (doseq [x [1 2]] (println x) (println x))
@@ -270,7 +218,6 @@
     conditionals
     assignments
     def-init
-    operators
     data-literals
     misc
     s/pass))

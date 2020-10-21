@@ -44,13 +44,6 @@
 ;; statements can contain expressions
 ;; block must contain statements (not expressions)
 
-(def c (atom 0))
-(defn gensym2 [s]
-  (symbol (str s (swap! c inc))))
-
-(defn tmp [type]
-  (with-meta (gensym2 "tmp") {:t type}))
-
 (declare statement)
 
 ;; half Clojure half Java
@@ -62,7 +55,7 @@
            (m/let [?t (if (:mut ?meta)
                         'Vector
                         'PersistentVector)
-                   ?tmp (tmp ?t)]))
+                   ?tmp (u/tmp ?t)]))
     (group
       (j/init ?tmp (j/new ?t))
       . (j/expression-statement (j/method add ?tmp (m/app expression !x))) ...
@@ -73,7 +66,7 @@
            (m/let [?t (if (:mut ?meta)
                         'HashMap
                         'PersistentMap)
-                   ?tmp (tmp ?t)]))
+                   ?tmp (u/tmp ?t)]))
     (group
       (j/init ?tmp (j/new ?t))
       . (j/expression-statement (j/method put ?tmp
@@ -86,7 +79,7 @@
            (m/let [?t (if (:mut ?meta)
                         'HashSet
                         'PersistentSet)
-                   ?tmp (tmp ?t)]))
+                   ?tmp (u/tmp ?t)]))
     (group
       (j/init ?tmp (j/new ?t))
       . (j/expression-statement (j/method add ?tmp (m/app expression !k))) ...
@@ -119,7 +112,7 @@
     ;;(j/ternary (m/app expression ?condition) (m/app expression ?then) (m/app expression ?else))
 
     (m/and (if ?condition ?then)
-           (m/let [?tmp (tmp (u/get-type ?then))]))
+           (m/let [?tmp (u/tmp-for ?then)]))
     (group
       (j/init (m/app u/set-meta ?tmp :mut true))
       (j/if (m/app expression ?condition)
@@ -127,7 +120,7 @@
       ?tmp)
 
     (m/and (if ?condition ?then ?else)
-           (m/let [?tmp (tmp (u/get-type ?then))]))
+           (m/let [?tmp (u/tmp-for ?then)]))
     (group
       (j/init (m/app u/set-meta ?tmp :mut true))
       (j/if (m/app expression ?condition)

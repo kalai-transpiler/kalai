@@ -19,7 +19,7 @@
 
       (p/method insert (u/of-type StringBuffer ?this) ?idx ?s2)
       (p/block
-        (m/let [t (gensym "tmp")]
+        (m/let [t (u/tmp StringBuffer)]
                (p/assign t ?this)
                (p/invoke truncate t ?idx)
                (p/operator + t ?s2))))))

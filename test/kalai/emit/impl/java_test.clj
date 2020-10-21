@@ -378,7 +378,7 @@ numberWords.put(\"three\", 3);"
 
 (defexpect demo
   (let [ast (az/analyze '(defclass "NumFmt"
-                           (defn format ^String [^Integer num]
+                           (defn format2 ^String [^Integer num]
                              (let [^Integer i (atom num)
                                    ^StringBuffer result (atom (new-strbuf))]
                                (while (not (= @i 0))
@@ -390,7 +390,7 @@ numberWords.put(\"three\", 3);"
     (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
 "public class NumFmt
 {
-  public String format(Integer num)
+  public String format2(Integer num)
   {
     {
       Integer i = num;
@@ -411,7 +411,7 @@ numberWords.put(\"three\", 3);"
   ;; TODO: make emitters for args to a static call / function call invoke discard the parens around derefs.
   ;; Then this test should be removed, and test above can have a simplified output.
   (let [ast (az/analyze '(defclass "NumFmt"
-                           (defn format ^String [^Integer num]
+                           (defn format2 ^String [^Integer num]
                              (let [^Integer i (atom num)
                                    ^StringBuffer result (atom (new-strbuf))]
                                (while (not (= i 0))
@@ -423,7 +423,7 @@ numberWords.put(\"three\", 3);"
     (expect (emit (map->AstOpts {:ast ast :lang ::l/java}))
 "public class NumFmt
 {
-  public String format(Integer num)
+  public String format2(Integer num)
   {
     {
       Integer i = num;

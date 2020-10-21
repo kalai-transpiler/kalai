@@ -1,10 +1,12 @@
 (ns kalai.pass.test-helpers
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [testing is]]
+    ;; Loading placation enables it to provide better string diffs,
+    ;; however not all tooling plays nicely with it
+    ;;[kalai.placation]
             [kalai.compile :as c]
             [kalai.pass.kalai.pipeline :as kalai-pipeline]
             [kalai.pass.java.pipeline :as java-pipeline]
-            [kalai.pass.java.a-syntax :as a-syntax]
-            #_[kalai.placation]
+            [kalai.util :as u]
             [clojure.string :as str]
             [clojure.tools.analyzer.jvm :as az]))
 
@@ -38,7 +40,7 @@
 
 (defn test-form [input kalai-s-expression expected as remove-kalai remove-java]
   `(do
-     (reset! a-syntax/c 0)
+     (reset! u/c 0)
      (is ;; to capture expections for test reporting
        (let [asts# (map az/analyze (~as ~input))
              a2b# (kalai-pipeline/asts->kalai asts#)]
@@ -52,7 +54,7 @@
                  (or
                    (is (= ~expected (~remove-java b2c#)))
                    (println "Kalai to Java failed")))
-               (reset! a-syntax/c 0)
+               (reset! u/c 0)
                (let [a2c# (c/compile-forms (~as ~input))]
                  (testing "compiling to java"
                    (or (is (= a2c# b2c#))

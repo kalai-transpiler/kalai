@@ -66,12 +66,12 @@ return ++x;
                  (do
                    (init x 0)
                    (group
-                     (assign x (invoke inc x))
+                     (assign x (operator ++ x))
                      (return x))))
       ;;->
       "public static final int f() {
 int x = 0;
-x = (x + 1);
+x = ++x;
 return x;
 }")))
 
@@ -454,12 +454,12 @@ System.out.println(x);
        (init x 0)
        (while (operator < x 5)
          (invoke println x)
-         (assign x (operator + x 1))))
+         (assign x (operator ++ x))))
     ;;->
     "int x = 0;
 while ((x < 5)) {
 System.out.println(x);
-x = (x + 1);
+x = ++x;
 }"))
 
 (deftest while-loop-test
@@ -569,7 +569,7 @@ b.length();
   (inner-form
     '(assoc {:a 1} :b 2)
     ;;->
-    '(invoke assoc {:a 1} :b 2)
+    '(method put {:a 1} :b 2)
     ;;->
     "final PersistentMap tmp1 = new PersistentMap();
 tmp1.put(\":a\", 1);
@@ -579,11 +579,20 @@ tmp1.put(\":b\", 2);"))
   (inner-form
     '(update {:a 1} :a inc)
     ;;->
-    '(invoke update {:a 1} :a inc)
+    '(group
+       (init tmp1 {:a 1})
+       (method put
+               tmp1
+               :a
+               (operator ++
+                         (method get tmp1 :a)))
+       tmp1)
     ;;->
-    "final PersistentMap tmp1 = new PersistentMap();
-tmp1.put(\":a\", 1);
-tmp1.put(\":a\", (tmp1.get(\":a\") + 1));"))
+    "final PersistentMap tmp2 = new PersistentMap();
+tmp2.put(\":a\", 1);
+final clojure.lang.PersistentArrayMap tmp1 = tmp2;
+tmp1.put(\":a\", ++tmp1.get(\":a\"));
+tmp1;"))
 
 (deftest conditional-expression-test
   ;; For simple expressions, a true ternary could be used instead
@@ -646,7 +655,10 @@ tmp2 = 5;
 
 (deftest conditional-expression2-test
   (inner-form
-    '(+ (if true (do (println 1) 2)) 4)
+    '(+ (if true
+          (do (println 1)
+              2))
+        4)
     ;;->
     '(operator +
                (if true

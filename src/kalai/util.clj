@@ -4,6 +4,33 @@
             [meander.match.syntax.epsilon :as match]
             [puget.printer :as puget]))
 
+(def c (atom 0))
+(defn gensym2 [s]
+  (symbol (str s (swap! c inc))))
+
+(defn tmp [type]
+  (with-meta (gensym2 "tmp") {:t type}))
+
+(defn get-type [expr]
+  (let [{:keys [t tag]} (meta expr)]
+    (or t
+        tag
+        (when (and (seq? expr) (seq expr))
+          (case (first expr)
+            ;; TODO: this suggests we need some type inference
+            (j/new) (second expr)
+            (j/block j/invoke do if) (get-type (last expr))
+            (do
+              (println "WARNING: missing type for" (pr-str expr))
+              "MISSING_TYPE")))
+        (when (not (symbol? expr))
+          (type expr))
+        (do (println "WARNING: missing type for" (pr-str expr))
+            "MISSING_TYPE"))))
+
+(defn tmp-for [expr]
+  (tmp (get-type expr)))
+
 (defn spy
   ([x] (spy nil x))
   ([label x]
@@ -30,23 +57,6 @@
     :meander/match
     `(m/app meta {:var ~v})
     &form))
-
-(defn get-type [expr]
-  (let [{:keys [t tag]} (meta expr)]
-    (or t
-        tag
-        (when (and (seq? expr) (seq expr))
-          (case (first expr)
-            ;; TODO: this suggests we need some type inference
-            (j/new) (second expr)
-            (j/block j/invoke do if) (get-type (last expr))
-            (do
-              (println "WARNING: missing type for" (pr-str expr))
-              "MISSING_TYPE")))
-        (when (not (symbol? expr))
-          (type expr))
-        (do (println "WARNING: missing type for" (pr-str expr))
-            "MISSING_TYPE"))))
 
 (defn void? [expr]
   (#{:void 'void "void"} (get-type expr)))
