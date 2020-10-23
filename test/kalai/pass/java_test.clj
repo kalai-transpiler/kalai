@@ -13,12 +13,12 @@
     "final int x = 3;"))
 
 (deftest init2-test
-    (top-level-form
-      '(def ^Integer x)
-      ;;->
-      '(init x)
-      ;;->
-      "final Integer x;"))
+  (top-level-form
+    '(def ^Integer x)
+    ;;->
+    '(init x)
+    ;;->
+    "final Integer x;"))
 
 (deftest init3-test
   (inner-form
@@ -29,10 +29,7 @@
        (init x 1)
        x)
     ;;->
-    "{
-final int x = 1;
-x;
-}"))
+    "final int x = 1;"))
 
 ;; # Functions
 
@@ -86,12 +83,15 @@ return x;
          (+ x y))))
     ;;->
     '(namespace test-package.test-class
-      (function f [x]
-                (return (operator ++ x)))
-      (function f [x y]
-                (return (operator + x y))))
+                (function f [x]
+                          (return (operator ++ x)))
+                (function f [x y]
+                          (return (operator + x y))))
     ;;->
     "package test-package;
+import java.util.Vector;
+import java.util.Map;
+import java.util.HashSet;
 public class test-class {
 public static final int f(final int x) {
 return ++x;
@@ -125,10 +125,8 @@ System.out.println(x);
        (init x 0)
        (assign x (operator + x 2)))
     ;;->
-    "{
-int x = 0;
-x = (x + 2);
-}"))
+    "int x = 0;
+x = (x + 2);"))
 
 (deftest local-variables2-test
   (inner-form
@@ -146,32 +144,40 @@ x = (x + 2);
          (assign x 3)
          (operator + x y)))
     ;;->
-    "{
-int x = 1;
+    "int x = 1;
 int y = 2;
 final int z = 1;
 {
 x = 3;
-(x + y);
-}
 }"))
 
 (deftest local-variables3-test
   (inner-form
     '(with-local-vars [^int x 1
                        ^int y 2]
-       (+ (var-get x) (var-get y)))
+       (println (+ (var-get x) (var-get y))))
+    ;;->
+    '(do (init x 1)
+         (init y 2)
+         (invoke println (operator + x y)))
+    ;;->
+    "int x = 1;
+int y = 2;
+System.out.println((x + y));"))
+
+(deftest local-variables4-test
+  (inner-form
+    '(let [y (atom 2)]
+       (swap! y + 4))
     ;;->
     '(do
-       (init x 1)
        (init y 2)
-       (operator + x y))
+       (group
+         (assign y (operator + y 4))
+         y))
     ;;->
-    "{
-int x = 1;
-int y = 2;
-(x + y);
-}"))
+    "long y = 2;
+y = (y + 4);"))
 
 ;; # Types
 
@@ -187,11 +193,9 @@ int y = 2;
        (init x true)
        (init y 5))
     ;;->
-    "{
-final Boolean x = true;
+    "final Boolean x = true;
 final bool x = true;
-final Long y = 5;
-}"))
+final Long y = 5;"))
 
 (deftest generic-types-test
   (top-level-form
@@ -211,6 +215,9 @@ final Long y = 5;
                 (init x))
     ;;->
     "package test-package;
+import java.util.Vector;
+import java.util.Map;
+import java.util.HashSet;
 public class test-class {
 final Map<Long,String> x;
 }"))
@@ -218,20 +225,18 @@ final Map<Long,String> x;
 ;; unparameterized form
 (deftest generic-types2-test
   (inner-form
-    '(let [^{:t kvector} x [1 2]]
+    '(let [x ^{:t {:vector [:long]}} [1 2]]
        (println x))
     ;;->
     '(do
        (init x [1 2])
        (invoke println x))
     ;;->
-    "{
-final PersistentVector tmp1 = new PersistentVector();
+    "final Vector<Long> tmp1 = new Vector<Long>();
 tmp1.add(1);
 tmp1.add(2);
-final Vector x = tmp1;
-System.out.println(x);
-}"))
+final Vector<Long> x = tmp1;
+System.out.println(x);"))
 
 (deftest generic-types3-test
   (inner-form
@@ -247,31 +252,35 @@ final Map<String,String> x = tmp1;"))
 
 (deftest conditional-test
   (inner-form
-    '(if true 1 2)
+    '(if true
+       (println 1)
+       (println 2))
     ;;->
-    '(if true 1 2)
+    '(if true
+       (invoke println 1)
+       (invoke println 2))
     ;;->
     "if (true)
 {
-1;
+System.out.println(1);
 }
 else
 {
-2;
+System.out.println(2);
 }"))
 
 ;; # Data Literals
 
 (deftest data-literals-test
   (inner-form
-    [1 2]
+    '(def x [1 2])
     ;;->
-    [1 2]
+    '(init x [1 2])
     ;;->
     "final PersistentVector tmp1 = new PersistentVector();
 tmp1.add(1);
 tmp1.add(2);
-tmp1;"))
+final PersistentVector x = tmp1;"))
 
 ;; selecting between Vector and PersistentVector
 (deftest data-literals2-test
@@ -294,13 +303,10 @@ final Vector x = tmp1;"))
        (init x [1 2])
        x)
     ;;->
-    "{
-final Vector tmp1 = new Vector();
+    "final Vector tmp1 = new Vector();
 tmp1.add(1);
 tmp1.add(2);
-final Vector x = tmp1;
-x;
-}"))
+final Vector x = tmp1;"))
 
 (deftest data-literals4-test
   (inner-form
@@ -311,38 +317,36 @@ x;
        (init x [1 2])
        (assign x [3 4]))
     ;;->
-    "{
-final Vector tmp1 = new Vector();
+    "final Vector tmp1 = new Vector();
 tmp1.add(1);
 tmp1.add(2);
 Vector x = tmp1;
 final Vector tmp2 = new Vector();
 tmp2.add(3);
 tmp2.add(4);
-x = tmp2;
-}"))
+x = tmp2;"))
 
 (deftest data-literals5-test
   (inner-form
-    {1 2 3 4}
+    '(def x {1 2 3 4})
     ;;->
-    {1 2 3 4}
+    '(init x {1 2 3 4})
     ;;->
     "final PersistentMap tmp1 = new PersistentMap();
 tmp1.put(1, 2);
 tmp1.put(3, 4);
-tmp1;"))
+final PersistentMap x = tmp1;"))
 
 (deftest data-literals6-test
   (inner-form
-    #{1 2}
+    '(def x #{1 2})
     ;;->
-    #{1 2}
+    '(init x #{1 2})
     ;;->
     "final PersistentSet tmp1 = new PersistentSet();
 tmp1.add(1);
 tmp1.add(2);
-tmp1;"))
+final PersistentSet x = tmp1;"))
 
 (deftest data-literals7-test
   (inner-form
@@ -353,15 +357,13 @@ tmp1;"))
        (init x [1 [2]])
        (invoke println x))
     ;;->
-    "{
-final PersistentVector tmp1 = new PersistentVector();
+    "final PersistentVector tmp1 = new PersistentVector();
 tmp1.add(1);
 final PersistentVector tmp2 = new PersistentVector();
 tmp2.add(2);
 tmp1.add(tmp2);
 final Vector x = tmp1;
-System.out.println(x);
-}"))
+System.out.println(x);"))
 
 (deftest data-literals8-test
   (inner-form
@@ -372,8 +374,7 @@ System.out.println(x);
        (init x [1 [2] 3 [[4]]])
        (invoke println x))
     ;;->
-    "{
-final PersistentVector tmp1 = new PersistentVector();
+    "final PersistentVector tmp1 = new PersistentVector();
 tmp1.add(1);
 final PersistentVector tmp2 = new PersistentVector();
 tmp2.add(2);
@@ -385,8 +386,7 @@ tmp4.add(4);
 tmp3.add(tmp4);
 tmp1.add(tmp3);
 final Vector x = tmp1;
-System.out.println(x);
-}"))
+System.out.println(x);"))
 
 (deftest data-literals9-test
   (inner-form
@@ -397,8 +397,7 @@ System.out.println(x);
        (init x {1 [{2 3} #{4 [5 6]}]})
        (invoke println x))
     ;;->
-    "{
-final PersistentMap tmp1 = new PersistentMap();
+    "final PersistentMap tmp1 = new PersistentMap();
 final PersistentVector tmp2 = new PersistentVector();
 final PersistentMap tmp3 = new PersistentMap();
 tmp3.put(2, 3);
@@ -412,21 +411,17 @@ tmp4.add(tmp5);
 tmp2.add(tmp4);
 tmp1.put(1, tmp2);
 final Vector x = tmp1;
-System.out.println(x);
-}"))
+System.out.println(x);"))
 
 (deftest data-literals10-test
   (inner-form
-    '{"key" (+ 1 2)}
+    '(def x {"key" (+ 1 2)})
     ;;->
-    '{"key" (operator
-              +
-              1
-              2)}
+    '(init x {"key" (operator + 1 2)})
     ;;->
     "final PersistentMap tmp1 = new PersistentMap();
 tmp1.put(\"key\", (1 + 2));
-tmp1;"))
+final PersistentMap x = tmp1;"))
 
 (deftest foreach-test
   (inner-form
@@ -476,32 +471,32 @@ System.out.println(\"hi\");
 
 (deftest conditional2-test
   (inner-form
-    '(cond true 1
-           false 2
-           :else 3)
+    '(cond true (println 1)
+           false (println 2)
+           true (println 3))
     ;;->
     '(if true
-       1
+       (invoke println 1)
        (if false
-         2
-         (if :else
-           3)))
+         (invoke println 2)
+         (if true
+           (invoke println 3))))
     ;;->
     "if (true)
 {
-1;
+System.out.println(1);
 }
 else
 {
 if (false)
 {
-2;
+System.out.println(2);
 }
 else
 {
-if (\":else\")
+if (true)
 {
-3;
+System.out.println(3);
 }
 }
 }"))
@@ -556,13 +551,11 @@ break;
          (method length a)
          (method length b)))
     ;;->
-    "{
-final String a = new String();
+    "final String a = new String();
 final String b = new String();
 {
 a.length();
 b.length();
-}
 }"))
 
 (deftest function-calls-test
@@ -591,24 +584,25 @@ tmp1.put(\":b\", 2);"))
     "final PersistentMap tmp2 = new PersistentMap();
 tmp2.put(\":a\", 1);
 final clojure.lang.PersistentArrayMap tmp1 = tmp2;
-tmp1.put(\":a\", ++tmp1.get(\":a\"));
-tmp1;"))
+tmp1.put(\":a\", ++tmp1.get(\":a\"));"))
 
 (deftest conditional-expression-test
   ;; For simple expressions, a true ternary could be used instead
   ;; "((true ? 1 : 2) + (true ? (true ? 3 : 4) : 5));"
   ;; But for now we are taking the more general approach which handles expressions.
   (inner-form
-    '(+ (if true 1 2)
-        (if true
-          (if true 3 4)
-          5))
+    '(println
+       (+ (if true 1 2)
+          (if true
+            (if true 3 4)
+            5)))
     ;;->
-    '(operator +
-               (if true 1 2)
-               (if true
-                 (if true 3 4)
-                 5))
+    '(invoke println
+             (operator +
+                       (if true 1 2)
+                       (if true
+                         (if true 3 4)
+                         5)))
     ;;->
     "long tmp1;
 if (true)
@@ -639,7 +633,7 @@ else
 {
 tmp2 = 5;
 }
-(tmp1 + tmp2);"))
+System.out.println((tmp1 + tmp2));"))
 
 (deftest nested-group-test
   #_(inner-form
@@ -655,17 +649,19 @@ tmp2 = 5;
 
 (deftest conditional-expression2-test
   (inner-form
-    '(+ (if true
-          (do (println 1)
-              2))
-        4)
+    '(println
+       (+ (if true
+            (do (println 1)
+                2))
+          4))
     ;;->
-    '(operator +
-               (if true
-                 (do
-                   (invoke println 1)
-                   2))
-               4)
+    '(invoke println
+             (operator +
+                       (if true
+                         (do
+                           (invoke println 1)
+                           2))
+                       4))
     ;;->
     "long tmp1;
 if (true)
@@ -675,18 +671,19 @@ System.out.println(1);
 tmp1 = 2;
 }
 }
-(tmp1 + 4);"))
+System.out.println((tmp1 + 4));"))
 
 
 (deftest conditional-expression3-test
   (inner-form
-    '(+ (if true 1 (if false 2 3)) 4)
+    '(println
+       (+ (if true 1 (if false 2 3)) 4))
     ;;->
-    '(operator +
-               (if true 1 (if false 2 3))
-               4)
+    '(invoke println
+             (operator +
+                       (if true 1 (if false 2 3))
+                       4))
     ;;->
-
     "long tmp1;
 if (true)
 {
@@ -707,15 +704,17 @@ tmp2 = 3;
 tmp1 = tmp2;
 }
 }
-(tmp1 + 4);"))
+System.out.println((tmp1 + 4));"))
 
 (deftest conditional-expression4-test
   (inner-form
-    '(+ (if true 1 (if false 2 [3])) 4)
+    '(println
+       (+ (if true 1 (if false 2 [3])) 4))
     ;;->
-    '(operator +
-               (if true 1 (if false 2 [3]))
-               4)
+    '(invoke println
+             (operator +
+                       (if true 1 (if false 2 [3]))
+                       4))
     ;;->
     "long tmp1;
 if (true)
@@ -741,12 +740,14 @@ tmp2 = tmp3;
 tmp1 = tmp2;
 }
 }
-(tmp1 + 4);"))
+System.out.println((tmp1 + 4));"))
 
 (deftest operator-test
   (inner-form
-    '(not (= 1 (inc 1)))
+    '(println
+       (not (= 1 (inc 1))))
     ;;->
-    '(operator ! (operator == 1 (operator ++ 1)))
+    '(invoke println
+             (operator ! (operator == 1 (operator ++ 1))))
     ;;->
-    "!(1 == ++1);"))
+    "System.out.println(!(1 == ++1));"))

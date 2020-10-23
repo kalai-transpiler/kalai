@@ -1,14 +1,10 @@
 (ns kalai.pass.java.c-condense
-  (:require [meander.strategy.epsilon :as s]))
+  (:require [meander.strategy.epsilon :as s]
+            [meander.epsilon :as m]))
 
 (def rewrite
   (s/bottom-up
     (s/rewrite
-      ;; TODO: handle upstream?
-      ;; result; is not a valid java expression
-      ;;(j/expression-statement (m/pred (complement seq?) ?x))
-      ;;nil
-
       ;;;; Raise unnecessarily nested blocks
       ;; {{body}} => {body}
       (j/block (j/block & ?more))

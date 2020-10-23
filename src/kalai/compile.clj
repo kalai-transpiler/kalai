@@ -48,25 +48,31 @@
         (rewriters))))
 
 (defn write-target-file [s file-path out lang]
-  (let [output-file (io/file (str out "/" (str/replace file-path #"\.clj[csx]?$" "") (ext lang)))]
+  (let [output-file (io/file (str out "/" (str/replace file-path #"\.clj[csx]?$" (ext lang))))]
     (.mkdirs (io/file (.getParent output-file)))
     (spit output-file s)))
 
-(defn compile [{:keys [in out language]}]
-  (doseq [^File file (file-seq (io/file in))
-          :when (not (.isDirectory file))
-          :let [s (compile-source-file (str file))]]
-    (write-target-file s (str file) out language)))
+(defn relative [^File base ^File file]
+  (.getPath (.relativize (.toURI base) (.toURI file))))
 
-(defn compile-target-file [file-path language]
-  (let [{:keys [exit out err]} (sh/sh "javac" (str file-path))]
+(defn compile [{:keys [in out language]}]
+  (let [base (io/file in)]
+    (doseq [^File file (file-seq base)
+            :when (not (.isDirectory file))
+            :let [s (compile-source-file file)
+                  target (relative base file)]]
+      (write-target-file s target out language))))
+
+(defn compile-target-file [file-path language target]
+  (println "Compiling" (str file-path))
+  (let [{:keys [exit out err]} (sh/sh "javac" "-d" target (str file-path))]
     (if (zero? exit)
       nil
       (do
         (println out)
         (println err)))))
 
-(defn target-compile [{:keys [in out language]}]
+(defn target-compile [{:keys [out language target]}]
   (doseq [^File file (file-seq (io/file out))
           :when (not (.isDirectory file))]
-    (compile-target-file file language)))
+    (compile-target-file file language target)))

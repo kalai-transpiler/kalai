@@ -16,7 +16,7 @@
 
 (defn as-function [form]
   (list '(ns test-package.test-class)
-        (list 'defn 'test-function ^{:t "void"} [] (list 'do form) nil)))
+        (list 'defn 'test-function ^{:t "void"} [] form)))
 
 (defn remove-kalai-class [s]
   (nth s 2))
@@ -24,18 +24,18 @@
 (defn remove-java-class [s]
   (->> s
        (str/split-lines)
-       (drop 2)
+       (drop 5)
        (butlast)
        (str/join \newline)))
 
 (defn remove-kalai-function [s]
-  (second (nth (remove-kalai-class s) 3)))
+  (nth (remove-kalai-class s) 3))
 
 (defn remove-java-function [s]
   (->> s
        (str/split-lines)
-       (drop 3)
-       (drop-last 3)
+       (drop 6)
+       (drop-last 2)
        (str/join \newline)))
 
 (defn test-form [input kalai-s-expression expected as remove-kalai remove-java]

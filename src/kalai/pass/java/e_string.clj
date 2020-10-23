@@ -2,6 +2,7 @@
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]
             [clojure.string :as str]
+            [camel-snake-kebab.core :as csk]
             [kalai.util :as u]
             [puget.printer :as puget]))
 
@@ -33,7 +34,7 @@
 (defn block-str [& xs]
   (line-separated
     "{"
-    (apply line-separated (map stringify xs))
+    (apply line-separated (map stringify (remove nil? xs)))
     "}"))
 
 (defn assign-str [variable-name value]
@@ -142,13 +143,16 @@
 #_(defn conditional [test then else])
 
 (defn invoke-str [function-name & args]
-  (str function-name (param-list (map stringify args))))
+  (str (if (str/includes? function-name "-")
+         (csk/->camelCase function-name)
+         function-name)
+       (param-list (map stringify args))))
 
 (defn function-str [name params body]
   (str
     (space-separated 'public 'static
                      (type-str params)
-                     name)
+                     (csk/->camelCase name))
     (space-separated (param-list (for [param params]
                                    (space-separated (type-str param) param)))
                      (stringify body))))
@@ -161,12 +165,18 @@
      (apply space-separated
             (interpose op (map stringify (cons x xs)))))))
 
+(def std-imports
+  "import java.util.Vector;
+import java.util.Map;
+import java.util.HashSet;")
+
 (defn class-str [ns-name body]
   (let [parts (str/split (str ns-name) #"\.")
         package-name (str/join "." (butlast parts))
         class-name (last parts)]
     (line-separated
       (statement (space-separated 'package package-name))
+      std-imports
       (space-separated 'public 'class class-name
                        (stringify body)))))
 
@@ -223,7 +233,7 @@
 
 (defn new-str [class-name & args]
   (space-separated
-    "new" (str class-name (param-list args))))
+    "new" (str (type-str* class-name) (param-list args))))
 
 ;;;; This is the main entry point
 
@@ -256,7 +266,8 @@
         (do
           (println "Inner form:")
           (puget/cprint ?form)
-          (throw (ex-info (str "Missing function: " ?x) {:form ?form})))))
+          (throw (ex-info (str "Missing function: " ?x)
+                          {:form ?form})))))
 
     (m/pred keyword? ?k)
     (pr-str (str ?k))

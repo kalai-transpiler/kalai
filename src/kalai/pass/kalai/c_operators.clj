@@ -5,6 +5,11 @@
 
 (def binary-operator
   '{clojure.lang.Numbers/add                    +
+    clojure.lang.Numbers/addP                   +
+    clojure.lang.Numbers/unchecked_add          +
+    clojure.lang.Numbers/minus                  -
+    clojure.lang.Numbers/minusP                 -
+    clojure.lang.Numbers/unchecked_minus        -
     clojure.lang.Numbers/unchecked_int_subtract -
     clojure.lang.Numbers/multiply               *
     clojure.lang.Numbers/divide                 /
@@ -37,21 +42,27 @@
         (invoke clojure.lang.Numbers/unchecked_inc ?x))
       (operator '++ ?x)
 
-      (invoke clojure.lang.Numbers/dec ?x)
+      (m/or
+        (invoke (u/var ~#'dec) ?x)
+        (invoke clojure.lang.Numbers/dec ?x)
+        (invoke clojure.lang.Numbers/unchecked_dec ?x))
       (operator '-- ?x)
 
       ;; varity operators
+      (invoke + . !args ...)
+      (operator + . !args ...)
+
       (invoke and)
       true
 
       (invoke and . !args ...)
-      (operator '&& . !args ...)
+      (operator && . !args ...)
 
       (invoke or)
       false
 
       (invoke or . !args ...)
-      (operator '|| . !args ...)
+      (operator || . !args ...)
 
       ;;;
 

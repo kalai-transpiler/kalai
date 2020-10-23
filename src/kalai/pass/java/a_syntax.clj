@@ -52,12 +52,18 @@
     ;; data literals
     (m/and [!x ...]
            (m/app meta ?meta)
-           (m/let [?t (if (:mut ?meta)
+           ;; TODO: clean this up...
+           ;; also observe that we know these are vectors,
+           ;; so {:vector [:long]} is redundant
+           (m/let [?t (:t ?meta)
+                   ?tag (:tag ?meta)
+                   ?tm (if (:mut ?meta)
                         'Vector
                         'PersistentVector)
-                   ?tmp (u/tmp ?t)]))
+                   ?ttt (or ?t ?tag ?tm)
+                   ?tmp (u/tmp ?ttt)]))
     (group
-      (j/init ?tmp (j/new ?t))
+      (j/init ?tmp (j/new ?ttt))
       . (j/expression-statement (j/method add ?tmp (m/app expression !x))) ...
       ?tmp)
 
@@ -184,8 +190,20 @@
       (assign ?name ?value)
       (j/assign ?name (m/app expression ?value))
 
+      (m/and
+        (m/or
+          (assign & _)
+          (operator ++ _)
+          (operator -- _)
+          (method & _)
+          (invoke & _)
+          (new & _))
+        ?expr)
+      (j/expression-statement (m/app expression ?expr))
+
+      ;; Java does not allow other expressions as statements
       ?else
-      (j/expression-statement (m/app expression ?else)))))
+      nil)))
 
 (def function
   (s/rewrite
