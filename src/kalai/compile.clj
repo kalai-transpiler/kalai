@@ -39,7 +39,7 @@
        (java-pipeline/kalai->java)))
 
 (defn compile-forms [forms]
-  (-> (map az/analyze forms)
+  (-> (map az/analyze+eval forms)
       (rewriters)))
 
 (defn compile-source-file [file-path & [out verbose lang]]

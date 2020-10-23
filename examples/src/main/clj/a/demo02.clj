@@ -1,8 +1,7 @@
 (ns a.demo02
-  (:refer-clojure :exclude [format])
-  (:import (java.util List Map)))
+  (:refer-clojure :exclude [format]))
 
-(def ^{:kalias {Map [Character Integer]}} CI)
+(def ^{:kalias {:map [:char :int]}} CI)
 
 (defn getDigitsMap ^{:t CI} []
   (let [^{:t CI} m
@@ -50,7 +49,7 @@
             (reset! result (+ (* 10 @result) digitVal))))))
     @result))
 
-(def ^{:kalias {Map [String {List [Character]}]}} SLC)
+(def ^{:kalias {:map [:string {:list [:char]}]}} SLC)
 
 (defn getNumberSystemsMap
   ^{:t SLC} []
@@ -63,7 +62,7 @@
 (def ^{:t SLC}
   numberSystemsMap (getNumberSystemsMap))
 
-(def ^{:kalias {Map [String Character]}} SC)
+(def ^{:kalias {:map [:string :char]}} SC)
 
 (defn getGroupingSeparatorsMap
   ^{:t SC} []
@@ -76,11 +75,11 @@
 (def ^{:t SC}
   groupingSeparatorsMap (getGroupingSeparatorsMap))
 
-(def ^{:kalias {List [Integer]}} LI)
+(def ^{:kalias {:list [:int]}} LI)
 
 (defn getSeparatorPositions ^{:t LI}
   [^Integer numLength ^String groupingStrategy]
-  (let [^{:t {List [Integer]}} result (atom [])]
+  (let [^{:t {:list [:int]}} result (atom [])]
     (cond
       (= groupingStrategy "NONE")
       @result

@@ -7,7 +7,9 @@
   ;; default stack size produces a stackoverflow expection when compiling some meander expressions,
   ;; so making it explicitly larger
   :jvm-opts ["-Xss2m"]
-  :test-paths ["examples" "test"]
+  :test-paths ["test" "examples/src/main/clj"]
+  :source-paths ["src"]
+  ;;:java-source-paths ["examples/src/main/java"]
   :dependencies [[expectations "2.1.10"]
                  [expectations/clojure-test "1.2.1"]
                  [org.clojure/clojure "1.10.1"]

@@ -36,6 +36,9 @@
     ?else
     ?else))
 
+;; TODO: Fix for files.
+;; For some reason, az/analyze+eval and az/analyze-ns produce different ASTs
+;; so our tests and examples don't produce the same AST.
 (def erase-type-alias
   (s/rewrite
     {:op   :def

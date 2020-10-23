@@ -4,7 +4,8 @@
             [kalai.pass.kalai.c-operators :as c-operators]
             [kalai.pass.kalai.d-annotate-return :as d-annotate-return]
             [kalai.pass.kalai.f-keyword-set-map-functions :as f]
-            [clojure.tools.analyzer.passes.jvm.emit-form :as azef]))
+            [clojure.tools.analyzer.passes.jvm.emit-form :as azef]
+            [kalai.util :as u]))
 
 (defn asts->kalai [asts]
   (->> asts

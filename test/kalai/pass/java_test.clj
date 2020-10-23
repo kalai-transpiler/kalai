@@ -22,7 +22,7 @@
 
 (deftest init3-test
   (inner-form
-    '(let [^int x 1]
+    '(let [^{:t :int} x 1]
        x)
     ;;->
     '(do
@@ -50,13 +50,11 @@ return ++x;
 (deftest function2-test
   (testing
     "Some Clojure forms expand to multiple statements.
-    The way Kalai deals with this is by..."
-
-    "A function with no argument and a mutable local variable,
-    and returning a Clojure form that expands to multiple statements."
+    The way Kalai deals with this is by creating a group.
+    That group is later unrolled as temporary variable assignments."
     (top-level-form
-      '(defn f ^int []
-         (let [^int x (atom 0)]
+      '(defn f ^{:t :int} []
+         (let [x (atom (int 0))]
            (swap! x inc)))
       ;;->
       '(function f []
@@ -77,9 +75,9 @@ return x;
   (ns-form
     '((ns test-package.test-class)
       (defn f
-        (^int [^int x]
+        (^{:t :int} [^{:t :int} x]
          (inc x))
-        (^int [^int x ^int y]
+        (^{:t :int} [^{:t :int} x ^{:t :int} y]
          (+ x y))))
     ;;->
     '(namespace test-package.test-class
@@ -104,13 +102,13 @@ return (x + y);
 ;; Custom type void does not return a value
 (deftest function4-test
   (top-level-form
-    '(defn f ^{:t :void} [^int x]
+    '(defn f ^{:t :void} [^long x]
        (println x))
     ;;->
     '(function f [x]
                (invoke println x))
     ;;->
-    "public static final void f(final int x) {
+    "public static final void f(final long x) {
 System.out.println(x);
 }"))
 
@@ -118,7 +116,7 @@ System.out.println(x);
 
 (deftest local-variables-test
   (inner-form
-    '(let [^int x (atom 0)]
+    '(let [x (atom (int 0))]
        (reset! x (+ @x 2)))
     ;;->
     '(do
@@ -130,10 +128,10 @@ x = (x + 2);"))
 
 (deftest local-variables2-test
   (inner-form
-    '(let [^int x (atom 1)
-           ^int y (atom 2)
-           ^int z 1]
-       (reset! x 3)
+    '(let [x (atom (int 1))
+           y (atom (int 2))
+           z (int 1)]
+       (reset! x (int 3))
        (+ @x (deref y)))
     ;;->
     '(do
@@ -199,7 +197,7 @@ final Long y = 5;"))
 
 (deftest generic-types-test
   (top-level-form
-    '(do (def ^{:t {:map [:long :string]}} x))
+    '(def ^{:t {:map [:long :string]}} x)
     ;;->
     '(init x)
     ;;->

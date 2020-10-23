@@ -39,7 +39,7 @@ tmp1.put('9', 9);
 final CI m = tmp1;
 return m;
 }
-final Map<Java.lang.character,Integer> digitsMap = getDigitsMap();
+final Map<Character,Integer> digitsMap = getDigitsMap();
 public static final Integer parse(final String s) {
 long result = 0;
 final MISSING_TYPE strLength = clojure.lang.RT/count(s);
@@ -111,11 +111,11 @@ tmp6.put("BENGALI", ',');
 final SC m = tmp6;
 return m;
 }
-final Map<String,Java.lang.character> groupingSeparatorsMap = getGroupingSeparatorsMap();
+final Map<String,Character> groupingSeparatorsMap = getGroupingSeparatorsMap();
 final TYPE_MISSING LI;
 public static final LI getSeparatorPositions(final Integer numLength, final String groupingStrategy) {
 final PersistentVector tmp7 = new PersistentVector();
-List<Integer> result = tmp7;
+list<Integer> result = tmp7;
 if ((groupingStrategy == "NONE"))
 {
 return result;

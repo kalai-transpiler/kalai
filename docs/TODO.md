@@ -10,6 +10,9 @@
       - Boxed and primitives need to be unified
       - If it's hard to work with both primitives and Boxed,
         we can fall back to only using Boxed
+  - Allow types to be declared instead of as meta data (like Typed Clojure)
+  - az/analyze-ns and az/analyze+eval produce slightly different AST,
+    breaking type aliasing
 * Test organization
   - grouping functionality
   - generate docsy from tests
