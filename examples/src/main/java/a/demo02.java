@@ -3,8 +3,7 @@ import java.util.Vector;
 import java.util.Map;
 import java.util.HashSet;
 public class demo02 {
-final TYPE_MISSING CI;
-public static final CI getDigitsMap() {
+public static final Map<Character,Integer> getDigitsMap() {
 final PersistentMap tmp1 = new PersistentMap();
 tmp1.put('٠', 0);
 tmp1.put('١', 1);
@@ -36,7 +35,7 @@ tmp1.put('6', 6);
 tmp1.put('7', 7);
 tmp1.put('8', 8);
 tmp1.put('9', 9);
-final CI m = tmp1;
+final Map<Character,Integer> m = tmp1;
 return m;
 }
 final Map<Character,Integer> digitsMap = getDigitsMap();
@@ -59,8 +58,7 @@ i = ++i;
 return result;
 }
 }
-final TYPE_MISSING SLC;
-public static final SLC getNumberSystemsMap() {
+public static final Map<String,Type_missing> getNumberSystemsMap() {
 final PersistentMap tmp2 = new PersistentMap();
 final PersistentVector tmp3 = new PersistentVector();
 tmp3.add('٠');
@@ -98,22 +96,20 @@ tmp5.add('৭');
 tmp5.add('৮');
 tmp5.add('৯');
 tmp2.put("BENGALI", tmp5);
-final SLC m = tmp2;
+final Map<String,Type_missing> m = tmp2;
 return m;
 }
 final Map<String,Type_missing> numberSystemsMap = getNumberSystemsMap();
-final TYPE_MISSING SC;
-public static final SC getGroupingSeparatorsMap() {
+public static final Map<String,Character> getGroupingSeparatorsMap() {
 final PersistentMap tmp6 = new PersistentMap();
 tmp6.put("ARABIC", '٬');
 tmp6.put("LATIN", ',');
 tmp6.put("BENGALI", ',');
-final SC m = tmp6;
+final Map<String,Character> m = tmp6;
 return m;
 }
 final Map<String,Character> groupingSeparatorsMap = getGroupingSeparatorsMap();
-final TYPE_MISSING LI;
-public static final LI getSeparatorPositions(final Integer numLength, final String groupingStrategy) {
+public static final list<Integer> getSeparatorPositions(final Integer numLength, final String groupingStrategy) {
 final PersistentVector tmp7 = new PersistentVector();
 list<Integer> result = tmp7;
 if ((groupingStrategy == "NONE"))
@@ -184,7 +180,7 @@ final StringBuffer result = new StringBuffer();
 while (!(i == 0)) {
 final Integer quotient = (i / 10);
 final Integer remainder = (i % 10);
-final List<Character> numberSystemDigits = clojure.lang.RT/get(numberSystemsMap, numberSystem);
+final list<Character> numberSystemDigits = clojure.lang.RT/get(numberSystemsMap, numberSystem);
 final Character localDigit = clojure.lang.RT/nth(numberSystemDigits, remainder);
 {
 result.insert(0, localDigit);
@@ -194,7 +190,7 @@ i = quotient;
 {
 final Character sep = clojure.lang.RT/get(groupingSeparatorsMap, numberSystem);
 final MISSING_TYPE numLength = result.length();
-final LI separatorPositions = getSeparatorPositions(numLength, groupingStrategy);
+final list<Integer> separatorPositions = getSeparatorPositions(numLength, groupingStrategy);
 final MISSING_TYPE numPositions = clojure.lang.RT/count(separatorPositions);
 int idx = 0;
 while ((idx < numPositions)) {
