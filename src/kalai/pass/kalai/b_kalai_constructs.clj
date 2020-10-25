@@ -59,7 +59,7 @@
         (if (clojure.lang.Numbers/lt ?sym ?auto)
           (do . !body ... (recur (clojure.lang.Numbers/unchecked_inc ?sym))))))
     (group
-      (init ~(with-meta ?sym {:t   'int
+      (init ~(with-meta ?sym {:t   (or (:t (meta ?sym)) 'int)
                               :mut true})
             0)
       (while (operator < ?sym ?n)
@@ -144,6 +144,10 @@
     (assign ?r (m/app inner-form ?x))
 
     ((u/var ~#'swap!) ?a ?f . !args ...)
+    (invoke ?f ?a . (m/app inner-form !args) ...)
+
+    ;; TODO: this doesn't happen but it should for a persistent data structure
+    ((u/var ~#'swap!) ?a ?f . !args ...)
     (group
       (assign ?a (invoke ?f ?a . (m/app inner-form !args) ...))
       ?a)
@@ -168,8 +172,9 @@
     ?x
 
     ;; TODO: might be better to leave this to function-calls
+    ;; TODO: sets use 'contains', array lists use count
     ((u/var ~#'contains?) ?coll ?x)
-    (method contains ?coll ?x)))
+    (method containsKey ?coll ?x)))
 
 (def conditionals
   (s/rewrite
@@ -200,11 +205,25 @@
     (new ?c . !args ...)
     (new ?c . (m/app inner-form !args) ...)
 
+
     ;; method
+
+    ('. ?obj ?method . !args ...)
+    (method ?method (m/app inner-form ?obj)
+            . (m/app inner-form !args) ...)
+
+    (m/and
+      ('.. ?obj . (!methods . !args ..!n) ...)
+      (m/let [?tmp (u/tmp-for ?obj)]))
+    (group
+      (init ?tmp (m/app inner-form ?obj))
+      . (!methods ?tmp . (m/app inner-form !args) ..!n) ...)
+
     ((m/and (m/pred #(str/starts-with? (str %) "."))
             (m/app #(symbol (subs (str %) 1)) ?m))
-     . !args ...)
-    (method ?m . (m/app inner-form !args) ...)
+     ?obj . !args ...)
+    (method ?m (m/app inner-form ?obj)
+            . (m/app inner-form !args) ...)
 
     ;; invoke
     ;; careful, this catches a lot!
@@ -241,7 +260,6 @@
     ;; TODO: update docs and examples
     inner-form
     (s/rewrite ?else ~(throw (ex-info "fail" {:else ?else})))))
-
 
 ;; takes a sequence of forms, returns a single form
 (def rewrite-namespace

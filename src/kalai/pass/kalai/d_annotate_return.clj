@@ -18,11 +18,11 @@
       (foreach ?t ?sym ?xs ?body)
       (return nil))
 
-    (if ?condition ?then)
-    (if ?condition (m/app return ?then))
+    ;;(if ?condition ?then)
+    ;;(if ?condition (m/app return ?then))
 
-    (if ?condition ?then ?else)
-    (if ?condition (m/app return ?then) (m/app return ?else))
+    ;;(if ?condition ?then ?else)
+    ;;(if ?condition (m/app return ?then) (m/app return ?else))
 
     ;; TODO: I think group is redundant with do
     (group . !statements ... ?last)

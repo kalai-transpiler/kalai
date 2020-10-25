@@ -41,18 +41,15 @@
 (def raise-or-splice
   (s/rewrite
     ;; if there is an enclosing group already established, just splice
-    (group . !before ...
-           (group . !tmp-init ... ?tmp-variable)
-           . !after ...)
-    (group . !before ...
-           . !tmp-init ...
-           ?tmp-variable
-           . !after ...)
+    (group . (m/or (group . !x ...)
+                   !x)
+           ...)
+    (group . !x ...)
 
     ;; Preserve short circuit evaluation.
     ;; temp variables must not escape if, so prevent that.
-    ;; branches must be in blocks as they can contain groups!
-    ;; the blocks preserve the indivisibility of the contained statements.
+    ;; Branches must be in blocks as they can contain groups!
+    ;; The blocks preserve the indivisibility of the contained statements.
     ;; In contrast, groups allow the statements to be divided, for example:
     ;; the temp variable expression vs the initialization statements prior to it.
     (j/if ?condition ?then)
@@ -67,10 +64,9 @@
     ;; establish an enclosing group,
     ;; and raise temporary variable initialization
     ((m/or (group . !tmp-init ... !tmp-variable)
-           !tmp-variable) ...)
-    (group
-      . !tmp-init ...
-      (!tmp-variable ...))
+           !tmp-variable)
+     ...)
+    (group . !tmp-init ... (!tmp-variable ...))
 
     ?else
     ?else))
@@ -110,7 +106,9 @@
                 (j/block . !statements ...))
     (j/function ?name ?params
                 (j/block . (m/app statement !statements) ...))
-    ?else ?else))
+
+    ?else
+    (m/app raise-sub-groups ?else)))
 
 (def rewrite
   (s/rewrite

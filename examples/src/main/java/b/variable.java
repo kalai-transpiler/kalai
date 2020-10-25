@@ -1,14 +1,14 @@
 package b;
-import java.util.Vector;
-import java.util.Map;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.ArrayList;
 public class variable {
 public static final Long sideEffect() {
 long y = 2;
 {
 y = 3;
-y = (y + 4);
-return y;
+return (y + 4);
 }
 }
 }

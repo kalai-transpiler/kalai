@@ -13,6 +13,10 @@
   - Allow types to be declared instead of as meta data (like Typed Clojure)
   - az/analyze-ns and az/analyze+eval produce slightly different AST,
     breaking type aliasing
+  - see if we can support functions applied to data literals
+    that would result in method invocations that Java will not allow.
+  - we really need to propagate type information on symbols,
+    so when they are referenced in scope we know what to do with them.
 * Test organization
   - grouping functionality
   - generate docsy from tests
@@ -46,6 +50,8 @@
   - consider our own macros
   - maps/sets/vectors conj/assoc/update etc
   - import when needed
+  - We might be better of using Collection builder functions instead of temporary variables?
+  - We should check static block semantics
 * operator and language specific transformation (e.g. = in Clojure is either .equals java or ==)
 * test helper clean up
   - don't report failures twice

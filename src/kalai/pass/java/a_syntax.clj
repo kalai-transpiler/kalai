@@ -58,7 +58,7 @@
            (m/let [?t (:t ?meta)
                    ?tag (:tag ?meta)
                    ?tm (if (:mut ?meta)
-                        'Vector
+                        'ArrayList
                         'PersistentVector)
                    ?ttt (or ?t ?tag ?tm)
                    ?tmp (u/tmp ?ttt)]))
@@ -137,7 +137,11 @@
     ;; faithfully reproduce Clojure semantics for do as a collection of
     ;; side-effect statements and a return expression
     (do . !x ... ?last)
-    (group . (m/app statement !x) ... (m/app expression ?last))
+    (group
+      . (m/app statement !x) ...
+      (m/app expression ?last))
+
+    ;; let
 
     ;; TODO: how to do this? maybe through variable assignment?
     (case ?x {& (m/seqable [!k [_ !v]] ...)})
@@ -154,6 +158,14 @@
 
     (init ?name ?x)
     (j/init ?name (m/app expression ?x))))
+
+(def top-level-init
+  (s/rewrite
+    (init ?name)
+    (j/init (m/app u/set-meta ?name :global true))
+
+    (init ?name ?x)
+    (j/init (m/app u/set-meta ?name :global true) (m/app expression ?x))))
 
 (def statement
   (s/choice
@@ -215,7 +227,7 @@
 (def top-level-form
   (s/choice
     function
-    init
+    top-level-init
     (s/rewrite
       ?else ~(throw (ex-info "Expected a top level form" {:else ?else})))))
 

@@ -9,5 +9,6 @@
     (while (< @x 10)
       (println (inc @x)))
     (if true
-      @x
+      ;; TODO: this is cheating, we should know the type of x
+      @^{:t :int}x
       (* 2 (+ 3 4) 5 6 7))))

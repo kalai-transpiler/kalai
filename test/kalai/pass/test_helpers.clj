@@ -24,7 +24,7 @@
 (defn remove-java-class [s]
   (->> s
        (str/split-lines)
-       (drop 5)
+       (drop 6)
        (butlast)
        (str/join \newline)))
 
@@ -34,7 +34,7 @@
 (defn remove-java-function [s]
   (->> s
        (str/split-lines)
-       (drop 6)
+       (drop 7)
        (drop-last 2)
        (str/join \newline)))
 

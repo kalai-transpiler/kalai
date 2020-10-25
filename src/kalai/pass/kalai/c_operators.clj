@@ -52,6 +52,9 @@
       (invoke + . !args ...)
       (operator + . !args ...)
 
+      (invoke - . !args ...)
+      (operator - . !args ...)
+
       (invoke and)
       true
 

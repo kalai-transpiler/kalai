@@ -1,7 +1,8 @@
 package a;
-import java.util.Vector;
-import java.util.Map;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.ArrayList;
 public class demo01 {
 public static final String format(final Integer num) {
 Integer i = num;

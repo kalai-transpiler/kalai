@@ -10,7 +10,7 @@
     ;;->
     '(init x 3)
     ;;->
-    "final int x = 3;"))
+    "static final int x = 3;"))
 
 (deftest init2-test
   (top-level-form
@@ -18,7 +18,7 @@
     ;;->
     '(init x)
     ;;->
-    "final Integer x;"))
+    "static final Integer x;"))
 
 (deftest init3-test
   (inner-form
@@ -30,6 +30,23 @@
        x)
     ;;->
     "final int x = 1;"))
+
+;; TODO:
+(deftest init4-test
+  #_(top-level-form
+      '(def x [1 2 3])
+      ;;->
+      '(init x [1 2 3])
+      ;;->
+      "static final PersistentVector x;
+  static {
+  final PersistentVector tmp1 = new PersistentVector();
+  tmp1.add(1);
+  tmp1.add(2);
+  tmp1.add(3);
+  x = tmp1;
+  }"))
+
 
 ;; # Functions
 
@@ -47,28 +64,29 @@
 return ++x;
 }")))
 
+;; TODO: differentiate between mutable swap and not
 (deftest function2-test
-  (testing
-    "Some Clojure forms expand to multiple statements.
-    The way Kalai deals with this is by creating a group.
-    That group is later unrolled as temporary variable assignments."
-    (top-level-form
-      '(defn f ^{:t :int} []
-         (let [x (atom (int 0))]
-           (swap! x inc)))
-      ;;->
-      '(function f []
-                 (do
-                   (init x 0)
-                   (group
-                     (assign x (operator ++ x))
-                     (return x))))
-      ;;->
-      "public static final int f() {
-int x = 0;
-x = ++x;
-return x;
-}")))
+  #_(testing
+      "Some Clojure forms expand to multiple statements.
+      The way Kalai deals with this is by creating a group.
+      That group is later unrolled as temporary variable assignments."
+      (top-level-form
+        '(defn f ^{:t :int} []
+           (let [x (atom (int 0))]
+             (swap! x inc)))
+        ;;->
+        '(function f []
+                   (do
+                     (init x 0)
+                     (group
+                       (assign x (operator ++ x))
+                       (return x))))
+        ;;->
+        "public static final int f() {
+  int x = 0;
+  x = ++x;
+  return x;
+  }")))
 
 ;; Multiple arity aka overloaded methods
 (deftest function3-test
@@ -87,9 +105,10 @@ return x;
                           (return (operator + x y))))
     ;;->
     "package test-package;
-import java.util.Vector;
-import java.util.Map;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.ArrayList;
 public class test-class {
 public static final int f(final int x) {
 return ++x;
@@ -163,19 +182,35 @@ x = 3;
 int y = 2;
 System.out.println((x + y));"))
 
+;; TODO: mutable swap
 (deftest local-variables4-test
-  (inner-form
-    '(let [y (atom 2)]
-       (swap! y + 4))
-    ;;->
-    '(do
-       (init y 2)
-       (group
-         (assign y (operator + y 4))
-         y))
-    ;;->
-    "long y = 2;
-y = (y + 4);"))
+  #_(inner-form
+      '(let [y (atom 2)]
+         (swap! y + 4))
+      ;;->
+      '(do
+         (init y 2)
+         (group
+           (assign y (operator + y 4))
+           y))
+      ;;->
+      "long y = 2;
+  y = (y + 4);"))
+
+;; TODO: why does this blow up?
+#_(deftest local-variables5-test
+    (inner-form
+      '(let [y (atom (int (- 2 4)))]
+         (swap! y + 4))
+      ;;->
+      '(do
+         (init y 2)
+         (group
+           (assign y (operator + y 4))
+           y))
+      ;;->
+      "long y = 2;
+  y = (y + 4);"))
 
 ;; # Types
 
@@ -201,7 +236,15 @@ final Long y = 5;"))
     ;;->
     '(init x)
     ;;->
-    "final Map<Long,String> x;"))
+    "static final HashMap<Long,String> x;"))
+
+(deftest generic-types-test2
+  (top-level-form
+    '(def ^{:t {:map [:string {:list [:char]}]}} x)
+    ;;->
+    '(init x)
+    ;;->
+    "static final HashMap<String,ArrayList<Character>> x;"))
 
 (deftest type-aliasing-test
   (ns-form
@@ -213,11 +256,12 @@ final Long y = 5;"))
                 (init x))
     ;;->
     "package test-package;
-import java.util.Vector;
-import java.util.Map;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.ArrayList;
 public class test-class {
-final Map<Long,String> x;
+static final HashMap<Long,String> x;
 }"))
 
 ;; unparameterized form
@@ -230,10 +274,10 @@ final Map<Long,String> x;
        (init x [1 2])
        (invoke println x))
     ;;->
-    "final Vector<Long> tmp1 = new Vector<Long>();
+    "final ArrayList<Long> tmp1 = new ArrayList<Long>();
 tmp1.add(1);
 tmp1.add(2);
-final Vector<Long> x = tmp1;
+final ArrayList<Long> x = tmp1;
 System.out.println(x);"))
 
 (deftest generic-types3-test
@@ -244,7 +288,7 @@ System.out.println(x);"))
     ;;->
     "final PersistentMap tmp1 = new PersistentMap();
 tmp1.put(\":a\", \"asdf\");
-final Map<String,String> x = tmp1;"))
+final HashMap<String,String> x = tmp1;"))
 
 ;; # Conditionals
 
@@ -287,10 +331,10 @@ final PersistentVector x = tmp1;"))
     ;;->
     '(init x [1 2])
     ;;->
-    "final Vector tmp1 = new Vector();
+    "final ArrayList tmp1 = new ArrayList();
 tmp1.add(1);
 tmp1.add(2);
-final Vector x = tmp1;"))
+final ArrayList x = tmp1;"))
 
 (deftest data-literals3-test
   (inner-form
@@ -301,10 +345,10 @@ final Vector x = tmp1;"))
        (init x [1 2])
        x)
     ;;->
-    "final Vector tmp1 = new Vector();
+    "final ArrayList tmp1 = new ArrayList();
 tmp1.add(1);
 tmp1.add(2);
-final Vector x = tmp1;"))
+final ArrayList x = tmp1;"))
 
 (deftest data-literals4-test
   (inner-form
@@ -315,11 +359,11 @@ final Vector x = tmp1;"))
        (init x [1 2])
        (assign x [3 4]))
     ;;->
-    "final Vector tmp1 = new Vector();
+    "final ArrayList tmp1 = new ArrayList();
 tmp1.add(1);
 tmp1.add(2);
-Vector x = tmp1;
-final Vector tmp2 = new Vector();
+ArrayList x = tmp1;
+final ArrayList tmp2 = new ArrayList();
 tmp2.add(3);
 tmp2.add(4);
 x = tmp2;"))
@@ -346,6 +390,7 @@ tmp1.add(1);
 tmp1.add(2);
 final PersistentSet x = tmp1;"))
 
+;; TODO: these types are actually incompatible
 (deftest data-literals7-test
   (inner-form
     '(let [^{:t kvector} x [1 [2]]]
@@ -360,7 +405,7 @@ tmp1.add(1);
 final PersistentVector tmp2 = new PersistentVector();
 tmp2.add(2);
 tmp1.add(tmp2);
-final Vector x = tmp1;
+final ArrayList x = tmp1;
 System.out.println(x);"))
 
 (deftest data-literals8-test
@@ -383,7 +428,7 @@ final PersistentVector tmp4 = new PersistentVector();
 tmp4.add(4);
 tmp3.add(tmp4);
 tmp1.add(tmp3);
-final Vector x = tmp1;
+final ArrayList x = tmp1;
 System.out.println(x);"))
 
 (deftest data-literals9-test
@@ -408,7 +453,7 @@ tmp5.add(6);
 tmp4.add(tmp5);
 tmp2.add(tmp4);
 tmp1.put(1, tmp2);
-final Vector x = tmp1;
+final ArrayList x = tmp1;
 System.out.println(x);"))
 
 (deftest data-literals10-test
@@ -749,3 +794,97 @@ System.out.println((tmp1 + 4));"))
              (operator ! (operator == 1 (operator ++ 1))))
     ;;->
     "System.out.println(!(1 == ++1));"))
+
+(deftest zzz-test
+  (inner-form
+    '(def ^{:t :int} x (count "abc"))
+    ;;->
+    '(init x (invoke clojure.lang.RT/count "abc"))
+    ;;->
+    "final int x = abc.length();"))
+
+(deftest zzz2-test
+  (inner-form
+    '(let [^String s "abc"]
+       (println (nth s 1)))
+    ;;->
+    '(do
+       (init s "abc")
+       (invoke println
+               (invoke clojure.lang.RT/nth s 1)))
+    ;;->
+    "final String s = \"abc\";
+System.out.println(s.charAt(1));"))
+
+(deftest yyy-test
+  (inner-form
+    '(let [result (atom ^:mut [])
+           i (atom (int 10))]
+       (while (< 0 @i)
+         (swap! result conj @i)
+         (reset! i (- @i 3))))
+    ;;->
+    '(do
+       (init result [])
+       (init i 10)
+       (while (operator < 0 i)
+         (method add result i)
+         (assign i (operator - i 3))))
+    ;;->
+    "final ArrayList tmp1 = new ArrayList();
+ArrayList result = tmp1;
+int i = 10;
+while ((0 < i)) {
+result.add(i);
+i = (i - 3);
+}"))
+
+(deftest yyy2-test
+  (inner-form
+    '(let [^{:t {:list [:int]}} separatorPositions nil
+           ^{:t :int} numPositions (.size separatorPositions)]
+       (println "hi"))
+    ;;->
+    '(do
+       (init separatorPositions nil)
+       (init numPositions
+             (method size separatorPositions))
+       (invoke println "hi"))
+    ;;->
+    "final ArrayList<Integer> separatorPositions = nil;
+final int numPositions = separatorPositions.size();
+System.out.println(\"hi\");"))
+
+(deftest return-if-test
+  (top-level-form
+    '(defn f ^{:t :long} []
+       (if true
+         1
+         (let [x 2]
+           (println "hi")
+           x)))
+    ;;->
+    '(function f []
+               (return (if true
+                         1
+                         (do
+                           (init x 2)
+                           (do (invoke println "hi")
+                               x)))))
+    ;;->
+    "public static final long f() {
+long tmp1;
+if (true)
+{
+tmp1 = 1;
+}
+else
+{
+final long x = 2;
+System.out.println(\"hi\");
+{
+tmp1 = x;
+}
+}
+return tmp1;
+}"))

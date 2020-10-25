@@ -41,12 +41,14 @@
   (statement (str variable-name " = " (stringify value))))
 
 (def ktypes
-  {"map"     "Map"
-   "kmap"    "Map"
-   "set"     "Set"
-   "kset"    "Set"
-   "vector"  "Vector"
-   "kvector" "Vector"
+  {"map"     "HashMap"
+   "kmap"    "HashMap"
+   "set"     "HashSet"
+   "kset"    "HashSet"
+   "vector"  "ArrayList"
+   "kvector" "ArrayList"
+   "list"    "ArrayList"
+   "klist"   "ArrayList"
    "kbool"   "bool"
    "kbyte"   "byte"
    "kchar"   "char"
@@ -57,15 +59,18 @@
    "kstring" "string"})
 
 (def java-types
-  {java.util.Map     "Map"
-   java.util.Set     "Set"
-   java.util.Vector  "Vector"
-   java.lang.Boolean "bool"
-   java.lang.Long    "long"
-   java.lang.Integer "int"
-   java.lang.Float   "float"
-   java.lang.Double  "double"
-   java.lang.String  "string"})
+  {java.util.Map       "HashMap"
+   java.util.HashMap   "HashMap"
+   java.util.Set       "HashSet"
+   java.util.HashSet   "HashSet"
+   java.util.Vector    "ArrayList"
+   java.util.ArrayList "ArrayList"
+   java.lang.Boolean   "bool"
+   java.lang.Long      "long"
+   java.lang.Integer   "int"
+   java.lang.Float     "float"
+   java.lang.Double    "double"
+   java.lang.String    "string"})
 
 (defn jtype [t]
   (or
@@ -93,42 +98,42 @@
     "int" "Integer"
     "char" "Character"
     "bool" "Boolean"
-    (str/capitalize s)))
+    (apply str (str/upper-case (first s)) (rest s))))
 
 (def type-str*
   (s/rewrite
     {?t [& ?ts]}
     ~(str (ktype ?t)
           \< (str/join \, (for [t ?ts]
-                            (type-str* [:boxed t])))
+                            (box (type-str* t))))
           \>)
-
-    [:boxed ?t]
-    ~(str (box (ktype ?t)))
 
     ?t
     ~(str (ktype ?t))))
 
-(defn type-modifiers [s mut]
+(defn type-modifiers [s mut global]
   (cond->> s
-           (not mut) (space-separated "final")))
+           (not mut) (space-separated "final")
+           global (space-separated "static")))
 
 ;; Types are allowed to flow through the pipeline as metadata
 (defn type-str
   ([variable]
-   (let [{:keys [t tag mut]} (meta variable)]
+   (let [{:keys [t tag mut global]} (meta variable)]
      (-> (type-str* (or t tag))
-         (type-modifiers mut))))
+         (type-modifiers mut global))))
   ([variable value]
-   (let [{:keys [t tag mut]} (meta variable)]
+   (let [{:keys [t tag mut global]} (meta variable)]
      (-> (type-str* (or t tag (u/get-type value)))
-         (type-modifiers mut)))))
+         (type-modifiers mut global)))))
 
 (defn init-str
   ([variable-name]
-   (statement (space-separated (type-str variable-name) variable-name)))
+   (statement (space-separated (type-str variable-name)
+                               variable-name)))
   ([variable-name value]
-   (statement (space-separated (type-str variable-name value) variable-name "=" (stringify value)))))
+   (statement (space-separated (type-str variable-name value)
+                               variable-name "=" (stringify value)))))
 
 #_(defn const [bindings]
     (str "const" Type x "=" initialValue))
@@ -166,9 +171,10 @@
             (interpose op (map stringify (cons x xs)))))))
 
 (def std-imports
-  "import java.util.Vector;
-import java.util.Map;
-import java.util.HashSet;")
+  "import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ArrayList;")
 
 (defn class-str [ns-name body]
   (let [parts (str/split (str ns-name) #"\.")
