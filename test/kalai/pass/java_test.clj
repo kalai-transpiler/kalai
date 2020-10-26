@@ -888,3 +888,18 @@ tmp1 = x;
 }
 return tmp1;
 }"))
+
+(deftest propagated-types-test
+  (inner-form
+    '(let [x 1
+           y x]
+       (println y))
+    ;;->
+    '(do
+       (init x 1)
+       (init y x)
+       (invoke println y))
+    ;;->
+    "final long x = 1;
+final long y = x;
+System.out.println(y);"))

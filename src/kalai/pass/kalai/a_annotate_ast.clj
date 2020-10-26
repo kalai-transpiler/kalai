@@ -32,6 +32,17 @@
      :form (m/app u/set-meta ?form :var ?var)
      &     ?ast}
 
+    ;; annotate locals with their value, for type propagation
+    {:op   :local
+     :form (m/pred some? ?form)
+     :env  {:locals {?form {:init {:val ?val}}} :as ?env}
+     &     ?ast}
+    ;;->
+    {:op   :local
+     :form (m/app u/set-meta ?form :local ?val)
+     ;;:env  ?env
+     &     ?ast}
+
     ;; otherwise leave the ast as is
     ?else
     ?else))

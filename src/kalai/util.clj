@@ -12,9 +12,10 @@
   (with-meta (gensym2 "tmp") {:t type}))
 
 (defn get-type [expr]
-  (let [{:keys [t tag]} (meta expr)]
+  (let [{:keys [t tag local]} (meta expr)]
     (or t
         tag
+        (some-> local (get-type))
         (when (and (seq? expr) (seq expr))
           (case (first expr)
             ;; TODO: this suggests we need some type inference

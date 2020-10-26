@@ -7,7 +7,7 @@
 (deftest compile-source-file-test
   (is (compile/compile-source-file "examples/src/main/clj/a/demo01.clj")))
 
-(deftest compile-source-file-test2
+(deftest compile-source-file2-test
   (is (compile/compile-source-file "examples/src/main/clj/b/simple.clj")))
 
 (deftest compile-test
