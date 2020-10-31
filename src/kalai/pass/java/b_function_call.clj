@@ -18,9 +18,19 @@
 ;; (for example multi-methods)
 ;; It doesn't allow us to share repetitive transpiled support in the way that multi-methods do.
 
+
 (defn nth-for [x]
-  ;; TODO: we need to have the type info to figure out what to do
-  'charAt)
+  (if (-> (u/get-type x) #{:string :String "string" "String" 'String String})
+    'charAt
+    'get))
+
+(defn count-for [x]
+  (m/rewrite (u/get-type x)
+    {:map (m/pred some?)} 'size
+    {:set (m/pred some?)} 'size
+    {:vector (m/pred some?)} 'size
+    {:list (m/pred some?)} 'size
+    ?else 'length))
 
 (def rewrite
   (s/bottom-up
@@ -29,7 +39,7 @@
       (j/invoke System.out.println & ?more)
 
       (j/invoke clojure.lang.RT/count ?x)
-      (j/method length ?x)
+      (j/method (m/app count-for ?x) ?x)
 
       ;; TODO: need to do different stuff depending on the type
       (j/invoke clojure.lang.RT/nth ?x ?n)

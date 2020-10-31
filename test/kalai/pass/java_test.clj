@@ -815,6 +815,23 @@ System.out.println((tmp1 + 4));"))
     "final String s = \"abc\";
 System.out.println(s.charAt(1));"))
 
+(deftest zzz3-test
+  (inner-form
+    '(let [^{:t {:vector [:int]}} v ^:mut [1 2 3]]
+       (println (nth v 1)))
+    ;;->
+    '(do
+       (init v [1 2 3])
+       (invoke println
+               (invoke clojure.lang.RT/nth v 1)))
+    ;;->
+    "final ArrayList<Integer> tmp1 = new ArrayList<Integer>();
+tmp1.add(1);
+tmp1.add(2);
+tmp1.add(3);
+final ArrayList<Integer> v = tmp1;
+System.out.println(v.get(1));"))
+
 (deftest yyy-test
   (inner-form
     '(let [result (atom ^:mut [])
@@ -983,3 +1000,19 @@ x = tmp2;"))
     "final ArrayList<Long> tmp1 = new ArrayList<Long>();
 ArrayList<Long> x = tmp1;
 x.add(1);"))
+
+(deftest propagated-types6-test
+  (top-level-form
+    '(defn f ^{:t :void} [^String s]
+       (let [x s]
+         (println x)))
+    ;;->
+    '(function f [s]
+               (do
+                 (init x s)
+                 (invoke println x)))
+    ;;->
+    "public static final void f(final String s) {
+final String x = s;
+System.out.println(x);
+}"))

@@ -113,14 +113,11 @@
             ^Character localDigit (get numberSystemDigits remainder)]
         (.insert result 0 localDigit)
         (reset! i quotient)))
-    ;; TODO: replace get with nth
-    (let [^{:t :char} sep (get groupingSeparatorsMap numberSystem)
+    (let [^char sep (get groupingSeparatorsMap numberSystem)
           ^{:t :int} numLength (.length result)
           ^{:t {:list [:int]}} separatorPositions (getSeparatorPositions numLength groupingStrategy)
-          ;; TODO: replace .size with count
-          ^{:t :int} numPositions (.size separatorPositions)]
+          ^{:t :int} numPositions (count separatorPositions)]
       (dotimes [idx numPositions]
-        ;; TODO: replace get with nth
-        (let [^{:t :int} position (get separatorPositions idx)]
+        (let [^int position (nth separatorPositions idx)]
           (.insert result position sep))))
     (.toString result)))

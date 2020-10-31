@@ -11,5 +11,5 @@
         ast (az/analyze in)
         ast2 (a/rewrite ast)
         out2 (azef/emit-form ast2)
-        nav #(-> % (nth 1) (nth 3) (meta) (:local))]
-    (is (= 1 (nav out2)))))
+        nav #(-> % (nth 1) (nth 3) (meta) (:t))]
+    (is (= Long (nav out2)))))

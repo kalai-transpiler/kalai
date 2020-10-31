@@ -27,6 +27,9 @@
      :as ?with-meta}
     ~(or ?t ?tag)
 
+    {:o-tag ?o-tag}
+    ?o-tag
+
     ?else
     nil))
 
@@ -73,9 +76,7 @@
     {:op   :local
      :form ?symbol
      :env  {:locals {?symbol {:form ?symbol-with-meta
-                              :init {:form ?init-form
-                                     :as   ?init}}
-                     :as     ?locals}
+                              :init ?init}}
             :as     ?env}
      &     ?ast}
     ;;->
