@@ -23,16 +23,14 @@ int x = 0;
 while ((x < 10)) {
 System.out.println(++x);
 }
-int tmp9;
 if (true)
 {
-tmp9 = x;
+return x;
 }
 else
 {
-tmp9 = (2 * (3 + 4) * 5 * 6 * 7);
+return (2 * (3 + 4) * 5 * 6 * 7);
 }
-return tmp9;
 }
 }
 }

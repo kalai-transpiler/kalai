@@ -2,7 +2,8 @@
   (:require [meander.epsilon :as m]
             [meander.syntax.epsilon :as syntax]
             [meander.match.syntax.epsilon :as match]
-            [puget.printer :as puget]))
+            [puget.printer :as puget])
+  (:import (clojure.lang IMeta)))
 
 (def c (atom 0))
 (defn gensym2 [s]
@@ -12,10 +13,9 @@
   (with-meta (gensym2 "tmp") {:t type}))
 
 (defn get-type [expr]
-  (let [{:keys [t tag local]} (meta expr)]
+  (let [{:keys [t tag]} (meta expr)]
     (or t
         tag
-        (some-> local (get-type))
         (when (and (seq? expr) (seq expr))
           (case (first expr)
             ;; TODO: this suggests we need some type inference
@@ -68,3 +68,16 @@
   (if v
     (with-meta x (assoc (meta x) k v))
     x))
+
+(defn has-type? [x]
+  (let [{:keys [t tag]} (meta x)]
+    (or t tag)))
+
+(defn propagate-type [from to]
+  (if (and (instance? IMeta to)
+           (not (has-type? to)))
+    (set-meta to :t (if (instance? IMeta from)
+                      (let [{:keys [t tag]} (meta from)]
+                        (or t tag))
+                      (type from)))
+    to))

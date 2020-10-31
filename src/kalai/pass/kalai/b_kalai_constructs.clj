@@ -34,6 +34,18 @@
     #'ref
     #'agent})
 
+(def swap-vars
+  #{#'swap!
+    #'alter
+    #'alter-var-root
+    #'send
+    #'send-off})
+
+(def reset-vars
+  #{#'reset!
+    #'var-set
+    #'ref-set})
+
 (defn ref-form? [x]
   (and (seq? x)
        (ref-vars (:var (meta (first x))))))
@@ -44,7 +56,7 @@
         (u/set-meta ?name :mut
                     (or (#{:mutable} mutability)
                         (ref-form? ?x)))
-        (inner-form ?x)))
+        (inner-form (u/propagate-type ?name ?x))))
 
 (def loops
   (s/rewrite
@@ -134,42 +146,30 @@
     ((u/var ~#'var-get) ?x)
     ?x
 
-    ((u/var ~#'var-set) ?var ?x)
-    (assign ?var (m/app inner-form ?x))
+    ;; matches (reset! atom value)
+    ;; and var-set, ref-set
+    ((u/var (m/pred reset-vars)) ?ref ?x)
+    (assign ?ref ~(inner-form (u/propagate-type ?ref ?x)))
 
-    ((u/var ~#'reset!) ?a ?x)
-    (assign ?a (m/app inner-form ?x))
-
-    ((u/var ~#'ref-set) ?r ?x)
-    (assign ?r (m/app inner-form ?x))
-
-    ((u/var ~#'swap!) ?a ?f . !args ...)
-    (invoke ?f ?a . (m/app inner-form !args) ...)
+    ;; matches (swap! atom fn arg1 arg2)
+    ;; and send, send-off, alter, alter-var-root
+    ((u/var (m/pred swap-vars)) ?ref ?f . !args ...)
+    (invoke (m/app u/propagate-type ?ref ?f) ?ref . (m/app inner-form !args) ...)
 
     ;; TODO: this doesn't happen but it should for a persistent data structure
-    ((u/var ~#'swap!) ?a ?f . !args ...)
+    ((u/var (m/pred swap-vars)) ?ref ?f . !args ...)
     (group
-      (assign ?a (invoke ?f ?a . (m/app inner-form !args) ...))
-      ?a)
+      (assign ?ref (invoke ?f ?ref . (m/app inner-form !args) ...))
+      ?ref)
 
-    ((u/var ~#'alter) ?r ?f . !args ...)
-    (assign ?r (invoke ?f ?r . (m/app inner-form !args) ...))
+    ;; matches (atom (+ 1 2)) or (ref (+ 1 2)) or (agent (+ 1 2))
+    (m/and
+      ((u/var (m/pred ref-vars)) ?x)
+      ?ref)
+    ~(inner-form (u/propagate-type ?ref ?x))
 
-    ((u/var ~#'alter-var-root) ?v ?f . !args ...)
-    (assign ?v (invoke ?f ?v . (m/app inner-form !args) ...))
-
-    ((u/var ~#'send) ?a ?f . !args ...)
-    (assign ?a (invoke ?f ?a . (m/app inner-form !args) ...))
-
-    ((u/var ~#'send-off) ?a ?f . !args ...)
-    (assign ?a (invoke ?f ?a . (m/app inner-form !args) ...))
-
-    ;; (atom (+ 1 2))
-    ((u/var (m/pred ref-vars)) ?x)
-    (m/app inner-form ?x)
-
-    ((u/var ~#'deref) ?x)
-    ?x
+    ((u/var ~#'deref) ?ref)
+    ?ref
 
     ;; TODO: might be better to leave this to function-calls
     ;; TODO: sets use 'contains', array lists use count

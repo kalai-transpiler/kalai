@@ -281,6 +281,9 @@ import java.util.ArrayList;")
     (m/pred char? ?c)
     (str \' ?c \')
 
+    nil
+    "null"
+
     ?else
     (pr-str ?else)))
 

@@ -15,8 +15,8 @@
     breaking type aliasing
   - see if we can support functions applied to data literals
     that would result in method invocations that Java will not allow.
-  - we really need to propagate type information on symbols,
-    so when they are referenced in scope we know what to do with them.
+  - might be a nice to have to propagate function return type to variable identifier in variable assignments.
+  - Fix the mutability propagation
 * Test organization
   - grouping functionality
   - generate docsy from tests

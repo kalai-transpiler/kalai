@@ -42,7 +42,7 @@
   `(do
      (reset! u/c 0)
      (is ;; to capture expections for test reporting
-       (let [asts# (map az/analyze (~as ~input))
+       (let [asts# (map az/analyze+eval (~as ~input))
              a2b# (kalai-pipeline/asts->kalai asts#)]
          (and
            (testing "compiling to kalai"

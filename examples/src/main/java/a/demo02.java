@@ -111,12 +111,11 @@ return m;
 }
 static final HashMap<String,Character> groupingSeparatorsMap = getGroupingSeparatorsMap();
 public static final ArrayList<Integer> getSeparatorPositions(final Integer numLength, final String groupingStrategy) {
-final ArrayList tmp7 = new ArrayList();
+final ArrayList<Integer> tmp7 = new ArrayList<Integer>();
 ArrayList<Integer> result = tmp7;
-{
 if ((groupingStrategy == "NONE"))
 {
-
+return result;
 }
 else
 {
@@ -128,6 +127,7 @@ while ((0 < i)) {
 result.add(i);
 i = (i - 3);
 }
+return result;
 }
 }
 else
@@ -140,6 +140,7 @@ while ((0 < i)) {
 result.add(i);
 i = (i - 2);
 }
+return result;
 }
 }
 else
@@ -148,7 +149,7 @@ if ((groupingStrategy == "MIN_2"))
 {
 if ((numLength <= 4))
 {
-
+return result;
 }
 else
 {
@@ -158,6 +159,7 @@ while ((0 < i)) {
 result.add(i);
 i = (i - 3);
 }
+return result;
 }
 }
 }
@@ -165,13 +167,15 @@ else
 {
 if (true)
 {
-
-}
-}
-}
-}
-}
 return result;
+}
+else
+{
+return null;
+}
+}
+}
+}
 }
 }
 public static final String format(final Integer num, final String numberSystem, final String groupingStrategy) {

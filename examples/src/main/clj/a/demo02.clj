@@ -74,14 +74,14 @@
   (let [^{:t {:list [:int]}} result (atom ^:mut [])]
     (cond
       (= groupingStrategy "NONE")
-      ^{:t {:list [:int]}} @result
+      @result
 
       (= groupingStrategy "ON_ALIGNED_3_3")
       (let [^{:t :int} i (atom (- numLength 3))]
         (while (< 0 @i)
           (swap! result conj @i)
           (reset! i (- @i 3)))
-        ^{:t {:list [:int]}} @result)
+        @result)
 
       (= groupingStrategy "ON_ALIGNED_3_2")
       (let [^{:t :int } i (atom (- numLength 3))]
@@ -100,9 +100,7 @@
           @result))
 
       true
-      @result)
-    ;; TODO: this is cheating, remove it but then don't know the types yet
-    @result))
+      @result)))
 
 (defn format
   ^String [^Integer num, ^String numberSystem, ^String groupingStrategy]

@@ -32,15 +32,26 @@
      :form (m/app u/set-meta ?form :var ?var)
      &     ?ast}
 
-    ;; annotate locals with their value, for type propagation
+    ;; We propagate type information which is stored in metadata
+    ;; from the the place where they are declared on a symbol
+    ;; to all future usages of that symbol in scope.
+    ;; When the type metadata is not provided and the type of the
+    ;; initial value is known, we use the type of the value.
+    ;; TODO: function call type inference would be nice
     {:op   :local
-     :form (m/pred some? ?form)
-     :env  {:locals {?form {:init {:val ?val}}} :as ?env}
+     :form (m/pred some? ?symbol)
+     :env  {:locals {?symbol {:form ?symbol-with-meta
+                              :init {:val  ?val
+                                     :form ?symbol-declaration}}
+                     :as     ?locals}
+            :as     ?env}
      &     ?ast}
     ;;->
     {:op   :local
-     :form (m/app u/set-meta ?form :local ?val)
-     ;;:env  ?env
+     :form ~(->> ?symbol-with-meta
+                 (u/propagate-type ?val)
+                 (u/propagate-type ?symbol-declaration))
+     :env  ?env
      &     ?ast}
 
     ;; otherwise leave the ast as is

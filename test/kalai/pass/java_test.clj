@@ -390,7 +390,6 @@ tmp1.add(1);
 tmp1.add(2);
 final PersistentSet x = tmp1;"))
 
-;; TODO: these types are actually incompatible
 (deftest data-literals7-test
   (inner-form
     '(let [^{:t kvector} x [1 [2]]]
@@ -400,7 +399,7 @@ final PersistentSet x = tmp1;"))
        (init x [1 [2]])
        (invoke println x))
     ;;->
-    "final PersistentVector tmp1 = new PersistentVector();
+    "final ArrayList tmp1 = new ArrayList();
 tmp1.add(1);
 final PersistentVector tmp2 = new PersistentVector();
 tmp2.add(2);
@@ -417,7 +416,7 @@ System.out.println(x);"))
        (init x [1 [2] 3 [[4]]])
        (invoke println x))
     ;;->
-    "final PersistentVector tmp1 = new PersistentVector();
+    "final ArrayList tmp1 = new ArrayList();
 tmp1.add(1);
 final PersistentVector tmp2 = new PersistentVector();
 tmp2.add(2);
@@ -851,7 +850,7 @@ i = (i - 3);
              (method size separatorPositions))
        (invoke println "hi"))
     ;;->
-    "final ArrayList<Integer> separatorPositions = nil;
+    "final ArrayList<Integer> separatorPositions = null;
 final int numPositions = separatorPositions.size();
 System.out.println(\"hi\");"))
 
@@ -865,28 +864,27 @@ System.out.println(\"hi\");"))
            x)))
     ;;->
     '(function f []
-               (return (if true
-                         1
-                         (do
-                           (init x 2)
-                           (do (invoke println "hi")
-                               x)))))
+               (if true
+                 (return 1)
+                 (do
+                   (init x 2)
+                   (do
+                     (invoke println "hi")
+                     (return x)))))
     ;;->
     "public static final long f() {
-long tmp1;
 if (true)
 {
-tmp1 = 1;
+return 1;
 }
 else
 {
 final long x = 2;
-System.out.println(\"hi\");
 {
-tmp1 = x;
+System.out.println(\"hi\");
+return x;
 }
 }
-return tmp1;
 }"))
 
 (deftest propagated-types-test
@@ -903,3 +901,85 @@ return tmp1;
     "final long x = 1;
 final long y = x;
 System.out.println(y);"))
+
+(deftest propagated-types2-test
+  (inner-form
+    '(let [^{:t :int} x 1
+           y x]
+       (println y))
+    ;;->
+    '(do
+       (init x 1)
+       (init y x)
+       (invoke println y))
+    ;;->
+    "final int x = 1;
+final int y = x;
+System.out.println(y);"))
+
+(deftest propagated-types3-test
+  ;; TODO: type 1 is not propagated to a
+  (inner-form
+    '(let [^{:t :long} a (atom 1)
+           x (cond
+               true @a
+               false @a)]
+       (println x))
+    ;;->
+    '(do
+       (init a 1)
+       (init x (if true
+                 a
+                 (if false
+                   a)))
+       (invoke println x))
+    ;;->
+    "long a = 1;
+long tmp1;
+if (true)
+{
+tmp1 = a;
+}
+else
+{
+long tmp2;
+if (false)
+{
+tmp2 = a;
+}
+{
+tmp1 = tmp2;
+}
+}
+final long x = tmp1;
+System.out.println(x);"))
+
+(deftest propagated-types4-test
+  (inner-form
+    '(let [^{:t {:vector [:long]}} x (atom ^:mut [])]
+       (reset! x ^:mut [1 2 3]))
+    ;;->
+    '(do
+       (init x [])
+       (assign x [1 2 3]))
+    ;;->
+    "final ArrayList<Long> tmp1 = new ArrayList<Long>();
+ArrayList<Long> x = tmp1;
+final ArrayList<Long> tmp2 = new ArrayList<Long>();
+tmp2.add(1);
+tmp2.add(2);
+tmp2.add(3);
+x = tmp2;"))
+
+(deftest propagated-types5-test
+  (inner-form
+    '(let [^{:t {:vector [:long]}} x (atom ^:mut [])]
+       (swap! x conj 1))
+    ;;->
+    '(do
+       (init x [])
+       (method add x 1))
+    ;;->
+    "final ArrayList<Long> tmp1 = new ArrayList<Long>();
+ArrayList<Long> x = tmp1;
+x.add(1);"))

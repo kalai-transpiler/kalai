@@ -143,8 +143,6 @@ pub printer_fn(m: &HashMap) {
 
 ## Strategy for types, alias, metadata
 
-## Notes
-
 In Clojure you can type hint and metadata let symbols,
 but not if they bind primitive values.
 
@@ -181,11 +179,75 @@ We provide a type aliasing feature:
 `(def ^{:t Z} x)` => In the AST, replace Z with the value of Z => `(def ^{:t {:map [:long :string]} x)`
 `(def ^{:kalias _} Z)` => In the AST, remove the def (don't emit it)
 
+### Type propagation
+
+We propagate metadata in 2 different directions.
+
+#### direction 1
+
+The first way is propagating the type information according to lexical scoping rules.
+The first way is to propagate type metadata from the binding to all references in scope,
+according to the static analysis given to us by tools analyzer.
+The reason we do this is that tools analyzer gives us an accurate snapshot of the
+environment at every node of the AST, but it doesn't collect the metadata we need.
+We need the type information.
+We don't use tools analyzer's type information because we give users full control
+to use the custom `{:t type}` form instead of `^type`.
+For example if you want to put a type on a collection literal that has the full
+information needed for output to a staticaly typed language then you need more
+information than Clojure/JVM type erasure allows.
+
+We propagate type information which is stored in metadata
+from the the place where they are declared on a symbol
+to all future usages of that symbol in scope.
+When the type metadata is not provided and the type of the
+initial value is known, we use the type of the value.
+
+#### direction 2
+
+The second way that we propagate type information is inside an initialization
+or assignment statement.
+The initialization statement is a convenience to avoid repeating the type:
+
+    (let [^{:t {:vector [int]} v []])
+
+Compare that with Java where there is redundancy in syntax:
+
+    ArrayList<Integer> v = new ArrayList<>();
+
+In the Kalai input code, the type on v is propagated to the untyped vector literal initial value.
+This allows the temporary variables used in the data literal expansion to have the proper types.
+
+#### bidirectional propagation
+
+The follow example shows both directions in action:
+
+    (let [^{:t {:vector [int]} v []]
+          v2 v])
+
+In the pipeline the first stage in which propagation happens is in the AST annotation pass.
+The propagation in this stage happens according to direction 1.
+The type of v is propagated to v2.
+
+After conversion to s-expressions, the next stage where propagation happens is in the Kalai constructs pass.
+The propagation in this stage happens according to direction 2.
+The type from v is propagated to the untyped vector literal.
+
+#### precedence
+
+User defined types on target will not be replaced by type propagation.
+
+    (let [^{:t :double} x 1])
+
+Here x keeps its type double, the type of x is not replaced by the type long of 1.
+
+
+## Notes
 
 Turning data literals into s-expressions, cannot use data literals in intermediate s-expressions.
 groups of statements in place of expressions are raised to above the statement,
 assigned to a temp variable in scope.
-Similar to return (identifying statements) but different.. context can be in the statement, and statements can have child statements.
+Similar to return (identifying statements) but different... context can be in the statement, and statements can have child statements.
 
 When using data literals of sets and maps, the ordering of output statements
 may not necessarily correspond to the ordering of elements in the source code,
