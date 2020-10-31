@@ -12,6 +12,7 @@
 (defn tmp [type]
   (with-meta (gensym2 "tmp") {:t type}))
 
+;; TODO: simplify this
 (defn get-type [expr]
   (let [{:keys [t tag]} (meta expr)]
     (or t
@@ -69,15 +70,15 @@
     (with-meta x (assoc (meta x) k v))
     x))
 
-(defn has-type? [x]
+(defn type-from-meta [x]
   (let [{:keys [t tag]} (meta x)]
     (or t tag)))
 
+;; TODO: maybe redundant?
 (defn propagate-type [from to]
   (if (and (instance? IMeta to)
-           (not (has-type? to)))
+           (not (type-from-meta to)))
     (set-meta to :t (if (instance? IMeta from)
-                      (let [{:keys [t tag]} (meta from)]
-                        (or t tag))
+                      (type-from-meta from)
                       (type from)))
     to))

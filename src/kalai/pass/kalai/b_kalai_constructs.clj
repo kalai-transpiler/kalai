@@ -164,7 +164,7 @@
 
     ;; matches (atom (+ 1 2)) or (ref (+ 1 2)) or (agent (+ 1 2))
     (m/and
-      ((u/var (m/pred ref-vars)) ?x)
+      ((u/var (m/pred ref-vars)) ?x . _ ...)
       ?ref)
     ~(inner-form (u/propagate-type ?ref ?x))
 

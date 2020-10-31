@@ -920,7 +920,7 @@ System.out.println(y);"))
 (deftest propagated-types3-test
   ;; TODO: type 1 is not propagated to a
   (inner-form
-    '(let [^{:t :long} a (atom 1)
+    '(let [a (atom 1)
            x (cond
                true @a
                false @a)]
@@ -957,7 +957,7 @@ System.out.println(x);"))
 (deftest propagated-types4-test
   (inner-form
     '(let [^{:t {:vector [:long]}} x (atom ^:mut [])]
-       (reset! x ^:mut [1 2 3]))
+       (reset! x [1 2 3]))
     ;;->
     '(do
        (init x [])

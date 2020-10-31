@@ -2,7 +2,39 @@
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]
             [clojure.tools.analyzer.ast :as ast]
-            [kalai.util :as u]))
+            [kalai.util :as u])
+  (:import (clojure.lang IMeta)))
+
+(def ref-vars
+  #{#'atom
+    #'ref
+    #'agent})
+
+(def ast-type
+  (s/rewrite
+    {:op :const
+     :val ?val}
+    ~(type ?val)
+
+    {:op :invoke
+     :fn {:var (m/pred ref-vars)}
+     :args [?value . _ ...]}
+    ~(ast-type ?value)
+
+    {:op :with-meta
+     :meta {:op :map
+            :form {:t ?t :tag ?tag}}
+     :as ?with-meta}
+    ~(or ?t ?tag)
+
+    ?else
+    nil))
+
+(defn propagate-ast-type [from to]
+  (if (and (instance? IMeta to)
+           (not (u/type-from-meta to)))
+    (u/set-meta to :t (ast-type from))
+    to))
 
 (def substitute-aliased-types
   (s/rewrite
@@ -39,18 +71,16 @@
     ;; initial value is known, we use the type of the value.
     ;; TODO: function call type inference would be nice
     {:op   :local
-     :form (m/pred some? ?symbol)
+     :form ?symbol
      :env  {:locals {?symbol {:form ?symbol-with-meta
-                              :init {:val  ?val
-                                     :form ?symbol-declaration}}
+                              :init {:form ?init-form
+                                     :as   ?init}}
                      :as     ?locals}
             :as     ?env}
      &     ?ast}
     ;;->
     {:op   :local
-     :form ~(->> ?symbol-with-meta
-                 (u/propagate-type ?val)
-                 (u/propagate-type ?symbol-declaration))
+     :form ~(propagate-ast-type ?init ?symbol-with-meta)
      :env  ?env
      &     ?ast}
 

@@ -4,7 +4,8 @@
             [clojure.string :as str]
             [camel-snake-kebab.core :as csk]
             [kalai.util :as u]
-            [puget.printer :as puget]))
+            [puget.printer :as puget])
+  (:import (java.util Map HashMap Set HashSet Vector ArrayList)))
 
 (declare stringify)
 
@@ -59,18 +60,18 @@
    "kstring" "string"})
 
 (def java-types
-  {java.util.Map       "HashMap"
-   java.util.HashMap   "HashMap"
-   java.util.Set       "HashSet"
-   java.util.HashSet   "HashSet"
-   java.util.Vector    "ArrayList"
-   java.util.ArrayList "ArrayList"
-   java.lang.Boolean   "bool"
-   java.lang.Long      "long"
-   java.lang.Integer   "int"
-   java.lang.Float     "float"
-   java.lang.Double    "double"
-   java.lang.String    "string"})
+  {Map       "HashMap"
+   HashMap   "HashMap"
+   Set       "HashSet"
+   HashSet   "HashSet"
+   Vector    "ArrayList"
+   ArrayList "ArrayList"
+   Boolean   "bool"
+   Long      "long"
+   Integer   "int"
+   Float     "float"
+   Double    "double"
+   String    "string"})
 
 (defn jtype [t]
   (or
