@@ -34,10 +34,9 @@
   (tmp (get-type expr)))
 
 (defn spy
-  ([x] (spy nil x))
-  ([label x]
-   (when label
-     (println label))
+  ([x] (spy x nil))
+  ([x label]
+   (println (str "Spy: " label))
    (doto x puget/cprint)))
 
 (defn match-type? [t x]
@@ -63,22 +62,25 @@
 (defn void? [expr]
   (#{:void 'void "void"} (get-type expr)))
 
-(defn set-meta
+(defn maybe-meta-assoc
   "If v is truthy, sets k to v in meta of x"
-  [x k v]
-  (if v
-    (with-meta x (assoc (meta x) k v))
-    x))
+  ([x k v]
+   (if v
+     (with-meta x (assoc (meta x) k v))
+     x))
+  ([x k v & more]
+   {:pre [(even? (count more))]}
+   (apply maybe-meta-assoc (maybe-meta-assoc x k v) more)))
 
 (defn type-from-meta [x]
   (let [{:keys [t tag]} (meta x)]
     (or t tag)))
 
-;; TODO: maybe redundant?
+;; TODO: may be redundant?
 (defn propagate-type [from to]
   (if (and (instance? IMeta to)
            (not (type-from-meta to)))
-    (set-meta to :t (if (instance? IMeta from)
-                      (type-from-meta from)
-                      (type from)))
+    (maybe-meta-assoc to :t (if (instance? IMeta from)
+                              (type-from-meta from)
+                              (type from)))
     to))

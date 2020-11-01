@@ -179,8 +179,8 @@ import java.util.ArrayList;")
 
 (defn class-str [ns-name body]
   (let [parts (str/split (str ns-name) #"\.")
-        package-name (str/join "." (butlast parts))
-        class-name (last parts)]
+        package-name (csk/->camelCase (str/join "." (butlast parts)))
+        class-name (csk/->camelCase (last parts))]
     (line-separated
       (statement (space-separated 'package package-name))
       std-imports

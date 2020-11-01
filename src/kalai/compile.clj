@@ -9,11 +9,14 @@
             [clojure.string :as str]
             [clojure.java.io :as io]
             [puget.printer :as puget]
-            [clojure.java.shell :as sh])
+            [clojure.java.shell :as sh]
+            [camel-snake-kebab.core :as csk]
+            [clojure.tools.analyzer.env :as env]
+            [clojure.tools.reader :as reader])
   (:import (java.io File)))
 
 (def ext {::l/rust ".rs"
-          ::l/cpp ".cpp"
+          ::l/cpp  ".cpp"
           ::l/java ".java"})
 
 (defn ns-url [file-path]
@@ -38,8 +41,11 @@
   (->> (kalai-pipeline/asts->kalai asts)
        (java-pipeline/kalai->java)))
 
+(defn analyze-forms [forms]
+  (mapv az/analyze+eval forms))
+
 (defn compile-forms [forms]
-  (-> (map az/analyze+eval forms)
+  (-> (analyze-forms forms)
       (rewriters)))
 
 (defn compile-source-file [file-path & [out verbose lang]]
@@ -48,7 +54,8 @@
         (rewriters))))
 
 (defn write-target-file [s file-path out lang]
-  (let [output-file (io/file (str out "/" (str/replace file-path #"\.clj[csx]?$" (ext lang))))]
+  (let [file-path (csk/->camelCase file-path) ;; TODO: depends on lang
+        output-file (io/file (str out "/" (str/replace file-path #"\.clj[csx]?$" (ext lang))))]
     (.mkdirs (io/file (.getParent output-file)))
     (spit output-file s)))
 

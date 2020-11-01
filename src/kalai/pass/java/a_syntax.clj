@@ -120,7 +120,7 @@
     (m/and (if ?condition ?then)
            (m/let [?tmp (u/tmp-for ?then)]))
     (group
-      (j/init (m/app u/set-meta ?tmp :mut true))
+      (j/init (m/app u/maybe-meta-assoc ?tmp :mut true))
       (j/if (m/app expression ?condition)
         (j/block (j/assign ?tmp (m/app expression ?then))))
       ?tmp)
@@ -128,7 +128,7 @@
     (m/and (if ?condition ?then ?else)
            (m/let [?tmp (u/tmp-for ?then)]))
     (group
-      (j/init (m/app u/set-meta ?tmp :mut true))
+      (j/init (m/app u/maybe-meta-assoc ?tmp :mut true))
       (j/if (m/app expression ?condition)
         (j/block (j/assign ?tmp (m/app expression ?then)))
         (j/block (j/assign ?tmp (m/app expression ?else))))
@@ -162,10 +162,10 @@
 (def top-level-init
   (s/rewrite
     (init ?name)
-    (j/init (m/app u/set-meta ?name :global true))
+    (j/init (m/app u/maybe-meta-assoc ?name :global true))
 
     (init ?name ?x)
-    (j/init (m/app u/set-meta ?name :global true) (m/app expression ?x))))
+    (j/init (m/app u/maybe-meta-assoc ?name :global true) (m/app expression ?x))))
 
 (def statement
   (s/choice

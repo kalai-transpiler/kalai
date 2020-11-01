@@ -179,6 +179,16 @@ We provide a type aliasing feature:
 `(def ^{:t Z} x)` => In the AST, replace Z with the value of Z => `(def ^{:t {:map [:long :string]} x)`
 `(def ^{:kalias _} Z)` => In the AST, remove the def (don't emit it)
 
+Unfortunately, both Clojure and tools analyzer do not resolve symbols
+in meta data on arglists or bindings.
+
+    (defn f ^{:t ZZZZa} [a b] a)
+    ;;=> #'kalai.core/f
+    (def ^{:t ZZZZa} x 1)
+    ;;=> Unable to resolve symbol: ZZZZa in this context
+
+So we have to rely on those being identifiable by declaration.
+
 ### Type propagation
 
 We propagate metadata in 2 different directions.

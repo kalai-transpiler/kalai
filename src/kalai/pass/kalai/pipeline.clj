@@ -4,14 +4,13 @@
             [kalai.pass.kalai.c-operators :as c-operators]
             [kalai.pass.kalai.d-annotate-return :as d-annotate-return]
             [kalai.pass.kalai.f-keyword-set-map-functions :as f]
-            [clojure.tools.analyzer.passes.jvm.emit-form :as azef]
+            [clojure.tools.analyzer.passes.jvm.emit-form :as e]
             [kalai.util :as u]))
 
 (defn asts->kalai [asts]
   (->> asts
-       (map a-annotate-ast/rewrite)
-       (remove nil?)
-       (map azef/emit-form)
+       (a-annotate-ast/rewrite)
+       (map e/emit-form)
        (b-kalai-constructs/rewrite)
        (c-operators/rewrite)
        (d-annotate-return/rewrite)

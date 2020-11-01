@@ -53,8 +53,8 @@
 (defn as-init
   [?name ?x mutability]
   (list 'init
-        (u/set-meta ?name :mut
-                    (or (#{:mutable} mutability)
+        (u/maybe-meta-assoc ?name :mut
+                            (or (#{:mutable} mutability)
                         (ref-form? ?x)))
         (inner-form (u/propagate-type ?name ?x))))
 
@@ -100,7 +100,7 @@
                     (clojure.lang.RT/intCast 0)))
                 (let* [?sym (clojure.core/first ?bs)]
                   (do ?body (recur (clojure.core/next ?bs) nil 0 0)))))))))
-    (foreach (m/app u/set-meta ?sym :mut true)
+    (foreach (m/app u/maybe-meta-assoc ?sym :mut true)
              ?xs
              (m/app inner-form ?body))
 
@@ -153,13 +153,21 @@
 
     ;; matches (swap! atom fn arg1 arg2)
     ;; and send, send-off, alter, alter-var-root
-    ((u/var (m/pred swap-vars)) ?ref ?f . !args ...)
+    ;; for non-mutable variables which cannot be assigned to
+    ((u/var (m/pred swap-vars))
+     (m/pred #(not (:mut (meta %))) ?ref)
+     ?f . !args ...)
     (invoke (m/app u/propagate-type ?ref ?f) ?ref . (m/app inner-form !args) ...)
 
-    ;; TODO: this doesn't happen but it should for a persistent data structure
+    ;; matches (swap! atom fn arg1 arg2)
+    ;; and send, send-off, alter, alter-var-root
+    ;; for mutable variables that can be assigned to
     ((u/var (m/pred swap-vars)) ?ref ?f . !args ...)
     (group
-      (assign ?ref (invoke ?f ?ref . (m/app inner-form !args) ...))
+      (assign ?ref
+              (invoke (m/app u/propagate-type ?ref ?f)
+                      ?ref
+                      . (m/app inner-form !args) ...))
       ?ref)
 
     ;; matches (atom (+ 1 2)) or (ref (+ 1 2)) or (agent (+ 1 2))
@@ -259,7 +267,7 @@
     def-init
     ;; TODO: update docs and examples
     inner-form
-    (s/rewrite ?else ~(throw (ex-info "fail" {:else ?else})))))
+    (s/rewrite ?else ~(throw (ex-info "Top level form" {:else ?else})))))
 
 ;; takes a sequence of forms, returns a single form
 (def rewrite-namespace
@@ -272,7 +280,7 @@
                (m/app top-level-form !forms)
                ...)
 
-    ?else ~(throw (ex-info "fail" {:else ?else}))))
+    ?else ~(throw (ex-info "Namespace" {:else ?else}))))
 
 (def remove-groups
   "Remove groups surrounding the multiple arities of a single function"

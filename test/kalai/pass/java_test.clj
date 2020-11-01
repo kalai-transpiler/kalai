@@ -31,7 +31,7 @@
     ;;->
     "final int x = 1;"))
 
-;; TODO:
+;; TODO: def data literal in top level form
 (deftest init4-test
   #_(top-level-form
       '(def x [1 2 3])
@@ -104,12 +104,12 @@ return ++x;
                 (function f [x y]
                           (return (operator + x y))))
     ;;->
-    "package test-package;
+    "package testPackage;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
-public class test-class {
+public class testClass {
 public static final int f(final int x) {
 return ++x;
 }
@@ -197,20 +197,19 @@ System.out.println((x + y));"))
       "long y = 2;
   y = (y + 4);"))
 
-;; TODO: why does this blow up?
-#_(deftest local-variables5-test
+(deftest local-variables5-test
     (inner-form
-      '(let [y (atom (int (- 2 4)))]
+      '(let [^:mut ^{:t :long} y (atom (- 2 4))]
          (swap! y + 4))
       ;;->
       '(do
-         (init y 2)
+         (init y (operator - 2 4))
          (group
            (assign y (operator + y 4))
            y))
       ;;->
-      "long y = 2;
-  y = (y + 4);"))
+      "long y = (2 - 4);
+y = (y + 4);"))
 
 ;; # Types
 
@@ -250,18 +249,30 @@ final Long y = 5;"))
   (ns-form
     '((ns test-package.test-class)
       (def ^{:kalias {:map [:long :string]}} T)
-      (def ^{:t T} x))
+      (def ^{:t T} x)
+      (defn f ^{:t T} [^{:t T} y]
+        (let [^{:t T} z y]
+          ^:mut {})))
     ;;->
     '(namespace test-package.test-class
-                (init x))
+                (init x)
+                (function f [y]
+                          (do
+                            (init z y)
+                            (return {}))))
     ;;->
-    "package test-package;
+    "package testPackage;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
-public class test-class {
+public class testClass {
 static final HashMap<Long,String> x;
+public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
+final HashMap<Long,String> z = y;
+final HashMap tmp1 = new HashMap();
+return tmp1;
+}
 }"))
 
 ;; unparameterized form
@@ -1015,4 +1026,20 @@ x.add(1);"))
     "public static final void f(final String s) {
 final String x = s;
 System.out.println(x);
+}"))
+
+(deftest propagated-types7-test
+  ;; TODO: we should propagate from the arglist return type to the return expression
+  #_
+  (top-level-form
+    '(defn f ^{:t {:vector [:int]}} []
+       [1])
+    ;;->
+    '(function f []
+               (return [1]))
+    ;;->
+    "public static final ArrayList<Integer> f() {
+final ArrayList<Integer> tmp1 = new ArrayList<Integer>();
+tmp1.add(1);
+return tmp1;
 }"))

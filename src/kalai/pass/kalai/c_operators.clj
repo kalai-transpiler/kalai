@@ -26,7 +26,9 @@
     (s/rewrite
       ;; not really an operator, but seems like it belongs here
       (invoke clojure.lang.RT/intCast ?x)
-      ~(clojure.lang.RT/intCast ?x)
+      ~(if (number? ?x)
+         (clojure.lang.RT/intCast ?x)
+         ?x)
 
       ;; binary operators
       (invoke (m/pred binary-operator ?op) ?x ?y)

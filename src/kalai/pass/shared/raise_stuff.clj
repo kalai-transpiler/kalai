@@ -118,6 +118,7 @@
     (j/class ?name (j/block . !function ...))
     (j/class ?name (j/block . (m/app maybe-function !function) ...))
 
-    ?else ~(throw (ex-info "fail" {:else ?else}))))
+    ?else
+    ~(throw (ex-info "Raise namespace" {:else ?else}))))
 
 
