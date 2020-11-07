@@ -39,23 +39,34 @@
     (u/maybe-meta-assoc to :t (ast-type from))
     to))
 
+
+(defn maybe-resolve-kalias [sym ast]
+  (or
+    (and
+      (symbol? sym)
+      (binding [*ns* (-> ast :env :ns find-ns)]
+        (some-> (resolve sym)
+                (meta)
+                (:kalias))))
+    sym))
+
 (defn resolve-t
   "Tools analyzer does not evaluate metadata in bindings,
   or arglists, so these need to be resolved."
-  [x kaliases]
+  [x ast]
   (some-> (meta x)
           (:t)
-          (kaliases)))
+          (maybe-resolve-kalias ast)))
 
 (defn substitute-aliased-types
   "Replace type aliases with their definition.
   Matches any AST node with meta data {:t T}
   where T is a var with meta {:kalias K}."
-  [kaliases ast]
+  [ast]
   (m/rewrite ast
     {:op   :def
      :name (m/and
-             (m/app #(resolve-t % kaliases) (m/pred some? ?t))
+             (m/app #(resolve-t % ast) (m/pred some? ?t))
              ?name)
      &     ?ast}
     ;;->
@@ -65,7 +76,7 @@
 
     {:op   :binding
      :form (m/and
-             (m/app #(resolve-t % kaliases) (m/pred some? ?t))
+             (m/app #(resolve-t % ast) (m/pred some? ?t))
              ?form)
      &     ?ast}
     ;;->
@@ -75,7 +86,7 @@
 
     {:op   :fn-method
      :form ((m/and
-              (m/app #(resolve-t % kaliases) (m/pred some? ?t))
+              (m/app #(resolve-t % ast) (m/pred some? ?t))
               [& ?params])
             & ?body)
      &     ?ast}
@@ -113,17 +124,16 @@
     ?else
     ?else))
 
-(def extract-type-aliases
+(def erase-type-aliases
   "Takes a vector of ASTs,
-  returns a vector pair of the map of kaliases and the non-kalias ASTs as a sequence."
+  matches and removes kalias defs, leaves other ASTs alone."
   (s/rewrite
     [(m/or {:op   :def
             :meta {:form {:kalias (m/pred some? !kalias)}}
             :name !name}
            !ast) ...]
     ;;->
-    [{& ([!name !kalias] ...)}
-     (!ast ...)]
+    (!ast ...)
 
     ?else
     ~(throw (ex-info "ASTs" {:else ?else}))))
@@ -148,10 +158,8 @@
 ;; TODO: maybe rewrite this as a meander expression,
 ;; or at least clean up the excessive function hijinks
 (defn substitute-and-erase-type-aliases [asts]
-  (let [[kaliases asts] (extract-type-aliases asts)]
-    (map #(ast/prewalk % (fn [x]
-                           (substitute-aliased-types kaliases x)))
-         asts)))
+  (map #(ast/prewalk % substitute-aliased-types)
+       asts))
 
 ;; TODO: split this mini-pipeline into 3 passes under the ast folder
 (defn rewrite
@@ -159,6 +167,7 @@
   The purpose of this pass is to capture that information and modify the s-expressions to contain what we need."
   [asts]
   (->> asts
+       (erase-type-aliases)
        (substitute-and-erase-type-aliases)
        (map #(ast/prewalk % propagate-types))
        (map #(ast/prewalk % annotate-vars))))
