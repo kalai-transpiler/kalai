@@ -10,13 +10,10 @@
       - Boxed and primitives need to be unified
       - If it's hard to work with both primitives and Boxed,
         we can fall back to only using Boxed
-  - Allow types to be declared instead of as meta data (like Typed Clojure)
-  - az/analyze-ns and az/analyze+eval produce slightly different AST,
-    breaking type aliasing
-  - see if we can support functions applied to data literals
-    that would result in method invocations that Java will not allow.
-  - might be a nice to have to propagate function return type to variable identifier in variable assignments.
-  - Fix the mutability propagation
+      - Java types equal non-universal types, which is equal to user defined
+  - Top level def of data literal needs static block initialization `(def x [1])`
+  - Might be a nice to have to propagate function return type to variable identifier in variable assignments.
+  - Option types
 * Test organization
   - grouping functionality
   - generate docsy from tests
@@ -28,12 +25,10 @@
     - local action
 * Interop
   - expand the "function-call" pass (core/interop/kalai/custom)
-    * depends on us choosing another target language
+    - depends on us choosing another target language
   - see if starter code for rust and python works
-  - implementing this probably requires implementing support for
-    a second target language to ensure we are not doing Java
-    specific things
-* Match demo1  
+* Match demo01 and demo02
+  - logic unit tests
 * We think we have most of the proof of concept language concepts, but we need to hook up the tests
   - pleasant cider testing
   - workflows (developer and CI)
@@ -52,20 +47,14 @@
   - import when needed
   - We might be better of using Collection builder functions instead of temporary variables?
   - We should check static block semantics
-* operator and language specific transformation (e.g. = in Clojure is either .equals java or ==)
+* Operator and language specific transformation (e.g. = in Clojure is either .equals java or ==)
 * test helper clean up
   - don't report failures twice
-* Fix the annotate (type annotation performance due to matching vs AST node tree walking) AST
 * Rust etc
 * Support function calls where functions are defined in input code across namespaces
   - Solve importing
 * Allow users to bring their own functions
 * Allow users to bring their own languages
-* Expand syslib
-* Start compiling our output files
-* "For loops"
-* Other concepts?
-* Variable casing (when to snake-camel-kebab-case)
 * Indentation
 * Do we support first class enums?
   - Without it you lose type strictness
@@ -74,8 +63,6 @@
 * Figure out a merge strategy
   - Switch wholesale
   - Backwards compatible (side by side operation)
-* Group non-removal in Java for data literals and if then else
 * Expand documentation:
   - Preserving knowledge (not tribal)
   - Keeping on track (what did we learn, why did we do that)
-  - Today:

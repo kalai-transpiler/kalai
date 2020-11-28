@@ -20,12 +20,12 @@
 
 
 (defn nth-for [x]
-  (if (-> (u/get-type x) #{:string :String "string" "String" 'String String})
+  (if (= (:t (meta x)) :string)
     'charAt
     'get))
 
 (defn count-for [x]
-  (m/rewrite (u/get-type x)
+  (m/rewrite (:t (meta x))
     {:map (m/pred some?)} 'size
     {:set (m/pred some?)} 'size
     {:vector (m/pred some?)} 'size

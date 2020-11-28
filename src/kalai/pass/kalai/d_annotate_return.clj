@@ -37,7 +37,7 @@
 
 (def maybe-function
   (s/rewrite
-    (function ?name (m/pred (complement u/void?) ?params) . !statements ... ?last)
+    (function ?name (m/pred #(not= :void (:t (meta %))) ?params) . !statements ... ?last)
     (function ?name ?params . !statements ... (m/app return ?last))
 
     ?else

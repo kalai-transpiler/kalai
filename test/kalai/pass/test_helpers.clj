@@ -16,7 +16,7 @@
 
 (defn as-function [form]
   (list '(ns test-package.test-class)
-        (list 'defn 'test-function ^{:t "void"} [] form)))
+        (list 'defn 'test-function ^{:t :void} [] form)))
 
 (defn remove-kalai-class [s]
   (nth s 2))

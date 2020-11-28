@@ -3,7 +3,7 @@
 (defn add ^{:t :int} [^{:t :int} a ^{:t :int} b]
   (dotimes [i 10]
     (println i))
-  (doseq [^int ii ^:mut ^{:t {:vector [:int]}} [1 2 3]]
+  (doseq [^int ii ^:mut ^{:t {:mvector [:int]}} [1 2 3]]
     (println ii))
   (let [x (atom (int 0))]
     (while (< @x 10)

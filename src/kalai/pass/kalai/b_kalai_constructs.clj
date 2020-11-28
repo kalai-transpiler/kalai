@@ -50,13 +50,16 @@
   (and (seq? x)
        (ref-vars (:var (meta (first x))))))
 
+
 (defn as-init
   [?name ?x mutability]
   (list 'init
         (u/maybe-meta-assoc ?name :mut
                             (or (#{:mutable} mutability)
                         (ref-form? ?x)))
-        (inner-form (u/propagate-type ?name ?x))))
+        ;; this propagation is too late, must happen before
+        ;; binding propagai
+        (inner-form ?x)))
 
 (def loops
   (s/rewrite
@@ -100,6 +103,7 @@
                     (clojure.lang.RT/intCast 0)))
                 (let* [?sym (clojure.core/first ?bs)]
                   (do ?body (recur (clojure.core/next ?bs) nil 0 0)))))))))
+    ;;->
     (foreach (m/app u/maybe-meta-assoc ?sym :mut true)
              ?xs
              (m/app inner-form ?body))
@@ -120,9 +124,9 @@
 (def assignments
   (s/rewrite
     ;; with-local-vars
-    (let* [_ (.setDynamic (clojure.lang.Var/create)) ..?n]
+    (let* [!sym (.setDynamic (clojure.lang.Var/create)) ..?n]
       (do
-        (clojure.lang.Var/pushThreadBindings (clojure.core/hash-map . !sym !x ..?n))
+        (clojure.lang.Var/pushThreadBindings (clojure.core/hash-map . _ !x ..?n))
         (try
           ?body
           (finally (clojure.lang.Var/popThreadBindings)))))
@@ -149,7 +153,7 @@
     ;; matches (reset! atom value)
     ;; and var-set, ref-set
     ((u/var (m/pred reset-vars)) ?ref ?x)
-    (assign ?ref ~(inner-form (u/propagate-type ?ref ?x)))
+    (assign ?ref ~(inner-form ?x))
 
     ;; matches (swap! atom fn arg1 arg2)
     ;; and send, send-off, alter, alter-var-root
@@ -157,7 +161,7 @@
     ((u/var (m/pred swap-vars))
      (m/pred #(not (:mut (meta %))) ?ref)
      ?f . !args ...)
-    (invoke (m/app u/propagate-type ?ref ?f) ?ref . (m/app inner-form !args) ...)
+    (invoke ?f ?ref . (m/app inner-form !args) ...)
 
     ;; matches (swap! atom fn arg1 arg2)
     ;; and send, send-off, alter, alter-var-root
@@ -165,7 +169,7 @@
     ((u/var (m/pred swap-vars)) ?ref ?f . !args ...)
     (group
       (assign ?ref
-              (invoke (m/app u/propagate-type ?ref ?f)
+              (invoke ?f
                       ?ref
                       . (m/app inner-form !args) ...))
       ?ref)
@@ -174,7 +178,7 @@
     (m/and
       ((u/var (m/pred ref-vars)) ?x . _ ...)
       ?ref)
-    ~(inner-form (u/propagate-type ?ref ?x))
+    ~(inner-form ?x)
 
     ((u/var ~#'deref) ?ref)
     ?ref
@@ -220,12 +224,9 @@
     (method ?method (m/app inner-form ?obj)
             . (m/app inner-form !args) ...)
 
-    (m/and
-      ('.. ?obj . (!methods . !args ..!n) ...)
-      (m/let [?tmp (u/tmp-for ?obj)]))
-    (group
-      (init ?tmp (m/app inner-form ?obj))
-      . (!methods ?tmp . (m/app inner-form !args) ..!n) ...)
+    ;; TODO: need to create multiple method calls
+    ;; ('.. ?obj . !method ...)
+    ;; (m/app inner-form ?obj)
 
     ((m/and (m/pred #(str/starts-with? (str %) "."))
             (m/app #(symbol (subs (str %) 1)) ?m))

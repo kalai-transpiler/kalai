@@ -1,5 +1,5 @@
 (ns kalai.pass.rust.b-function-call
-  (:require [kalai.util]
+  (:require [kalai.util :as u]
             [meander.strategy.epsilon :as s]))
 
 (def rewrite
@@ -11,16 +11,16 @@
       (r/construct StringBuffer)
       (r/construct String)
 
-      (r/method append (u/of-type StringBuffer ?this) ?x)
+      (r/method append (u/of-tag StringBuffer ?this) ?x)
       (r/method push_str ?this ?x)
 
-      (r/method length (u/of-type StringBuffer ?this))
+      (r/method length (u/of-tag StringBuffer ?this))
       (r/method len ?this)
 
-      (r/method toString (u/of-type StringBuffer ?this))
+      (r/method toString (u/of-tag StringBuffer ?this))
       ?this
 
-      (r/method insert (u/of-type StringBuffer ?this) ?idx ?s2)
+      (r/method insert (u/of-tag StringBuffer ?this) ?idx ?s2)
       (r/block
         (m/let [t (u/tmp StringBuffer)]
                (r/assign t ?this)

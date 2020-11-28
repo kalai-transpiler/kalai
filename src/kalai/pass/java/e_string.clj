@@ -3,9 +3,7 @@
             [meander.epsilon :as m]
             [clojure.string :as str]
             [camel-snake-kebab.core :as csk]
-            [kalai.util :as u]
-            [puget.printer :as puget])
-  (:import (java.util Map HashMap Set HashSet Vector ArrayList)))
+            [puget.printer :as puget]))
 
 (declare stringify)
 
@@ -41,58 +39,33 @@
 (defn assign-str [variable-name value]
   (statement (str variable-name " = " (stringify value))))
 
-(def ktypes
-  {"map"     "HashMap"
-   "kmap"    "HashMap"
-   "set"     "HashSet"
-   "kset"    "HashSet"
-   "vector"  "ArrayList"
-   "kvector" "ArrayList"
-   "list"    "ArrayList"
-   "klist"   "ArrayList"
-   "kbool"   "bool"
-   "kbyte"   "byte"
-   "kchar"   "char"
-   "kint"    "int"
-   "klong"   "long"
-   "kfloat"  "float"
-   "kdouble" "double"
-   "kstring" "string"})
+;; TODO: do we need an :object type?
+(def kalai-type->java
+  {:map     "PMap"
+   :mmap    "HashMap"
+   :set     "PSet"
+   :mset    "HashSet"
+   :vector  "PVector"
+   :mvector "ArrayList"
+   :bool    "boolean"
+   :byte    "byte"
+   :char    "char"
+   :int     "int"
+   :long    "long"
+   :float   "float"
+   :double  "double"
+   :string  "String"
+   :void    "void"
+   :any     "Object"})
 
-(def java-types
-  {Map       "HashMap"
-   HashMap   "HashMap"
-   Set       "HashSet"
-   HashSet   "HashSet"
-   Vector    "ArrayList"
-   ArrayList "ArrayList"
-   Boolean   "bool"
-   Long      "long"
-   Integer   "int"
-   Float     "float"
-   Double    "double"
-   String    "string"})
-
-(defn jtype [t]
-  (or
-    (get java-types t)
-    (last (str/split (str t) #" "))))
-
-(defn ktype* [s]
-  (or (get ktypes s)
-      s))
-
-(defn ktype [t]
-  (or
-    (cond
-      (string? t) (ktype* t)
-      (symbol? t) (ktype* (name t))
-      (keyword? t) (ktype* (name t))
-      (class? t) (ktype* (jtype t))
-      ;; TODO: We've lost the source line:column of the form at this point,
-      ;; it would be nice to preserve it for better error reporting
-      :else (println "WARNING: missing type detected" t))
-    "TYPE_MISSING"))
+(defn java-type [t]
+  (or (get kalai-type->java t)
+      ;; TODO: breaking the rules for interop...
+      ;; is this a bad idea?
+      (when t (pr-str t))
+      (do
+        (println "WARNING: missing type detected" t)
+        "TYPE_MISSING")))
 
 (defn box [s]
   (case s
@@ -101,52 +74,34 @@
     "bool" "Boolean"
     (apply str (str/upper-case (first s)) (rest s))))
 
-(def type-str*
+(def t-str
   (s/rewrite
     {?t [& ?ts]}
-    ~(str (ktype ?t)
+    ~(str (java-type ?t)
           \< (str/join \, (for [t ?ts]
-                            (box (type-str* t))))
+                            (box (t-str t))))
           \>)
 
     ?t
-    ~(str (ktype ?t))))
+    ~(str (java-type ?t))))
 
 (defn type-modifiers [s mut global]
   (cond->> s
            (not mut) (space-separated "final")
            global (space-separated "static")))
 
-;; Types are allowed to flow through the pipeline as metadata
-(defn type-str
-  ([variable]
-   (let [{:keys [t tag mut global]} (meta variable)]
-     (-> (type-str* (or t tag))
-         (type-modifiers mut global))))
-  ([variable value]
-   (let [{:keys [t tag mut global]} (meta variable)]
-     (-> (type-str* (or t tag (u/get-type value)))
-         (type-modifiers mut global)))))
+(defn type-str [variable-name]
+  (let [{:keys [t mut global]} (meta variable-name)]
+    (-> (t-str t)
+        (type-modifiers mut global))))
 
 (defn init-str
   ([variable-name]
    (statement (space-separated (type-str variable-name)
                                variable-name)))
   ([variable-name value]
-   (statement (space-separated (type-str variable-name value)
+   (statement (space-separated (type-str variable-name)
                                variable-name "=" (stringify value)))))
-
-#_(defn const [bindings]
-    (str "const" Type x "=" initialValue))
-
-#_(defn test* [x]
-    ;; could be a boolean expression
-    (str x "==" y)
-    ;; or just a value
-    (str x))
-
-
-#_(defn conditional [test then else])
 
 (defn invoke-str [function-name & args]
   (str (if (str/includes? function-name "-")
@@ -194,10 +149,6 @@ import java.util.ArrayList;")
   (space-separated 'while (parens (stringify condition))
                    (stringify body)))
 
-;; TODO
-
-
-
 (defn foreach-str [sym xs body]
   (space-separated 'for (parens (space-separated (type-str sym) sym ":" (stringify xs)))
                    (stringify body)))
@@ -240,7 +191,10 @@ import java.util.ArrayList;")
 
 (defn new-str [class-name & args]
   (space-separated
-    "new" (str (type-str* class-name) (param-list args))))
+    "new" (str (if (symbol? class-name)
+                 class-name
+                 (t-str class-name))
+               (param-list args))))
 
 ;;;; This is the main entry point
 

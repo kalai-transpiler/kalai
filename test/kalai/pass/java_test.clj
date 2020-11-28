@@ -6,7 +6,7 @@
 
 (deftest init1-test
   (top-level-form
-    '(def ^{:t "int"} x 3)
+    '(def ^{:t :int} x 3)
     ;;->
     '(init x 3)
     ;;->
@@ -18,7 +18,7 @@
     ;;->
     '(init x)
     ;;->
-    "static final Integer x;"))
+    "static final int x;"))
 
 (deftest init3-test
   (inner-form
@@ -31,16 +31,27 @@
     ;;->
     "final int x = 1;"))
 
-;; TODO: def data literal in top level form
 (deftest init4-test
+  (inner-form
+    '(let [^Integer x (Integer. 1)]
+       x)
+    ;;->
+    '(do
+       (init x (new Integer 1))
+       x)
+    ;;->
+    "final int x = new Integer(1);"))
+
+;; TODO: def data literal in top level form
+(deftest init5-test
   #_(top-level-form
       '(def x [1 2 3])
       ;;->
       '(init x [1 2 3])
       ;;->
-      "static final PersistentVector x;
+      "static final PVector<Object> x;
   static {
-  final PersistentVector tmp1 = new PersistentVector();
+  final PVector<Object> tmp1 = new PVector<Object>();
   tmp1.add(1);
   tmp1.add(2);
   tmp1.add(3);
@@ -60,7 +71,7 @@
       '(function f [x]
                  (return (operator ++ x)))
       ;;->
-      "public static final Integer f(final Integer x) {
+      "public static final int f(final int x) {
 return ++x;
 }")))
 
@@ -198,17 +209,17 @@ System.out.println((x + y));"))
   y = (y + 4);"))
 
 (deftest local-variables5-test
-    (inner-form
-      '(let [^:mut ^{:t :long} y (atom (- 2 4))]
-         (swap! y + 4))
-      ;;->
-      '(do
-         (init y (operator - 2 4))
-         (group
-           (assign y (operator + y 4))
-           y))
-      ;;->
-      "long y = (2 - 4);
+  (inner-form
+    '(let [^:mut ^{:t :long} y (atom (- 2 4))]
+       (swap! y + 4))
+    ;;->
+    '(do
+       (init y (operator - 2 4))
+       (group
+         (assign y (operator + y 4))
+         y))
+    ;;->
+    "long y = (2 - 4);
 y = (y + 4);"))
 
 ;; # Types
@@ -216,22 +227,30 @@ y = (y + 4);"))
 ;; Exhibits the generosity of our type system
 (deftest primitives-types-test
   (inner-form
-    '(do (def ^{:t :Boolean} x true)
+    '(do (def ^{:t :bool} x true)
          (def x true)
-         (def ^{:t "Long"} y 5))
+         (let [z true]
+           z)
+         (def ^{:t :long} y 5))
     ;;->
     '(do
        (init x true)
        (init x true)
+       (do
+         (init z true)
+         z)
        (init y 5))
     ;;->
-    "final Boolean x = true;
-final bool x = true;
-final Long y = 5;"))
+    "final boolean x = true;
+final boolean x = true;
+{
+final boolean z = true;
+}
+final long y = 5;"))
 
 (deftest generic-types-test
   (top-level-form
-    '(def ^{:t {:map [:long :string]}} x)
+    '(def ^{:t {:mmap [:long :string]}} x)
     ;;->
     '(init x)
     ;;->
@@ -239,7 +258,7 @@ final Long y = 5;"))
 
 (deftest generic-types-test2
   (top-level-form
-    '(def ^{:t {:map [:string {:list [:char]}]}} x)
+    '(def ^{:t {:mmap [:string {:mvector [:char]}]}} x)
     ;;->
     '(init x)
     ;;->
@@ -248,18 +267,18 @@ final Long y = 5;"))
 (deftest type-aliasing-test
   (ns-form
     '((ns test-package.test-class)
-      (def ^{:kalias {:map [:long :string]}} T)
+      (def ^{:kalias {:mmap [:long :string]}} T)
       (def ^{:t T} x)
       (defn f ^{:t T} [^{:t T} y]
         (let [^{:t T} z y]
-          ^:mut {})))
+          z)))
     ;;->
     '(namespace test-package.test-class
                 (init x)
                 (function f [y]
                           (do
                             (init z y)
-                            (return {}))))
+                            (return z))))
     ;;->
     "package testPackage;
 import java.util.HashMap;
@@ -270,15 +289,14 @@ public class testClass {
 static final HashMap<Long,String> x;
 public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
 final HashMap<Long,String> z = y;
-final HashMap tmp1 = new HashMap();
-return tmp1;
+return z;
 }
 }"))
 
 ;; unparameterized form
 (deftest generic-types2-test
   (inner-form
-    '(let [x ^{:t {:vector [:long]}} [1 2]]
+    '(let [x ^{:t {:mvector [:long]}} [1 2]]
        (println x))
     ;;->
     '(do
@@ -293,11 +311,11 @@ System.out.println(x);"))
 
 (deftest generic-types3-test
   (inner-form
-    '(def ^{:t {:map [:string :string]}} x {:a "asdf"})
+    '(def ^{:t {:mmap [:string :string]}} x {:a "asdf"})
     ;;->
     '(init x {:a "asdf"})
     ;;->
-    "final PersistentMap tmp1 = new PersistentMap();
+    "final HashMap<String,String> tmp1 = new HashMap<String,String>();
 tmp1.put(\":a\", \"asdf\");
 final HashMap<String,String> x = tmp1;"))
 
@@ -326,165 +344,262 @@ System.out.println(2);
 
 (deftest data-literals-test
   (inner-form
-    '(def x [1 2])
+    '(def ^{:t {:vector [:long]}} x [1 2])
     ;;->
     '(init x [1 2])
     ;;->
-    "final PersistentVector tmp1 = new PersistentVector();
+    "final PVector<Long> tmp1 = new PVector<Long>();
 tmp1.add(1);
 tmp1.add(2);
-final PersistentVector x = tmp1;"))
+final PVector<Long> x = tmp1;"))
 
-;; selecting between Vector and PersistentVector
+;; selecting between Vector and PVector<Object>
 (deftest data-literals2-test
   (inner-form
-    '(def x ^:mut [1 2])
+    '(def x ^{:t {:mvector [:long]}} [1 2])
     ;;->
     '(init x [1 2])
     ;;->
-    "final ArrayList tmp1 = new ArrayList();
+    "final ArrayList<Long> tmp1 = new ArrayList<Long>();
 tmp1.add(1);
 tmp1.add(2);
-final ArrayList x = tmp1;"))
+final ArrayList<Long> x = tmp1;"))
 
 (deftest data-literals3-test
   (inner-form
-    '(let [x ^:mut [1 2]]
+    '(let [^{:t {:mvector [:long]}} x [1 2]]
        x)
     ;;->
     '(do
        (init x [1 2])
        x)
     ;;->
-    "final ArrayList tmp1 = new ArrayList();
+    "final ArrayList<Long> tmp1 = new ArrayList<Long>();
 tmp1.add(1);
 tmp1.add(2);
-final ArrayList x = tmp1;"))
+final ArrayList<Long> x = tmp1;"))
 
 (deftest data-literals4-test
   (inner-form
-    '(let [x (atom ^:mut [1 2])]
-       (reset! x ^:mut [3 4]))
+    '(let [x (atom ^{:t {:vector [:long]}} [1 2])]
+       (reset! x ^{:t {:vector [:long]}} [3 4]))
     ;;->
     '(do
        (init x [1 2])
        (assign x [3 4]))
     ;;->
-    "final ArrayList tmp1 = new ArrayList();
+    "final PVector<Long> tmp1 = new PVector<Long>();
 tmp1.add(1);
 tmp1.add(2);
-ArrayList x = tmp1;
-final ArrayList tmp2 = new ArrayList();
+PVector<Long> x = tmp1;
+final PVector<Long> tmp2 = new PVector<Long>();
 tmp2.add(3);
 tmp2.add(4);
 x = tmp2;"))
 
 (deftest data-literals5-test
   (inner-form
-    '(def x {1 2 3 4})
+    '(def x ^{:t {:map [:long :long]}} {1 2 3 4})
     ;;->
     '(init x {1 2 3 4})
     ;;->
-    "final PersistentMap tmp1 = new PersistentMap();
+    "final PMap<Long,Long> tmp1 = new PMap<Long,Long>();
 tmp1.put(1, 2);
 tmp1.put(3, 4);
-final PersistentMap x = tmp1;"))
+final PMap<Long,Long> x = tmp1;"))
 
 (deftest data-literals6-test
   (inner-form
-    '(def x #{1 2})
+    '(def x ^{:t {:set [:long]}} #{1 2})
     ;;->
     '(init x #{1 2})
     ;;->
-    "final PersistentSet tmp1 = new PersistentSet();
+    "final PSet<Long> tmp1 = new PSet<Long>();
 tmp1.add(1);
 tmp1.add(2);
-final PersistentSet x = tmp1;"))
+final PSet<Long> x = tmp1;"))
 
+;; TODO: What about hetrogenus collections,
+;; do we want to allow them? [1 [2]] if so what is the type?
+;; Do all languages have an "Object" concept?
+;; TODO: note the redundant typing of nested data literals,
+;; we should imply those from the parent type
 (deftest data-literals7-test
   (inner-form
-    '(let [^{:t kvector} x [1 [2]]]
+    '(let [^{:t {:vector [{:vector [:long]}]}} x
+           [[1] [2]]]
        (println x))
     ;;->
     '(do
-       (init x [1 [2]])
+       (init x [[1] [2]])
        (invoke println x))
     ;;->
-    "final ArrayList tmp1 = new ArrayList();
-tmp1.add(1);
-final PersistentVector tmp2 = new PersistentVector();
-tmp2.add(2);
+    "final PVector<PVector<Long>> tmp1 = new PVector<PVector<Long>>();
+final PVector<Long> tmp2 = new PVector<Long>();
+tmp2.add(1);
 tmp1.add(tmp2);
-final ArrayList x = tmp1;
+final PVector<Long> tmp3 = new PVector<Long>();
+tmp3.add(2);
+tmp1.add(tmp3);
+final PVector<PVector<Long>> x = tmp1;
+System.out.println(x);"))
+
+(deftest data-literals7-1-test
+  (inner-form
+    '(let [^{:t {:mmap [:long {:mvector [:string]}]}} x
+           {1 ["hi"]
+            2 ["hello" "there"]}]
+       (println x))
+    ;;->
+    '(do
+       (init x {1 ["hi"]
+                2 ["hello" "there"]})
+       (invoke println x))
+    ;;->
+    "final HashMap<Long,ArrayList<String>> tmp1 = new HashMap<Long,ArrayList<String>>();
+final ArrayList<String> tmp2 = new ArrayList<String>();
+tmp2.add(\"hi\");
+tmp1.put(1, tmp2);
+final ArrayList<String> tmp3 = new ArrayList<String>();
+tmp3.add(\"hello\");
+tmp3.add(\"there\");
+tmp1.put(2, tmp3);
+final HashMap<Long,ArrayList<String>> x = tmp1;
+System.out.println(x);"))
+
+(deftest data-literals7-2-test
+  (inner-form
+    '(let [^{:t {:vector [{:map [{:set [:long]} {:vector [:string]}]}]}} x
+           [{#{1} ["hi"]
+             #{2} ["hello" "there"]}]]
+       (println x))
+    ;;->
+    '(do
+       (init x [{#{1} ["hi"]
+                 #{2} ["hello" "there"]}])
+       (invoke println x))
+    ;;->
+    "final PVector<PMap<PSet<Long>,PVector<String>>> tmp1 = new PVector<PMap<PSet<Long>,PVector<String>>>();
+final PMap<PSet<Long>,PVector<String>> tmp2 = new PMap<PSet<Long>,PVector<String>>();
+final PSet<Long> tmp3 = new PSet<Long>();
+tmp3.add(1);
+final PVector<String> tmp4 = new PVector<String>();
+tmp4.add(\"hi\");
+tmp2.put(tmp3, tmp4);
+final PSet<Long> tmp5 = new PSet<Long>();
+tmp5.add(2);
+final PVector<String> tmp6 = new PVector<String>();
+tmp6.add(\"hello\");
+tmp6.add(\"there\");
+tmp2.put(tmp5, tmp6);
+tmp1.add(tmp2);
+final PVector<PMap<PSet<Long>,PVector<String>>> x = tmp1;
+System.out.println(x);"))
+
+(deftest data-literals7-3-test
+  (inner-form
+    '(let [x
+           ^{:t {:vector [{:map [{:set [:long]} {:vector [:string]}]}]}}
+           [{#{1} ["hi"]
+             #{2} ["hello" "there"]}]]
+       (println x))
+    ;;->
+    '(do
+       (init x [{#{1} ["hi"]
+                 #{2} ["hello" "there"]}])
+       (invoke println x))
+    ;;->
+    "final PVector<PMap<PSet<Long>,PVector<String>>> tmp1 = new PVector<PMap<PSet<Long>,PVector<String>>>();
+final PMap<PSet<Long>,PVector<String>> tmp2 = new PMap<PSet<Long>,PVector<String>>();
+final PSet<Long> tmp3 = new PSet<Long>();
+tmp3.add(1);
+final PVector<String> tmp4 = new PVector<String>();
+tmp4.add(\"hi\");
+tmp2.put(tmp3, tmp4);
+final PSet<Long> tmp5 = new PSet<Long>();
+tmp5.add(2);
+final PVector<String> tmp6 = new PVector<String>();
+tmp6.add(\"hello\");
+tmp6.add(\"there\");
+tmp2.put(tmp5, tmp6);
+tmp1.add(tmp2);
+final PVector<PMap<PSet<Long>,PVector<String>>> x = tmp1;
 System.out.println(x);"))
 
 (deftest data-literals8-test
   (inner-form
-    '(let [^{:t kvector} x [1 [2] 3 [[4]]]]
+    '(let [x ^{:t {:mvector [:any]}}
+             [1
+              ^{:t {:mvector [:long]}} [2]
+              3
+              ^{:t {:mvector [:any]}} [^{:t {:mvector [:long]}} [4]]]]
        (println x))
     ;;->
     '(do
        (init x [1 [2] 3 [[4]]])
        (invoke println x))
     ;;->
-    "final ArrayList tmp1 = new ArrayList();
+    "final ArrayList<Object> tmp1 = new ArrayList<Object>();
 tmp1.add(1);
-final PersistentVector tmp2 = new PersistentVector();
+final ArrayList<Long> tmp2 = new ArrayList<Long>();
 tmp2.add(2);
 tmp1.add(tmp2);
 tmp1.add(3);
-final PersistentVector tmp3 = new PersistentVector();
-final PersistentVector tmp4 = new PersistentVector();
+final ArrayList<Object> tmp3 = new ArrayList<Object>();
+final ArrayList<Long> tmp4 = new ArrayList<Long>();
 tmp4.add(4);
 tmp3.add(tmp4);
 tmp1.add(tmp3);
-final ArrayList x = tmp1;
+final ArrayList<Object> x = tmp1;
 System.out.println(x);"))
 
 (deftest data-literals9-test
   (inner-form
-    '(let [^{:t kvector} x {1 [{2 3} #{4 [5 6]}]}]
+    '(let [^{:t {:mmap [:any :any]}} x
+           {1 ^{:t {:mvector [:any]}} [^{:t {:mmap [:long :long]}} {2 3}
+                                       ^{:t {:mset [:any]}} #{4
+                                                              ^{:t {:mvector [:long]}} [5 6]}]}]
        (println x))
     ;;->
     '(do
        (init x {1 [{2 3} #{4 [5 6]}]})
        (invoke println x))
     ;;->
-    "final PersistentMap tmp1 = new PersistentMap();
-final PersistentVector tmp2 = new PersistentVector();
-final PersistentMap tmp3 = new PersistentMap();
+    "final HashMap<Object,Object> tmp1 = new HashMap<Object,Object>();
+final ArrayList<Object> tmp2 = new ArrayList<Object>();
+final HashMap<Long,Long> tmp3 = new HashMap<Long,Long>();
 tmp3.put(2, 3);
 tmp2.add(tmp3);
-final PersistentSet tmp4 = new PersistentSet();
+final HashSet<Object> tmp4 = new HashSet<Object>();
 tmp4.add(4);
-final PersistentVector tmp5 = new PersistentVector();
+final ArrayList<Long> tmp5 = new ArrayList<Long>();
 tmp5.add(5);
 tmp5.add(6);
 tmp4.add(tmp5);
 tmp2.add(tmp4);
 tmp1.put(1, tmp2);
-final ArrayList x = tmp1;
+final HashMap<Object,Object> x = tmp1;
 System.out.println(x);"))
 
 (deftest data-literals10-test
   (inner-form
-    '(def x {"key" (+ 1 2)})
+    '(def ^{:t {:mmap [:string :long]}} x {"key" (+ 1 2)})
     ;;->
     '(init x {"key" (operator + 1 2)})
     ;;->
-    "final PersistentMap tmp1 = new PersistentMap();
+    "final HashMap<String,Long> tmp1 = new HashMap<String,Long>();
 tmp1.put(\"key\", (1 + 2));
-final PersistentMap x = tmp1;"))
+final HashMap<String,Long> x = tmp1;"))
 
 (deftest foreach-test
   (inner-form
-    '(doseq [^int x [1 2 3 4]]
+    '(doseq [^int x ^{:t {:mvector [:long]}} [1 2 3 4]]
        (println x))
     ;;->
     '(foreach x [1 2 3 4]
               (invoke println x))
     ;;->
-    "final PersistentVector tmp1 = new PersistentVector();
+    "final ArrayList<Long> tmp1 = new ArrayList<Long>();
 tmp1.add(1);
 tmp1.add(2);
 tmp1.add(3);
@@ -495,7 +610,7 @@ System.out.println(x);
 
 (deftest for-loop-test
   (inner-form
-    '(dotimes [x 5]
+    '(dotimes [^{:t :int} x 5]
        (println x))
     ;;->
     '(group
@@ -556,21 +671,21 @@ System.out.println(3);
 
 (deftest keywords-as-functions-test
   (inner-form
-    '(:k {:k 1})
+    '(:k ^{:t {:mmap [:string :long]}} {:k 1})
     ;;->
     '(method get {:k 1} :k)
     ;;->
-    "final PersistentMap tmp1 = new PersistentMap();
+    "final HashMap<String,Long> tmp1 = new HashMap<String,Long>();
 tmp1.put(\":k\", 1);
 tmp1.get(\":k\");"))
 
 (deftest keywords-as-functions2-test
   (inner-form
-    '(:k #{:k})
+    '(:k ^{:t {:mset [:string]}} #{:k})
     ;;->
     '(method get #{:k} :k)
     ;;->
-    "final PersistentSet tmp1 = new PersistentSet();
+    "final HashSet<String> tmp1 = new HashSet<String>();
 tmp1.add(\":k\");
 tmp1.get(\":k\");"))
 
@@ -613,17 +728,17 @@ b.length();
 
 (deftest function-calls-test
   (inner-form
-    '(assoc {:a 1} :b 2)
+    '(assoc ^{:t {:mmap [:string :long]}} {:a 1} :b 2)
     ;;->
     '(method put {:a 1} :b 2)
     ;;->
-    "final PersistentMap tmp1 = new PersistentMap();
+    "final HashMap<String,Long> tmp1 = new HashMap<String,Long>();
 tmp1.put(\":a\", 1);
 tmp1.put(\":b\", 2);"))
 
 (deftest function-calls2-test
   (inner-form
-    '(update {:a 1} :a inc)
+    '(update ^{:t {:mmap [:string :long]}} {:a 1} :a inc)
     ;;->
     '(group
        (init tmp1 {:a 1})
@@ -634,9 +749,9 @@ tmp1.put(\":b\", 2);"))
                          (method get tmp1 :a)))
        tmp1)
     ;;->
-    "final PersistentMap tmp2 = new PersistentMap();
+    "final HashMap<String,Long> tmp2 = new HashMap<String,Long>();
 tmp2.put(\":a\", 1);
-final clojure.lang.PersistentArrayMap tmp1 = tmp2;
+final HashMap<String,Long> tmp1 = tmp2;
 tmp1.put(\":a\", ++tmp1.get(\":a\"));"))
 
 (deftest conditional-expression-test
@@ -762,7 +877,7 @@ System.out.println((tmp1 + 4));"))
 (deftest conditional-expression4-test
   (inner-form
     '(println
-       (+ (if true 1 (if false 2 [3])) 4))
+       (+ (if true 1 (if false 2 ^{:t {:vector [:long]}} [3])) 4))
     ;;->
     '(invoke println
              (operator +
@@ -783,7 +898,7 @@ tmp2 = 2;
 }
 else
 {
-final PersistentVector tmp3 = new PersistentVector();
+final PVector<Long> tmp3 = new PVector<Long>();
 tmp3.add(3);
 {
 tmp2 = tmp3;
@@ -828,7 +943,7 @@ System.out.println(s.charAt(1));"))
 
 (deftest zzz3-test
   (inner-form
-    '(let [^{:t {:vector [:int]}} v ^:mut [1 2 3]]
+    '(let [^{:t {:mvector [:int]}} v [1 2 3]]
        (println (nth v 1)))
     ;;->
     '(do
@@ -845,7 +960,7 @@ System.out.println(v.get(1));"))
 
 (deftest yyy-test
   (inner-form
-    '(let [result (atom ^:mut [])
+    '(let [result (atom ^{:t {:mvector [:int]}} [])
            i (atom (int 10))]
        (while (< 0 @i)
          (swap! result conj @i)
@@ -858,8 +973,8 @@ System.out.println(v.get(1));"))
          (method add result i)
          (assign i (operator - i 3))))
     ;;->
-    "final ArrayList tmp1 = new ArrayList();
-ArrayList result = tmp1;
+    "final ArrayList<Integer> tmp1 = new ArrayList<Integer>();
+ArrayList<Integer> result = tmp1;
 int i = 10;
 while ((0 < i)) {
 result.add(i);
@@ -868,7 +983,7 @@ i = (i - 3);
 
 (deftest yyy2-test
   (inner-form
-    '(let [^{:t {:list [:int]}} separatorPositions nil
+    '(let [^{:t {:mvector [:int]}} separatorPositions nil
            ^{:t :int} numPositions (.size separatorPositions)]
        (println "hi"))
     ;;->
@@ -946,12 +1061,12 @@ final int y = x;
 System.out.println(y);"))
 
 (deftest propagated-types3-test
-  ;; TODO: type 1 is not propagated to a
   (inner-form
     '(let [a (atom 1)
-           x (cond
-               true @a
-               false @a)]
+           ;; TODO: shouldn't have to declare the type of x here
+           ^{:t :long} x (cond
+                           true @a
+                           false @a)]
        (println x))
     ;;->
     '(do
@@ -984,8 +1099,9 @@ System.out.println(x);"))
 
 (deftest propagated-types4-test
   (inner-form
-    '(let [^{:t {:vector [:long]}} x (atom ^:mut [])]
-       (reset! x [1 2 3]))
+    ;; TODO: it would be nice to be able to type infer from x to the inner vectors
+    '(let [x (atom ^{:t {:mvector [:long]}} [])]
+       (reset! x ^{:t {:mvector [:long]}} [1 2 3]))
     ;;->
     '(do
        (init x [])
@@ -1001,7 +1117,8 @@ x = tmp2;"))
 
 (deftest propagated-types5-test
   (inner-form
-    '(let [^{:t {:vector [:long]}} x (atom ^:mut [])]
+    ;; TODO: it would be nice to annotate x here instead
+    '(let [x (atom ^{:t {:mvector [:long]}} [])]
        (swap! x conj 1))
     ;;->
     '(do
@@ -1015,7 +1132,8 @@ x.add(1);"))
 (deftest propagated-types6-test
   (top-level-form
     '(defn f ^{:t :void} [^String s]
-       (let [x s]
+       ;; TODO: type of x should be inferred from s
+       (let [^String x s]
          (println x)))
     ;;->
     '(function f [s]
@@ -1030,16 +1148,41 @@ System.out.println(x);
 
 (deftest propagated-types7-test
   ;; TODO: we should propagate from the arglist return type to the return expression
-  #_
+  #_(top-level-form
+      '(defn f ^{:t {:vector [:int]}} []
+         [1])
+      ;;->
+      '(function f []
+                 (return [1]))
+      ;;->
+      "public static final ArrayList<Integer> f() {
+  final ArrayList<Integer> tmp1 = new ArrayList<Integer>();
+  tmp1.add(1);
+  return tmp1;
+  }"))
+
+(deftest propagated-types8-test
   (top-level-form
-    '(defn f ^{:t {:vector [:int]}} []
-       [1])
+    '(defn f ^String [^Integer num]
+       (let [i (atom num)]
+         i))
     ;;->
-    '(function f []
-               (return [1]))
+    '(function f [num]
+               (do (init i num)
+                   (return i)))
     ;;->
-    "public static final ArrayList<Integer> f() {
-final ArrayList<Integer> tmp1 = new ArrayList<Integer>();
-tmp1.add(1);
-return tmp1;
+    "public static final String f(final int num) {
+int i = num;
+return i;
 }"))
+
+(deftest propagated-types9-test
+  (inner-form
+    '(let [result (StringBuffer.)]
+       result)
+    ;;->
+    '(do
+       (init result (new StringBuffer))
+       result)
+    ;;->
+    "final java.lang.StringBuffer result = new StringBuffer();"))

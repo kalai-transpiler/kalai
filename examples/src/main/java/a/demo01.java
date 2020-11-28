@@ -4,9 +4,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 public class demo01 {
-public static final String format(final Integer num) {
-Integer i = num;
-final StringBuffer result = new StringBuffer();
+public static final String format(final int num) {
+int i = num;
+final java.lang.StringBuffer result = new StringBuffer();
 {
 while (!(i == 0)) {
 final int quotient = (i / 10);

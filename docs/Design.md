@@ -153,17 +153,15 @@ We should minimize the effort required from users to extend Kalai, which would b
 
 Types can be supplied as either type hints (which is metadata `{:tag type}`),
 or Kalai specific metadata `{:t type}`.
-Kalai specific metadata is sometimes necessary because
+Kalai specific metadata is necessary because
 1. Number literals in Clojure are strictly longs and doubles,
    and cannot be typehinted as ints/floats.
    But these are useful types for many target languages.
-2. Representing generic types 
+2. Representing generic types
 
-Types can be supplied as Java types, classes, keywords or symbols.
-Keywords are convenient to work with.
-Types are accepted as presented, and left to the final stage in
-the language specific pipelines to be converted where necessary.
-Kalai makes no attempt to validate the types at present.
+You should prefer specifying a `{:t type}` over typehints.
+
+The canonical representation of types in Kalai s-expressions is keywords.
 
 Generic types, also known as parameterized types (including collection types)
 are represented as a map containing a single key value pair:
@@ -173,11 +171,24 @@ and the value is the type parameters (child types).
 This notation is sufficient to represent the tree like nesting of types,
 Information about the type nodes is captured in metadata if required,
 which enables us to use the simple structure.
-`(def ^{:t '{kmap [klong ^:mut ^:opt kstr]}} x)`
+`(def ^{:t '{:map [:long ^:mut ^:opt :str]}} x)`
 
 We provide a type aliasing feature:
-`(def ^{:t Z} x)` => In the AST, replace Z with the value of Z => `(def ^{:t {:map [:long :string]} x)`
-`(def ^{:kalias _} Z)` => In the AST, remove the def (don't emit it)
+1. `(def ^{:kalias {:map [:long :string]}} Z)` defines an alias Z which will not exist in the final output.
+2. `(def ^{:t Z} x)` uses the Alias Z, the final output will replace Z with `{:map [:long :string]}`.
+Being equivalent to `(def ^{:t {:map [:long :string]} x)`.
+
+TODO: maybe using the :t convention is redundant...
+annotating the types doesn't conflict, but it adds noise and is easy to forget
+maybe allow ^{:map [:int :int]}
+
+Invariants:
+1. a `{:t type}` will never be replaced
+2. a `{:t type}` will always be a keyword (or generic type)
+3. The `:tag` and `:o-tag` will not be used in s-expressions after the ast annotation,
+   any inference of `:t` from `:tag` or `:o-tag` will occur converting ast to s-expressions.
+   Only `:t` will be used in the s-expressions.
+   There is an exception, which is interop: certain tags may be used to identify method calls on things like StringBuffers.
 
 Unfortunately, both Clojure and tools analyzer do not resolve symbols
 in meta data on arglists or bindings.
@@ -186,6 +197,8 @@ in meta data on arglists or bindings.
     ;;=> #'kalai.core/f
     (def ^{:t ZZZZa} x 1)
     ;;=> Unable to resolve symbol: ZZZZa in this context
+    (type (:tag (meta (second '(def ^Integer x)))))
+    => clojure.lang.Symbol
 
 So we have to rely on those being identifiable by declaration.
 

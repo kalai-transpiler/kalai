@@ -7,7 +7,6 @@ public class typeAlias {
 static final HashMap<Long,String> x;
 public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
 final HashMap<Long,String> z = y;
-final HashMap tmp9 = new HashMap();
-return tmp9;
+return z;
 }
 }

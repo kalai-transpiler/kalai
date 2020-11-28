@@ -49,30 +49,24 @@
 ;; half Clojure half Java
 (def expression
   (s/rewrite
-    ;; data literals
+    ;; Data Literals
+    ;;;; vector []
     (m/and [!x ...]
            (m/app meta ?meta)
-           ;; TODO: clean this up...
-           ;; also observe that we know these are vectors,
-           ;; so {:vector [:long]} is redundant
            (m/let [?t (:t ?meta)
-                   ?tag (:tag ?meta)
-                   ?tm (if (:mut ?meta)
-                        'ArrayList
-                        'PersistentVector)
-                   ?ttt (or ?t ?tag ?tm)
-                   ?tmp (u/tmp ?ttt)]))
+                   ?tmp (u/tmp ?t)]))
+    ;;->
     (group
-      (j/init ?tmp (j/new ?ttt))
+      (j/init ?tmp (j/new ?t))
       . (j/expression-statement (j/method add ?tmp (m/app expression !x))) ...
       ?tmp)
 
+    ;;;; map {}
     (m/and (m/and {} (m/seqable [!k !v] ...))
            (m/app meta ?meta)
-           (m/let [?t (if (:mut ?meta)
-                        'HashMap
-                        'PersistentMap)
+           (m/let [?t (:t ?meta)
                    ?tmp (u/tmp ?t)]))
+    ;;->
     (group
       (j/init ?tmp (j/new ?t))
       . (j/expression-statement (j/method put ?tmp
@@ -80,18 +74,18 @@
                                           (m/app expression !v))) ...
       ?tmp)
 
+    ;;;; set #{}
     (m/and (m/and #{} (m/seqable !k ...))
            (m/app meta ?meta)
-           (m/let [?t (if (:mut ?meta)
-                        'HashSet
-                        'PersistentSet)
+           (m/let [?t (:t ?meta)
                    ?tmp (u/tmp ?t)]))
+    ;;->
     (group
       (j/init ?tmp (j/new ?t))
       . (j/expression-statement (j/method add ?tmp (m/app expression !k))) ...
       ?tmp)
 
-    ;; interop
+    ;; Interop
     (new ?c . !args ...)
     (j/new ?c . (m/app expression !args) ...)
 

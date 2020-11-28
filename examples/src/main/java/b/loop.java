@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 public class loop {
 public static final int add(final int a, final int b) {
-int i = 0;
+long i = 0;
 while ((i < 10)) {
 System.out.println(i);
 i = ++i;
