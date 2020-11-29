@@ -26,10 +26,7 @@
 
 (defn count-for [x]
   (m/rewrite (:t (meta x))
-    {:map (m/pred some?)} 'size
-    {:set (m/pred some?)} 'size
-    {:vector (m/pred some?)} 'size
-    {:list (m/pred some?)} 'size
+    {(m/pred #{:mmap :map :mset :set :mvector :vector}) (m/pred some?)} 'size
     ?else 'length))
 
 (def rewrite

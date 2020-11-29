@@ -60,12 +60,12 @@
     ;; ^{:t :long, :tag Long} x
     {:op   :with-meta
      :meta {:form {:t ?t :tag ?tag}}
-     :expr  ?expr}
+     :expr ?expr}
     ~(or ?t
          (get types/java-types ?tag)
          (ast-t ?expr))
 
-    {:op :local
+    {:op   :local
      :form ?form}
     ~(resolve-t ?form ast)
 
@@ -89,10 +89,11 @@
 (defn t-from-meta [x]
   (:t (meta x)))
 
-(defn propagate-ast-type [from-ast to-imeta]
+(defn propagate-ast-type [from-ast to-imeta ast]
   (if (and (instance? IMeta to-imeta)
            (not (t-from-meta to-imeta)))
-    (u/maybe-meta-assoc to-imeta :t (ast-t from-ast))
+    (u/maybe-meta-assoc to-imeta :t (or (ast-t from-ast)
+                                        (resolve-tag (:tag (meta to-imeta)) ast)))
     to-imeta))
 
 (defn set-coll-t [val t]
@@ -119,7 +120,8 @@
 ;; eg: ^{:t {:map [:long :long]} {1 1}   <- with-meta
 ;; vs {1 1}     <- const
 ;; vs {1 (inc 1)}   <- map
-(defn set-t-of-init
+;; EXCEPT when working with files!!???!!!
+(defn set-ast-t
   "We match against both the collection and the type because maps must have
   a valid map type and we need the key value sub-types."
   [ast t]
@@ -138,13 +140,18 @@
 
     [{:op   :with-meta
       :expr ?expr
+      :form ?form
       &     ?more}
      ?t]
     ;;->
-    {:op :with-meta
+    {:op   :with-meta
      ;; TODO: only if we don't have a t
-     :expr ~(set-t-of-init ?expr ?t)
-     & ?more}
+     :expr ~(do
+              (set-ast-t ?expr ?t))
+     :form ~(if ?t
+              (set-coll-t ?form ?t)
+              ?form)
+     &     ?more}
 
     [{:op   :map
       :form ?form
@@ -157,12 +164,12 @@
     ;;->
     {:op   :map
      :form ~(set-coll-t ?form ?t)
-     :keys [(m/app set-t-of-init !keys ?kt) ...]
-     :vals [(m/app set-t-of-init !vals ?vt) ...]
+     :keys [(m/app set-ast-t !keys ?kt) ...]
+     :vals [(m/app set-ast-t !vals ?vt) ...]
      &     ?more}
 
     [{:op    (m/pred #{:set :vector} ?op)
-      :form ?form
+      :form  ?form
       :items [!items ...]
       &      ?more}
      (m/and
@@ -170,13 +177,30 @@
        ?t)]
     ;;->
     {:op    ?op
-     :form ~(set-coll-t ?form ?t)
-     :items [(m/app set-t-of-init !items ?it) ...]
+     :form  ~(set-coll-t ?form ?t)
+     :items [(m/app set-ast-t !items ?it) ...]
      &      ?more}
+
+    ;; (atom []) put the type on the vector
+    [{:op   :invoke
+      :fn   {:op  :var
+             ;; TODO: some duplicaton here with ref-vars in kalai-constructs
+             :var (m/pred #{#'atom
+                            #'ref
+                            #'agent})
+             :as  ?fn}
+      :args [?x]
+      &     ?more}
+     ?t]
+    ;;->
+    {:op   :invoke
+     :fn   ?fn
+     :args [~(set-ast-t ?x ?t)]
+     &     ?more}
 
     ;; else return ast unchanged
     [?ast ?t]
-    ?ast))
+    ~?ast))
 
 (defn normalize-t-in-ast
   "Normalizing t consists of:
@@ -201,7 +225,7 @@
     {:op   :def
      :name ~(u/maybe-meta-assoc ?name :t (or ?t ?init-t))
      :init ~(when ?init
-              (set-t-of-init ?init (or ?init-t ?t)))
+              (set-ast-t ?init (or ?init-t ?t)))
      &     ?more}
 
     ;; [x 1]
@@ -217,7 +241,7 @@
     ;;->
     {:op   :binding
      :form ~(u/maybe-meta-assoc ?form :t (or ?t ?init-t))
-     :init ~(set-t-of-init ?init (or ?init-t ?t))
+     :init ~(set-ast-t ?init (or ?init-t ?t))
      &     ?more}
 
     ;; ([x y z])
@@ -248,10 +272,11 @@
      :env  {:locals {?symbol {:form ?symbol-with-meta
                               :init ?init}}
             :as     ?env}
-     &     ?more}
+     &     ?more
+     :as ?ast}
     ;;->
     {:op   :local
-     :form ~(propagate-ast-type ?init ?symbol-with-meta)
+     :form ~(propagate-ast-type ?init ?symbol-with-meta ?ast)
      :env  ?env
      &     ?more}
 

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 public class demo02 {
 public static final HashMap<Character,Integer> getDigitsMap() {
-final TYPE_MISSING tmp1 = new TYPE_MISSING();
+final HashMap<Character,Integer> tmp1 = new HashMap<Character,Integer>();
 tmp1.put('٠', 0);
 tmp1.put('١', 1);
 tmp1.put('٢', 2);
@@ -44,10 +44,10 @@ public static final int parse(final String s) {
 int result = 0;
 final int strLength = s.length();
 {
-long i = 0;
+int i = 0;
 while ((i < strLength)) {
 {
-final char digit = s.get(i);
+final char digit = s.charAt(i);
 if (digitsMap.containsKey(digit))
 {
 final int digitVal = digitsMap.get(digit);
@@ -60,8 +60,8 @@ return result;
 }
 }
 public static final HashMap<String,ArrayList<Character>> getNumberSystemsMap() {
-final TYPE_MISSING tmp2 = new TYPE_MISSING();
-final TYPE_MISSING tmp3 = new TYPE_MISSING();
+final HashMap<String,ArrayList<Character>> tmp2 = new HashMap<String,ArrayList<Character>>();
+final ArrayList<Character> tmp3 = new ArrayList<Character>();
 tmp3.add('٠');
 tmp3.add('١');
 tmp3.add('٢');
@@ -73,7 +73,7 @@ tmp3.add('٧');
 tmp3.add('٨');
 tmp3.add('٩');
 tmp2.put("ARABIC", tmp3);
-final TYPE_MISSING tmp4 = new TYPE_MISSING();
+final ArrayList<Character> tmp4 = new ArrayList<Character>();
 tmp4.add('0');
 tmp4.add('1');
 tmp4.add('2');
@@ -85,7 +85,7 @@ tmp4.add('7');
 tmp4.add('8');
 tmp4.add('9');
 tmp2.put("LATIN", tmp4);
-final TYPE_MISSING tmp5 = new TYPE_MISSING();
+final ArrayList<Character> tmp5 = new ArrayList<Character>();
 tmp5.add('০');
 tmp5.add('১');
 tmp5.add('২');
@@ -102,7 +102,7 @@ return m;
 }
 static final HashMap<String,ArrayList<Character>> numberSystemsMap = getNumberSystemsMap();
 public static final HashMap<String,Character> getGroupingSeparatorsMap() {
-final TYPE_MISSING tmp6 = new TYPE_MISSING();
+final HashMap<String,Character> tmp6 = new HashMap<String,Character>();
 tmp6.put("ARABIC", '٬');
 tmp6.put("LATIN", ',');
 tmp6.put("BENGALI", ',');
@@ -111,7 +111,7 @@ return m;
 }
 static final HashMap<String,Character> groupingSeparatorsMap = getGroupingSeparatorsMap();
 public static final ArrayList<Integer> getSeparatorPositions(final int numLength, final String groupingStrategy) {
-final TYPE_MISSING tmp7 = new TYPE_MISSING();
+final ArrayList<Integer> tmp7 = new ArrayList<Integer>();
 ArrayList<Integer> result = tmp7;
 if ((groupingStrategy == "NONE"))
 {
@@ -196,8 +196,8 @@ i = quotient;
 final Object sep = groupingSeparatorsMap.get(numberSystem);
 final int numLength = result.length();
 final ArrayList<Integer> separatorPositions = getSeparatorPositions(numLength, groupingStrategy);
-final int numPositions = separatorPositions.length();
-long idx = 0;
+final int numPositions = separatorPositions.size();
+int idx = 0;
 while ((idx < numPositions)) {
 {
 final int position = separatorPositions.get(idx);

@@ -10,11 +10,11 @@
 (defn gensym2 [s]
   (symbol (str s (swap! c inc))))
 
-(defn tmp [type]
-  (with-meta (gensym2 "tmp") {:t type}))
+(defn tmp [type expr]
+  (with-meta (gensym2 "tmp") {:t type :expr expr}))
 
 (defn tmp-for [expr]
-  (tmp (types/get-type expr)))
+  (tmp (types/get-type expr) expr))
 
 (defn spy
   ([x] (spy x nil))

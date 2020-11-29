@@ -1186,3 +1186,27 @@ return i;
        result)
     ;;->
     "final java.lang.StringBuffer result = new StringBuffer();"))
+
+(deftest propagated-types10-test
+  (inner-form
+    '(let [^{:t {:mvector [:int]}} result (atom [])]
+       @result)
+    ;;->
+    '(do
+       (init result [])
+       result)
+    ;;->
+    "final ArrayList<Integer> tmp1 = new ArrayList<Integer>();
+ArrayList<Integer> result = tmp1;"))
+
+(deftest foo2-test
+  (top-level-form
+    '(defn parse ^Integer [^String s]
+       (nth s 1))
+    ;;->
+    '(function parse [s]
+               (return (invoke clojure.lang.RT/nth s 1)))
+    ;;->
+    "public static final int parse(final String s) {
+return s.charAt(1);
+}"))

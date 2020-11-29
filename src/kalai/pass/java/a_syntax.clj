@@ -52,9 +52,10 @@
     ;; Data Literals
     ;;;; vector []
     (m/and [!x ...]
+           ?expr
            (m/app meta ?meta)
            (m/let [?t (:t ?meta)
-                   ?tmp (u/tmp ?t)]))
+                   ?tmp (u/tmp ?t ?expr)]))
     ;;->
     (group
       (j/init ?tmp (j/new ?t))
@@ -62,10 +63,12 @@
       ?tmp)
 
     ;;;; map {}
-    (m/and (m/and {} (m/seqable [!k !v] ...))
+    (m/and {}
+           ?expr
+           (m/seqable [!k !v] ...)
            (m/app meta ?meta)
            (m/let [?t (:t ?meta)
-                   ?tmp (u/tmp ?t)]))
+                   ?tmp (u/tmp ?t ?expr)]))
     ;;->
     (group
       (j/init ?tmp (j/new ?t))
@@ -75,10 +78,12 @@
       ?tmp)
 
     ;;;; set #{}
-    (m/and (m/and #{} (m/seqable !k ...))
+    (m/and #{}
+           ?expr
+           (m/seqable !k ...)
            (m/app meta ?meta)
            (m/let [?t (:t ?meta)
-                   ?tmp (u/tmp ?t)]))
+                   ?tmp (u/tmp ?t ?expr)]))
     ;;->
     (group
       (j/init ?tmp (j/new ?t))

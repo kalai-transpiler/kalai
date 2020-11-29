@@ -2,7 +2,8 @@
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]
             [kalai.util :as u]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import (clojure.lang IMeta)))
 
 (declare inner-form)
 
@@ -50,15 +51,12 @@
   (and (seq? x)
        (ref-vars (:var (meta (first x))))))
 
-
 (defn as-init
   [?name ?x mutability]
   (list 'init
         (u/maybe-meta-assoc ?name :mut
                             (or (#{:mutable} mutability)
-                        (ref-form? ?x)))
-        ;; this propagation is too late, must happen before
-        ;; binding propagai
+                                (ref-form? ?x)))
         (inner-form ?x)))
 
 (def loops
@@ -175,9 +173,7 @@
       ?ref)
 
     ;; matches (atom (+ 1 2)) or (ref (+ 1 2)) or (agent (+ 1 2))
-    (m/and
-      ((u/var (m/pred ref-vars)) ?x . _ ...)
-      ?ref)
+    ((u/var (m/pred ref-vars)) ?x . _ ...)
     ~(inner-form ?x)
 
     ((u/var ~#'deref) ?ref)
@@ -198,7 +194,7 @@
 
     (let* [?auto ?x]
       (case* ?auto ?shift ?mask
-             ?default ;;often (throw (new java.lang.IllegalArgumentException (clojure.core/str "No matching clause: " ?auto)))
+             ?default ;; often (throw (new java.lang.IllegalArgumentException (clojure.core/str "No matching clause: " ?auto)))
              ?imap ?switch-type ?tt ?skip-check))
     (case (m/app inner-form ?x) ?imap)))
 

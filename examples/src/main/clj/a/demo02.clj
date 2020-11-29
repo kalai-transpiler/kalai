@@ -40,7 +40,7 @@
 (defn parse ^Integer [^String s]
   (let [result (atom (int 0))
         ^{:t :int} strLength (count s)]
-    (dotimes [i strLength]
+    (dotimes [^{:t :int} i strLength]
       (let [^{:t :char} digit (nth s i)]
         (if (contains? digitsMap digit)
           (let [^Integer digitVal (get digitsMap digit)]
@@ -117,7 +117,7 @@
           ^{:t :int} numLength (.length result)
           ^{:t {:mvector [:int]}} separatorPositions (getSeparatorPositions numLength groupingStrategy)
           ^{:t :int} numPositions (count separatorPositions)]
-      (dotimes [idx numPositions]
+      (dotimes [^{:t :int} idx numPositions]
         (let [^int position (nth separatorPositions idx)]
           (.insert result position sep))))
     (.toString result)))
