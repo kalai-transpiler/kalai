@@ -64,6 +64,7 @@
 
 (defn compile [{:keys [in out language]}]
   (let [base (io/file in)]
+    (.mkdirs (io/file out))
     (doseq [^File file (file-seq base)
             :when (not (.isDirectory file))
             :let [s (compile-source-file file)
