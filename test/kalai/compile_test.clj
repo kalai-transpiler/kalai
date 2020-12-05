@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [kalai.emit.langs :as l]
             [kalai.compile :as c]
-            [kalai.util :as u]))
+            [kalai.util :as u]
+            [clojure.string :as string]))
 
 ;; for testing one file
 (deftest compile-source-file-test
@@ -28,11 +29,13 @@
            :target   "examples/tmp"
            :language ::l/java}]
     (is (= "" (with-out-str (c/compile x))))
-    (is (= "Compiling examples/src/main/java/a/demo01.java
-Compiling examples/src/main/java/a/demo02.java
-Compiling examples/src/main/java/b/typeAlias.java
-Compiling examples/src/main/java/b/variable.java
-Compiling examples/src/main/java/b/simple.java
-Compiling examples/src/main/java/b/loop.java
-"
-           (with-out-str (c/target-compile x))))))
+    ;; TODO: consider making compile order matter when running compilation with a root file
+    (is (= #{"Compiling examples/src/main/java/a/demo01.java"
+             "Compiling examples/src/main/java/a/demo02.java"
+             "Compiling examples/src/main/java/b/typeAlias.java"
+             "Compiling examples/src/main/java/b/variable.java"
+             "Compiling examples/src/main/java/b/simple.java"
+             "Compiling examples/src/main/java/b/loop.java"}
+           (->> (with-out-str (c/target-compile x))
+                (string/split-lines)
+                (set))))))
