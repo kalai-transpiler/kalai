@@ -68,6 +68,7 @@ Multiple passes occur to incrementally transform Clojure to the target represent
     
 ## Strategy of mutable vs immutable
 
+```
 (defn mess [^{:t :int
               :mut true
               :ref true} a]
@@ -77,6 +78,7 @@ Multiple passes occur to incrementally transform Clojure to the target represent
     (swap! z conj 5)
     (swap! z conj 6)
     (count @z)))
+```
     
 Even though we apply the word mutable to bindings and to data collections
 it is tricky to recognize that the opposite of a mutable binding
@@ -204,57 +206,120 @@ So we have to rely on those being identifiable by declaration.
 
 ### Type propagation
 
-We propagate metadata in 2 different directions.
+We propagate metadata in 3 different ways, which we're calling:
 
-#### direction 1
+* initial value to binding
+* binding to initial value
+* bindings to locals
 
-The first way is propagating the type information according to lexical scoping rules.
-The first way is to propagate type metadata from the binding to all references in scope,
-according to the static analysis given to us by tools analyzer.
-The reason we do this is that tools analyzer gives us an accurate snapshot of the
+#### bindings to locals
+
+Here, we propagate type metadata from the binding to all references in scope,
+according to the static analysis given to us by tools.analyzer.
+The reason we do this is that tools.analyzer gives us an accurate snapshot of the
 environment at every node of the AST, but it doesn't collect the metadata we need.
 We need the type information.
-We don't use tools analyzer's type information because we give users full control
+We don't use tools.analyzer's type information because we give users full control
 to use the custom `{:t type}` form instead of `^type`.
 For example if you want to put a type on a collection literal that has the full
-information needed for output to a staticaly typed language then you need more
+information needed for output to a statically typed language then you need more
 information than Clojure/JVM type erasure allows.
 
-We propagate type information which is stored in metadata
-from the the place where they are declared on a symbol
-to all future usages of that symbol in scope.
+        (let [^{:t {:vector [int]} v []]
+          (println v))
+
+We propagate type information which is stored in metadata (`^{:t {:vector [int]}`)
+from the place where they are declared on a symbol (`v`)
+to all future usages of that symbol in scope (`(println v)`).
 When the type metadata is not provided and the type of the
 initial value is known, we use the type of the value.
 
-#### direction 2
+
+
+#### binding to initial value
 
 The second way that we propagate type information is inside an initialization
 or assignment statement.
-The initialization statement is a convenience to avoid repeating the type:
+We allow metadata propagation in an initialization statement to be a convenience that avoids repeating the type in both the binding and value:
 
-    (let [^{:t {:vector [int]} v []])
+    (let [^{:t {:vector [int]}} v []])
 
 Compare that with Java where there is redundancy in syntax:
 
     ArrayList<Integer> v = new ArrayList<>();
 
-In the Kalai input code, the type on v is propagated to the untyped vector literal initial value.
+In the Kalai input code, the type on `v` is propagated to the untyped vector literal initial value.
 This allows the temporary variables used in the data literal expansion to have the proper types.
 
-#### bidirectional propagation
+#### initial value to binding
 
-The follow example shows both directions in action:
+However, we want to additionally support the case when the user provides type information on the initial value of an assignment but not the binding. Ex:
 
-    (let [^{:t {:vector [int]} v []]
+    (let [v ^{:t {:vector [int]}} []])
+
+Here, the `v2` binding will have the type info (via metadata) of `v` propagated to it.
+
+
+Currently, we perform binding-to-local metadata propagation within the AST phase of the pipeline. That is because there is more nuance. For example, if you put a type on the vector
+
+    (let [v ^{:t {:vector [int]}} []
           v2 v])
 
-In the pipeline the first stage in which propagation happens is in the AST annotation pass.
-The propagation in this stage happens according to direction 1.
-The type of v is propagated to v2.
+Here, the `v2` binding will have the type info (via metadata) of `v` propagated to it. So the propagation of type info metadata from the initial value to the binding (`^{:t {:vector [int]} []` to `v`) should before the propagation from the binding to the local (`v` to `v`) so that `v2` can have `v`'s metadata propagated to it.
 
-After conversion to s-expressions, the next stage where propagation happens is in the Kalai constructs pass.
-The propagation in this stage happens according to direction 2.
-The type from v is propagated to the untyped vector literal.
+
+
+#### ordering of propagation types
+
+As said before, propagation of metadata from bindings to locals happens must be done in the AST using tools.analyzer. Also, propagation from initial values to bindings must happen before propagation from bindings to locals. Therefore, propagation from initial values to bindings must also be done in the AST.
+
+Since two of the three ways in which propagation happens are done in the AST, for code reuse / simplicity purposes, we have all 3 ways done in the AST.
+
+##### potential ordering problem and potential solution
+
+However, there is a problem that is not fully solved when it comes to the ordering of the execution of these type propagation passes.  In this example
+
+    (let [v ^{:t {:vector [int]}} []
+          v2 v])
+
+We have type info propagating as follows:
+
+1. from the initial value (`^{:t {:vector [int]} []`)to the binding (`v`)
+2. from the binding (`v`) to the local (`v`)
+3. from the initial value (`v`) to the binding (`v2`)
+
+Step 1 and Step 3 must happen one after the other, but they are both the same operation ("initial to binding propagation").
+
+This problem is even more obvious when you have
+
+    (let [v ^{:t {:vector [int]}} []
+          v2 v
+          v3 v2
+          v4 v3])
+
+And you try to get type info for `v3` but it hasn't propagated from `v` beyond `v2`.
+
+However, in this example, when we look at the binding line `v4 v3`, and we see `v3`'s binding (`v3 v2`) also has no type info specified, we need to continue recursively. And tools.analyzer contains all this information at the node for `v4`'s binding in a nested manner in the environment. If we follow this binding info recursively within the nested environment info, we should eventually get the type (`^{:t {:vector [int]}}`) or throw an error. Once we do that, our recursive navigation for getting the type will subsume/replace the work done in binding-to-local propagation entirely within this initial-value-to-binding propagation step.
+
+In this new restructuring of type propagation phases, we think that the ordering of initial-value-to-binding and binding-to-initial-value propagation does not matter because binding-to-initial-value propagation is a convenience that only applies when the initial value is a data literal. For example, if we don't have a data literal, but we do have type information:
+
+
+    (let [v ^{:t {:vector [int]}} []
+          v2 v      
+          ^{:t {:vector [int]}} v3 v2
+          v4 v3])
+
+then we get the type of `v4` from `v3`. If we need the type of `v2`, we can get it from `v`.
+
+And when we do have a data literal initial value:
+
+    (let [v ^{:t {:vector [int]}} []
+          v2 v      
+          ^{:t {:vector [int]}} v3 []
+          v4 v3])
+
+then getting the types for `v4` and `v2` are unaffected, and we have all the info we need for `v3`'s binding (that is to say, propagate from binding to value, which enables the info we need to generate the full assignment statement in the target language).
+
 
 #### precedence
 
