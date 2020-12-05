@@ -36,7 +36,10 @@
           (get types/java-types c)))))
 
 ;; TODO: what about type aliases in type aliases
-(defn resolve-t [x ast]
+(defn resolve-t
+  "Takes a value that might have metadata,
+  and an AST, and resolves the type"
+  [x ast]
   (let [{:keys [t tag]} (meta x)]
     (if t
       (if (symbol? t)
@@ -49,7 +52,9 @@
     #'ref
     #'agent})
 
-(defn ast-t [ast]
+(defn ast-t
+  "Return the type represented by an AST node"
+  [ast]
   (m/rewrite ast
     ;; (atom x)
     {:op   :invoke
@@ -65,12 +70,37 @@
          (get types/java-types ?tag)
          (ast-t ?expr))
 
+    {:op :binding
+     #_#_:meta {:form {:t ?t :tag ?tag}
+                :as ?meta}
+     :form (m/and
+             (m/app #(resolve-t % ast) ?t)
+             (m/guard (some? ?t)))
+     :as ?binding}
+    ~(do (u/spy [:t ?t] ":binding with :meta")
+         (u/spy (-> ?binding :form meta) "?binding form meta")
+         ?t)
+
+    {:op :binding
+     :init ?init
+     :as ?binding}
+    ~(do (u/spy ?binding ":binding without :meta")
+         (println (-> ?binding :form meta))
+         (println (-> ?binding :name meta))
+         (ast-t ?init))
+
+    {:op :binding
+     :init ?init}
+    ~(do (u/spy (ast-t ?init) ":binding without :meta")
+       (ast-t ?init))
+
     {:op   :local
-     :form ?form}
-    ~(resolve-t ?form ast)
+     :form ?form
+     :env {:locals {?form ?binding}}}
+    ~(ast-t ?binding)
 
     ;; Last resort: 1
-    {:op  :const
+    {:op :const
      :val ?val}
     ~(get types/java-types (type ?val))
 

@@ -1060,6 +1060,43 @@ System.out.println(y);"))
 final int y = x;
 System.out.println(y);"))
 
+(deftest propagated-types2-1-test
+  (inner-form
+    '(let [x 1
+           y x
+           z y]
+       (println z))
+    ;;->
+    '(do
+       (init x 1)
+       (init y x)
+       (init z y)
+       (invoke println z))
+    ;;->
+    "final long x = 1;
+final long y = x;
+final long z = y;
+System.out.println(z);"))
+
+(deftest propagated-types2-2-test
+  (inner-form
+    '(let [x ^{:t {:mvector [:int]}} []
+           y x
+           z y]
+       (println z))
+    ;;->
+    '(do
+       (init x [])
+       (init y x)
+       (init z y)
+       (invoke println z))
+    ;;->
+    "final ArrayList<Integer> tmp1 = new ArrayList<Integer>();
+final ArrayList<Integer> x = tmp1;
+final ArrayList<Integer> y = x;
+final ArrayList<Integer> z = y;
+System.out.println(z);"))
+
 (deftest propagated-types3-test
   (inner-form
     '(let [a (atom 1)
