@@ -64,7 +64,6 @@
 
 (defn compile [{:keys [in out language]}]
   (let [base (io/file in)]
-    (.mkdirs (io/file out))
     (doseq [^File file (file-seq base)
             :when (not (.isDirectory file))
             :let [s (compile-source-file file)
@@ -73,6 +72,7 @@
 
 (defn compile-target-file [file-path language target]
   (println "Compiling" (str file-path))
+  (.mkdirs (io/file target))
   (let [{:keys [exit out err]} (sh/sh "javac" "-d" target (str file-path))]
     (if (zero? exit)
       nil
