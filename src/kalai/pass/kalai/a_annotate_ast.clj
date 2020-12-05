@@ -54,67 +54,55 @@
 
 (defn ast-t
   "Return the type represented by an AST node"
-  [ast]
-  (m/rewrite ast
-    ;; (atom x)
-    {:op   :invoke
-     :fn   {:var (m/pred ref-vars)}
-     :args [?value . _ ...]}
-    ~(ast-t ?value)
+  ([ast]
+   (ast-t ast ast))
+  ([ast root]
+   (m/rewrite ast
+     ;; (atom x)
+     {:op   :invoke
+      :fn   {:var (m/pred ref-vars)}
+      :args [?value . _ ...]}
+     ~(ast-t ?value ast)
 
-    ;; ^{:t :long, :tag Long} x
-    {:op   :with-meta
-     :meta {:form {:t ?t :tag ?tag}}
-     :expr ?expr}
-    ~(or ?t
-         (get types/java-types ?tag)
-         (ast-t ?expr))
+     ;; ^{:t :long, :tag Long} x
+     {:op   :with-meta
+      :meta {:form {:t ?t :tag ?tag}}
+      :expr ?expr}
+     ~(or ?t
+          (get types/java-types ?tag)
+          (ast-t ?expr ast))
 
-    {:op :binding
-     #_#_:meta {:form {:t ?t :tag ?tag}
-                :as ?meta}
-     :form (m/and
-             (m/app #(resolve-t % ast) ?t)
-             (m/guard (some? ?t)))
-     :as ?binding}
-    ~(do (u/spy [:t ?t] ":binding with :meta")
-         (u/spy (-> ?binding :form meta) "?binding form meta")
-         ?t)
+     {:op   :binding
+      :form (m/and
+              (m/app #(resolve-t % root) ?t)
+              (m/guard (some? ?t)))}
+     ?t
 
-    {:op :binding
-     :init ?init
-     :as ?binding}
-    ~(do (u/spy ?binding ":binding without :meta")
-         (println (-> ?binding :form meta))
-         (println (-> ?binding :name meta))
-         (ast-t ?init))
+     {:op   :binding
+      :init (m/pred some? ?init)}
+     ~(ast-t ?init ast)
 
-    {:op :binding
-     :init ?init}
-    ~(do (u/spy (ast-t ?init) ":binding without :meta")
-       (ast-t ?init))
+     {:op   :local
+      :form (m/pred some? ?form)
+      :env  {:locals {?form ?binding}}}
+     ~(ast-t ?binding ast)
 
-    {:op   :local
-     :form ?form
-     :env {:locals {?form ?binding}}}
-    ~(ast-t ?binding)
+     ;; Last resort: 1
+     {:op  :const
+      :val (m/pred some? ?val)}
+     ~(get types/java-types (type ?val))
 
-    ;; Last resort: 1
-    {:op :const
-     :val ?val}
-    ~(get types/java-types (type ?val))
+     ;; Last resort: Clojure type inferred
+     {:o-tag (m/pred some? ?o-tag)}
+     ~(or (get types/java-types ?o-tag)
+          ;; TODO: breaking the rules for interop...
+          ;; is this a bad idea?
+          ;; note that some o-tags are unhelpful,
+          ;; like PersistentMap
+          (#{StringBuffer} ?o-tag))
 
-    ;; Last resort: Clojure type inferred
-    {:o-tag (m/pred some? ?o-tag)}
-    ~(or (get types/java-types ?o-tag)
-         ;; TODO: breaking the rules for interop...
-         ;; is this a bad idea?
-         ;; note that some o-tags are unhelpful,
-         ;; like PersistentMap
-         (#{StringBuffer} ?o-tag))
-
-    ?else
-    nil))
+     ?else
+     nil)))
 
 (defn t-from-meta [x]
   (:t (meta x)))
@@ -303,7 +291,7 @@
                               :init ?init}}
             :as     ?env}
      &     ?more
-     :as ?ast}
+     :as   ?ast}
     ;;->
     {:op   :local
      :form ~(propagate-ast-type ?init ?symbol-with-meta ?ast)
