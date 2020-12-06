@@ -257,9 +257,6 @@ However, we want to additionally support the case when the user provides type in
 
     (let [v ^{:t {:vector [int]}} []])
 
-Here, the `v2` binding will have the type info (via metadata) of `v` propagated to it.
-
-
 Currently, we perform binding-to-local metadata propagation within the AST phase of the pipeline. That is because there is more nuance. For example, if you put a type on the vector
 
     (let [v ^{:t {:vector [int]}} []

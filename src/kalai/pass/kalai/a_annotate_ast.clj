@@ -72,12 +72,20 @@
           (get types/java-types ?tag)
           (ast-t ?expr ast))
 
+     ;; Following the type inference precedence order, if we don't see type
+     ;; info on the binding name itself, then check the initial value.
+     ;; This enables the initial-value-to-binding propagation of type metadata.
      {:op   :binding
       :form (m/and
               (m/app #(resolve-t % root) ?t)
               (m/guard (some? ?t)))}
      ?t
 
+     ;; Start a recursive search for the type, starting with the initial value.
+     ;; Supports a thorough inference of type, like for `z` in this situation:
+     ;; (let [^{:t :some-type} x some-val
+     ;;       y x
+     ;;       z y] ...)
      {:op   :binding
       :init (m/pred some? ?init)}
      ~(ast-t ?init ast)
