@@ -53,7 +53,9 @@
     #'agent})
 
 (defn ast-t
-  "Return the type represented by an AST node"
+  "Return the type represented by an AST node. `root` is an AST node that
+  contains namespace information for `ast`. Type info returned is using the
+  normalized form consisting of keywords, as described in [Design.md]."
   ([ast]
    (ast-t ast ast))
   ([ast root]
@@ -72,13 +74,11 @@
           (get types/java-types ?tag)
           (ast-t ?expr ast))
 
-     ;; Following the type inference precedence order, if we don't see type
-     ;; info on the binding name itself, then check the initial value.
+     ;; If we see user-provided type metadata on the binding name itself,
+     ;; then return a normalized version of the type info data.
      ;; This enables the initial-value-to-binding propagation of type metadata.
      {:op   :binding
-      :form (m/and
-              (m/app #(resolve-t % root) ?t)
-              (m/guard (some? ?t)))}
+      :form (m/app #(resolve-t % root) (m/pred some? ?t))}
      ?t
 
      ;; Start a recursive search for the type, starting with the initial value.
