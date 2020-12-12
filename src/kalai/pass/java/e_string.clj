@@ -121,13 +121,23 @@
        (param-list (map stringify args))))
 
 (defn function-str [name params body]
-  (str
-    (space-separated 'public 'static
-                     (type-str params)
-                     (csk/->camelCase name))
-    (space-separated (param-list (for [param params]
-                                   (space-separated (type-str param) param)))
-                     (stringify body))))
+  (if (= '-main name)
+    (do
+      (assert (= '& (first params)) "Main method must have signature (defn -main [& args]...)")
+      (str
+        (space-separated 'public 'static
+          'final
+          'void
+          'main)
+        (space-separated (param-list [(space-separated "String[]" (second params))])
+          (stringify body))))
+    (str
+      (space-separated 'public 'static
+        (type-str params)
+        (csk/->camelCase name))
+      (space-separated (param-list (for [param params]
+                                     (space-separated (type-str param) param)))
+        (stringify body)))))
 
 (defn operator-str
   ([op x]

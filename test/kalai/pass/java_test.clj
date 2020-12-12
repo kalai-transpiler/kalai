@@ -248,22 +248,6 @@ final boolean z = true;
 }
 final long y = 5;"))
 
-(deftest generic-types-test
-  (top-level-form
-    '(def ^{:t {:mmap [:long :string]}} x)
-    ;;->
-    '(init x)
-    ;;->
-    "static final HashMap<Long,String> x;"))
-
-(deftest generic-types-test2
-  (top-level-form
-    '(def ^{:t {:mmap [:string {:mvector [:char]}]}} x)
-    ;;->
-    '(init x)
-    ;;->
-    "static final HashMap<String,ArrayList<Character>> x;"))
-
 (deftest type-aliasing-test
   (ns-form
     '((ns test-package.test-class)
@@ -274,11 +258,11 @@ final long y = 5;"))
           z)))
     ;;->
     '(namespace test-package.test-class
-                (init x)
-                (function f [y]
-                          (do
-                            (init z y)
-                            (return z))))
+       (init x)
+       (function f [y]
+         (do
+           (init z y)
+           (return z))))
     ;;->
     "package testPackage;
 import java.util.HashMap;
@@ -293,8 +277,23 @@ return z;
 }
 }"))
 
-;; unparameterized form
+(deftest generic-types-test
+  (top-level-form
+    '(def ^{:t {:mmap [:long :string]}} x)
+    ;;->
+    '(init x)
+    ;;->
+    "static final HashMap<Long,String> x;"))
+
 (deftest generic-types2-test
+  (top-level-form
+    '(def ^{:t {:mmap [:string {:mvector [:char]}]}} x)
+    ;;->
+    '(init x)
+    ;;->
+    "static final HashMap<String,ArrayList<Character>> x;"))
+
+(deftest generic-types3-test
   (inner-form
     '(let [x ^{:t {:mvector [:long]}} [1 2]]
        (println x))
@@ -309,7 +308,7 @@ tmp1.add(2);
 final ArrayList<Long> x = tmp1;
 System.out.println(x);"))
 
-(deftest generic-types3-test
+(deftest generic-types4-test
   (inner-form
     '(def ^{:t {:mmap [:string :string]}} x {:a "asdf"})
     ;;->
@@ -318,6 +317,36 @@ System.out.println(x);"))
     "final HashMap<String,String> tmp1 = new HashMap<String,String>();
 tmp1.put(\":a\", \"asdf\");
 final HashMap<String,String> x = tmp1;"))
+
+(deftest generic-types5-test
+  #_
+  (inner-form
+    '(let [x ^{:t {:array [:string]}} ["arg1" "arg2"]]
+       (println x))
+    ;;->
+    '(do
+       (init x ["arg1" "arg2"])
+       (invoke println x))
+    ;;->
+    "final ArrayList<Long> tmp1 = new ArrayList<Long>();
+tmp1.add(1);
+tmp1.add(2);
+final ArrayList<Long> x = tmp1;
+System.out.println(x);"))
+
+;; # Main entry point
+
+(deftest main-method-test
+  (top-level-form
+    ;; return type of `void` for `main()` is implied
+    '(defn -main ^{:t :void} [& args]
+       1)
+    ;;->
+    '(function -main [& args] 1)
+    ;;->
+    "public static final void main(String[] args) {
+
+}"))
 
 ;; # Conditionals
 
