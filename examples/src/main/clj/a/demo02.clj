@@ -2,38 +2,37 @@
   (:refer-clojure :exclude [format]))
 
 (defn getDigitsMap ^{:t {:mmap [:char :int]}} []
-  (let [^{:t {:mmap [:char :int]}} m
-        {\0     0
-         \1     1
-         \2     2
-         \3     3
-         \4     4
-         \5     5
-         \6     6
-         \7     7
-         \8     8
-         \9     9
-         \u0660 0
-         \u0661 1
-         \u0662 2
-         \u0663 3
-         \u0664 4
-         \u0665 5
-         \u0666 6
-         \u0667 7
-         \u0668 8
-         \u0669 9
-         \u09E6 0
-         \u09E7 1
-         \u09E8 2
-         \u09E9 3
-         \u09EA 4
-         \u09EB 5
-         \u09EC 6
-         \u09ED 7
-         \u09EE 8
-         \u09EF 9}]
-    m))
+  ^{:t {:mmap [:char :int]}}
+  {\0     0
+   \1     1
+   \2     2
+   \3     3
+   \4     4
+   \5     5
+   \6     6
+   \7     7
+   \8     8
+   \9     9
+   \u0660 0
+   \u0661 1
+   \u0662 2
+   \u0663 3
+   \u0664 4
+   \u0665 5
+   \u0666 6
+   \u0667 7
+   \u0668 8
+   \u0669 9
+   \u09E6 0
+   \u09E7 1
+   \u09E8 2
+   \u09E9 3
+   \u09EA 4
+   \u09EB 5
+   \u09EC 6
+   \u09ED 7
+   \u09EE 8
+   \u09EF 9})
 
 (def ^{:t {:mmap [:char :int]}} digitsMap (getDigitsMap))
 
@@ -60,11 +59,10 @@
 
 (defn getGroupingSeparatorsMap
   ^{:t {:mmap [:string :char]}} []
-  (let [^{:t {:mmap [:string :char]}} m
-        {"LATIN"   \,
-         "ARABIC"  \٬
-         "BENGALI" \,}]
-    m))
+  ^{:t {:mmap [:string :char]}}
+  {"LATIN"   \,
+   "ARABIC"  \٬
+   "BENGALI" \,})
 
 (def ^{:t {:mmap [:string :char]}}
   groupingSeparatorsMap (getGroupingSeparatorsMap))
@@ -110,10 +108,10 @@
       (let [^Integer quotient (quot @i 10)
             ^Integer remainder (rem @i 10)
             ^{:t {:mvector [:char]}} numberSystemDigits (get numberSystemsMap numberSystem)
-            ^Character localDigit (get numberSystemDigits remainder)]
+            ^{:t :char} localDigit (get numberSystemDigits remainder)]
         (.insert result 0 localDigit)
         (reset! i quotient)))
-    (let [^char sep (get groupingSeparatorsMap numberSystem)
+    (let [^{:t :char} sep (get groupingSeparatorsMap numberSystem)
           ^{:t :int} numLength (.length result)
           ^{:t {:mvector [:int]}} separatorPositions (getSeparatorPositions numLength groupingStrategy)
           ^{:t :int} numPositions (count separatorPositions)]
@@ -121,3 +119,13 @@
         (let [^int position (nth separatorPositions idx)]
           (.insert result position sep))))
     (.toString result)))
+
+(defn -main ^{:t :void} [& args]
+  (println (parse "\u0665\u0660\u0663\u0660\u0661"))
+  (println (parse "৫০৩০১"))
+  (println (parse "7,654,321"))
+  (println (parse "76,54,321"))
+
+  (println (format 7654321 "LATIN" "ON_ALIGNED_3_2"))
+  (println (format 7654321 "ARABIC" "ON_ALIGNED_3_3"))
+  (println (format 7654321 "BENGALI" "ON_ALIGNED_3_3")))

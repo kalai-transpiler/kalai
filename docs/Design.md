@@ -34,25 +34,29 @@ Multiple passes occur to incrementally transform Clojure to the target represent
 
 ## The pipeline passes
 
-### Dependencies and assumptions
+### Requirements for all passes
+
+#### Dependencies and assumptions
 * Pass order is important
 * Linear is easiest!
   - shared passes seem tricky, they bit us once already
 
-### what does each pass do,
+#### Documentation
 
-### what does it assume,
-### why does it exist
+* what does each pass do,
+* what does it assume,
+* why does it exist
 
-## Return statement insertion strategy
+### Return statement insertion strategy
 
-## The group s-expressions
+### The group s-expressions
 * What does "group" mean, how are we using it?
 * How return statements interact with groups
 * Data literals in init statements in Java (example of groups)
 * Constructs in Clojure that have side-effects and return values (eg swap! interacting with groups)
 
 ## Recursion
+
 * happens at every level, on all expressions
 * should not happen on everything in the AST (maybe use az/walk when necessary)
 * style of recursion for compiler is different:
@@ -65,7 +69,11 @@ Multiple passes occur to incrementally transform Clojure to the target represent
   - just spitting out transformations, not the final product (see Nano pass)
 
 ## Statements/expressions
-    
+
+* basic definitions (ex: per Java)
+* strategy in Kalai
+* small attempts at Clojurifying it (ex: `if` as expressions that return values. `do` (?) and others??)
+
 ## Strategy of mutable vs immutable
 
 ```

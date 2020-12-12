@@ -36,8 +36,7 @@ tmp1.put('6', 6);
 tmp1.put('7', 7);
 tmp1.put('8', 8);
 tmp1.put('9', 9);
-final HashMap<Character,Integer> m = tmp1;
-return m;
+return tmp1;
 }
 static final HashMap<Character,Integer> digitsMap = getDigitsMap();
 public static final int parse(final String s) {
@@ -106,8 +105,7 @@ final HashMap<String,Character> tmp6 = new HashMap<String,Character>();
 tmp6.put("ARABIC", '٬');
 tmp6.put("LATIN", ',');
 tmp6.put("BENGALI", ',');
-final HashMap<String,Character> m = tmp6;
-return m;
+return tmp6;
 }
 static final HashMap<String,Character> groupingSeparatorsMap = getGroupingSeparatorsMap();
 public static final ArrayList<Integer> getSeparatorPositions(final int numLength, final String groupingStrategy) {
@@ -186,14 +184,14 @@ while (!(i == 0)) {
 final int quotient = (i / 10);
 final int remainder = (i % 10);
 final ArrayList<Character> numberSystemDigits = numberSystemsMap.get(numberSystem);
-final Object localDigit = numberSystemDigits.get(remainder);
+final char localDigit = numberSystemDigits.get(remainder);
 {
 result.insert(0, localDigit);
 i = quotient;
 }
 }
 {
-final Object sep = groupingSeparatorsMap.get(numberSystem);
+final char sep = groupingSeparatorsMap.get(numberSystem);
 final int numLength = result.length();
 final ArrayList<Integer> separatorPositions = getSeparatorPositions(numLength, groupingStrategy);
 final int numPositions = separatorPositions.size();
@@ -208,5 +206,14 @@ idx = ++idx;
 }
 return result.toString();
 }
+}
+public static final void main(String[] args) {
+System.out.println(parse("٥٠٣٠١"));
+System.out.println(parse("৫০৩০১"));
+System.out.println(parse("7,654,321"));
+System.out.println(parse("76,54,321"));
+System.out.println(format(7654321, "LATIN", "ON_ALIGNED_3_2"));
+System.out.println(format(7654321, "ARABIC", "ON_ALIGNED_3_3"));
+System.out.println(format(7654321, "BENGALI", "ON_ALIGNED_3_3"));
 }
 }

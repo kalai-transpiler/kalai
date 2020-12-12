@@ -10,3 +10,7 @@
         (.insert result (int 0) remainder)
         (reset! i quotient)))
     (.toString result)))
+
+(defn -main ^{:t :void} [& args]
+  (format 2345)
+  (println (format 2345)))

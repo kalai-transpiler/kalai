@@ -19,4 +19,8 @@ i = quotient;
 return result.toString();
 }
 }
+public static final void main(String[] args) {
+format(2345);
+System.out.println(format(2345));
+}
 }
