@@ -11,10 +11,21 @@ Multiple passes occur to incrementally transform Clojure to the target represent
 * Stringification
 
 ## Strategy
+
 ### Nano pass
+* Simplicity: It is better to perform several smaller transformations than a few big ones
+* Benefits:
+  - decomplection: isolation of effects of changing a pass
+  - reordering passes
+  - grouping/refactoring passes
+  - reusing passes within and across pipelines
+
 ### ASTs vs s-expressions
 * The preference for operating on s-expressions
+
 ### Hierarchy
+* It should be possible to find commonality among & reuse code for related languages
+  - Ex: Java syntax and semantics largely adapted from C++
 
 ### Leveraging data-oriented, declarative tools
 
@@ -31,6 +42,10 @@ Multiple passes occur to incrementally transform Clojure to the target represent
 * Concise
 
 #### Analyzer (macroexpand, normalize)
+* Identifies required & optional syntactic elements
+* Provides static analysis info
+  - Ex: lexically scoped environment at every AST node
+* Data-oriented plain data design like Clojure ecosystem
 
 ## The pipeline passes
 
@@ -40,20 +55,113 @@ Multiple passes occur to incrementally transform Clojure to the target represent
 * Pass order is important
 * Linear is easiest!
   - shared passes seem tricky, they bit us once already
+* Dependencies between passes should be as local / short-lived as possible
+  - Best is still avoiding dependencies
+  - But separate dependent passes could help with debugging and reasoning about code
+* When in doubt, when implementing new functionality, put it in a pass in the target language-specific pipeline phase, and then later on refactor into the Kalai construct phase of the pipeline if/when commonalities across target languages are understood
 
 #### Documentation
-
 * what does each pass do,
 * what does it assume,
 * why does it exist
 
-### Return statement insertion strategy
+### Return statement insertion strategy (kalai/annotate_return.clj)
+* what does it do
+* what does it assume
+* why does it exist
+
+* Strategy
+  * Find forms in tail position and wrap them with an `(return ...)` S-expression in the Kalai constructs portion of the pipeline
+  * Allow target-language specific handling of the `return` form (some languages require a `return` keyword, some may not)
+* Caveat
+  * Some expression forms in the input code may convert into more than one Kalai construct expression, and we wrap those with `(group...)` to allow a single return value from Meander rewrite rules
+  * See section below on `group`
 
 ### The group s-expressions
 * What does "group" mean, how are we using it?
 * How return statements interact with groups
 * Data literals in init statements in Java (example of groups)
 * Constructs in Clojure that have side-effects and return values (eg swap! interacting with groups)
+
+* TODO: see if these notes can be re-used later when filling in details for the section outline above for this `The group s-expressions` section
+  * Some expression forms in the input code may convert into more than one Kalai construct expression, and we wrap those with `(group...)` to allow a single return value from Meander rewrite rules
+  * We allow the "associative" property equivalence that `(return (group a b c))` is the same as `(group a b (return c))`
+  * Equivalence is brought into effect using the `shared/raise_stuff.clj` pass
+  * TODO: Explain what special case that the `shared/flatten_groups.clj` pass is handling (is it over-nested `group` forms? if so, how to describe that exact is that over-nesting scenario?)
+* TODO: Explain why we had to defer the flattening of the `group` form to be the first pass of the target language phase of the pipeline. It obviously could have been the last pass of the Kalai construct phase, and we did discuss this previously. Asking this question in terms of the return-group interactions
+* TODO: possibly reference or pull in initial text of the "Patterns" section explaining the creation of temp variables and gensyms for the temp variables
+
+### Flatten Groups (shared/flatten_groups.clj)
+* what does it do
+* what does it assume
+* why does it exist
+
+### Raise Stuff (shared/raise_stuff.clj)
+* what does it do
+* what does it assume
+* why does it exist
+
+### Translate to Java syntax "AST" / S-expressions (java/syntax.clj)
+* what does it do
+* what does it assume
+* why does it exist
+
+### Mappings (java/function-call.clj)
+* what does it do
+* what does it assume
+* why does it exist
+
+TODO: See if notes in the section "Interop / funtion call" should be referred to or pulled into this section
+
+This part of the pass pipeline considers "function call"
+as defined in terms of what most target languages think of.
+For example: println
+For anti example: + - * / are functions in Clojure but are operators in target languages.
+We adopt the Clojure view that constructors and methods are functions.
+Methods are functions of objects with args.
+Constructors are static functions.
+
+  * Core core
+    - println
+  * Kalai provided things
+  * OOP (Interop)
+    - constructors and methods
+  * User provided things!
+
+Operators are kinda different kinda similar (constructs), part of the syntax
+
+Symbols like `inc` resolve to vars like `clojure.core/inc`.
+Therefore we need to annotate them in the AST,
+so that when replacing function calls with target language equivalents,
+we replace the right things (not some locally scoped name).
+
+Operators have a further complication;
+in Clojure everything is a function,
+so it is possible to write a higher order function,
+and pass an "operator".
+Operators as values will need to be replaced with wrapper functions,
+either through provided interop or by the user.
+
+### Condense (java/condense.clj)
+* what does it do
+* what does it assume
+* why does it exist
+
+* Get rid of redundant nested blocks, ex: `{{ ... }}`
+* Get rid of redundant nested parenthases, ex: `(( ... ))`
+
+### Add imports (java/add_imports.clj)
+* what does it do
+* what does it assume
+* why does it exist
+
+* Still TBD
+* Intention: take care of boilerplate-ish known imports for target language's classes for data structures used in code
+
+### Stringify (java/string.clj)
+* what does it do
+* what does it assume
+* why does it exist
 
 ## Recursion
 
@@ -153,6 +261,8 @@ pub printer_fn(m: &HashMap) {
 
 ## Strategy for types, alias, metadata
 
+### Representing types in metadata
+
 In Clojure you can type hint and metadata let symbols,
 but not if they bind primitive values.
 
@@ -183,6 +293,8 @@ Information about the type nodes is captured in metadata if required,
 which enables us to use the simple structure.
 `(def ^{:t '{:map [:long ^:mut ^:opt :str]}} x)`
 
+### Type aliases
+
 We provide a type aliasing feature:
 1. `(def ^{:kalias {:map [:long :string]}} Z)` defines an alias Z which will not exist in the final output.
 2. `(def ^{:t Z} x)` uses the Alias Z, the final output will replace Z with `{:map [:long :string]}`.
@@ -191,6 +303,8 @@ Being equivalent to `(def ^{:t {:map [:long :string]} x)`.
 TODO: maybe using the :t convention is redundant...
 annotating the types doesn't conflict, but it adds noise and is easy to forget
 maybe allow ^{:map [:int :int]}
+
+### Invariants about types after the AST pass
 
 Invariants:
 1. a `{:t type}` will never be replaced
@@ -335,7 +449,9 @@ User defined types on target will not be replaced by type propagation.
 Here x keeps its type double, the type of x is not replaced by the type long of 1.
 
 
-## Notes
+## Notes to be reorganized
+
+### Data literals (using `group` S-expressions, etc.)
 
 Turning data literals into s-expressions, cannot use data literals in intermediate s-expressions.
 groups of statements in place of expressions are raised to above the statement,
@@ -346,6 +462,8 @@ When using data literals of sets and maps, the ordering of output statements
 may not necessarily correspond to the ordering of elements in the source code,
 due to Clojure's reader interpreting data literals before any other library or tool
 or our code can see it.
+
+### Writing tests for Kalai implementation
 
 When writing tests note that the output ordering might change,
 even if you just append items to the end of the input.
@@ -365,36 +483,7 @@ Do not use with sets, instead use `contains?`.
 Use contains if you want a boolean.
 
 
-## Mappings (function-call.clj)
 
-This part of the pass pipeline considers "function call"
-as defined in terms of what most target languages think of.
-For example: println
-For anti example: + - * / are functions in Clojure but are operators in target languages.
-We adopt the Clojure view that constructors and methods are functions.
-Methods are functions of objects with args.
-Constructors are static functions.
-
-  * Core core
-    - println
-  * Kalai provided things
-  * OOP (Interop)
-    - constructors and methods
-  * User provided things!
-
-Operators are kinda different kinda similar (constructs), part of the syntax
-
-Symbols like `inc` resolve to vars like `clojure.core/inc`.
-Therefore we need to annotate them in the AST,
-so that when replacing function calls with target language equivalents,
-we replace the right things (not some locally scoped name).
-
-Operators have a further complication;
-in Clojure everything is a function,
-so it is possible to write a higher order function,
-and pass an "operator".
-Operators as values will need to be replaced with wrapper functions,
-either through provided interop or by the user.
 
 ## Truthiness
 
@@ -413,7 +502,7 @@ Match all the groups inside an s-expression:
     ((m/or (group . !tmp-init ... !tmp-variable)
            !tmp-variable) ...)
 
-# Patterns
+## Patterns
 
 When we have an input form that represents an expression,
 but must be written in terms of multiple forms,
@@ -437,6 +526,8 @@ We create the group of forms that the input expands to,
 then we run the raise-forms pass to separate the return expression
 in the group from the preceeding initialization statements in the group.
 We require that the very next pass must flatten groups (remove any remaining).
+
+## Interop / function call (?)
 
 In choosing how to support fn invocations to interop methods
   - 2 options:
