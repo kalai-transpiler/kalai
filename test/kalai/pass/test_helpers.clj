@@ -55,7 +55,7 @@
                    (is (= ~expected (~remove-java b2c#)))
                    (println "Kalai to Java failed")))
                (reset! u/c 0)
-               (let [a2c# (c/compile-forms (~as ~input))]
+               (let [a2c# (c/transpile-forms (~as ~input))]
                  (testing "compiling to java"
                    (or (is (= a2c# b2c#))
                        (println "Clojure to Java failed")))))))))))

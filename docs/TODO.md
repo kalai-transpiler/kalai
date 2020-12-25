@@ -38,7 +38,6 @@
     - local action
 * Interop
   - Support import statements (ex: for user-defined classes; automatically created when user uses data collections)
-  - support String equality comparison properly
   - expand the "function-call" pass (core/interop/kalai/custom)
     - depends on us choosing another target language
   - see if starter code for rust and python works
@@ -48,6 +47,7 @@
   - try using `case` instead of `cond` in `getSeparatorPositions` of demo02
   - logic unit tests
 * Miscellaneous
+  - Filename syntax should be language specific
   - Update Design doc headings & organization
 * We think we have most of the proof of concept language concepts, but we need to hook up the tests
   - workflows (developer and CI)

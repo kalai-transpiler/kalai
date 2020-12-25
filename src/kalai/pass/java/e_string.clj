@@ -121,10 +121,19 @@
                                variable-name "=" (stringify value)))))
 
 (defn invoke-str [function-name & args]
-  (str (if (str/includes? function-name "-")
-         (csk/->camelCase function-name)
-         function-name)
-       (args-list args)))
+  (let [metameta (some-> function-name meta :var meta)]
+    (if metameta
+      (let [s (str (:ns metameta))
+            xs (str/split s #"\.")
+            packagename (str/join "." (for [z (butlast xs)]
+                                        (str/lower-case (csk/->camelCase z))))
+            classname (csk/->PascalCase (last xs))]
+        (str packagename "." classname "." (str (:name metameta))
+             (args-list args)))
+      (str (if (str/includes? function-name "-")
+             (csk/->camelCase function-name)
+             function-name)
+           (args-list args)))))
 
 (defn function-str [name params body]
   (if (= '-main name)
@@ -156,10 +165,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;")
 
+
+
 (defn class-str [ns-name body]
   (let [parts (str/split (str ns-name) #"\.")
-        package-name (csk/->camelCase (str/join "." (butlast parts)))
-        class-name (csk/->camelCase (last parts))]
+        package-name (str/lower-case (csk/->camelCase (str/join "." (butlast parts))))
+        class-name (csk/->PascalCase (last parts))]
     (line-separated
       (statement (space-separated 'package package-name))
       std-imports

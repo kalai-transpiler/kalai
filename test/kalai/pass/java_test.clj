@@ -115,12 +115,12 @@ return ++x;
                 (function f [x y]
                           (return (operator + x y))))
     ;;->
-    "package testPackage;
+    "package testpackage;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
-public class testClass {
+public class TestClass {
 public static final int f(final int x) {
 return ++x;
 }
@@ -264,12 +264,12 @@ final long y = 5;"))
                             (init z y)
                             (return z))))
     ;;->
-    "package testPackage;
+    "package testpackage;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
-public class testClass {
+public class TestClass {
 static final HashMap<Long,String> x;
 public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
 final HashMap<Long,String> z = y;
