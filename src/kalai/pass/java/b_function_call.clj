@@ -45,5 +45,10 @@
       (j/invoke clojure.lang.RT/get ?x ?k)
       (j/method get ?x ?k)
 
+      (j/operator ==
+                  (m/and (m/or (m/pred string?) (m/app meta {:t :string})) ?x)
+                  (m/and (m/or (m/pred string?) (m/app meta {:t :string})) ?y))
+      (j/method equals ?x ?y)
+
       ?else
       ?else)))

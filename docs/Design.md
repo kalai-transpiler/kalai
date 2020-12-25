@@ -59,6 +59,7 @@ Multiple passes occur to incrementally transform Clojure to the target represent
   - Best is still avoiding dependencies
   - But separate dependent passes could help with debugging and reasoning about code
 * When in doubt, when implementing new functionality, put it in a pass in the target language-specific pipeline phase, and then later on refactor into the Kalai construct phase of the pipeline if/when commonalities across target languages are understood
+* It seems like a good approach to not allow types to influence the Kalai syntax even though we carry type information. Instead type specific syntax should be langugage specific, because not all languages handle types the same
 
 #### Documentation
 * what does each pass do,

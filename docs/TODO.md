@@ -26,6 +26,7 @@
   - Might be a nice-to-have to propagate function return type to variable identifier in variable assignments, ex: `(def x (fn-call 1 2 3))`
   - Propagate return type of fn to a data literal passed as return value in fn body implementation, ex: `(defn f ^{:t {:mmap [:char :int]}} [] {})`
   - Option types
+  - (let [x (String. "abc")]) should infer :t :string
 * Test organization
   - grouping functionality
   - generate docsy from tests
@@ -42,6 +43,7 @@
     - depends on us choosing another target language
   - see if starter code for rust and python works
   - support array types (ex: Java main method)
+  - In C++ make sure that string concatenation of numbers is wrapped by std::to_string https://stackoverflow.com/questions/191757/how-to-concatenate-a-stdstring-and-an-int
 * Match demo01 and demo02
   - try using `case` instead of `cond` in `getSeparatorPositions` of demo02
   - logic unit tests

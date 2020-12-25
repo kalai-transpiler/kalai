@@ -111,13 +111,13 @@ static final HashMap<String,Character> groupingSeparatorsMap = getGroupingSepara
 public static final ArrayList<Integer> getSeparatorPositions(final int numLength, final String groupingStrategy) {
 final ArrayList<Integer> tmp7 = new ArrayList<Integer>();
 ArrayList<Integer> result = tmp7;
-if ((groupingStrategy == "NONE"))
+if (groupingStrategy.equals("NONE"))
 {
 return result;
 }
 else
 {
-if ((groupingStrategy == "ON_ALIGNED_3_3"))
+if (groupingStrategy.equals("ON_ALIGNED_3_3"))
 {
 int i = (numLength - 3);
 {
@@ -130,7 +130,7 @@ return result;
 }
 else
 {
-if ((groupingStrategy == "ON_ALIGNED_3_2"))
+if (groupingStrategy.equals("ON_ALIGNED_3_2"))
 {
 int i = (numLength - 3);
 {
@@ -143,7 +143,7 @@ return result;
 }
 else
 {
-if ((groupingStrategy == "MIN_2"))
+if (groupingStrategy.equals("MIN_2"))
 {
 if ((numLength <= 4))
 {

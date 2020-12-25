@@ -13,8 +13,14 @@
 (defn- parens [x]
   (str "(" x ")"))
 
-(defn- param-list [params]
-  (parens (str/join ", " params)))
+(defn- comma-separated [& xs]
+  (str/join ", " xs))
+
+(defn- params-list [params]
+  (parens (apply comma-separated params)))
+
+(defn- args-list [args]
+  (parens (apply comma-separated (map stringify args))))
 
 (defn- space-separated [& xs]
   (str/join " " xs))
@@ -118,26 +124,23 @@
   (str (if (str/includes? function-name "-")
          (csk/->camelCase function-name)
          function-name)
-       (param-list (map stringify args))))
+       (args-list args)))
 
 (defn function-str [name params body]
   (if (= '-main name)
     (do
       (assert (= '& (first params)) "Main method must have signature (defn -main [& args]...)")
       (str
-        (space-separated 'public 'static
-          'final
-          'void
-          'main)
-        (space-separated (param-list [(space-separated "String[]" (second params))])
-          (stringify body))))
+        (space-separated 'public 'static 'final 'void 'main)
+        (space-separated (params-list [(space-separated "String[]" (second params))])
+                         (stringify body))))
     (str
       (space-separated 'public 'static
-        (type-str params)
-        (csk/->camelCase name))
-      (space-separated (param-list (for [param params]
-                                     (space-separated (type-str param) param)))
-        (stringify body)))))
+                       (type-str params)
+                       (csk/->camelCase name))
+      (space-separated (params-list (for [param params]
+                                      (space-separated (type-str param) param)))
+                       (stringify body)))))
 
 (defn operator-str
   ([op x]
@@ -208,7 +211,7 @@ import java.util.ArrayList;")
        \newline "break;"))
 
 (defn method-str [method object & args]
-  (str object "." method (param-list (map stringify args))))
+  (str (pr-str object) "." method (args-list args)))
 
 (defn new-str [class-name & args]
   (space-separated
@@ -216,7 +219,7 @@ import java.util.ArrayList;")
                  class-name
                  (doto (t-str class-name)
                    (maybe-warn-type-missing class-name)))
-               (param-list args))))
+               (args-list args))))
 
 ;;;; This is the main entry point
 
