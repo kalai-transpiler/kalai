@@ -115,12 +115,12 @@ return ++x;
                 (function f [x y]
                           (return (operator + x y))))
     ;;->
-    "package testPackage;
+    "package testpackage;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
-public class testClass {
+public class TestClass {
 public static final int f(final int x) {
 return ++x;
 }
@@ -258,18 +258,18 @@ final long y = 5;"))
           z)))
     ;;->
     '(namespace test-package.test-class
-       (init x)
-       (function f [y]
-         (do
-           (init z y)
-           (return z))))
+                (init x)
+                (function f [y]
+                          (do
+                            (init z y)
+                            (return z))))
     ;;->
-    "package testPackage;
+    "package testpackage;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
-public class testClass {
+public class TestClass {
 static final HashMap<Long,String> x;
 public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
 final HashMap<Long,String> z = y;
@@ -319,20 +319,19 @@ tmp1.put(\":a\", \"asdf\");
 final HashMap<String,String> x = tmp1;"))
 
 (deftest generic-types5-test
-  #_
-  (inner-form
-    '(let [x ^{:t {:array [:string]}} ["arg1" "arg2"]]
-       (println x))
-    ;;->
-    '(do
-       (init x ["arg1" "arg2"])
-       (invoke println x))
-    ;;->
-    "final ArrayList<Long> tmp1 = new ArrayList<Long>();
-tmp1.add(1);
-tmp1.add(2);
-final ArrayList<Long> x = tmp1;
-System.out.println(x);"))
+  #_(inner-form
+      '(let [x ^{:t {:array [:string]}} ["arg1" "arg2"]]
+         (println x))
+      ;;->
+      '(do
+         (init x ["arg1" "arg2"])
+         (invoke println x))
+      ;;->
+      "final ArrayList<Long> tmp1 = new ArrayList<Long>();
+  tmp1.add(1);
+  tmp1.add(2);
+  final ArrayList<Long> x = tmp1;
+  System.out.println(x);"))
 
 ;; # Main entry point
 
@@ -448,11 +447,9 @@ tmp1.add(1);
 tmp1.add(2);
 final PSet<Long> x = tmp1;"))
 
-;; TODO: What about hetrogenus collections,
+;; TODO: What about heterogeneous collections,
 ;; do we want to allow them? [1 [2]] if so what is the type?
 ;; Do all languages have an "Object" concept?
-;; TODO: note the redundant typing of nested data literals,
-;; we should imply those from the parent type
 (deftest data-literals7-test
   (inner-form
     '(let [^{:t {:vector [{:vector [:long]}]}} x
@@ -472,6 +469,27 @@ tmp3.add(2);
 tmp1.add(tmp3);
 final PVector<PVector<Long>> x = tmp1;
 System.out.println(x);"))
+
+(deftest data-literals7-0-test
+  #_(top-level-form
+      '(defn f []
+         (let [x ^{:t {:vector [{:vector [:long]}]}}
+                 [[1] [2]]]
+           x)
+         ^{:t {:vector [{:vector [:long]}]}}
+         [[1] [2]])
+      ;;->
+      '(function f [] (return [[1] [2]]))
+      ;;->
+      "final PVector<PVector<Long>> tmp1 = new PVector<PVector<Long>>();
+  final PVector<Long> tmp2 = new PVector<Long>();
+  tmp2.add(1);
+  tmp1.add(tmp2);
+  final PVector<Long> tmp3 = new PVector<Long>();
+  tmp3.add(2);
+  tmp1.add(tmp3);
+  final PVector<PVector<Long>> x = tmp1;
+  System.out.println(x);"))
 
 (deftest data-literals7-1-test
   (inner-form
@@ -619,6 +637,46 @@ System.out.println(x);"))
     "final HashMap<String,Long> tmp1 = new HashMap<String,Long>();
 tmp1.put(\"key\", (1 + 2));
 final HashMap<String,Long> x = tmp1;"))
+
+(deftest string-equality-test
+  (inner-form
+    '(println (= "abc" "abc"))
+    ;;->
+    '(invoke println (operator == "abc" "abc"))
+    ;;->
+    "System.out.println(\"abc\".equals(\"abc\"));"))
+
+(deftest string-equality2-test
+  (inner-form
+    '(let [x "abc"
+           y "abc"]
+       (println (= x y)))
+    ;;->
+    '(do
+       (init x "abc")
+       (init y "abc")
+       (invoke println (operator == x y)))
+    ;;->
+    "final String x = \"abc\";
+final String y = \"abc\";
+System.out.println(x.equals(y));"))
+
+(deftest string-equality2-test
+  (inner-form
+    '(let [^{:t :string} x (String. "abc")
+           y "abc"]
+       (println (= x y)))
+    ;;->
+    '(do
+       (init x (new
+                 String
+                 "abc"))
+       (init y "abc")
+       (invoke println (operator == x y)))
+    ;;->
+    "final String x = new String(\"abc\");
+final String y = \"abc\";
+System.out.println(x.equals(y));"))
 
 (deftest foreach-test
   (inner-form
@@ -955,7 +1013,7 @@ System.out.println((tmp1 + 4));"))
     ;;->
     '(init x (invoke clojure.lang.RT/count "abc"))
     ;;->
-    "final int x = abc.length();"))
+    "final int x = \"abc\".length();"))
 
 (deftest zzz2-test
   (inner-form

@@ -13,7 +13,9 @@
             [camel-snake-kebab.core :as csk]
             [clojure.tools.analyzer.env :as env]
             [clojure.tools.reader :as reader])
-  (:import (java.io File)))
+  (:import (java.io File)
+           (java.nio.file Path)
+           (java.nio.file Paths)))
 
 (def ext {::l/rust ".rs"
           ::l/cpp  ".cpp"
@@ -44,33 +46,41 @@
 (defn analyze-forms [forms]
   (mapv az/analyze+eval forms))
 
-(defn compile-forms [forms]
+(defn transpile-forms [forms]
   (-> (analyze-forms forms)
       (rewriters)))
 
-(defn compile-source-file [file-path & [out verbose lang]]
+(defn transpile-source-file-content [file-path & [out verbose lang]]
   (with-redefs [azu/ns-url ns-url]
     (-> (az/analyze-ns file-path)
         (rewriters))))
 
-(defn write-target-file [s file-path out lang]
-  (let [file-path (csk/->camelCase file-path) ;; TODO: depends on lang
-        output-file (io/file (str out "/" (str/replace file-path #"\.clj[csx]?$" (ext lang))))]
+(defn javaize [^String filename]
+  (let [i (.lastIndexOf filename ".")]
+    (assert (pos? i) "must have an extension")
+    (str (csk/->PascalCase (subs filename 0 i))
+         (subs filename i))))
+
+(defn write-target-file [content ^String relative-path out lang]
+  (let [p (Paths/get relative-path (into-array String []))
+        filename (javaize (str (.getFileName p)))
+        package-name (str/lower-case (csk/->camelCase (str (.getParent p))))
+        output-file (io/file out package-name (str/replace filename #"\.clj[csx]?$" (ext lang)))]
     (.mkdirs (io/file (.getParent output-file)))
-    (spit output-file s)))
+    (spit output-file content)))
 
 (defn relative [^File base ^File file]
   (.getPath (.relativize (.toURI base) (.toURI file))))
 
-(defn compile [{:keys [in out language]}]
+(defn transpile [{:keys [in out language]}]
   (let [base (io/file in)]
     (doseq [^File file (file-seq base)
             :when (not (.isDirectory file))
-            :let [s (compile-source-file file)
+            :let [s (transpile-source-file-content file)
                   target (relative base file)]]
       (write-target-file s target out language))))
 
-(defn compile-target-file [file-path language target]
+(defn compile-target-file [^File file-path language target]
   (println "Compiling" (str file-path))
   (.mkdirs (io/file target))
   (let [{:keys [exit out err]} (sh/sh "javac" "-d" target (str file-path))]
@@ -80,7 +90,8 @@
         (println out)
         (println err)))))
 
-(defn target-compile [{:keys [out language target]}]
-  (doseq [^File file (file-seq (io/file out))
-          :when (not (.isDirectory file))]
-    (compile-target-file file language target)))
+(defn target-compile [{:keys [out language]}]
+  (let [{:keys [exit out err]} (sh/sh "gradle" "build" :dir "examples")]
+    (if (zero? exit)
+      nil
+      (str out \newline err))))

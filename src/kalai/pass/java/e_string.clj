@@ -13,8 +13,14 @@
 (defn- parens [x]
   (str "(" x ")"))
 
-(defn- param-list [params]
-  (parens (str/join ", " params)))
+(defn- comma-separated [& xs]
+  (str/join ", " xs))
+
+(defn- params-list [params]
+  (parens (apply comma-separated params)))
+
+(defn- args-list [args]
+  (parens (apply comma-separated (map stringify args))))
 
 (defn- space-separated [& xs]
   (str/join " " xs))
@@ -115,29 +121,35 @@
                                variable-name "=" (stringify value)))))
 
 (defn invoke-str [function-name & args]
-  (str (if (str/includes? function-name "-")
-         (csk/->camelCase function-name)
-         function-name)
-       (param-list (map stringify args))))
+  (let [metameta (some-> function-name meta :var meta)]
+    (if metameta
+      (let [s (str (:ns metameta))
+            xs (str/split s #"\.")
+            packagename (str/join "." (for [z (butlast xs)]
+                                        (str/lower-case (csk/->camelCase z))))
+            classname (csk/->PascalCase (last xs))]
+        (str packagename "." classname "." (str (:name metameta))
+             (args-list args)))
+      (str (if (str/includes? function-name "-")
+             (csk/->camelCase function-name)
+             function-name)
+           (args-list args)))))
 
 (defn function-str [name params body]
   (if (= '-main name)
     (do
       (assert (= '& (first params)) "Main method must have signature (defn -main [& args]...)")
       (str
-        (space-separated 'public 'static
-          'final
-          'void
-          'main)
-        (space-separated (param-list [(space-separated "String[]" (second params))])
-          (stringify body))))
+        (space-separated 'public 'static 'final 'void 'main)
+        (space-separated (params-list [(space-separated "String[]" (second params))])
+                         (stringify body))))
     (str
       (space-separated 'public 'static
-        (type-str params)
-        (csk/->camelCase name))
-      (space-separated (param-list (for [param params]
-                                     (space-separated (type-str param) param)))
-        (stringify body)))))
+                       (type-str params)
+                       (csk/->camelCase name))
+      (space-separated (params-list (for [param params]
+                                      (space-separated (type-str param) param)))
+                       (stringify body)))))
 
 (defn operator-str
   ([op x]
@@ -153,10 +165,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;")
 
+
+
 (defn class-str [ns-name body]
   (let [parts (str/split (str ns-name) #"\.")
-        package-name (csk/->camelCase (str/join "." (butlast parts)))
-        class-name (csk/->camelCase (last parts))]
+        package-name (str/lower-case (csk/->camelCase (str/join "." (butlast parts))))
+        class-name (csk/->PascalCase (last parts))]
     (line-separated
       (statement (space-separated 'package package-name))
       std-imports
@@ -208,7 +222,7 @@ import java.util.ArrayList;")
        \newline "break;"))
 
 (defn method-str [method object & args]
-  (str object "." method (param-list (map stringify args))))
+  (str (pr-str object) "." method (args-list args)))
 
 (defn new-str [class-name & args]
   (space-separated
@@ -216,7 +230,7 @@ import java.util.ArrayList;")
                  class-name
                  (doto (t-str class-name)
                    (maybe-warn-type-missing class-name)))
-               (param-list args))))
+               (args-list args))))
 
 ;;;; This is the main entry point
 

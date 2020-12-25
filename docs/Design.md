@@ -59,6 +59,7 @@ Multiple passes occur to incrementally transform Clojure to the target represent
   - Best is still avoiding dependencies
   - But separate dependent passes could help with debugging and reasoning about code
 * When in doubt, when implementing new functionality, put it in a pass in the target language-specific pipeline phase, and then later on refactor into the Kalai construct phase of the pipeline if/when commonalities across target languages are understood
+* It seems like a good approach to not allow types to influence the Kalai syntax even though we carry type information. Instead type specific syntax should be langugage specific, because not all languages handle types the same
 
 #### Documentation
 * what does each pass do,
@@ -550,3 +551,13 @@ In choosing how to support fn invocations to interop methods
     * provide a function (a Meander rewrite rule) that converts s-expressions
 
 We are mapping target language s-expressions (usually Interop or Clojure core functions) to target language syntax s-expressions
+
+Imports:
+* User code calling other parts of the same user code
+* User code relying on collection types that Kalai supports for the user (list,set,vector,mutable/persistent)
+* Certain languages might need imports for things like stringbuffer in python
+* User wanting to bring their own Kalai dependencies (from a jar file (not a directory))
+* User wanting to bring their own language specific dependencies
+* Topological sort to choose what to compile first (probably don't need this because files can be compile individually)
+
+* What if you want to produce a cross cloud library in multiple different languages.

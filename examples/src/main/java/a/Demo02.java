@@ -3,7 +3,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
-public class demo02 {
+public class Demo02 {
 public static final HashMap<Character,Integer> getDigitsMap() {
 final HashMap<Character,Integer> tmp1 = new HashMap<Character,Integer>();
 tmp1.put('٠', 0);
@@ -38,7 +38,7 @@ tmp1.put('8', 8);
 tmp1.put('9', 9);
 return tmp1;
 }
-static final HashMap<Character,Integer> digitsMap = getDigitsMap();
+static final HashMap<Character,Integer> digitsMap = a.Demo02.getDigitsMap();
 public static final int parse(final String s) {
 int result = 0;
 final int strLength = s.length();
@@ -99,7 +99,7 @@ tmp2.put("BENGALI", tmp5);
 final HashMap<String,ArrayList<Character>> m = tmp2;
 return m;
 }
-static final HashMap<String,ArrayList<Character>> numberSystemsMap = getNumberSystemsMap();
+static final HashMap<String,ArrayList<Character>> numberSystemsMap = a.Demo02.getNumberSystemsMap();
 public static final HashMap<String,Character> getGroupingSeparatorsMap() {
 final HashMap<String,Character> tmp6 = new HashMap<String,Character>();
 tmp6.put("ARABIC", '٬');
@@ -107,17 +107,17 @@ tmp6.put("LATIN", ',');
 tmp6.put("BENGALI", ',');
 return tmp6;
 }
-static final HashMap<String,Character> groupingSeparatorsMap = getGroupingSeparatorsMap();
+static final HashMap<String,Character> groupingSeparatorsMap = a.Demo02.getGroupingSeparatorsMap();
 public static final ArrayList<Integer> getSeparatorPositions(final int numLength, final String groupingStrategy) {
 final ArrayList<Integer> tmp7 = new ArrayList<Integer>();
 ArrayList<Integer> result = tmp7;
-if ((groupingStrategy == "NONE"))
+if (groupingStrategy.equals("NONE"))
 {
 return result;
 }
 else
 {
-if ((groupingStrategy == "ON_ALIGNED_3_3"))
+if (groupingStrategy.equals("ON_ALIGNED_3_3"))
 {
 int i = (numLength - 3);
 {
@@ -130,7 +130,7 @@ return result;
 }
 else
 {
-if ((groupingStrategy == "ON_ALIGNED_3_2"))
+if (groupingStrategy.equals("ON_ALIGNED_3_2"))
 {
 int i = (numLength - 3);
 {
@@ -143,7 +143,7 @@ return result;
 }
 else
 {
-if ((groupingStrategy == "MIN_2"))
+if (groupingStrategy.equals("MIN_2"))
 {
 if ((numLength <= 4))
 {
@@ -193,7 +193,7 @@ i = quotient;
 {
 final char sep = groupingSeparatorsMap.get(numberSystem);
 final int numLength = result.length();
-final ArrayList<Integer> separatorPositions = getSeparatorPositions(numLength, groupingStrategy);
+final ArrayList<Integer> separatorPositions = a.Demo02.getSeparatorPositions(numLength, groupingStrategy);
 final int numPositions = separatorPositions.size();
 int idx = 0;
 while ((idx < numPositions)) {
@@ -208,12 +208,12 @@ return result.toString();
 }
 }
 public static final void main(String[] args) {
-System.out.println(parse("٥٠٣٠١"));
-System.out.println(parse("৫০৩০১"));
-System.out.println(parse("7,654,321"));
-System.out.println(parse("76,54,321"));
-System.out.println(format(7654321, "LATIN", "ON_ALIGNED_3_2"));
-System.out.println(format(7654321, "ARABIC", "ON_ALIGNED_3_3"));
-System.out.println(format(7654321, "BENGALI", "ON_ALIGNED_3_3"));
+System.out.println(a.Demo02.parse("٥٠٣٠١"));
+System.out.println(a.Demo02.parse("৫০৩০১"));
+System.out.println(a.Demo02.parse("7,654,321"));
+System.out.println(a.Demo02.parse("76,54,321"));
+System.out.println(a.Demo02.format(7654321, "LATIN", "ON_ALIGNED_3_2"));
+System.out.println(a.Demo02.format(7654321, "ARABIC", "ON_ALIGNED_3_3"));
+System.out.println(a.Demo02.format(7654321, "BENGALI", "ON_ALIGNED_3_3"));
 }
 }

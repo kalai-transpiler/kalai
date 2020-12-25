@@ -21,7 +21,8 @@
   ([x label]
    (println (str "Spy: " label))
    (flush)
-   (doto x puget/cprint)))
+   (binding [*print-meta* true]
+     (doto x puget/cprint))))
 
 ;; TODO: we might not need this
 (defn match-tag? [tag x]

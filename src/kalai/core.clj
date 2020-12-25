@@ -30,6 +30,6 @@
       (let [{:keys [verbose]} options]
         (when verbose
           (println "Options" (pr-str options)))
-        (compile/compile options)
+        (compile/transpile options)
         (when verbose
           (println "Done"))))))
