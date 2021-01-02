@@ -42,13 +42,13 @@
         (invoke (u/var ~#'inc) ?x)
         (invoke clojure.lang.Numbers/inc ?x)
         (invoke clojure.lang.Numbers/unchecked_inc ?x))
-      (operator '++ ?x)
+      (operator + ?x 1)
 
       (m/or
         (invoke (u/var ~#'dec) ?x)
         (invoke clojure.lang.Numbers/dec ?x)
         (invoke clojure.lang.Numbers/unchecked_dec ?x))
-      (operator '-- ?x)
+      (operator - ?x 1)
 
       ;; varity operators
       (invoke + . !args ...)

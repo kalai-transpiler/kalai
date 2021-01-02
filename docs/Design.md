@@ -561,3 +561,26 @@ Imports:
 * Topological sort to choose what to compile first (probably don't need this because files can be compile individually)
 
 * What if you want to produce a cross cloud library in multiple different languages.
+
+
+Note: For Kalai code to execute as Clojure in a REPL,
+interop needs to be backed by Java classes,
+therefore any new abstract logical operation that we want to support across target languages
+must have a Java implementation.
+For that reason forcing a Java class to exist as the key in the map makes that requirement explicit
+while being an alternative to a more heavyweight version of defining interfaces and polymorphic dispatch
+(for example multi-methods)
+It doesn't allow us to share repetitive transpiled support in the way that multi-methods do.
+
+
+When translating interop calls, do we match on the Java syntax (ex: `(j/invoke (u/var ~#'println) & ?more) (j/invoke System.out.println & ?more)`, or the Kalai syntax? (ex: `(invoke println...) (...)`)
+
+## Supporting a new target language
+
+Current approach for supporting the 2nd language (Rust, after first supporting Java):
+
+* Copied all the files from Java pass to Rust pass
+* Updated namespace and includes
+* Searched for “java” and replaced with “rust” and replaced types
+* Replace j/* with r/*
+* Might want to write a definition of what statements etc are

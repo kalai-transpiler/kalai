@@ -69,10 +69,10 @@
          (inc x))
       ;;->
       '(function f [x]
-                 (return (operator ++ x)))
+                 (return (operator + x 1)))
       ;;->
       "public static final int f(final int x) {
-return ++x;
+return (x + 1);
 }")))
 
 ;; TODO: differentiate between mutable swap and not
@@ -111,7 +111,7 @@ return ++x;
     ;;->
     '(namespace test-package.test-class
                 (function f [x]
-                          (return (operator ++ x)))
+                          (return (operator + x 1)))
                 (function f [x y]
                           (return (operator + x y))))
     ;;->
@@ -122,7 +122,7 @@ import java.util.List;
 import java.util.ArrayList;
 public class TestClass {
 public static final int f(final int x) {
-return ++x;
+return (x + 1);
 }
 public static final int f(final int x, final int y) {
 return (x + y);
@@ -832,14 +832,13 @@ tmp1.put(\":b\", 2);"))
        (method put
                tmp1
                :a
-               (operator ++
-                         (method get tmp1 :a)))
+               (operator + (method get tmp1 :a) 1))
        tmp1)
     ;;->
     "final HashMap<String,Long> tmp2 = new HashMap<String,Long>();
 tmp2.put(\":a\", 1);
 final HashMap<String,Long> tmp1 = tmp2;
-tmp1.put(\":a\", ++tmp1.get(\":a\"));"))
+tmp1.put(\":a\", (tmp1.get(\":a\") + 1));"))
 
 (deftest conditional-expression-test
   ;; For simple expressions, a true ternary could be used instead
@@ -1003,9 +1002,9 @@ System.out.println((tmp1 + 4));"))
        (not (= 1 (inc 1))))
     ;;->
     '(invoke println
-             (operator ! (operator == 1 (operator ++ 1))))
+             (operator ! (operator == 1 (operator + 1 1))))
     ;;->
-    "System.out.println(!(1 == ++1));"))
+    "System.out.println(!(1 == (1 + 1)));"))
 
 (deftest zzz-test
   (inner-form

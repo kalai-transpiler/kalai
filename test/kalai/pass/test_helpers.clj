@@ -6,6 +6,7 @@
             [kalai.compile :as c]
             [kalai.pass.kalai.pipeline :as kalai-pipeline]
             [kalai.pass.java.pipeline :as java-pipeline]
+            [kalai.pass.rust.pipeline :as rust-pipeline]
             [kalai.util :as u]
             [clojure.string :as str]
             [clojure.tools.analyzer.jvm :as az]))
@@ -38,7 +39,9 @@
        (drop-last 2)
        (str/join \newline)))
 
-(defn test-form [input kalai-s-expression expected as remove-kalai remove-java]
+;; TODO: refactor target-language as an argument to this test fn, and
+;; create (a) map(s) with each target language's pipline fn, display name, etc.
+(defn test-form [input kalai-s-expression expected as remove-kalai remove-java target-lang-pipeline]
   `(do
      (reset! u/c 0)
      (is ;; to capture expections for test reporting
@@ -48,26 +51,54 @@
            (testing "compiling to kalai"
              (or (is (= ~kalai-s-expression (~remove-kalai a2b#)))
                  (println "Clojure to Kalai failed")))
-           (let [b2c# (java-pipeline/kalai->java a2b#)]
+           (let [b2c# (~target-lang-pipeline a2b#)]
              (and
-               (testing "compiling kalai to java"
+               (testing "compiling kalai to target"
                  (or
                    (is (= ~expected (~remove-java b2c#)))
-                   (println "Kalai to Java failed")))
+                   (println "Kalai to target failed")))
                (reset! u/c 0)
-               (let [a2c# (c/transpile-forms (~as ~input))]
-                 (testing "compiling to java"
+               #_(let [a2c# (c/transpile-forms (~as ~input))]
+                 (testing "compiling to target"
                    (or (is (= a2c# b2c#))
-                       (println "Clojure to Java failed")))))))))))
+                       (println "Clojure to target failed")))))))))))
 
 (defmacro ns-form [input kalai-s-expression expected]
   (test-form input kalai-s-expression expected
-             identity identity identity))
+             identity identity identity java-pipeline/kalai->java))
 
 (defmacro top-level-form [input kalai-s-expression expected]
   (test-form input kalai-s-expression expected
-             as-ns remove-kalai-class remove-java-class))
+             as-ns remove-kalai-class remove-java-class java-pipeline/kalai->java))
 
 (defmacro inner-form [input kalai-s-expression expected]
   (test-form input kalai-s-expression expected
-             as-function remove-kalai-function remove-java-function))
+             as-function remove-kalai-function remove-java-function java-pipeline/kalai->java))
+
+
+
+(defn remove-rust-class [s]
+  (->> s
+    (str/split-lines)
+    (drop 5)
+    (butlast)
+    (str/join \newline)))
+
+(defn remove-rust-function [s]
+  (->> s
+    (str/split-lines)
+    (drop 6)
+    (drop-last 2)
+    (str/join \newline)))
+
+(defmacro ns-form-rust [input kalai-s-expression expected]
+  (test-form input kalai-s-expression expected
+    identity identity identity rust-pipeline/kalai->rust))
+
+(defmacro top-level-form-rust [input kalai-s-expression expected]
+  (test-form input kalai-s-expression expected
+    as-ns remove-kalai-class remove-rust-class rust-pipeline/kalai->rust))
+
+(defmacro inner-form-rust [input kalai-s-expression expected]
+  (test-form input kalai-s-expression expected
+    as-function remove-kalai-function remove-rust-function rust-pipeline/kalai->rust))

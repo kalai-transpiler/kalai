@@ -1,5 +1,22 @@
 # TODO
 
+* Rust etc
+  - parameterize pipeline & test helpers to be target lang-driven
+  - add Java tests to Rust tests that we skipped over for temporary expediency reasons
+  - things that were difficult for emitter approach in Rust
+    - type modifiers
+      - if a fn param is both mutable and a reference
+        - fn param signature (ex1: `s: &String;` ex2: `s: &mut String`)
+        - annotation of call site arg expression to the fn param (ex1: `f(&my_string)`, ex2: `f(&mut my_string)`)
+        - but if `my_string` was previously defined as `let my_string: &String = &String::from("...")`, then call site would look different (ex1: `f(my_string)`, ex2: `f(mut my_string)`) to prevent passing a `&&String` type
+    - general type strategy that Kalai enforces
+      - primitive types to be "pass-by-value"
+      - all other types to be "pass-by-reference" (all other types = heap-allocated?)
+    - interop
+  - make shared passes apply for all target languages
+    - if so, can make them ignore leading target language symbol prefix (ex: "j/", "r/")
+  - add support for data literals in intialization
+  - support initialization for top-level forms (const vs. let, static and/or lazy_static!{..})
 * Types!!!
   - Document target language type conversions (when added)
   - Validate types and narrow the set of accepted types
@@ -40,8 +57,9 @@
   - Support import statements (ex: for user-defined classes; automatically created when user uses data collections)
   - expand the "function-call" pass (core/interop/kalai/custom)
     - depends on us choosing another target language
+    - core = clojure.core fns; interop = which Java classes to support (ex: StringBuffer) out-of-the-box; kalai = other users' Kalai source; custom = 3rd-party libs/fns that users need
   - see if starter code for rust and python works
-  - support array types (ex: Java main method)
+  - support array types (?) (ex: Java main method)
   - In C++ make sure that string concatenation of numbers is wrapped by std::to_string https://stackoverflow.com/questions/191757/how-to-concatenate-a-stdstring-and-an-int
 * Match demo01 and demo02
   - try using `case` instead of `cond` in `getSeparatorPositions` of demo02
@@ -49,6 +67,8 @@
 * Miscellaneous
   - Filename syntax should be language specific
   - Update Design doc headings & organization
+  - Throw warning/error if expression cannot be supported as statement in target language (target-language's a_syntax.clj)
+  - Delete the line "import java.util.List" from Java pipeline's e-string/std-imports
 * We think we have most of the proof of concept language concepts, but we need to hook up the tests
   - workflows (developer and CI)
     * documenting workflows (?)
@@ -73,7 +93,6 @@
 * Operator and language specific transformation (e.g. = in Clojure is either .equals java or ==)
 * test helper clean up
   - don't report failures twice
-* Rust etc
 * Support function calls where functions are defined in input code across namespaces
   - Solve importing
 * Allow users to bring their own functions
