@@ -1,8 +1,7 @@
 (ns kalai.pass.java.a-syntax
   (:require [kalai.util :as u]
             [meander.strategy.epsilon :as s]
-            [meander.epsilon :as m])
-  (:import (java.util HashSet)))
+            [meander.epsilon :as m]))
 
 ;;; -------- language constructs to syntax
 ;; expanded s-expressions below

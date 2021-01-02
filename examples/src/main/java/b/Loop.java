@@ -21,7 +21,7 @@ System.out.println(ii);
 int x = 0;
 {
 while ((x < 10)) {
-System.out.println(++x);
+System.out.println((x + 1));
 }
 if (true)
 {

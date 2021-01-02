@@ -119,6 +119,10 @@
     (j/class ?name (j/block . (m/app maybe-function !function) ...))
 
     ?else
-    ~(throw (ex-info "Raise namespace" {:else ?else}))))
+    ;; TODO: uncomment exception, make copy of this for each target language until
+    ;; we figure out a better solution
+    ;;~(throw (ex-info "Raise namespace" {:else ?else}))
+    ?else
+    ))
 
 
