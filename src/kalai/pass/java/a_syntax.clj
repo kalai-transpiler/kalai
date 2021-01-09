@@ -115,6 +115,8 @@
     ;;(if ?condition ?then ?else)
     ;;(j/ternary (m/app expression ?condition) (m/app expression ?then) (m/app expression ?else))
 
+    ;; when a conditional appears as an expression, we need a tmp variable,
+    ;; so we create a group.
     (m/and (if ?condition ?then)
            (m/let [?tmp (u/tmp-for ?then)]))
     (group

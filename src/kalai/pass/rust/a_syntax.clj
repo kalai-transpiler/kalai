@@ -15,9 +15,9 @@
            (m/let [?t (:t ?meta)
                    ?tmp (u/tmp ?t ?expr)]))
     ;;->
-    (group
+    (r/block
       (r/init ?tmp (r/new ?t))
-      . (r/expression-statement (r/method add ?tmp (m/app expression !x))) ...
+      . (r/expression-statement (r/method push ?tmp (m/app expression !x))) ...
       ?tmp)
 
     ;;;; map {}
@@ -28,9 +28,9 @@
            (m/let [?t (:t ?meta)
                    ?tmp (u/tmp ?t ?expr)]))
     ;;->
-    (group
+    (r/block
       (r/init ?tmp (r/new ?t))
-      . (r/expression-statement (r/method put ?tmp
+      . (r/expression-statement (r/method insert ?tmp
                                           (m/app expression !k)
                                           (m/app expression !v))) ...
       ?tmp)
@@ -43,9 +43,9 @@
            (m/let [?t (:t ?meta)
                    ?tmp (u/tmp ?t ?expr)]))
     ;;->
-    (group
+    (r/block
       (r/init ?tmp (r/new ?t))
-      . (r/expression-statement (r/method add ?tmp (m/app expression !k))) ...
+      . (r/expression-statement (r/method insert ?tmp (m/app expression !k))) ...
       ?tmp)
 
     ;; Interop
@@ -67,34 +67,10 @@
     (lambda ?name ?docstring ?body)
     (r/lambda ?name ?docstring ?body)
 
-    ;; conditionals as an expression must be ternaries, but ternaries cannot contain bodies
-    ;;(if ?condition ?then)
-    ;;(r/ternary (m/app expression ?condition) (m/app expression ?then) nil)
-
-    ;;(if ?condition ?then ?else)
-    ;;(r/ternary (m/app expression ?condition) (m/app expression ?then) (m/app expression ?else))
-
-    (m/and (if ?condition ?then)
-           (m/let [?tmp (u/tmp-for ?then)]))
-    (group
-      (r/init (m/app u/maybe-meta-assoc ?tmp :mut true))
-      (r/if (m/app expression ?condition)
-        (r/block (r/assign ?tmp (m/app expression ?then))))
-      ?tmp)
-
-    (m/and (if ?condition ?then ?else)
-           (m/let [?tmp (u/tmp-for ?then)]))
-    (group
-      (r/init (m/app u/maybe-meta-assoc ?tmp :mut true))
-      (r/if (m/app expression ?condition)
-        (r/block (r/assign ?tmp (m/app expression ?then)))
-        (r/block (r/assign ?tmp (m/app expression ?else))))
-      ?tmp)
-
     ;; faithfully reproduce Clojure semantics for do as a collection of
     ;; side-effect statements and a return expression
     (do . !x ... ?last)
-    (group
+    (r/block
       . (m/app statement !x) ...
       (m/app expression ?last))
 
@@ -159,21 +135,8 @@
       (assign ?name ?value)
       (r/assign ?name (m/app expression ?value))
 
-      (m/and
-        (m/or
-          (assign & _)
-          (operator ++ _)
-          (operator -- _)
-          (method & _)
-          (invoke & _)
-          (new & _))
-        ?expr)
-      (r/expression-statement (m/app expression ?expr))
-
-      ;; Java does not allow other expressions as statements,
-      ;; therefore not supporting in Rust, either
-      ?else
-      nil)))
+      ?expr
+      (r/expression-statement (m/app expression ?expr)))))
 
 (def function
   (s/rewrite
@@ -192,7 +155,6 @@
 (def rewrite
   (s/rewrite
     (namespace ?ns-name . !forms ...)
-    (r/class ?ns-name
-             (r/block . (m/app top-level-form !forms) ...))
+    (r/module . (m/app top-level-form !forms) ...)
 
     ?else ~(throw (ex-info "Expected a namespace" {:else ?else}))))

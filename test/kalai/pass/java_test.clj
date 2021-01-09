@@ -162,7 +162,7 @@ x = (x + 2);"))
            y (atom (int 2))
            z (int 1)]
        (reset! x (int 3))
-       (+ @x (deref y)))
+       (println (+ @x (deref y))))
     ;;->
     '(do
        (init x 1)
@@ -170,13 +170,15 @@ x = (x + 2);"))
        (init z 1)
        (do
          (assign x 3)
-         (operator + x y)))
+         (invoke println
+                 (operator + x y))))
     ;;->
     "int x = 1;
 int y = 2;
 final int z = 1;
 {
 x = 3;
+System.out.println((x + y));
 }"))
 
 (deftest local-variables3-test
