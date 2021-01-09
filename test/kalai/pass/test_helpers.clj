@@ -76,19 +76,17 @@
              as-function remove-kalai-function remove-java-function java-pipeline/kalai->java))
 
 
-
 (defn remove-rust-class [s]
   (->> s
     (str/split-lines)
     (drop 5)
-    (butlast)
     (str/join \newline)))
 
 (defn remove-rust-function [s]
   (->> s
     (str/split-lines)
     (drop 6)
-    (drop-last 2)
+    (butlast)
     (str/join \newline)))
 
 (defmacro ns-form-rust [input kalai-s-expression expected]

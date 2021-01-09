@@ -1,28 +1,36 @@
 (ns kalai.pass.rust-test
   (:require [clojure.test :refer [deftest testing is]]
-            [kalai.pass.test-helpers :refer [ns-form-rust top-level-form-rust inner-form-rust]]))
+            [kalai.pass.test-helpers
+             :refer [ns-form-rust top-level-form-rust inner-form-rust]
+             :rename {ns-form-rust ns-form
+                      top-level-form-rust top-level-form
+                      inner-form-rust inner-form}]))
 
 ;; # Creating Variables
 
 ;; TODO: this should be a static (top level "def")
 (deftest init1-test
-  (top-level-form-rust
+  (top-level-form
     '(def ^{:t :int} x 3)
     ;;->
     '(init x 3)
     ;;->
-    "let x: i32 = 3;"))
+    "lazy_static! {
+static ref x: i32 = 3;
+}"))
 
 (deftest init2-test
-  (top-level-form-rust
+  (top-level-form
     '(def ^Integer x)
     ;;->
     '(init x)
     ;;->
-    "let x: i32;"))
+    "lazy_static! {
+static ref x: i32 = ();
+}"))
 
 (deftest init3-test
-  (inner-form-rust
+  (inner-form
     '(let [^{:t :int} x 1]
        x)
     ;;->
@@ -30,11 +38,12 @@
        (init x 1)
        x)
     ;;->
-    "let x: i32 = 1;"))
+    "let x: i32 = 1;
+x;"))
 
 ;; TODO: do we even need to support this for Rust?
 #_(deftest init4-test
-  (inner-form-rust
+  (inner-form
     '(let [^Integer x (Integer. 1)]
        x)
     ;;->
@@ -47,7 +56,7 @@
 
 ;; TODO: def data literal in top level form
 (deftest init5-test
-  #_(top-level-form-rust
+  #_(top-level-form
       '(def x [1 2 3])
       ;;->
       '(init x [1 2 3])
@@ -67,7 +76,7 @@
 (deftest function-test
   (testing
     "In Kalai, you repesent a function just how you would in Clojure"
-    (top-level-form-rust
+    (top-level-form
       '(defn f ^Integer [^Integer x]
          (inc x))
       ;;->
@@ -84,7 +93,7 @@ return (x + 1);
       "Some Clojure forms expand to multiple statements.
       The way Kalai deals with this is by creating a group.
       That group is later unrolled as temporary variable assignments."
-      (top-level-form-rust
+      (top-level-form
         '(defn f ^{:t :int} []
            (let [x (atom (int 0))]
              (swap! x inc)))
@@ -106,7 +115,7 @@ return (x + 1);
 ;; end of transpiled Rust fn name to disambiguate
 ;; Multiple arity aka overloaded methods
 #_(deftest function3-test
-  (ns-form-rust
+  (ns-form
     '((ns test-package.test-class)
       (defn f
         (^{:t :int} [^{:t :int} x]
@@ -137,7 +146,7 @@ return (x + y);
 
 ;; Custom type void does not return a value
 (deftest function4-test
-  (top-level-form-rust
+  (top-level-form
     '(defn f ^{:t :void} [^long x]
        (println x x))
     ;;->
@@ -146,4 +155,146 @@ return (x + y);
     ;;->
     "pub fn f(x: i64) -> () {
 println!(\"{} {}\", x, x);
+}"))
+
+(deftest local-variables-test
+  (inner-form
+    '(let [x (atom (int 0))]
+       (reset! x (+ @x 2)))
+    ;;->
+    '(do
+       (init x 0)
+       (assign x (operator + x 2)))
+    ;;->
+    "let mut x: i32 = 0;
+x = (x + 2);"))
+
+(deftest local-variables2-test
+  (inner-form
+    '(let [x (atom (int 1))
+           y (atom (int 2))
+           z (int 1)]
+       (reset! x (int 3))
+       (println (+ @x (deref y))))
+    ;;->
+    '(do
+       (init x 1)
+       (init y 2)
+       (init z 1)
+       (do
+         (assign x 3)
+         (invoke println (operator + x y))))
+    ;;->
+    "let mut x: i32 = 1;
+let mut y: i32 = 2;
+let z: i32 = 1;
+{
+x = 3;
+println!(\"{}\", (x + y));
+}"))
+
+(deftest local-variables3-test
+  (inner-form
+    '(with-local-vars [^int x 1
+                       ^int y 2]
+       (println (+ (var-get x) (var-get y))))
+    ;;->
+    '(do (init x 1)
+         (init y 2)
+         (invoke println (operator + x y)))
+    ;;->
+    "let mut x: i32 = 1;
+let mut y: i32 = 2;
+println!(\"{}\", (x + y));"))
+
+;; TODO: mutable swap
+(deftest local-variables4-test
+  #_(inner-form
+      '(let [y (atom 2)]
+         (swap! y + 4))
+      ;;->
+      '(do
+         (init y 2)
+         (group
+           (assign y (operator + y 4))
+           y))
+      ;;->
+      ""))
+
+'(defn f {:t :void} []
+   (let [^:mut ^{:t :long} y (atom (- 2 4))]
+     (swap! y + 4)))
+
+(deftest local-variables5-test
+  (inner-form
+    '(let [^:mut ^{:t :long} y (atom (- 2 4))]
+       (swap! y + 4))
+    ;;->
+    '(do
+       (init y (operator - 2 4))
+       (group
+         (assign y (operator + y 4))
+         y))
+    ;;->
+    "let mut y: i64 = (2 - 4);
+y = (y + 4);
+y;"))
+
+;; # Types
+
+;; Exhibits the generosity of our type system
+(deftest primitives-types-test
+  (inner-form
+    '(do (def ^{:t :bool} x true)
+         (def x true)
+         (let [z true]
+           z)
+         (def ^{:t :long} y 5))
+    ;;->
+    '(do
+       (init x true)
+       (init x true)
+       (do
+         (init z true)
+         z)
+       (init y 5))
+    ;;->
+    "let x: bool = true;
+let x: bool = true;
+{
+let z: bool = true;
+z;
+}
+let y: i64 = 5;"))
+
+(deftest type-aliasing-test
+  (ns-form
+    '((ns test-package.test-class)
+      (def ^{:kalias {:mmap [:long :string]}} T)
+      (def ^{:t T} x {})
+      (defn f ^{:t T} [^{:t T} y]
+        (let [^{:t T} z y]
+          z)))
+    ;;->
+    '(namespace test-package.test-class
+                (init x {})
+                (function f [y]
+                          (do
+                            (init z y)
+                            (return z))))
+    ;;->
+    "#[macro_use]
+extern crate lazy_static;
+use std::collections::HashMap;
+use std::collections::HashSet;
+use std::vec::Vec;
+lazy_static! {
+static ref x: HashMap<i64,String> = {
+let tmp1: HashMap<i64,String> = HashMap::new();
+tmp1
+};
+}
+pub fn f(y: HashMap<i64,String>) -> HashMap<i64,String> {
+let z: HashMap<i64,String> = y;
+return z;
 }"))

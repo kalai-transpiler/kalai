@@ -165,8 +165,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;")
 
-
-
 (defn class-str [ns-name body]
   (let [parts (str/split (str ns-name) #"\.")
         package-name (str/lower-case (csk/->camelCase (str/join "." (butlast parts))))

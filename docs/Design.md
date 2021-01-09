@@ -79,10 +79,14 @@ Multiple passes occur to incrementally transform Clojure to the target represent
   * See section below on `group`
 
 ### The group s-expressions
+* Rust doesn't need groups because it has static blocks that return stuff,
+  and if statements return values.
 * What does "group" mean, how are we using it?
-* How return statements interact with groups
-* Data literals in init statements in Java (example of groups)
-* Constructs in Clojure that have side-effects and return values (eg swap! interacting with groups)
+* How return statements interact with groups.
+* Current use cases are:
+  * Data literals in init statements in Java (example of groups)
+  * Support for if statements as expressions
+  * do blocks that return a value
 
 * TODO: see if these notes can be re-used later when filling in details for the section outline above for this `The group s-expressions` section
   * Some expression forms in the input code may convert into more than one Kalai construct expression, and we wrap those with `(group...)` to allow a single return value from Meander rewrite rules
@@ -584,3 +588,36 @@ Current approach for supporting the 2nd language (Rust, after first supporting J
 * Searched for “java” and replaced with “rust” and replaced types
 * Replace j/* with r/*
 * Might want to write a definition of what statements etc are
+
+## Shadowing
+
+Clojure: Can only shadow in nested lexical scope except in a multiline let
+```
+(let [x 1
+      x 5]
+  x)
+```
+This could be problematic in Java unless a new scope is created for each binding.
+
+Java: can only shadow in nested lexical scope (not later in the same block)
+
+Rust:
+Can shadow anywhere (in nested lexical scope and in the same block)
+Inconsistency in syntax between mutable and immutable when crossed with initialization vs assignment.
+Basically an assignment to a mutable variable does not use a let keyword,
+but mutable initialization, immutable initialization, and immutable assignment do.
+<TODO: examples of these>
+
+## Rust
+
+* Rust doesn't need groups because it has static blocks that return stuff,
+  and if statements return values.
+* Note that do can be a statement or an expression (def x (do 1 2 3))),
+  in the latter case, the "block" must return the last thing,
+  in the form case it must not return a value because that would break the return type
+  when the case where it is used at the tail position of a void defn.
+* In cases were do is used as an expression we allow the last expression to be emitted
+  without a semi-colon at the end (as an implied return),
+  we could convert it to an explicit return.
+* We can pass data literals inline using blocks that contain temporary variable.
+  We keep the temporary variables and initialization code there instead of raising the initialization code like we did in Java.

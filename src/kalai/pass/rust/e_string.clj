@@ -40,7 +40,7 @@
 (defn block-str [& xs]
   (line-separated
     "{"
-    (apply line-separated (map stringify (remove nil? xs)))
+    (apply line-separated (map stringify xs))
     "}"))
 
 (defn assign-str [variable-name value]
@@ -82,13 +82,6 @@
     ?t
     ~(str (rust-type ?t))))
 
-
-(defn type-modifiers [s mut global]
-  (cond->> s
-           mut (space-separated "mut")
-           ;;global (space-separated "static")
-           ))
-
 (defn where [{:keys [file line column]}]
   (when file
     (str (.getName (io/file file)) ":" line ":" column)))
@@ -100,22 +93,32 @@
                (where (meta (:expr (meta x))))))))
 
 (defn type-str [variable-name]
-  (let [{:keys [t mut global]} (meta variable-name)]
+  (let [{:keys [t]} (meta variable-name)]
     (-> (t-str t)
-        (doto (maybe-warn-type-missing variable-name))
-        (type-modifiers mut global))))
+        (doto (maybe-warn-type-missing variable-name)))))
+
+(defn variable-name-type-str [variable-name]
+  (let [{:keys [mut]} (meta variable-name)]
+    (str (when mut "mut ") variable-name ": "
+         (type-str variable-name))))
 
 (defn init-str
   ([variable-name]
-   (statement (space-separated "let"
-                               (str variable-name ":")
-                               (type-str variable-name))))
+   (init-str variable-name nil))
   ([variable-name value]
-   (statement (space-separated "let"
-                               (str variable-name ":")
-                               (type-str variable-name)
-                               "="
-                               (stringify value)))))
+   (let [{:keys [global]} (meta variable-name)]
+     (if global
+       (line-separated
+         "lazy_static! {"
+         (statement (space-separated "static ref"
+                                     (variable-name-type-str variable-name)
+                                     "="
+                                     (stringify value)))
+         "}")
+       (statement (space-separated "let"
+                                   (variable-name-type-str variable-name)
+                                   "="
+                                   (stringify value)))))))
 
 (defn invoke-str [function-name & args]
   (let [metameta (some-> function-name meta :var meta)]
@@ -153,21 +156,16 @@
             (interpose op (map stringify (cons x xs)))))))
 
 (def std-imports
-  "use std:collections::HashMap;
+  "#[macro_use]
+extern crate lazy_static;
+use std::collections::HashMap;
 use std::collections::HashSet;
-use std::collections::Vec;")
+use std::vec::Vec;")
 
-
-
-(defn class-str [ns-name body]
-  (let [parts (str/split (str ns-name) #"\.")
-        package-name (str/lower-case (csk/->camelCase (str/join "." (butlast parts))))
-        class-name (csk/->PascalCase (last parts))]
-    (line-separated
-      (statement (space-separated 'package package-name))
-      std-imports
-      (space-separated 'public 'class class-name
-                       (stringify body)))))
+(defn module-str [& forms]
+  (apply line-separated
+    std-imports
+    (map stringify forms)))
 
 (defn return-str [x]
   (space-separated 'return (stringify x)))
@@ -216,18 +214,18 @@ use std::collections::Vec;")
 (defn method-str [method object & args]
   (str (pr-str object) "." method (args-list args)))
 
-(defn new-str [class-name & args]
-  (space-separated
-    "new" (str (if (symbol? class-name)
-                 class-name
-                 (doto (t-str class-name)
-                   (maybe-warn-type-missing class-name)))
-               (args-list args))))
+(defn new-str [t & args]
+  (str (if (symbol? t)
+         t
+         (doto (-> t (keys) (first) (rust-type))
+           (maybe-warn-type-missing t)))
+       "::new"
+       (args-list args)))
 
 ;;;; This is the main entry point
 
 (def str-fn-map
-  {'r/class                class-str
+  {'r/module               module-str
    'r/operator             operator-str
    'r/function             function-str
    'r/invoke               invoke-str
@@ -265,7 +263,7 @@ use std::collections::Vec;")
     (str \' ?c \')
 
     nil
-    "null"
+    "()"
 
     ?else
     (pr-str ?else)))

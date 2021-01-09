@@ -15,6 +15,7 @@
     - interop
   - make shared passes apply for all target languages
     - if so, can make them ignore leading target language symbol prefix (ex: "j/", "r/")
+    - a block is just a block, why bother with r/block, j/block
   - add support for data literals in intialization
   - support initialization for top-level forms (const vs. let, static and/or lazy_static!{..})
 * Types!!!
