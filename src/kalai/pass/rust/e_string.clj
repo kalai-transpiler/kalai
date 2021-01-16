@@ -222,6 +222,9 @@ use std::vec::Vec;")
        "::new"
        (args-list args)))
 
+(defn literal-str [s]
+  (pr-str s))
+
 ;;;; This is the main entry point
 
 (def str-fn-map
@@ -242,7 +245,8 @@ use std::vec::Vec;")
    'r/switch               switch-str
    'r/case                 case-str
    'r/method               method-str
-   'r/new                  new-str})
+   'r/new                  new-str
+   'r/literal              literal-str})
 
 (def stringify
   (s/match
@@ -257,10 +261,13 @@ use std::vec::Vec;")
                           {:form ?form})))))
 
     (m/pred keyword? ?k)
-    (pr-str (str ?k))
+    (str "String::from(" (pr-str (str ?k)) ")")
 
     (m/pred char? ?c)
     (str \' ?c \')
+
+    (m/pred string? ?s)
+    (str "String::from(" (pr-str ?s) ")")
 
     nil
     "()"

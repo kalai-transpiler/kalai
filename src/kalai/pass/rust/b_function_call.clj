@@ -23,8 +23,8 @@
     (s/rewrite
       (r/invoke (u/var ~#'println) & ?args)
       (r/invoke println!
-                ~(->> (repeat (count ?args) "{}")
-                      (str/join " "))
+                (r/literal ~(->> (repeat (count ?args) "{}")
+                                 (str/join " ")))
                 & ?args)
 
       (r/construct StringBuffer)
