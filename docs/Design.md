@@ -621,3 +621,26 @@ but mutable initialization, immutable initialization, and immutable assignment d
   we could convert it to an explicit return.
 * We can pass data literals inline using blocks that contain temporary variable.
   We keep the temporary variables and initialization code there instead of raising the initialization code like we did in Java.
+
+### How to handle nil?
+
+Can we ignore nil? No, b/c you have initialize Clojure state containers with something
+1. Everything is Option<T>, would have to know when to unwrap things
+  a. All types are Option<T>, all var names as expressions are unwrapped
+  b. Wrap the return
+  c. All args and return vals to/from user fns are Options
+  d. For non-user fns (ex: operators; println!) -- we have to unwrap everything;
+  For non-user fns that return values (ex: operators), wrap the result into an Option;
+  For non-user fns that don't return values (ex: println!), then we'll know, and we'll return a None
+  d. Is wrapping stuff sufficient when the value Option value is None (nil)
+2. Everything is a concrete type, ignore nils for now
+
+### How to handle ref(erence)s and literals (ex: String literals)
+
+* Depending on the interop functions / macros that we are calling, we will have to decide on each arg that we pass whether it is owned / borrowed / literal.  (Could it be just owned vs borrowed?)
+* For user functions, hopefully we can get away with assuming:
+  - All "primitives" are passed as owned to user functions
+  - All non-primitives are passed as references to user functions
+  - Basically, how Java works with primitives & objects
+* Currently, wrapping `r/literal` around strings that we create in implementation that should not become `String::from(...)` when stringified.
+  - We expect to wrap things in `r/borrowed` in the future, wherever needed (ex: specific interop method args; user fn args).

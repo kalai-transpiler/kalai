@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 public class Demo02 {
 public static final HashMap<Character,Integer> getDigitsMap() {
-final HashMap<Character,Integer> tmp1 = new HashMap<Character,Integer>();
+HashMap<Character,Integer> tmp1 = new HashMap<Character,Integer>();
 tmp1.put('٠', 0);
 tmp1.put('١', 1);
 tmp1.put('٢', 2);
@@ -59,8 +59,8 @@ return result;
 }
 }
 public static final HashMap<String,ArrayList<Character>> getNumberSystemsMap() {
-final HashMap<String,ArrayList<Character>> tmp2 = new HashMap<String,ArrayList<Character>>();
-final ArrayList<Character> tmp3 = new ArrayList<Character>();
+HashMap<String,ArrayList<Character>> tmp2 = new HashMap<String,ArrayList<Character>>();
+ArrayList<Character> tmp3 = new ArrayList<Character>();
 tmp3.add('٠');
 tmp3.add('١');
 tmp3.add('٢');
@@ -72,7 +72,7 @@ tmp3.add('٧');
 tmp3.add('٨');
 tmp3.add('٩');
 tmp2.put("ARABIC", tmp3);
-final ArrayList<Character> tmp4 = new ArrayList<Character>();
+ArrayList<Character> tmp4 = new ArrayList<Character>();
 tmp4.add('0');
 tmp4.add('1');
 tmp4.add('2');
@@ -84,7 +84,7 @@ tmp4.add('7');
 tmp4.add('8');
 tmp4.add('9');
 tmp2.put("LATIN", tmp4);
-final ArrayList<Character> tmp5 = new ArrayList<Character>();
+ArrayList<Character> tmp5 = new ArrayList<Character>();
 tmp5.add('০');
 tmp5.add('১');
 tmp5.add('২');
@@ -101,7 +101,7 @@ return m;
 }
 static final HashMap<String,ArrayList<Character>> numberSystemsMap = a.Demo02.getNumberSystemsMap();
 public static final HashMap<String,Character> getGroupingSeparatorsMap() {
-final HashMap<String,Character> tmp6 = new HashMap<String,Character>();
+HashMap<String,Character> tmp6 = new HashMap<String,Character>();
 tmp6.put("ARABIC", '٬');
 tmp6.put("LATIN", ',');
 tmp6.put("BENGALI", ',');
@@ -109,7 +109,7 @@ return tmp6;
 }
 static final HashMap<String,Character> groupingSeparatorsMap = a.Demo02.getGroupingSeparatorsMap();
 public static final ArrayList<Integer> getSeparatorPositions(final int numLength, final String groupingStrategy) {
-final ArrayList<Integer> tmp7 = new ArrayList<Integer>();
+ArrayList<Integer> tmp7 = new ArrayList<Integer>();
 ArrayList<Integer> result = tmp7;
 if (groupingStrategy.equals("NONE"))
 {

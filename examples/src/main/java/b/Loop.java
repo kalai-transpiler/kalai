@@ -10,7 +10,7 @@ while ((i < 10)) {
 System.out.println(i);
 i = ++i;
 }
-final ArrayList<Integer> tmp8 = new ArrayList<Integer>();
+ArrayList<Integer> tmp8 = new ArrayList<Integer>();
 tmp8.add(1);
 tmp8.add(2);
 tmp8.add(3);

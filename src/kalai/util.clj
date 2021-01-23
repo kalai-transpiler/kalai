@@ -11,7 +11,7 @@
   (symbol (str s (swap! c inc))))
 
 (defn tmp [type expr]
-  (with-meta (gensym2 "tmp") {:t type :expr expr}))
+  (with-meta (gensym2 "tmp") {:t type :expr expr :mut true}))
 
 (defn tmp-for [expr]
   (tmp (types/get-type expr) expr))

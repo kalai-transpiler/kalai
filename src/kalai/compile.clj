@@ -8,13 +8,9 @@
             [clojure.tools.analyzer.jvm.utils :as azu]
             [clojure.string :as str]
             [clojure.java.io :as io]
-            [puget.printer :as puget]
             [clojure.java.shell :as sh]
-            [camel-snake-kebab.core :as csk]
-            [clojure.tools.analyzer.env :as env]
-            [clojure.tools.reader :as reader])
+            [camel-snake-kebab.core :as csk])
   (:import (java.io File)
-           (java.nio.file Path)
            (java.nio.file Paths)))
 
 (def ext {::l/rust ".rs"

@@ -304,7 +304,7 @@ return z;
        (init x [1 2])
        (invoke println x))
     ;;->
-    "final ArrayList<Long> tmp1 = new ArrayList<Long>();
+    "ArrayList<Long> tmp1 = new ArrayList<Long>();
 tmp1.add(1);
 tmp1.add(2);
 final ArrayList<Long> x = tmp1;
@@ -316,7 +316,7 @@ System.out.println(x);"))
     ;;->
     '(init x {:a "asdf"})
     ;;->
-    "final HashMap<String,String> tmp1 = new HashMap<String,String>();
+    "HashMap<String,String> tmp1 = new HashMap<String,String>();
 tmp1.put(\":a\", \"asdf\");
 final HashMap<String,String> x = tmp1;"))
 
@@ -378,7 +378,7 @@ System.out.println(2);
     ;;->
     '(init x [1 2])
     ;;->
-    "final PVector<Long> tmp1 = new PVector<Long>();
+    "PVector<Long> tmp1 = new PVector<Long>();
 tmp1.add(1);
 tmp1.add(2);
 final PVector<Long> x = tmp1;"))
@@ -390,7 +390,7 @@ final PVector<Long> x = tmp1;"))
     ;;->
     '(init x [1 2])
     ;;->
-    "final ArrayList<Long> tmp1 = new ArrayList<Long>();
+    "ArrayList<Long> tmp1 = new ArrayList<Long>();
 tmp1.add(1);
 tmp1.add(2);
 final ArrayList<Long> x = tmp1;"))
@@ -404,7 +404,7 @@ final ArrayList<Long> x = tmp1;"))
        (init x [1 2])
        x)
     ;;->
-    "final ArrayList<Long> tmp1 = new ArrayList<Long>();
+    "ArrayList<Long> tmp1 = new ArrayList<Long>();
 tmp1.add(1);
 tmp1.add(2);
 final ArrayList<Long> x = tmp1;"))
@@ -418,11 +418,11 @@ final ArrayList<Long> x = tmp1;"))
        (init x [1 2])
        (assign x [3 4]))
     ;;->
-    "final PVector<Long> tmp1 = new PVector<Long>();
+    "PVector<Long> tmp1 = new PVector<Long>();
 tmp1.add(1);
 tmp1.add(2);
 PVector<Long> x = tmp1;
-final PVector<Long> tmp2 = new PVector<Long>();
+PVector<Long> tmp2 = new PVector<Long>();
 tmp2.add(3);
 tmp2.add(4);
 x = tmp2;"))
@@ -433,7 +433,7 @@ x = tmp2;"))
     ;;->
     '(init x {1 2 3 4})
     ;;->
-    "final PMap<Long,Long> tmp1 = new PMap<Long,Long>();
+    "PMap<Long,Long> tmp1 = new PMap<Long,Long>();
 tmp1.put(1, 2);
 tmp1.put(3, 4);
 final PMap<Long,Long> x = tmp1;"))
@@ -444,7 +444,7 @@ final PMap<Long,Long> x = tmp1;"))
     ;;->
     '(init x #{1 2})
     ;;->
-    "final PSet<Long> tmp1 = new PSet<Long>();
+    "PSet<Long> tmp1 = new PSet<Long>();
 tmp1.add(1);
 tmp1.add(2);
 final PSet<Long> x = tmp1;"))
@@ -462,11 +462,11 @@ final PSet<Long> x = tmp1;"))
        (init x [[1] [2]])
        (invoke println x))
     ;;->
-    "final PVector<PVector<Long>> tmp1 = new PVector<PVector<Long>>();
-final PVector<Long> tmp2 = new PVector<Long>();
+    "PVector<PVector<Long>> tmp1 = new PVector<PVector<Long>>();
+PVector<Long> tmp2 = new PVector<Long>();
 tmp2.add(1);
 tmp1.add(tmp2);
-final PVector<Long> tmp3 = new PVector<Long>();
+PVector<Long> tmp3 = new PVector<Long>();
 tmp3.add(2);
 tmp1.add(tmp3);
 final PVector<PVector<Long>> x = tmp1;
@@ -505,11 +505,11 @@ System.out.println(x);"))
                 2 ["hello" "there"]})
        (invoke println x))
     ;;->
-    "final HashMap<Long,ArrayList<String>> tmp1 = new HashMap<Long,ArrayList<String>>();
-final ArrayList<String> tmp2 = new ArrayList<String>();
+    "HashMap<Long,ArrayList<String>> tmp1 = new HashMap<Long,ArrayList<String>>();
+ArrayList<String> tmp2 = new ArrayList<String>();
 tmp2.add(\"hi\");
 tmp1.put(1, tmp2);
-final ArrayList<String> tmp3 = new ArrayList<String>();
+ArrayList<String> tmp3 = new ArrayList<String>();
 tmp3.add(\"hello\");
 tmp3.add(\"there\");
 tmp1.put(2, tmp3);
@@ -528,16 +528,16 @@ System.out.println(x);"))
                  #{2} ["hello" "there"]}])
        (invoke println x))
     ;;->
-    "final PVector<PMap<PSet<Long>,PVector<String>>> tmp1 = new PVector<PMap<PSet<Long>,PVector<String>>>();
-final PMap<PSet<Long>,PVector<String>> tmp2 = new PMap<PSet<Long>,PVector<String>>();
-final PSet<Long> tmp3 = new PSet<Long>();
+    "PVector<PMap<PSet<Long>,PVector<String>>> tmp1 = new PVector<PMap<PSet<Long>,PVector<String>>>();
+PMap<PSet<Long>,PVector<String>> tmp2 = new PMap<PSet<Long>,PVector<String>>();
+PSet<Long> tmp3 = new PSet<Long>();
 tmp3.add(1);
-final PVector<String> tmp4 = new PVector<String>();
+PVector<String> tmp4 = new PVector<String>();
 tmp4.add(\"hi\");
 tmp2.put(tmp3, tmp4);
-final PSet<Long> tmp5 = new PSet<Long>();
+PSet<Long> tmp5 = new PSet<Long>();
 tmp5.add(2);
-final PVector<String> tmp6 = new PVector<String>();
+PVector<String> tmp6 = new PVector<String>();
 tmp6.add(\"hello\");
 tmp6.add(\"there\");
 tmp2.put(tmp5, tmp6);
@@ -558,16 +558,16 @@ System.out.println(x);"))
                  #{2} ["hello" "there"]}])
        (invoke println x))
     ;;->
-    "final PVector<PMap<PSet<Long>,PVector<String>>> tmp1 = new PVector<PMap<PSet<Long>,PVector<String>>>();
-final PMap<PSet<Long>,PVector<String>> tmp2 = new PMap<PSet<Long>,PVector<String>>();
-final PSet<Long> tmp3 = new PSet<Long>();
+    "PVector<PMap<PSet<Long>,PVector<String>>> tmp1 = new PVector<PMap<PSet<Long>,PVector<String>>>();
+PMap<PSet<Long>,PVector<String>> tmp2 = new PMap<PSet<Long>,PVector<String>>();
+PSet<Long> tmp3 = new PSet<Long>();
 tmp3.add(1);
-final PVector<String> tmp4 = new PVector<String>();
+PVector<String> tmp4 = new PVector<String>();
 tmp4.add(\"hi\");
 tmp2.put(tmp3, tmp4);
-final PSet<Long> tmp5 = new PSet<Long>();
+PSet<Long> tmp5 = new PSet<Long>();
 tmp5.add(2);
-final PVector<String> tmp6 = new PVector<String>();
+PVector<String> tmp6 = new PVector<String>();
 tmp6.add(\"hello\");
 tmp6.add(\"there\");
 tmp2.put(tmp5, tmp6);
@@ -588,14 +588,14 @@ System.out.println(x);"))
        (init x [1 [2] 3 [[4]]])
        (invoke println x))
     ;;->
-    "final ArrayList<Object> tmp1 = new ArrayList<Object>();
+    "ArrayList<Object> tmp1 = new ArrayList<Object>();
 tmp1.add(1);
-final ArrayList<Long> tmp2 = new ArrayList<Long>();
+ArrayList<Long> tmp2 = new ArrayList<Long>();
 tmp2.add(2);
 tmp1.add(tmp2);
 tmp1.add(3);
-final ArrayList<Object> tmp3 = new ArrayList<Object>();
-final ArrayList<Long> tmp4 = new ArrayList<Long>();
+ArrayList<Object> tmp3 = new ArrayList<Object>();
+ArrayList<Long> tmp4 = new ArrayList<Long>();
 tmp4.add(4);
 tmp3.add(tmp4);
 tmp1.add(tmp3);
@@ -614,14 +614,14 @@ System.out.println(x);"))
        (init x {1 [{2 3} #{4 [5 6]}]})
        (invoke println x))
     ;;->
-    "final HashMap<Object,Object> tmp1 = new HashMap<Object,Object>();
-final ArrayList<Object> tmp2 = new ArrayList<Object>();
-final HashMap<Long,Long> tmp3 = new HashMap<Long,Long>();
+    "HashMap<Object,Object> tmp1 = new HashMap<Object,Object>();
+ArrayList<Object> tmp2 = new ArrayList<Object>();
+HashMap<Long,Long> tmp3 = new HashMap<Long,Long>();
 tmp3.put(2, 3);
 tmp2.add(tmp3);
-final HashSet<Object> tmp4 = new HashSet<Object>();
+HashSet<Object> tmp4 = new HashSet<Object>();
 tmp4.add(4);
-final ArrayList<Long> tmp5 = new ArrayList<Long>();
+ArrayList<Long> tmp5 = new ArrayList<Long>();
 tmp5.add(5);
 tmp5.add(6);
 tmp4.add(tmp5);
@@ -636,7 +636,7 @@ System.out.println(x);"))
     ;;->
     '(init x {"key" (operator + 1 2)})
     ;;->
-    "final HashMap<String,Long> tmp1 = new HashMap<String,Long>();
+    "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
 tmp1.put(\"key\", (1 + 2));
 final HashMap<String,Long> x = tmp1;"))
 
@@ -688,7 +688,7 @@ System.out.println(x.equals(y));"))
     '(foreach x [1 2 3 4]
               (invoke println x))
     ;;->
-    "final ArrayList<Long> tmp1 = new ArrayList<Long>();
+    "ArrayList<Long> tmp1 = new ArrayList<Long>();
 tmp1.add(1);
 tmp1.add(2);
 tmp1.add(3);
@@ -764,7 +764,7 @@ System.out.println(3);
     ;;->
     '(method get {:k 1} :k)
     ;;->
-    "final HashMap<String,Long> tmp1 = new HashMap<String,Long>();
+    "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
 tmp1.put(\":k\", 1);
 tmp1.get(\":k\");"))
 
@@ -774,7 +774,7 @@ tmp1.get(\":k\");"))
     ;;->
     '(method get #{:k} :k)
     ;;->
-    "final HashSet<String> tmp1 = new HashSet<String>();
+    "HashSet<String> tmp1 = new HashSet<String>();
 tmp1.add(\":k\");
 tmp1.get(\":k\");"))
 
@@ -821,7 +821,7 @@ b.length();
     ;;->
     '(method put {:a 1} :b 2)
     ;;->
-    "final HashMap<String,Long> tmp1 = new HashMap<String,Long>();
+    "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
 tmp1.put(\":a\", 1);
 tmp1.put(\":b\", 2);"))
 
@@ -837,9 +837,9 @@ tmp1.put(\":b\", 2);"))
                (operator + (method get tmp1 :a) 1))
        tmp1)
     ;;->
-    "final HashMap<String,Long> tmp2 = new HashMap<String,Long>();
+    "HashMap<String,Long> tmp2 = new HashMap<String,Long>();
 tmp2.put(\":a\", 1);
-final HashMap<String,Long> tmp1 = tmp2;
+HashMap<String,Long> tmp1 = tmp2;
 tmp1.put(\":a\", (tmp1.get(\":a\") + 1));"))
 
 (deftest conditional-expression-test
@@ -986,7 +986,7 @@ tmp2 = 2;
 }
 else
 {
-final PVector<Long> tmp3 = new PVector<Long>();
+PVector<Long> tmp3 = new PVector<Long>();
 tmp3.add(3);
 {
 tmp2 = tmp3;
@@ -1039,7 +1039,7 @@ System.out.println(s.charAt(1));"))
        (invoke println
                (invoke clojure.lang.RT/nth v 1)))
     ;;->
-    "final ArrayList<Integer> tmp1 = new ArrayList<Integer>();
+    "ArrayList<Integer> tmp1 = new ArrayList<Integer>();
 tmp1.add(1);
 tmp1.add(2);
 tmp1.add(3);
@@ -1061,7 +1061,7 @@ System.out.println(v.get(1));"))
          (method add result i)
          (assign i (operator - i 3))))
     ;;->
-    "final ArrayList<Integer> tmp1 = new ArrayList<Integer>();
+    "ArrayList<Integer> tmp1 = new ArrayList<Integer>();
 ArrayList<Integer> result = tmp1;
 int i = 10;
 while ((0 < i)) {
@@ -1179,7 +1179,7 @@ System.out.println(z);"))
        (init z y)
        (invoke println z))
     ;;->
-    "final ArrayList<Integer> tmp1 = new ArrayList<Integer>();
+    "ArrayList<Integer> tmp1 = new ArrayList<Integer>();
 final ArrayList<Integer> x = tmp1;
 final ArrayList<Integer> y = x;
 final ArrayList<Integer> z = y;
@@ -1232,9 +1232,9 @@ System.out.println(x);"))
        (init x [])
        (assign x [1 2 3]))
     ;;->
-    "final ArrayList<Long> tmp1 = new ArrayList<Long>();
+    "ArrayList<Long> tmp1 = new ArrayList<Long>();
 ArrayList<Long> x = tmp1;
-final ArrayList<Long> tmp2 = new ArrayList<Long>();
+ArrayList<Long> tmp2 = new ArrayList<Long>();
 tmp2.add(1);
 tmp2.add(2);
 tmp2.add(3);
@@ -1250,7 +1250,7 @@ x = tmp2;"))
        (init x [])
        (method add x 1))
     ;;->
-    "final ArrayList<Long> tmp1 = new ArrayList<Long>();
+    "ArrayList<Long> tmp1 = new ArrayList<Long>();
 ArrayList<Long> x = tmp1;
 x.add(1);"))
 
@@ -1321,7 +1321,7 @@ return i;
        (init result [])
        result)
     ;;->
-    "final ArrayList<Integer> tmp1 = new ArrayList<Integer>();
+    "ArrayList<Integer> tmp1 = new ArrayList<Integer>();
 ArrayList<Integer> result = tmp1;"))
 
 (deftest foo2-test

@@ -290,7 +290,7 @@ use std::collections::HashSet;
 use std::vec::Vec;
 lazy_static! {
 static ref x: HashMap<i64,String> = {
-let tmp1: HashMap<i64,String> = HashMap::new();
+let mut tmp1: HashMap<i64,String> = HashMap::new();
 tmp1
 };
 }
@@ -298,3 +298,53 @@ pub fn f(y: HashMap<i64,String>) -> HashMap<i64,String> {
 let z: HashMap<i64,String> = y;
 return z;
 }"))
+
+;; TODO: figure out nil strategy for Rust
+(deftest generic-types-test
+  #_(top-level-form
+    '(def ^{:t {:mmap [:long :string]}} x)
+    ;;->
+    '(init x)
+    ;;->
+    "lazy_static! {
+static ref x: HashMap<i64,String> = ();
+}"))
+
+(deftest generic-types2-test
+  #_(top-level-form
+    '(def ^{:t {:mmap [:string {:mvector [:char]}]}} x)
+    ;;->
+    '(init x)
+    ;;->
+    "static final HashMap<String,ArrayList<Character>> x;"))
+
+
+(deftest generic-types3-test
+  (inner-form
+    '(let [x ^{:t {:mvector [:long]}} [1 2]]
+       (println x))
+    ;;->
+    '(do
+       (init x [1 2])
+       (invoke println x))
+    ;;->
+    "let x: Vec<i64> = {
+let mut tmp1: Vec<i64> = Vec::new();
+tmp1.push(1);
+tmp1.push(2);
+tmp1
+};
+println!(\"{}\", x);"))
+
+(deftest generic-types4-test
+  (inner-form
+    '(def ^{:t {:mmap [:string :string]}} x {:a "asdf"})
+    ;;->
+    '(init x {:a "asdf"})
+    ;;->
+    "let x: HashMap<String,String> = {
+let mut tmp1: HashMap<String,String> = HashMap::new();
+tmp1.insert(String::from(\":a\"), String::from(\"asdf\"));
+tmp1
+};"))
+
