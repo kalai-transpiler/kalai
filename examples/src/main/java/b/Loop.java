@@ -8,7 +8,7 @@ public static final int add(final int a, final int b) {
 long i = 0;
 while ((i < 10)) {
 System.out.println(i);
-i = ++i;
+i = (i + 1);
 }
 ArrayList<Integer> tmp8 = new ArrayList<Integer>();
 tmp8.add(1);

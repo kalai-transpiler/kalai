@@ -4,7 +4,8 @@
             [clojure.string :as str]
             [camel-snake-kebab.core :as csk]
             [puget.printer :as puget]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io])
+  (:import (clojure.lang IMeta)))
 
 (declare stringify)
 
@@ -99,7 +100,7 @@
 
 (defn variable-name-type-str [variable-name]
   (let [{:keys [mut]} (meta variable-name)]
-    (str (when mut "mut ") variable-name ": "
+    (str (when mut "mut ") (csk/->snake_case variable-name) ": "
          (type-str variable-name))))
 
 (defn init-str
@@ -135,14 +136,17 @@
     (do
       (assert (= '& (first params)) "Main method must have signature (defn -main [& args]...)")
       (str
-        (space-separated 'public 'static 'final 'void 'main)
-        (space-separated (params-list [(space-separated "String[]" (second params))])
-                         (stringify body))))
+        (space-separated 'fn 'main (params-list [])
+                         (line-separated "{"
+                                         (str "let " (csk/->snake_case (second params)) ": Vec<String> = env::args().collect();")
+                                         (stringify body)
+                                         "}"))))
     (str
       (space-separated "pub" "fn"
-                       (csk/->camelCase name))
+                       (csk/->snake_case name))
       (space-separated (params-list (for [param params]
-                                      (space-separated (str param ":") (type-str param))))
+                                      (space-separated (str (csk/->snake_case param) ":")
+                                                       (type-str param))))
                        "->"
                        (type-str params)
                        (stringify body)))))
@@ -160,7 +164,8 @@
 extern crate lazy_static;
 use std::collections::HashMap;
 use std::collections::HashSet;
-use std::vec::Vec;")
+use std::vec::Vec;
+use std::env;")
 
 (defn module-str [& forms]
   (apply line-separated
@@ -171,25 +176,21 @@ use std::vec::Vec;")
   (space-separated 'return (stringify x)))
 
 (defn while-str [condition body]
-  (space-separated 'while (parens (stringify condition))
+  (space-separated 'while (stringify condition)
                    (stringify body)))
 
 (defn foreach-str [sym xs body]
-  (space-separated 'for (parens (space-separated (type-str sym) sym ":" (stringify xs)))
-                   (stringify body)))
-
-(defn for-str [initialization termination increment body]
-  (space-separated 'for (parens (str/join "; " (map stringify [initialization termination increment])))
+  (space-separated 'for (space-separated sym "in" (stringify xs))
                    (stringify body)))
 
 (defn if-str
   ([test then]
    (line-separated
-     (space-separated 'if (parens (stringify test)))
+     (space-separated 'if (stringify test))
      (stringify then)))
   ([test then else]
    (line-separated
-     (space-separated 'if (parens (stringify test)))
+     (space-separated 'if (stringify test))
      (stringify then)
      'else
      (stringify else))))
@@ -212,7 +213,7 @@ use std::vec::Vec;")
        \newline "break;"))
 
 (defn method-str [method object & args]
-  (str (pr-str object) "." method (args-list args)))
+  (str (stringify object) "." method (args-list args)))
 
 (defn new-str [t & args]
   (str (if (symbol? t)
@@ -224,6 +225,12 @@ use std::vec::Vec;")
 
 (defn literal-str [s]
   (pr-str s))
+
+(defn ref-str [s]
+  (if (and (instance? IMeta s)
+           (:ref (meta s)))
+    (stringify s)
+    (str "&" (stringify s))))
 
 ;;;; This is the main entry point
 
@@ -238,7 +245,6 @@ use std::vec::Vec;")
    'r/expression-statement expression-statement-str
    'r/return               return-str
    'r/while                while-str
-   'r/for                  for-str
    'r/foreach              foreach-str
    'r/if                   if-str
    'r/ternary              ternary-str
@@ -246,7 +252,8 @@ use std::vec::Vec;")
    'r/case                 case-str
    'r/method               method-str
    'r/new                  new-str
-   'r/literal              literal-str})
+   'r/literal              literal-str
+   'r/ref                  ref-str})
 
 (def stringify
   (s/match
@@ -271,6 +278,10 @@ use std::vec::Vec;")
 
     nil
     "()"
+
+    ;; identifier
+    (m/pred symbol? ?s)
+    (csk/->snake_case (str ?s))
 
     ?else
     (pr-str ?else)))

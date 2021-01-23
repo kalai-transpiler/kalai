@@ -54,12 +54,7 @@
       (r/method (m/app nth-for ?x) ?x ?n)
 
       (r/invoke clojure.lang.RT/get ?x ?k)
-      (r/method get ?x ?k)
-
-      (r/operator ==
-        (m/and (m/or (m/pred string?) (m/app meta {:t :string})) ?x)
-        (m/and (m/or (m/pred string?) (m/app meta {:t :string})) ?y))
-      (r/method equals ?x ?y)
+      (r/method get ?x (r/ref ?k))
 
       ?else
       ?else)))
