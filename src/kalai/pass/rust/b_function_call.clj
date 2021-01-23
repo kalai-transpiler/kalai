@@ -54,7 +54,7 @@
       (r/method (m/app nth-for ?x) ?x ?n)
 
       (r/invoke clojure.lang.RT/get ?x ?k)
-      (r/method get ?x ?k)
+      (r/method get ?x (r/ref ?k))
 
       ?else
       ?else)))

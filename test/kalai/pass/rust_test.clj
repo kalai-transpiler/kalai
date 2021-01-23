@@ -788,3 +788,59 @@ x = (x + 1);
     "while true {
 println!(\"{}\", String::from(\"hi\"));
 }"))
+
+(deftest conditional2-test
+  (inner-form
+    '(cond true (println 1)
+           false (println 2)
+           true (println 3))
+    ;;->
+    '(if true
+       (invoke println 1)
+       (if false
+         (invoke println 2)
+         (if true
+           (invoke println 3))))
+    ;;->
+    "if true
+{
+println!(\"{}\", 1);
+}
+else
+{
+if false
+{
+println!(\"{}\", 2);
+}
+else
+{
+if true
+{
+println!(\"{}\", 3);
+}
+}
+}"))
+
+(deftest keywords-as-functions-test
+  (inner-form
+    '(println (:k ^{:t {:mmap [:string :long]}} {:k 1}))
+    ;;->
+    '(invoke println (invoke clojure.lang.RT/get {:k 1} :k))
+    ;;->
+    "println!(\"{}\", {
+let mut tmp_1: HashMap<String,i64> = HashMap::new();
+tmp_1.insert(String::from(\":k\"), 1);
+tmp_1
+}.get(&String::from(\":k\")));"))
+
+(deftest keywords-as-functions2-test
+  (inner-form
+    '(:k ^{:t {:mset [:string]}} #{:k})
+    ;;->
+    '(invoke clojure.lang.RT/get #{:k} :k)
+    ;;->
+    "{
+let mut tmp_1: HashSet<String> = HashSet::new();
+tmp_1.insert(String::from(\":k\"));
+tmp_1
+}.get(&String::from(\":k\"));"))

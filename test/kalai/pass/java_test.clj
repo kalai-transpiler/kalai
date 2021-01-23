@@ -787,7 +787,7 @@ System.out.println(3);
   (inner-form
     '(:k ^{:t {:mmap [:string :long]}} {:k 1})
     ;;->
-    '(method get {:k 1} :k)
+    '(invoke clojure.lang.RT/get {:k 1} :k)
     ;;->
     "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
 tmp1.put(\":k\", 1);
@@ -797,7 +797,7 @@ tmp1.get(\":k\");"))
   (inner-form
     '(:k ^{:t {:mset [:string]}} #{:k})
     ;;->
-    '(method get #{:k} :k)
+    '(invoke clojure.lang.RT/get #{:k} :k)
     ;;->
     "HashSet<String> tmp1 = new HashSet<String>();
 tmp1.add(\":k\");

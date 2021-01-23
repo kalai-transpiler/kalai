@@ -4,7 +4,8 @@
             [clojure.string :as str]
             [camel-snake-kebab.core :as csk]
             [puget.printer :as puget]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io])
+  (:import (clojure.lang IMeta)))
 
 (declare stringify)
 
@@ -225,6 +226,12 @@ use std::env;")
 (defn literal-str [s]
   (pr-str s))
 
+(defn ref-str [s]
+  (if (and (instance? IMeta s)
+           (:ref (meta s)))
+    (stringify s)
+    (str "&" (stringify s))))
+
 ;;;; This is the main entry point
 
 (def str-fn-map
@@ -245,7 +252,8 @@ use std::env;")
    'r/case                 case-str
    'r/method               method-str
    'r/new                  new-str
-   'r/literal              literal-str})
+   'r/literal              literal-str
+   'r/ref                  ref-str})
 
 (def stringify
   (s/match

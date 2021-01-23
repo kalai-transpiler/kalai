@@ -6,11 +6,11 @@
   (s/bottom-up
     (s/rewrite
       (invoke (m/pred keyword? ?k) ?x)
-      (method get ?x ?k)
+      (invoke clojure.lang.RT/get ?x ?k)
 
       (invoke (m/pred keyword? ?k) ?x ?default)
       (if (contains? ?x ?k)
-        (method get ?x ?k)
+        (invoke clojure.lang.RT/get ?x ?k)
         ?default)
 
       ?else ?else)))
