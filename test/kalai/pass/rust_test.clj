@@ -398,3 +398,393 @@ static ref my_var: i64 = 1;
 let my_binding: i64 = 2;
 return my_binding;
 }"))
+
+;; # Conditionals
+
+(deftest conditional-test
+  (inner-form
+    '(if true
+       (println 1)
+       (println 2))
+    ;;->
+    '(if true
+       (invoke println 1)
+       (invoke println 2))
+    ;;->
+    "if true
+{
+println!(\"{}\", 1);
+}
+else
+{
+println!(\"{}\", 2);
+}"))
+
+;; # Data Literals
+
+;; TODO: will change when we use a persistent collection library
+(deftest data-literals-test
+  (inner-form
+    '(def ^{:t {:vector [:long]}} x [1 2])
+    ;;->
+    '(init x [1 2])
+    ;;->
+    "let x: PVector<i64> = {
+let mut tmp_1: PVector<i64> = PVector::new();
+tmp_1.push(1);
+tmp_1.push(2);
+tmp_1
+};"))
+
+(deftest data-literals2-test
+  (top-level-form
+    '(def x ^{:t {:mvector [:long]}} [1 2])
+    ;;->
+    '(init x [1 2])
+    ;;->
+    "lazy_static! {
+static ref x: Vec<i64> = {
+let mut tmp_1: Vec<i64> = Vec::new();
+tmp_1.push(1);
+tmp_1.push(2);
+tmp_1
+};
+}"))
+
+(deftest data-literals3-test
+  (inner-form
+    '(let [^{:t {:mvector [:long]}} x [1 2]]
+       x)
+    ;;->
+    '(do
+       (init x [1 2])
+       x)
+    ;;->
+    "let x: Vec<i64> = {
+let mut tmp_1: Vec<i64> = Vec::new();
+tmp_1.push(1);
+tmp_1.push(2);
+tmp_1
+};
+x;"))
+
+(deftest data-literals4-test
+  (inner-form
+    '(let [x (atom ^{:t {:vector [:long]}} [1 2])]
+       (reset! x ^{:t {:vector [:long]}} [3 4]))
+    ;;->
+    '(do
+       (init x [1 2])
+       (assign x [3 4]))
+    ;;->
+    "let mut x: PVector<i64> = {
+let mut tmp_1: PVector<i64> = PVector::new();
+tmp_1.push(1);
+tmp_1.push(2);
+tmp_1
+};
+x = {
+let mut tmp_2: PVector<i64> = PVector::new();
+tmp_2.push(3);
+tmp_2.push(4);
+tmp_2
+};"))
+
+(deftest data-literals5-test
+  (inner-form
+    '(def x ^{:t {:map [:long :long]}} {1 2 3 4})
+    ;;->
+    '(init x {1 2 3 4})
+    ;;->
+    "let x: PMap<i64,i64> = {
+let mut tmp_1: PMap<i64,i64> = PMap::new();
+tmp_1.insert(1, 2);
+tmp_1.insert(3, 4);
+tmp_1
+};"))
+
+(deftest data-literals6-test
+  (inner-form
+    '(def x ^{:t {:set [:long]}} #{1 2})
+    ;;->
+    '(init x #{1 2})
+    ;;->
+    "let x: PSet<i64> = {
+let mut tmp_1: PSet<i64> = PSet::new();
+tmp_1.insert(1);
+tmp_1.insert(2);
+tmp_1
+};"))
+
+;; TODO: What about heterogeneous collections,
+;; do we want to allow them? [1 [2]] if so what is the type?
+;; Do all languages have an "Object" concept?
+(deftest data-literals7-test
+  (inner-form
+    '(let [^{:t {:vector [{:vector [:long]}]}} x
+           [[1] [2]]]
+       (println x))
+    ;;->
+    '(do
+       (init x [[1] [2]])
+       (invoke println x))
+    ;;->
+    "let x: PVector<PVector<i64>> = {
+let mut tmp_1: PVector<PVector<i64>> = PVector::new();
+tmp_1.push({
+let mut tmp_2: PVector<i64> = PVector::new();
+tmp_2.push(1);
+tmp_2
+});
+tmp_1.push({
+let mut tmp_3: PVector<i64> = PVector::new();
+tmp_3.push(2);
+tmp_3
+});
+tmp_1
+};
+println!(\"{}\", x);"))
+
+(deftest data-literals7-0-test
+  #_(top-level-form
+      '(defn f []
+         (let [x ^{:t {:vector [{:vector [:long]}]}}
+                 [[1] [2]]]
+           x)
+         ^{:t {:vector [{:vector [:long]}]}}
+         [[1] [2]])
+      ;;->
+      '(function f [] (return [[1] [2]]))
+      ;;->
+      ""))
+
+(deftest data-literals7-1-test
+  (inner-form
+    '(let [^{:t {:mmap [:long {:mvector [:string]}]}} x
+           {1 ["hi"]
+            2 ["hello" "there"]}]
+       (println x))
+    ;;->
+    '(do
+       (init x {1 ["hi"]
+                2 ["hello" "there"]})
+       (invoke println x))
+    ;;->
+    "let x: HashMap<i64,Vec<String>> = {
+let mut tmp_1: HashMap<i64,Vec<String>> = HashMap::new();
+tmp_1.insert(1, {
+let mut tmp_2: Vec<String> = Vec::new();
+tmp_2.push(String::from(\"hi\"));
+tmp_2
+});
+tmp_1.insert(2, {
+let mut tmp_3: Vec<String> = Vec::new();
+tmp_3.push(String::from(\"hello\"));
+tmp_3.push(String::from(\"there\"));
+tmp_3
+});
+tmp_1
+};
+println!(\"{}\", x);"))
+
+(deftest data-literals7-2-test
+  (inner-form
+    '(let [^{:t {:vector [{:map [{:set [:long]} {:vector [:string]}]}]}} x
+           [{#{1} ["hi"]
+             #{2} ["hello" "there"]}]]
+       (println x))
+    ;;->
+    '(do
+       (init x [{#{1} ["hi"]
+                 #{2} ["hello" "there"]}])
+       (invoke println x))
+    ;;->
+    "let x: PVector<PMap<PSet<i64>,PVector<String>>> = {
+let mut tmp_1: PVector<PMap<PSet<i64>,PVector<String>>> = PVector::new();
+tmp_1.push({
+let mut tmp_2: PMap<PSet<i64>,PVector<String>> = PMap::new();
+tmp_2.insert({
+let mut tmp_3: PSet<i64> = PSet::new();
+tmp_3.insert(1);
+tmp_3
+}, {
+let mut tmp_4: PVector<String> = PVector::new();
+tmp_4.push(String::from(\"hi\"));
+tmp_4
+});
+tmp_2.insert({
+let mut tmp_5: PSet<i64> = PSet::new();
+tmp_5.insert(2);
+tmp_5
+}, {
+let mut tmp_6: PVector<String> = PVector::new();
+tmp_6.push(String::from(\"hello\"));
+tmp_6.push(String::from(\"there\"));
+tmp_6
+});
+tmp_2
+});
+tmp_1
+};
+println!(\"{}\", x);"))
+
+(deftest data-literals7-3-test
+  (inner-form
+    '(let [x
+           ^{:t {:vector [{:map [{:set [:long]} {:vector [:string]}]}]}}
+           [{#{1} ["hi"]
+             #{2} ["hello" "there"]}]]
+       (println x))
+    ;;->
+    '(do
+       (init x [{#{1} ["hi"]
+                 #{2} ["hello" "there"]}])
+       (invoke println x))
+    ;;->
+    "let x: PVector<PMap<PSet<i64>,PVector<String>>> = {
+let mut tmp_1: PVector<PMap<PSet<i64>,PVector<String>>> = PVector::new();
+tmp_1.push({
+let mut tmp_2: PMap<PSet<i64>,PVector<String>> = PMap::new();
+tmp_2.insert({
+let mut tmp_3: PSet<i64> = PSet::new();
+tmp_3.insert(1);
+tmp_3
+}, {
+let mut tmp_4: PVector<String> = PVector::new();
+tmp_4.push(String::from(\"hi\"));
+tmp_4
+});
+tmp_2.insert({
+let mut tmp_5: PSet<i64> = PSet::new();
+tmp_5.insert(2);
+tmp_5
+}, {
+let mut tmp_6: PVector<String> = PVector::new();
+tmp_6.push(String::from(\"hello\"));
+tmp_6.push(String::from(\"there\"));
+tmp_6
+});
+tmp_2
+});
+tmp_1
+};
+println!(\"{}\", x);"))
+
+(deftest data-literals8-test
+  ;; TODO: Rust has an Any trait, but no Any type...
+  ;; therefore Kalai can't support any (remove it)
+  #_(inner-form
+    '(let [x ^{:t {:mvector [:any]}}
+             [1
+              ^{:t {:mvector [:long]}} [2]
+              3
+              ^{:t {:mvector [:any]}} [^{:t {:mvector [:long]}} [4]]]]
+       (println x))
+    ;;->
+    '(do
+       (init x [1 [2] 3 [[4]]])
+       (invoke println x))
+    ;;->
+    ""))
+
+;; omitted 9 because of any....
+
+(deftest data-literals10-test
+  (inner-form
+    '(def ^{:t {:mmap [:string :long]}} x {"key" (+ 1 2)})
+    ;;->
+    '(init x {"key" (operator + 1 2)})
+    ;;->
+    "let x: HashMap<String,i64> = {
+let mut tmp_1: HashMap<String,i64> = HashMap::new();
+tmp_1.insert(String::from(\"key\"), (1 + 2));
+tmp_1
+};"))
+
+(deftest string-equality-test
+  (inner-form
+    '(println (= "abc" "abc"))
+    ;;->
+    '(invoke println (operator == "abc" "abc"))
+    ;;->
+    "println!(\"{}\", (String::from(\"abc\") == String::from(\"abc\")));"))
+
+(deftest string-equality2-test
+  (inner-form
+    '(let [x "abc"
+           y "abc"]
+       (println (= x y)))
+    ;;->
+    '(do
+       (init x "abc")
+       (init y "abc")
+       (invoke println (operator == x y)))
+    ;;->
+    "let x: String = String::from(\"abc\");
+let y: String = String::from(\"abc\");
+println!(\"{}\", (x == y));"))
+
+(deftest string-equality2-test
+  (inner-form
+    '(let [^{:t :string} x (String. "abc")
+           y "abc"]
+       (println (= x y)))
+    ;;->
+    '(do
+       (init x (new
+                 String
+                 "abc"))
+       (init y "abc")
+       (invoke println (operator == x y)))
+    ;;->
+    "let x: String = String::new(String::from(\"abc\"));
+let y: String = String::from(\"abc\");
+println!(\"{}\", (x == y));"))
+
+(deftest foreach-test
+  (inner-form
+    '(doseq [^int x ^{:t {:mvector [:long]}} [1 2 3 4]]
+       (println x))
+    ;;->
+    '(foreach x [1 2 3 4]
+              (invoke println x))
+    ;;->
+    "for x in {
+let mut tmp_1: Vec<i64> = Vec::new();
+tmp_1.push(1);
+tmp_1.push(2);
+tmp_1.push(3);
+tmp_1.push(4);
+tmp_1
+} {
+println!(\"{}\", x);
+}"))
+
+(deftest for-loop-test
+  (inner-form
+    '(dotimes [^{:t :int} x 5]
+       (println x))
+    ;;->
+    '(group
+       (init x 0)
+       (while (operator < x 5)
+         (invoke println x)
+         (assign x (operator + x 1))))
+    ;;->
+    "let mut x: i32 = 0;
+while (x < 5) {
+println!(\"{}\", x);
+x = (x + 1);
+}"))
+
+(deftest while-loop-test
+  (inner-form
+    '(while true
+       (println "hi"))
+    ;;->
+    '(while true
+       (invoke println "hi"))
+    ;;->
+    "while true {
+println!(\"{}\", String::from(\"hi\"));
+}"))

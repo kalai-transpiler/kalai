@@ -392,6 +392,7 @@ System.out.println(2);
 
 ;; # Data Literals
 
+;; TODO: will change when we use a persistent collection library
 (deftest data-literals-test
   (inner-form
     '(def ^{:t {:vector [:long]}} x [1 2])
@@ -405,6 +406,8 @@ final PVector<Long> x = tmp1;"))
 
 ;; selecting between Vector and PVector<Object>
 (deftest data-literals2-test
+  ;; TODO: inner form is not usually where def x would appear,
+  ;; more likely as a top level form, but we haven't implemented static initializers yet
   (inner-form
     '(def x ^{:t {:mvector [:long]}} [1 2])
     ;;->
@@ -595,6 +598,7 @@ tmp1.add(tmp2);
 final PVector<PMap<PSet<Long>,PVector<String>>> x = tmp1;
 System.out.println(x);"))
 
+;; TODO: deprecated, we can't support any in all languages, so remove it
 (deftest data-literals8-test
   (inner-form
     '(let [x ^{:t {:mvector [:any]}}
@@ -622,6 +626,7 @@ tmp1.add(tmp3);
 final ArrayList<Object> x = tmp1;
 System.out.println(x);"))
 
+;; TODO: deprecated, we can't support any in all languages, so remove it
 (deftest data-literals9-test
   (inner-form
     '(let [^{:t {:mmap [:any :any]}} x
@@ -726,12 +731,12 @@ System.out.println(x);
        (init x 0)
        (while (operator < x 5)
          (invoke println x)
-         (assign x (operator ++ x))))
+         (assign x (operator + x 1))))
     ;;->
     "int x = 0;
 while ((x < 5)) {
 System.out.println(x);
-x = ++x;
+x = (x + 1);
 }"))
 
 (deftest while-loop-test

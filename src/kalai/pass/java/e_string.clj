@@ -188,10 +188,6 @@ import java.util.ArrayList;")
   (space-separated 'for (parens (space-separated (type-str sym) sym ":" (stringify xs)))
                    (stringify body)))
 
-(defn for-str [initialization termination increment body]
-  (space-separated 'for (parens (str/join "; " (map stringify [initialization termination increment])))
-                   (stringify body)))
-
 (defn if-str
   ([test then]
    (line-separated
@@ -245,7 +241,6 @@ import java.util.ArrayList;")
    'j/expression-statement expression-statement-str
    'j/return               return-str
    'j/while                while-str
-   'j/for                  for-str
    'j/foreach              foreach-str
    'j/if                   if-str
    'j/ternary              ternary-str

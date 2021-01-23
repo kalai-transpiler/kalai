@@ -175,25 +175,21 @@ use std::env;")
   (space-separated 'return (stringify x)))
 
 (defn while-str [condition body]
-  (space-separated 'while (parens (stringify condition))
+  (space-separated 'while (stringify condition)
                    (stringify body)))
 
 (defn foreach-str [sym xs body]
-  (space-separated 'for (parens (space-separated (type-str sym) sym ":" (stringify xs)))
-                   (stringify body)))
-
-(defn for-str [initialization termination increment body]
-  (space-separated 'for (parens (str/join "; " (map stringify [initialization termination increment])))
+  (space-separated 'for (space-separated sym "in" (stringify xs))
                    (stringify body)))
 
 (defn if-str
   ([test then]
    (line-separated
-     (space-separated 'if (parens (stringify test)))
+     (space-separated 'if (stringify test))
      (stringify then)))
   ([test then else]
    (line-separated
-     (space-separated 'if (parens (stringify test)))
+     (space-separated 'if (stringify test))
      (stringify then)
      'else
      (stringify else))))
@@ -242,7 +238,6 @@ use std::env;")
    'r/expression-statement expression-statement-str
    'r/return               return-str
    'r/while                while-str
-   'r/for                  for-str
    'r/foreach              foreach-str
    'r/if                   if-str
    'r/ternary              ternary-str

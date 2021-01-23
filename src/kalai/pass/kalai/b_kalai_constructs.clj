@@ -77,7 +77,7 @@
             0)
       (while (operator < ?sym ?n)
         . (m/app inner-form !body) ...
-        (assign ?sym (operator ++ ?sym))))
+        (assign ?sym (operator + ?sym 1))))
 
     ;; TODO: test with
     ;;;; (doseq [x [1 2]] (println x) (println x))

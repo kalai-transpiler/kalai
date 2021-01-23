@@ -53,7 +53,7 @@ final int digitVal = digitsMap.get(digit);
 result = ((10 * result) + digitVal);
 }
 }
-i = ++i;
+i = (i + 1);
 }
 return result;
 }
@@ -201,7 +201,7 @@ while ((idx < numPositions)) {
 final int position = separatorPositions.get(idx);
 result.insert(position, sep);
 }
-idx = ++idx;
+idx = (idx + 1);
 }
 }
 return result.toString();
