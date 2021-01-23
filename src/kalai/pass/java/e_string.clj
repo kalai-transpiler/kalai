@@ -115,10 +115,11 @@
    ;; TODO: we could default "Objects" to null, otherwise Java won't compile
    ;; See (def ^{:t T} x nil) in type_alias.clj example
    (statement (space-separated (type-str variable-name)
-                               variable-name)))
+                               (csk/->camelCase variable-name))))
   ([variable-name value]
    (statement (space-separated (type-str variable-name)
-                               variable-name "=" (stringify value)))))
+                               (csk/->camelCase variable-name)
+                               "=" (stringify value)))))
 
 (defn invoke-str [function-name & args]
   (let [metameta (some-> function-name meta :var meta)]
@@ -141,14 +142,15 @@
       (assert (= '& (first params)) "Main method must have signature (defn -main [& args]...)")
       (str
         (space-separated 'public 'static 'final 'void 'main)
-        (space-separated (params-list [(space-separated "String[]" (second params))])
+        (space-separated (params-list [(space-separated "String[]" (csk/->camelCase (second params)))])
                          (stringify body))))
     (str
       (space-separated 'public 'static
                        (type-str params)
                        (csk/->camelCase name))
       (space-separated (params-list (for [param params]
-                                      (space-separated (type-str param) param)))
+                                      (space-separated (type-str param)
+                                                       (csk/->camelCase param))))
                        (stringify body)))))
 
 (defn operator-str
@@ -220,7 +222,7 @@ import java.util.ArrayList;")
        \newline "break;"))
 
 (defn method-str [method object & args]
-  (str (pr-str object) "." method (args-list args)))
+  (str (stringify object) "." method (args-list args)))
 
 (defn new-str [class-name & args]
   (space-separated
@@ -272,6 +274,10 @@ import java.util.ArrayList;")
 
     nil
     "null"
+
+    ;; identifier
+    (m/pred symbol? ?s)
+    (csk/->camelCase (str ?s))
 
     ?else
     (pr-str ?else)))

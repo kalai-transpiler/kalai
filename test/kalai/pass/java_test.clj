@@ -349,6 +349,26 @@ final HashMap<String,String> x = tmp1;"))
 
 }"))
 
+(deftest hyphen-test1
+  (top-level-form
+    '(def my-var 1)
+    '(init my-var 1)
+    "static final long myVar = 1;"))
+
+(deftest hyphen-test2
+  (top-level-form
+    '(defn my-function ^{:t :long} [^{:t :long} my-arg]
+       (let [^{:t :long} my-binding 2]
+         my-binding))
+    '(function my-function [my-arg]
+               (do
+                 (init my-binding 2)
+                 (return my-binding)))
+    "public static final long myFunction(final long myArg) {
+final long myBinding = 2;
+return myBinding;
+}"))
+
 ;; # Conditionals
 
 (deftest conditional-test

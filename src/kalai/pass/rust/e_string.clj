@@ -99,7 +99,7 @@
 
 (defn variable-name-type-str [variable-name]
   (let [{:keys [mut]} (meta variable-name)]
-    (str (when mut "mut ") variable-name ": "
+    (str (when mut "mut ") (csk/->snake_case variable-name) ": "
          (type-str variable-name))))
 
 (defn init-str
@@ -135,14 +135,17 @@
     (do
       (assert (= '& (first params)) "Main method must have signature (defn -main [& args]...)")
       (str
-        (space-separated 'public 'static 'final 'void 'main)
-        (space-separated (params-list [(space-separated "String[]" (second params))])
-                         (stringify body))))
+        (space-separated 'fn 'main (params-list [])
+                         (line-separated "{"
+                                         (str "let " (csk/->snake_case (second params)) ": Vec<String> = env::args().collect();")
+                                         (stringify body)
+                                         "}"))))
     (str
       (space-separated "pub" "fn"
-                       (csk/->camelCase name))
+                       (csk/->snake_case name))
       (space-separated (params-list (for [param params]
-                                      (space-separated (str param ":") (type-str param))))
+                                      (space-separated (str (csk/->snake_case param) ":")
+                                                       (type-str param))))
                        "->"
                        (type-str params)
                        (stringify body)))))
@@ -160,7 +163,8 @@
 extern crate lazy_static;
 use std::collections::HashMap;
 use std::collections::HashSet;
-use std::vec::Vec;")
+use std::vec::Vec;
+use std::env;")
 
 (defn module-str [& forms]
   (apply line-separated
@@ -212,7 +216,7 @@ use std::vec::Vec;")
        \newline "break;"))
 
 (defn method-str [method object & args]
-  (str (pr-str object) "." method (args-list args)))
+  (str (stringify object) "." method (args-list args)))
 
 (defn new-str [t & args]
   (str (if (symbol? t)
@@ -271,6 +275,10 @@ use std::vec::Vec;")
 
     nil
     "()"
+
+    ;; identifier
+    (m/pred symbol? ?s)
+    (csk/->snake_case (str ?s))
 
     ?else
     (pr-str ?else)))

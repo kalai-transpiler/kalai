@@ -288,10 +288,11 @@ extern crate lazy_static;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::vec::Vec;
+use std::env;
 lazy_static! {
 static ref x: HashMap<i64,String> = {
-let mut tmp1: HashMap<i64,String> = HashMap::new();
-tmp1
+let mut tmp_1: HashMap<i64,String> = HashMap::new();
+tmp_1
 };
 }
 pub fn f(y: HashMap<i64,String>) -> HashMap<i64,String> {
@@ -329,10 +330,10 @@ static ref x: HashMap<i64,String> = ();
        (invoke println x))
     ;;->
     "let x: Vec<i64> = {
-let mut tmp1: Vec<i64> = Vec::new();
-tmp1.push(1);
-tmp1.push(2);
-tmp1
+let mut tmp_1: Vec<i64> = Vec::new();
+tmp_1.push(1);
+tmp_1.push(2);
+tmp_1
 };
 println!(\"{}\", x);"))
 
@@ -343,8 +344,57 @@ println!(\"{}\", x);"))
     '(init x {:a "asdf"})
     ;;->
     "let x: HashMap<String,String> = {
-let mut tmp1: HashMap<String,String> = HashMap::new();
-tmp1.insert(String::from(\":a\"), String::from(\"asdf\"));
-tmp1
+let mut tmp_1: HashMap<String,String> = HashMap::new();
+tmp_1.insert(String::from(\":a\"), String::from(\"asdf\"));
+tmp_1
 };"))
 
+(deftest generic-types5-test
+  #_(inner-form
+      '(let [x ^{:t {:array [:string]}} ["arg1" "arg2"]]
+         (println x))
+      ;;->
+      '(do
+         (init x ["arg1" "arg2"])
+         (invoke println x))
+      ;;->
+      ""))
+
+;; # Main entry point
+
+(deftest main-method-test
+  (top-level-form
+    ;; return type of `void` for `main()` is implied
+    '(defn -main ^{:t :void} [& my-args]
+       (println 1))
+    ;;->
+    '(function -main [& my-args] (invoke println 1))
+    ;;->
+    "fn main () {
+let my_args: Vec<String> = env::args().collect();
+{
+println!(\"{}\", 1);
+}
+}"))
+
+(deftest hyphen-test1
+  (top-level-form
+    '(def my-var 1)
+    '(init my-var 1)
+    "lazy_static! {
+static ref my_var: i64 = 1;
+}"))
+
+(deftest hyphen-test2
+  (top-level-form
+    '(defn my-function ^{:t :long} [^{:t :long} my-arg]
+       (let [^{:t :long} my-binding 2]
+         my-binding))
+    '(function my-function [my-arg]
+               (do
+                 (init my-binding 2)
+                 (return my-binding)))
+    "pub fn my_function(my_arg: i64) -> i64 {
+let my_binding: i64 = 2;
+return my_binding;
+}"))
