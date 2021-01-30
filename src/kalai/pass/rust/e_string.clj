@@ -203,14 +203,13 @@ use std::env;")
       "?" (stringify then)
       ":" (stringify else))))
 
-(defn switch-str
+(defn match-str
   [x clauses]
-  (space-separated 'switch (parens (stringify x))
+  (space-separated 'match (stringify x)
                    (stringify clauses)))
 
-(defn case-str [x then]
-  (str (space-separated "case" (stringify x) ":" (stringify then))
-       \newline "break;"))
+(defn arm-str [x then]
+  (str (space-separated (stringify x) "=>" (str (stringify then) ","))))
 
 (defn method-str [method object & args]
   (str (stringify object) "." method (args-list args)))
@@ -248,8 +247,8 @@ use std::env;")
    'r/foreach              foreach-str
    'r/if                   if-str
    'r/ternary              ternary-str
-   'r/switch               switch-str
-   'r/case                 case-str
+   'r/match                match-str
+   'r/arm                  arm-str
    'r/method               method-str
    'r/new                  new-str
    'r/literal              literal-str
@@ -281,7 +280,11 @@ use std::env;")
 
     ;; identifier
     (m/pred symbol? ?s)
-    (csk/->snake_case (str ?s))
+    (let [s-str (str ?s)
+          snake-case (csk/->snake_case s-str)]
+      (if (= \_ (first s-str))
+        (str \_ snake-case)
+        snake-case))
 
     ?else
     (pr-str ?else)))

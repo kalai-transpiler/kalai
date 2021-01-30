@@ -213,8 +213,12 @@ import java.util.ArrayList;")
   (space-separated 'switch (parens (stringify x))
                    (stringify clauses)))
 
-(defn case-str [x then]
-  (str (space-separated "case" (stringify x) ":" (stringify then))
+(defn case-str [v expr]
+  (str (space-separated "case" (stringify v) ":" (stringify expr))
+       \newline "break;"))
+
+(defn default-str [expr]
+  (str (space-separated "default" ":" (stringify expr))
        \newline "break;"))
 
 (defn method-str [method object & args]
@@ -246,6 +250,7 @@ import java.util.ArrayList;")
    'j/ternary              ternary-str
    'j/switch               switch-str
    'j/case                 case-str
+   'j/default              default-str
    'j/method               method-str
    'j/new                  new-str})
 
