@@ -10,7 +10,6 @@
   (->> k
        (flatten-groups/rewrite)
        (rust.a-syntax/rewrite)
-       (u/spy)
        (rust.b-function-call/rewrite)
        (rust.c-condense/rewrite)
        (rust.e-string/stringify-entry)))

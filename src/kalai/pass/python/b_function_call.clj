@@ -8,16 +8,16 @@
       (p/construct StringBuffer)
       (p/construct String)
 
-      (p/method append (u/of-tag StringBuffer ?this) ?x)
+      (p/method append (u/of-t StringBuffer ?this) ?x)
       (p/operator + ?this ?x)
 
-      (p/method length (u/of-tag StringBuffer ?this))
+      (p/method length (u/of-t StringBuffer ?this))
       (p/invoke len ?this)
 
-      (p/method toString (u/of-tag StringBuffer ?this))
+      (p/method toString (u/of-t StringBuffer ?this))
       ?this
 
-      (p/method insert (u/of-tag StringBuffer ?this) ?idx ?s2)
+      (p/method insert (u/of-t StringBuffer ?this) ?idx ?s2)
       (p/block
         (m/let [t (u/tmp StringBuffer)]
                (p/assign t ?this)

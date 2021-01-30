@@ -22,22 +22,19 @@
    (println (str "Spy: " label))
    (flush)
    (binding [*print-meta* true]
-     (doto x puget/cprint))))
+     (doto x puget/pprint))))
 
 ;; TODO: we might not need this
 (defn match-t? [tag x]
-  (let [result (some-> x
-                       meta
-                       (#(= tag (:t %))))]
-    (println "x= " x "meta =" (meta x) "; type of tag =" (type tag))
-    (println "result = " result "; type of t =" (-> x meta :t type))
-    result))
+  (some-> x
+          meta
+          (#(= tag (:t %)))))
 
 ;; TODO: we might not need this
-(m/defsyntax of-tag [tag x]
+(m/defsyntax of-t [t x]
   (case (::syntax/phase &env)
     :meander/match
-    `(match/pred #(match-t? ~tag %) ~x)
+    `(match/pred #(match-t? ~t %) ~x)
     &form))
 
 (m/defsyntax var [v]

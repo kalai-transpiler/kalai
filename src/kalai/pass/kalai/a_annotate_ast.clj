@@ -95,8 +95,8 @@
       :env  {:locals {?form ?binding}}}
      ~(ast-t ?binding ast)
 
-     {:op :new
-      :class {:class (m/app #(resolve-t % root) (m/pred some? ?t))}}
+     {:op    :new
+      :class {:class (m/app #(resolve-tag % root) (m/pred some? ?t))}}
      ?t
 
      ;; Last resort: 1
