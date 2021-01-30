@@ -30,24 +30,22 @@
       ;; Remember that ^{:t java.lang.String} gets converted to ^{:t :string} upstream
       ;; (AST rewriting), whereas other Java class/types are left as-is in the metadata
       ;; map.
-      (r/method length (u/of-tag :string ?this))
-      ;(r/method length ?this)
-      (r/method len ~(doto ?this
-                       (-> meta prn)))
+      (r/method length (u/of-t :string ?this))
+      (r/method len ?this)
 
       (r/construct StringBuffer)
       (r/construct String)
 
-      (r/method append (u/of-tag StringBuffer ?this) ?x)
+      (r/method append (u/of-t StringBuffer ?this) ?x)
       (r/method push_str ?this ?x)
 
-      (r/method length (u/of-tag StringBuffer ?this))
+      (r/method length (u/of-t StringBuffer ?this))
       (r/method len ?this)
 
-      (r/method toString (u/of-tag StringBuffer ?this))
+      (r/method toString (u/of-t StringBuffer ?this))
       ?this
 
-      #_#_(r/method insert (u/of-tag StringBuffer ?this) ?idx ?s2)
+      #_#_(r/method insert (u/of-t StringBuffer ?this) ?idx ?s2)
       (r/block
         (m/let [t (u/tmp StringBuffer)]
                (r/assign t ?this)

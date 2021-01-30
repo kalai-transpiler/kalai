@@ -11,7 +11,6 @@
   (->> asts
        (a-annotate-ast/rewrite)
        (map e/emit-form)
-       (u/spy)
        (b-kalai-constructs/rewrite)
        (c-operators/rewrite)
        (d-annotate-return/rewrite)
