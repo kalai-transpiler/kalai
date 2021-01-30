@@ -879,3 +879,25 @@ _ => String::from(\":c\"),
 2 => String::from(\":b\"),
 _ => String::from(\":c\"),
 });"))
+
+(deftest interop-test
+  (inner-form
+    '(let [a (new String)
+           b (String.)]
+       (.length ^{:t :string} a)
+       (. b length))
+    ;;->
+    '(do
+       (init a (new String))
+       (init b (new String))
+       (do
+         (method length a)
+         (method length b)))
+    ;;->
+    "let a: String = String::new();
+let b: String = String::new();
+{
+a.len();
+b.len();
+}"))
+
