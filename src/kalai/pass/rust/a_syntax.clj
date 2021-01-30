@@ -77,9 +77,10 @@
     ;; let
 
     ;; TODO: how to do this? maybe through variable assignment?
-    (case ?x {& (m/seqable [!k [_ !v]] ...)})
-    (r/switch (m/app expression ?x)
-              (r/block . (r/case !k (r/expression-statement (m/app expression !v))) ...))
+    (case ?x {& (m/seqable [!k [_ !v]] ...)} ?default)
+    (r/match (m/app expression ?x)
+             (r/block . (r/arm !k (m/app expression !v)) ...
+                      (r/arm '_ (m/app expression ?default))))
 
     ?else
     ?else))
@@ -124,10 +125,6 @@
       (r/if (m/app expression ?test)
         (r/block (m/app statement ?then))
         (r/block (m/app statement ?else)))
-
-      (case ?x {& (m/seqable [!k [_ !v]] ...)})
-      (r/switch (m/app expression ?x)
-                (r/block . (r/case !k (r/expression-statement (m/app expression !v))) ...))
 
       (do . !xs ...)
       (r/block . (m/app statement !xs) ...)

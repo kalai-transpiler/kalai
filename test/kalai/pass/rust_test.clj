@@ -844,3 +844,38 @@ let mut tmp_1: HashSet<String> = HashSet::new();
 tmp_1.insert(String::from(\":k\"));
 tmp_1
 }.get(&String::from(\":k\"));"))
+
+(deftest switch-case-test
+  (inner-form
+    '(case 1
+       1 :a
+       2 :b
+       :c)
+    ;;->
+    '(case 1 {1 [1 :a]
+              2 [2 :b]}
+             :c)
+    ;;->
+    "match 1 {
+1 => String::from(\":a\"),
+2 => String::from(\":b\"),
+_ => String::from(\":c\"),
+};"))
+
+(deftest switch-case2-test
+  (inner-form
+      '(println (case 1
+                  1 :a
+                  2 :b
+                  :c))
+      ;;->
+      '(invoke println
+               (case 1 {1 [1 :a]
+                        2 [2 :b]}
+                       :c))
+      ;;->
+      "println!(\"{}\", match 1 {
+1 => String::from(\":a\"),
+2 => String::from(\":b\"),
+_ => String::from(\":c\"),
+});"))

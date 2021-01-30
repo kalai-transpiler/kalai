@@ -192,9 +192,10 @@
         (j/block (m/app statement ?then))
         (j/block (m/app statement ?else)))
 
-      (case ?x {& (m/seqable [!k [_ !v]] ...)})
+      (case ?x {& (m/seqable [!k [_ !v]] ...)} ?default)
       (j/switch (m/app expression ?x)
-                (j/block . (j/case !k (j/expression-statement (m/app expression !v))) ...))
+                (j/block . (j/case !k (j/expression-statement (m/app expression !v))) ...
+                         (j/default ?default)))
 
       (do . !xs ...)
       (j/block . (m/app statement !xs) ...)

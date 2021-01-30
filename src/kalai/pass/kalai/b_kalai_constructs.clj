@@ -196,7 +196,7 @@
       (case* ?auto ?shift ?mask
              ?default ;; often (throw (new java.lang.IllegalArgumentException (clojure.core/str "No matching clause: " ?auto)))
              ?imap ?switch-type ?tt ?skip-check))
-    (case (m/app inner-form ?x) ?imap)))
+    (case (m/app inner-form ?x) ?imap ?default)))
 
 (def misc
   (s/rewrite

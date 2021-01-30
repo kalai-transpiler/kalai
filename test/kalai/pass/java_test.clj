@@ -807,10 +807,33 @@ tmp1.get(\":k\");"))
   (inner-form
     '(case 1
        1 :a
-       2 :b)
+       2 :b
+       :c)
     ;;->
     '(case 1 {1 [1 :a]
-              2 [2 :b]})
+              2 [2 :b]}
+             :c)
+    ;;->
+    "switch (1) {
+case 1 : \":a\";
+break;
+case 2 : \":b\";
+break;
+default : \":c\"
+break;
+}"))
+
+
+;; TODO: support switch as expression
+(deftest switch-case2-test
+  #_(inner-form
+    '(println (case 1
+                1 :a
+                2 :b))
+    ;;->
+    '(invoke println
+             (case 1 {1 [1 :a]
+                      2 [2 :b]}))
     ;;->
     "switch (1) {
 case 1 : \":a\";
@@ -818,6 +841,7 @@ break;
 case 2 : \":b\";
 break;
 }"))
+
 
 (deftest interop-test
   (inner-form
