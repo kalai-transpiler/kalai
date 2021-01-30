@@ -25,16 +25,19 @@
      (doto x puget/cprint))))
 
 ;; TODO: we might not need this
-(defn match-tag? [tag x]
-  (some-> x
-          meta
-          (#(= tag (:tag %)))))
+(defn match-t? [tag x]
+  (let [result (some-> x
+                       meta
+                       (#(= tag (:t %))))]
+    (println "x= " x "meta =" (meta x) "; type of tag =" (type tag))
+    (println "result = " result "; type of t =" (-> x meta :t type))
+    result))
 
 ;; TODO: we might not need this
 (m/defsyntax of-tag [tag x]
   (case (::syntax/phase &env)
     :meander/match
-    `(match/pred #(match-tag? ~tag %) ~x)
+    `(match/pred #(match-t? ~tag %) ~x)
     &form))
 
 (m/defsyntax var [v]

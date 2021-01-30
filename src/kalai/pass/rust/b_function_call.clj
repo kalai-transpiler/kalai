@@ -27,6 +27,14 @@
                                  (str/join " ")))
                 & ?args)
 
+      ;; Remember that ^{:t java.lang.String} gets converted to ^{:t :string} upstream
+      ;; (AST rewriting), whereas other Java class/types are left as-is in the metadata
+      ;; map.
+      (r/method length (u/of-tag :string ?this))
+      ;(r/method length ?this)
+      (r/method len ~(doto ?this
+                       (-> meta prn)))
+
       (r/construct StringBuffer)
       (r/construct String)
 

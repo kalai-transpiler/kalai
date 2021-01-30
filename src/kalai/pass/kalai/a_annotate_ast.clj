@@ -95,6 +95,10 @@
       :env  {:locals {?form ?binding}}}
      ~(ast-t ?binding ast)
 
+     {:op :new
+      :class {:class (m/app #(resolve-t % root) (m/pred some? ?t))}}
+     ?t
+
      ;; Last resort: 1
      {:op  :const
       :val (m/pred some? ?val)}
