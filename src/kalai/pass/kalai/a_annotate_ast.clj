@@ -9,7 +9,8 @@
 
 (defn resolve-in-ast-ns
   "Tools analyzer does not evaluate metadata in bindings or arglists.
-   They are symbols which we can resolve to vars."
+   They are symbols which we can resolve to vars.
+   We have to resolve these symbols in the namespace that they were defined."
   [sym ast]
   (and
     (symbol? sym)
@@ -90,11 +91,19 @@
       :init (m/pred some? ?init)}
      ~(ast-t ?init ast)
 
+     ;; A typical case: an identifier used as an expression that was defined
+     ;; previously in this lexical scope
      {:op   :local
       :form (m/pred some? ?form)
       :env  {:locals {?form ?binding}}}
      ~(ast-t ?binding ast)
 
+     ;; Users who use any non-Kalai-primitive types or custom types (ex:
+     ;; for interop purposes), which are represented as Java clases/types, will
+     ;; often times instantiate the Java class that represents the custom type.
+     ;; In such cases, when the `new` operator is invoked, we can resolve the
+     ;; symbol of the custom type's Java class (ex: 'String) into the type that
+     ;; we expect the :t key to take in the metadata map (ex: :string).
      {:op    :new
       :class {:class (m/app #(resolve-tag % root) (m/pred some? ?t))}}
      ?t
@@ -119,7 +128,14 @@
 (defn t-from-meta [x]
   (:t (meta x)))
 
-(defn propagate-ast-type [from-ast to-imeta ast]
+(defn propagate-ast-type
+  "If possible, associate the representative type of `from-ast` to `to-imeta`,
+  otherwise, just return `to-imeta` exactly as-is.
+  Return `to-imeta` as-is if:
+    * `to-imeta` cannot take metadata
+    * `to-imeta` already has type info, as inferred by truthy value for `:t` in
+    metadata"
+  [from-ast to-imeta ast]
   (if (and (instance? IMeta to-imeta)
            (not (t-from-meta to-imeta)))
     (u/maybe-meta-assoc to-imeta :t (or (ast-t from-ast)

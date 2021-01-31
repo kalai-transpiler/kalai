@@ -25,11 +25,14 @@
      (doto x puget/pprint))))
 
 ;; TODO: we might not need this
-(defn match-t? [tag x]
+(defn match-t?
+  "Match the value for `t` in the :t key in the metadata map of `x`"
+  [t x]
   (some-> x
           meta
-          (#(= tag (:t %)))))
+          (#(= t (:t %)))))
 
+;; Return whether `t` matches the value of :t of the metadata map
 ;; TODO: we might not need this
 (m/defsyntax of-t [t x]
   (case (::syntax/phase &env)
@@ -37,6 +40,7 @@
     `(match/pred #(match-t? ~t %) ~x)
     &form))
 
+;; Return the value in :var in the metadata map
 (m/defsyntax var [v]
   (case (::syntax/phase &env)
     :meander/match

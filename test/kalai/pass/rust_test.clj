@@ -882,14 +882,44 @@ _ => String::from(\":c\"),
 
 (deftest interop-test
   (inner-form
-    '(let [a (new String)
-           b (String.)]
-       (.length ^{:t :string} a)
-       (. b length))
+    '(let [^{:t :string} a (new String)
+           b (String.)
+           c (new String)]
+       (.length a)
+       (. b length)
+       (.length c))
     ;;->
     '(do
        (init a (new String))
        (init b (new String))
+       (init c (new String))
+       (do
+         (method length a)
+         (method length b)
+         (method length c)))
+    ;;->
+    "let a: String = String::new();
+let b: String = String::new();
+let c: String = String::new();
+{
+a.len();
+b.len();
+c.len();
+}"))
+
+(deftest interop2-test
+  ;; TODO: refactor the type translation of Java StringBuffer -> Rust String
+  ;; so that it can be used in k.p.rust.b-function-call as well as
+  ;; k.p.rust.e_string/type-str ?
+  #_(inner-form
+    '(let [^{:t StringBuffer} a (new StringBuffer)
+           b (StringBuffer.)]
+       (.length a)
+       (. b length))
+    ;;->
+    '(do
+       (init a (new StringBuffer))
+       (init b (new StringBuffer))
        (do
          (method length a)
          (method length b)))
@@ -900,4 +930,3 @@ let b: String = String::new();
 a.len();
 b.len();
 }"))
-

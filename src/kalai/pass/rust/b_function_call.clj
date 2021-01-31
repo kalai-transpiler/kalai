@@ -33,8 +33,8 @@
       (r/method length (u/of-t :string ?this))
       (r/method len ?this)
 
-      (r/construct StringBuffer)
-      (r/construct String)
+      (r/new StringBuffer)
+      (r/new String)
 
       (r/method append (u/of-t StringBuffer ?this) ?x)
       (r/method push_str ?this ?x)
