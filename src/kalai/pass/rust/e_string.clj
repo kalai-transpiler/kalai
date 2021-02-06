@@ -4,7 +4,8 @@
             [clojure.string :as str]
             [camel-snake-kebab.core :as csk]
             [puget.printer :as puget]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [kalai.types :as types])
   (:import (clojure.lang IMeta)))
 
 (declare stringify)
@@ -69,7 +70,9 @@
 (defn rust-type [t]
   (or (get kalai-type->rust t)
       ;; TODO: breaking the rules for interop... is this a bad idea?
-      (when t (pr-str t))
+      (when t
+        (or (get-in types/lang-type-mappings [:kalai.emit.langs/rust t])
+            (pr-str t)))
       "TYPE_MISSING"))
 
 (def t-str
@@ -99,9 +102,12 @@
         (doto (maybe-warn-type-missing variable-name)))))
 
 (defn variable-name-type-str [variable-name]
-  (let [{:keys [mut]} (meta variable-name)]
-    (str (when mut "mut ") (csk/->snake_case variable-name) ": "
-         (type-str variable-name))))
+  (let [{:keys [mut t]} (meta variable-name)]
+    (str (when mut "mut ") (csk/->snake_case variable-name)
+         ;; Rust has type inference, so we can leave temp variable types off
+         ;; TODO: probably don't want to use "MISSING_TYPE" though
+         (when (not= t "MISSING_TYPE")
+           (str ": " (type-str variable-name))))))
 
 (defn init-str
   ([variable-name]

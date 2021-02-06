@@ -27,6 +27,7 @@
       (j/invoke (u/var ~#'println) & ?more)
       (j/invoke System.out.println & ?more)
 
+      ;; TODO: these should be (u/var)
       (j/invoke clojure.lang.RT/count ?x)
       (j/method (m/app count-for ?x) ?x)
 
@@ -41,6 +42,22 @@
                   (m/and (m/or (m/pred string?) (m/app meta {:t :string})) ?x)
                   (m/and (m/or (m/pred string?) (m/app meta {:t :string})) ?y))
       (j/method equals ?x ?y)
+
+      (j/invoke (u/var ~#'assoc) & ?more)
+      (j/method put & ?more)
+
+      (j/invoke (u/var ~#'dissoc) & ?more)
+      (j/method remove & ?more)
+
+      (j/invoke (u/var ~#'conj) & ?more)
+      (j/method add & ?more)
+
+      (j/invoke (u/var ~#'inc) ?x)
+      (j/operator + ?x 1)
+
+      (j/invoke (u/var ~#'update) ?x ?k ?f & ?args)
+      (j/method put ?x ?k
+                (m/app rewrite (j/invoke ?f (j/method get ?x ?k) & ?args)))
 
       ?else
       ?else)))

@@ -908,11 +908,8 @@ c.len();
 }"))
 
 (deftest interop2-test
-  ;; TODO: refactor the type translation of Java StringBuffer -> Rust String
-  ;; so that it can be used in k.p.rust.b-function-call as well as
-  ;; k.p.rust.e_string/type-str ?
-  #_(inner-form
-    '(let [^{:t StringBuffer} a (new StringBuffer)
+  (inner-form
+    '(let [^StringBuffer a (new StringBuffer)
            b (StringBuffer.)]
        (.length a)
        (. b length))
@@ -930,3 +927,31 @@ let b: String = String::new();
 a.len();
 b.len();
 }"))
+
+(deftest function-calls-test
+  (inner-form
+    '(assoc ^{:t {:mmap [:string :long]}} {:a 1} :b 2)
+    ;;->
+    '(invoke assoc {:a 1} :b 2)
+    ;;->
+    "{
+let mut tmp_1: HashMap<String,i64> = HashMap::new();
+tmp_1.insert(String::from(\":a\"), 1);
+tmp_1
+}.insert(String::from(\":b\"), 2);"))
+
+(deftest function-calls2-test
+  (inner-form
+    '(update ^{:t {:mmap [:string :long]}} {:a 1} :a inc)
+    ;;->
+    '(invoke update {:a 1} :a inc)
+    ;;->
+    "{
+let mut tmp_1: HashMap<String,i64> = HashMap::new();
+tmp_1.insert(String::from(\":a\"), 1);
+tmp_1
+}.insert(String::from(\":a\"), ({
+let mut tmp_1: HashMap<String,i64> = HashMap::new();
+tmp_1.insert(String::from(\":a\"), 1);
+tmp_1
+}.get(&String::from(\":a\")).unwrap() + 1));"))

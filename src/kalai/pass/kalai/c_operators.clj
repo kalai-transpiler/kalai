@@ -74,27 +74,6 @@
       ;;(invoke (u/var ~#'println) & ?more)
       ;;(invoke System.out.println & ?more)
 
-      (invoke (u/var ~#'assoc) & ?more)
-      (method put & ?more)
-
-      (invoke (u/var ~#'dissoc) & ?more)
-      (method remove & ?more)
-
-      (invoke (u/var ~#'conj) & ?more)
-      (method add & ?more)
-
-      ;; TODO: this isn't really an operator..
-      ;; TODO: temp variable creation must come first
-      ;; philosophically, this is the fundamental difference between
-      ;; imperative and functional... do we want to be opinionated about this?
-      (m/and
-        (invoke (u/var ~#'update) ?x ?k ?f & ?args)
-        (m/let [?tmp (u/tmp-for ?x)]))
-      (group
-        (init ?tmp ?x)
-        (method put ?tmp ?k
-                (m/app rewrite (invoke ?f (method get ?tmp ?k) & ?args)))
-        ?tmp)
 
       ?else
       ?else)))
