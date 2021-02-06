@@ -108,4 +108,5 @@
               "MISSING_TYPE")))
     (get-kalai-type-from-java-type (type expr))))
 
-
+(def lang-type-mappings
+  {:kalai.emit.langs/rust {java.lang.StringBuffer 'String}})

@@ -868,7 +868,7 @@ b.length();
   (inner-form
     '(assoc ^{:t {:mmap [:string :long]}} {:a 1} :b 2)
     ;;->
-    '(method put {:a 1} :b 2)
+    '(invoke assoc {:a 1} :b 2)
     ;;->
     "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
 tmp1.put(\":a\", 1);
@@ -878,17 +878,10 @@ tmp1.put(\":b\", 2);"))
   (inner-form
     '(update ^{:t {:mmap [:string :long]}} {:a 1} :a inc)
     ;;->
-    '(group
-       (init tmp1 {:a 1})
-       (method put
-               tmp1
-               :a
-               (operator + (method get tmp1 :a) 1))
-       tmp1)
+    '(invoke update {:a 1} :a inc)
     ;;->
-    "HashMap<String,Long> tmp2 = new HashMap<String,Long>();
-tmp2.put(\":a\", 1);
-HashMap<String,Long> tmp1 = tmp2;
+    "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
+tmp1.put(\":a\", 1);
 tmp1.put(\":a\", (tmp1.get(\":a\") + 1));"))
 
 (deftest conditional-expression-test
@@ -1107,7 +1100,7 @@ System.out.println(v.get(1));"))
        (init result [])
        (init i 10)
        (while (operator < 0 i)
-         (method add result i)
+         (invoke conj result i)
          (assign i (operator - i 3))))
     ;;->
     "ArrayList<Integer> tmp1 = new ArrayList<Integer>();
@@ -1297,7 +1290,7 @@ x = tmp2;"))
     ;;->
     '(do
        (init x [])
-       (method add x 1))
+       (invoke conj x 1))
     ;;->
     "ArrayList<Long> tmp1 = new ArrayList<Long>();
 ArrayList<Long> x = tmp1;

@@ -10,12 +10,6 @@
 (defn gensym2 [s]
   (symbol (str s (swap! c inc))))
 
-(defn tmp [type expr]
-  (with-meta (gensym2 "tmp") {:t type :expr expr :mut true}))
-
-(defn tmp-for [expr]
-  (tmp (types/get-type expr) expr))
-
 (defn spy
   ([x] (spy x nil))
   ([x label]
@@ -23,6 +17,12 @@
    (flush)
    (binding [*print-meta* true]
      (doto x puget/pprint))))
+
+(defn tmp [type expr]
+  (with-meta (gensym2 "tmp") {:t type :expr expr :mut true}))
+
+(defn tmp-for [expr]
+  (tmp (types/get-type expr) expr))
 
 ;; TODO: we might not need this
 (defn match-t?

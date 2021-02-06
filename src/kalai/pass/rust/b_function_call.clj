@@ -2,7 +2,8 @@
   (:require [kalai.util :as u]
             [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [kalai.types :as types]))
 
 ;; TODO: user extension point, is dynamic var good?
 ;; can it be more data driven?
@@ -32,15 +33,15 @@
       ;; map.
       (r/method length (u/of-t :string ?this))
       (r/method len ?this)
+      (r/method length (u/of-t StringBuffer ?this))
+      (r/method len ?this)
 
-      (r/new StringBuffer)
-      (r/new String)
+      (r/new ?sym)
+      (r/new ~(or (get-in types/lang-type-mappings [:kalai.emit.langs/rust (:t (meta ?sym))])
+                  ?sym))
 
       (r/method append (u/of-t StringBuffer ?this) ?x)
       (r/method push_str ?this ?x)
-
-      (r/method length (u/of-t StringBuffer ?this))
-      (r/method len ?this)
 
       (r/method toString (u/of-t StringBuffer ?this))
       ?this
@@ -52,6 +53,7 @@
                (r/invoke truncate t ?idx)
                (r/invoke push_str t ?s2)))
 
+      ;; TODO: these should be (u/var)
       (r/invoke clojure.lang.RT/count ?x)
       (r/method (m/app count-for ?x) ?x)
 
@@ -61,6 +63,22 @@
 
       (r/invoke clojure.lang.RT/get ?x ?k)
       (r/method get ?x (r/ref ?k))
+
+      (r/invoke (u/var ~#'assoc) & ?more)
+      (r/method insert & ?more)
+
+      (r/invoke (u/var ~#'dissoc) & ?more)
+      (r/method remove & ?more)
+
+      (r/invoke (u/var ~#'conj) & ?more)
+      (r/method add & ?more)
+
+      (r/invoke (u/var ~#'inc) ?x)
+      (r/operator + ?x 1)
+
+      (r/invoke (u/var ~#'update) ?x ?k ?f & ?args)
+      (r/method insert ?x ?k
+                (m/app rewrite (r/invoke ?f (r/method unwrap (r/invoke clojure.lang.RT/get ?x ?k)) & ?args)))
 
       ?else
       ?else)))

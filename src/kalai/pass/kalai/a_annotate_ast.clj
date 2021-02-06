@@ -4,7 +4,8 @@
             [clojure.tools.analyzer.ast :as ast]
             [kalai.util :as u]
             [kalai.types :as types]
-            [clojure.tools.analyzer.passes.jvm.emit-form :as e])
+            [clojure.tools.analyzer.passes.jvm.emit-form :as e]
+            [clojure.string :as str])
   (:import (clojure.lang IMeta)))
 
 (defn resolve-in-ast-ns
@@ -34,7 +35,7 @@
         (when (class? c)
           ;; Clojure macro expands expressions out that create bindings,
           ;; and some of those will have unexpected types that we can just ignore
-          (get types/java-types c)))))
+          (or (get types/java-types c) c)))))
 
 ;; TODO: what about type aliases in type aliases
 (defn resolve-t
@@ -52,6 +53,9 @@
   #{#'atom
     #'ref
     #'agent})
+
+(defn clojure-type [tag]
+  (str/starts-with? (.getCanonicalName tag) "clojure.lang"))
 
 (defn ast-t
   "Return the type represented by an AST node. `root` is an AST node that
@@ -114,13 +118,18 @@
      ~(get types/java-types (type ?val))
 
      ;; Last resort: Clojure type inferred
+     ;; There are two cases when o-tag is not nil
+     ;; 1. When there is a user defined class or a non primitive class/object
+     ;; 2. When there is an initialization and the initial value is a Clojure collection type, keyword, etc
+     ;; Case 2 is a special case of 1, however we want Clojure collection types to have more specific type information
+     ;; and we assume that we can get this from the metadata on the identifier symbol,
+     ;; or the metadata on the initial object value itself,
+     ;; which we also assume is given in the Kalai form.
+     ;; Therefore in case 2, we should ignore the less informative o-tag value.
      {:o-tag (m/pred some? ?o-tag)}
      ~(or (get types/java-types ?o-tag)
-          ;; TODO: breaking the rules for interop...
-          ;; is this a bad idea?
-          ;; note that some o-tags are unhelpful,
-          ;; like PersistentMap
-          (#{StringBuffer} ?o-tag))
+          (when (and ?o-tag (not (clojure-type ?o-tag)))
+            ?o-tag))
 
      ?else
      nil)))
@@ -363,6 +372,25 @@
     ?else
     ?else))
 
+(def annotate-news
+  (s/rewrite
+    ;; annotate vars with their var as metadata so they can be identified later in the pipeline
+    {:op   :new
+     :class {:form ?form
+             :val ?type
+             & ?more}
+     &     ?ast}
+    ;;->
+    {:op   :new
+     :class {:form ~(u/maybe-meta-assoc ?form :t ?type)
+             :val ?type
+             & ?more}
+     &     ?ast}
+
+    ;; otherwise leave the ast as is
+    ?else
+    ?else))
+
 ;; TODO: split this mini-pipeline into 3 passes under the ast folder
 (defn rewrite
   "There is contextual information in the AST that is not available in s-expressions.
@@ -376,8 +404,9 @@
        ;; between normalization and propagation,
        ;; but it doesn't solve [x 1, y x, z y] ...
        (map #(ast/prewalk % normalize-t-in-ast))
-
        (map #(ast/prewalk % annotate-vars))
+       (map #(ast/prewalk % annotate-news))
+
        ;; TODO:
        ;; assert our invariant that everything has a type
        ;; separate pass on s-expressions
