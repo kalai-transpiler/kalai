@@ -62,6 +62,7 @@
   - see if starter code for rust and python works
   - support array types (?) (ex: Java main method)
   - In C++ make sure that string concatenation of numbers is wrapped by std::to_string https://stackoverflow.com/questions/191757/how-to-concatenate-a-stdstring-and-an-int
+  - implement `str`
 * Match demo01 and demo02
   - try using `case` instead of `cond` in `getSeparatorPositions` of demo02
   - logic unit tests

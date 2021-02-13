@@ -9,15 +9,10 @@
 ;; can it be more data driven?
 (def ^:dynamic *user*)
 
-(defn nth-for [x]
-  (if (= (:t (meta x)) :string)
-    'charAt
-    'get))
-
 (defn count-for [x]
   (m/rewrite (:t (meta x))
-    {(m/pred #{:mmap :map :mset :set :mvector :vector}) (m/pred some?)} 'size
-    ?else 'length))
+    {(m/pred #{:mmap :map :mset :set :mvector :vector}) (m/pred some?)} 'len
+    ?else 'len))
 
 (def rewrite
   (s/bottom-up
@@ -32,9 +27,13 @@
       ;; (AST rewriting), whereas other Java class/types are left as-is in the metadata
       ;; map.
       (r/method length (u/of-t :string ?this))
-      (r/method len ?this)
+      (r/method unwrap (r/method try_into (r/method len ?this)))
+
       (r/method length (u/of-t StringBuffer ?this))
-      (r/method len ?this)
+      (r/method unwrap (r/method try_into (r/method len ?this)))
+
+      (r/method size ?this)
+      (r/method unwrap (r/method try_into (r/method len ?this)))
 
       (r/new ?sym)
       (r/new ~(or (get-in types/lang-type-mappings [:kalai.emit.langs/rust (:t (meta ?sym))])
@@ -55,11 +54,11 @@
 
       ;; TODO: these should be (u/var)
       (r/invoke clojure.lang.RT/count ?x)
-      (r/method (m/app count-for ?x) ?x)
+      (r/method unwrap (r/method try_into (r/method len ?x)))
 
       ;; TODO: need to do different stuff depending on the type
       (r/invoke clojure.lang.RT/nth ?x ?n)
-      (r/method (m/app nth-for ?x) ?x ?n)
+      (r/method unwrap (r/method get ?x ?n))
 
       (r/invoke clojure.lang.RT/get ?x ?k)
       (r/method get ?x (r/ref ?k))
@@ -71,7 +70,7 @@
       (r/method remove & ?more)
 
       (r/invoke (u/var ~#'conj) & ?more)
-      (r/method add & ?more)
+      (r/method push & ?more)
 
       (r/invoke (u/var ~#'inc) ?x)
       (r/operator + ?x 1)

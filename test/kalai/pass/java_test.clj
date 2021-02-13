@@ -842,48 +842,6 @@ case 2 : \":b\";
 break;
 }"))
 
-
-(deftest interop-test
-  (inner-form
-    '(let [a (new String)
-           b (String.)]
-       (.length a)
-       (. b length))
-    ;;->
-    '(do
-       (init a (new String))
-       (init b (new String))
-       (do
-         (method length a)
-         (method length b)))
-    ;;->
-    "final String a = new String();
-final String b = new String();
-{
-a.length();
-b.length();
-}"))
-
-(deftest function-calls-test
-  (inner-form
-    '(assoc ^{:t {:mmap [:string :long]}} {:a 1} :b 2)
-    ;;->
-    '(invoke assoc {:a 1} :b 2)
-    ;;->
-    "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
-tmp1.put(\":a\", 1);
-tmp1.put(\":b\", 2);"))
-
-(deftest function-calls2-test
-  (inner-form
-    '(update ^{:t {:mmap [:string :long]}} {:a 1} :a inc)
-    ;;->
-    '(invoke update {:a 1} :a inc)
-    ;;->
-    "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
-tmp1.put(\":a\", 1);
-tmp1.put(\":a\", (tmp1.get(\":a\") + 1));"))
-
 (deftest conditional-expression-test
   ;; For simple expressions, a true ternary could be used instead
   ;; "((true ? 1 : 2) + (true ? (true ? 3 : 4) : 5));"
@@ -950,7 +908,8 @@ System.out.println((tmp1 + tmp2));"))
     '(println
        (+ (if true
             (do (println 1)
-                2))
+                2)
+            3)
           4))
     ;;->
     '(invoke println
@@ -958,7 +917,8 @@ System.out.println((tmp1 + tmp2));"))
                        (if true
                          (do
                            (invoke println 1)
-                           2))
+                           2)
+                         3)
                        4))
     ;;->
     "long tmp1;
@@ -968,6 +928,10 @@ System.out.println(1);
 {
 tmp1 = 2;
 }
+}
+else
+{
+tmp1 = 3;
 }
 System.out.println((tmp1 + 4));"))
 
@@ -1004,42 +968,6 @@ tmp1 = tmp2;
 }
 System.out.println((tmp1 + 4));"))
 
-(deftest conditional-expression4-test
-  (inner-form
-    '(println
-       (+ (if true 1 (if false 2 ^{:t {:vector [:long]}} [3])) 4))
-    ;;->
-    '(invoke println
-             (operator +
-                       (if true 1 (if false 2 [3]))
-                       4))
-    ;;->
-    "long tmp1;
-if (true)
-{
-tmp1 = 1;
-}
-else
-{
-long tmp2;
-if (false)
-{
-tmp2 = 2;
-}
-else
-{
-PVector<Long> tmp3 = new PVector<Long>();
-tmp3.add(3);
-{
-tmp2 = tmp3;
-}
-}
-{
-tmp1 = tmp2;
-}
-}
-System.out.println((tmp1 + 4));"))
-
 (deftest operator-test
   (inner-form
     '(println
@@ -1050,7 +978,48 @@ System.out.println((tmp1 + 4));"))
     ;;->
     "System.out.println(!(1 == (1 + 1)));"))
 
-(deftest zzz-test
+(deftest interop-test
+  (inner-form
+    '(let [a (new String)
+           b (String.)]
+       (.length a)
+       (. b length))
+    ;;->
+    '(do
+       (init a (new String))
+       (init b (new String))
+       (do
+         (method length a)
+         (method length b)))
+    ;;->
+    "final String a = new String();
+final String b = new String();
+{
+a.length();
+b.length();
+}"))
+
+(deftest interop2-test
+  (inner-form
+    '(assoc ^{:t {:mmap [:string :long]}} {:a 1} :b 2)
+    ;;->
+    '(invoke assoc {:a 1} :b 2)
+    ;;->
+    "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
+tmp1.put(\":a\", 1);
+tmp1.put(\":b\", 2);"))
+
+(deftest interop3-test
+  (inner-form
+    '(update ^{:t {:mmap [:string :long]}} {:a 1} :a inc)
+    ;;->
+    '(invoke update {:a 1} :a inc)
+    ;;->
+    "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
+tmp1.put(\":a\", 1);
+tmp1.put(\":a\", (tmp1.get(\":a\") + 1));"))
+
+(deftest interop4-test
   (inner-form
     '(def ^{:t :int} x (count "abc"))
     ;;->
@@ -1058,7 +1027,7 @@ System.out.println((tmp1 + 4));"))
     ;;->
     "final int x = \"abc\".length();"))
 
-(deftest zzz2-test
+(deftest interop5-test
   (inner-form
     '(let [^String s "abc"]
        (println (nth s 1)))
@@ -1071,7 +1040,7 @@ System.out.println((tmp1 + 4));"))
     "final String s = \"abc\";
 System.out.println(s.charAt(1));"))
 
-(deftest zzz3-test
+(deftest interop6-test
   (inner-form
     '(let [^{:t {:mvector [:int]}} v [1 2 3]]
        (println (nth v 1)))
@@ -1088,7 +1057,7 @@ tmp1.add(3);
 final ArrayList<Integer> v = tmp1;
 System.out.println(v.get(1));"))
 
-(deftest yyy-test
+(deftest interop7-test
   (inner-form
     '(let [result (atom ^{:t {:mvector [:int]}} [])
            i (atom (int 10))]
@@ -1111,19 +1080,20 @@ result.add(i);
 i = (i - 3);
 }"))
 
-(deftest yyy2-test
+(deftest interop8-test
   (inner-form
-    '(let [^{:t {:mvector [:int]}} separatorPositions nil
+    '(let [^{:t {:mvector [:int]}} separatorPositions []
            ^{:t :int} numPositions (.size separatorPositions)]
        (println "hi"))
     ;;->
     '(do
-       (init separatorPositions nil)
+       (init separatorPositions [])
        (init numPositions
              (method size separatorPositions))
        (invoke println "hi"))
     ;;->
-    "final ArrayList<Integer> separatorPositions = null;
+    "ArrayList<Integer> tmp1 = new ArrayList<Integer>();
+final ArrayList<Integer> separatorPositions = tmp1;
 final int numPositions = separatorPositions.size();
 System.out.println(\"hi\");"))
 
@@ -1233,7 +1203,8 @@ System.out.println(z);"))
            ;; TODO: shouldn't have to declare the type of x here
            ^{:t :long} x (cond
                            true @a
-                           false @a)]
+                           false @a
+                           :else @a)]
        (println x))
     ;;->
     '(do
@@ -1241,6 +1212,7 @@ System.out.println(z);"))
        (init x (if true
                  a
                  (if false
+                   a
                    a)))
        (invoke println x))
     ;;->
@@ -1254,6 +1226,10 @@ else
 {
 long tmp2;
 if (false)
+{
+tmp2 = a;
+}
+else
 {
 tmp2 = a;
 }
@@ -1330,7 +1306,7 @@ System.out.println(x);
 
 (deftest propagated-types8-test
   (top-level-form
-    '(defn f ^String [^Integer num]
+    '(defn f ^Integer [^Integer num]
        (let [i (atom num)]
          i))
     ;;->
@@ -1338,7 +1314,7 @@ System.out.println(x);
                (do (init i num)
                    (return i)))
     ;;->
-    "public static final String f(final int num) {
+    "public static final int f(final int num) {
 int i = num;
 return i;
 }"))
@@ -1365,15 +1341,3 @@ return i;
     ;;->
     "ArrayList<Integer> tmp1 = new ArrayList<Integer>();
 ArrayList<Integer> result = tmp1;"))
-
-(deftest foo2-test
-  (top-level-form
-    '(defn parse ^Integer [^String s]
-       (nth s 1))
-    ;;->
-    '(function parse [s]
-               (return (invoke clojure.lang.RT/nth s 1)))
-    ;;->
-    "public static final int parse(final String s) {
-return s.charAt(1);
-}"))
