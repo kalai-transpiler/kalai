@@ -288,6 +288,7 @@ extern crate lazy_static;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::vec::Vec;
+use std::convert::TryInto;
 use std::env;
 lazy_static! {
 static ref x: HashMap<i64,String> = {
@@ -880,6 +881,114 @@ _ => String::from(\":c\"),
 _ => String::from(\":c\"),
 });"))
 
+(deftest conditional-expression-test
+  ;; For simple expressions, a true ternary could be used instead
+  ;; "((true ? 1 : 2) + (true ? (true ? 3 : 4) : 5));"
+  ;; But for now we are taking the more general approach which handles expressions.
+  (inner-form
+    '(println
+       (+ (if true 1 2)
+          (if true
+            (if true 3 4)
+            5)))
+    ;;->
+    '(invoke println
+             (operator +
+                       (if true 1 2)
+                       (if true
+                         (if true 3 4)
+                         5)))
+    ;;->
+    "println!(\"{}\", (if true
+{
+1
+}
+else
+{
+2
+} + if true
+{
+if true
+{
+3
+}
+else
+{
+4
+}
+}
+else
+{
+5
+}));"))
+
+;; Note: Rust will not compile when conditionals as expressions don't have
+;; an "else" branch (that is, only has a "then" branch)
+(deftest conditional-expression2-test
+  (inner-form
+    '(println
+       (+ (if true
+            (do (println 1)
+                2)
+            3)
+          4))
+    ;;->
+    '(invoke println
+             (operator +
+                       (if true
+                         (do
+                           (invoke println 1)
+                           2)
+                         3)
+                       4))
+    ;;->
+    "println!(\"{}\", (if true
+{
+println!(\"{}\", 1);
+2
+}
+else
+{
+3
+} + 4));"))
+
+(deftest conditional-expression3-test
+  (inner-form
+    '(println
+       (+ (if true 1 (if false 2 3)) 4))
+    ;;->
+    '(invoke println
+             (operator +
+                       (if true 1 (if false 2 3))
+                       4))
+    ;;->
+    "println!(\"{}\", (if true
+{
+1
+}
+else
+{
+if false
+{
+2
+}
+else
+{
+3
+}
+} + 4));"))
+
+(deftest operator-test
+  (inner-form
+    '(println
+       (not (= 1 (inc 1))))
+    ;;->
+    '(invoke println
+             (operator ! (operator == 1 (operator + 1 1))))
+    ;;->
+    "println!(\"{}\", !(1 == (1 + 1)));"))
+
+
 (deftest interop-test
   (inner-form
     '(let [^{:t :string} a (new String)
@@ -902,12 +1011,12 @@ _ => String::from(\":c\"),
 let b: String = String::new();
 let c: String = String::new();
 {
-a.len();
-b.len();
-c.len();
+a.len().try_into().unwrap();
+b.len().try_into().unwrap();
+c.len().try_into().unwrap();
 }"))
 
-(deftest interop2-test
+(deftest interop1b-test
   (inner-form
     '(let [^StringBuffer a (new StringBuffer)
            b (StringBuffer.)]
@@ -924,11 +1033,11 @@ c.len();
     "let a: String = String::new();
 let b: String = String::new();
 {
-a.len();
-b.len();
+a.len().try_into().unwrap();
+b.len().try_into().unwrap();
 }"))
 
-(deftest function-calls-test
+(deftest interop2-test
   (inner-form
     '(assoc ^{:t {:mmap [:string :long]}} {:a 1} :b 2)
     ;;->
@@ -940,7 +1049,7 @@ tmp_1.insert(String::from(\":a\"), 1);
 tmp_1
 }.insert(String::from(\":b\"), 2);"))
 
-(deftest function-calls2-test
+(deftest interop3-test
   (inner-form
     '(update ^{:t {:mmap [:string :long]}} {:a 1} :a inc)
     ;;->
@@ -955,3 +1064,311 @@ let mut tmp_1: HashMap<String,i64> = HashMap::new();
 tmp_1.insert(String::from(\":a\"), 1);
 tmp_1
 }.get(&String::from(\":a\")).unwrap() + 1));"))
+
+(deftest interop4-test
+  (inner-form
+    '(def ^{:t :int} x (count "abc"))
+    ;;->
+    '(init x (invoke clojure.lang.RT/count "abc"))
+    ;;->
+    "let x: i32 = String::from(\"abc\").len().try_into().unwrap();"))
+
+;; Because Rust strings semantically differ from Java strings, we're not even
+;; sure if `nth` on strings even makes sense across languages. If/when we
+;; revisit, we could instead offer an iterator over a string as a construct
+;; in input Kalai.
+(deftest interop5-test
+  #_(inner-form
+    '(let [^String s "abc"]
+       (println (nth s 1)))
+    ;;->
+    '(do
+       (init s "abc")
+       (invoke println
+               (invoke clojure.lang.RT/nth s 1)))
+    ;;->
+    "final String s = \"abc\";
+System.out.println(s.charAt(1));"))
+
+(deftest interop6-test
+  (inner-form
+    '(let [^{:t {:mvector [:int]}} v [1 2 3]]
+       (println (nth v 1)))
+    ;;->
+    '(do
+       (init v [1 2 3])
+       (invoke println
+               (invoke clojure.lang.RT/nth v 1)))
+    ;;->
+    "let v: Vec<i32> = {
+let mut tmp_1: Vec<i32> = Vec::new();
+tmp_1.push(1);
+tmp_1.push(2);
+tmp_1.push(3);
+tmp_1
+};
+println!(\"{}\", v.get(1).unwrap());"))
+
+
+(deftest interop7-test
+  (inner-form
+    '(let [result (atom ^{:t {:mvector [:int]}} [])
+           i (atom (int 10))]
+       (while (< 0 @i)
+         (swap! result conj @i)
+         (reset! i (- @i 3))))
+    ;;->
+    '(do
+       (init result [])
+       (init i 10)
+       (while (operator < 0 i)
+         (invoke conj result i)
+         (assign i (operator - i 3))))
+    ;;->
+    "let mut result: Vec<i32> = {
+let mut tmp_1: Vec<i32> = Vec::new();
+tmp_1
+};
+let mut i: i32 = 10;
+while (0 < i) {
+result.push(i);
+i = (i - 3);
+}"))
+
+(deftest interop8-test
+  (inner-form
+    '(let [^{:t {:mvector [:int]}} separatorPositions []
+           ^{:t :int} numPositions (.size separatorPositions)]
+       (println "hi"))
+    ;;->
+    '(do
+       (init separatorPositions [])
+       (init numPositions
+             (method size separatorPositions))
+       (invoke println "hi"))
+    ;;->
+    "let separator_positions: Vec<i32> = {
+let mut tmp_1: Vec<i32> = Vec::new();
+tmp_1
+};
+let num_positions: i32 = separator_positions.len().try_into().unwrap();
+println!(\"{}\", String::from(\"hi\"));"))
+
+
+(deftest return-if-test
+  (top-level-form
+    '(defn f ^{:t :long} []
+       (if true
+         1
+         (let [x 2]
+           (println "hi")
+           x)))
+    ;;->
+    '(function f []
+               (if true
+                 (return 1)
+                 (do
+                   (init x 2)
+                   (do
+                     (invoke println "hi")
+                     (return x)))))
+    ;;->
+    "pub fn f() -> i64 {
+if true
+{
+return 1;
+}
+else
+{
+let x: i64 = 2;
+{
+println!(\"{}\", String::from(\"hi\"));
+return x;
+}
+}
+}"))
+
+(deftest propagated-types-test
+  (inner-form
+    '(let [x 1
+           y x]
+       (println y))
+    ;;->
+    '(do
+       (init x 1)
+       (init y x)
+       (invoke println y))
+    ;;->
+    "let x: i64 = 1;
+let y: i64 = x;
+println!(\"{}\", y);"))
+
+
+(deftest propagated-types2-test
+  (inner-form
+    '(let [^{:t :int} x 1
+           y x]
+       (println y))
+    ;;->
+    '(do
+       (init x 1)
+       (init y x)
+       (invoke println y))
+    ;;->
+    "let x: i32 = 1;
+let y: i32 = x;
+println!(\"{}\", y);"))
+
+
+(deftest propagated-types3-test
+  (inner-form
+    '(let [a (atom 1)
+           ;; TODO: shouldn't have to declare the type of x here
+           ^{:t :long} x (cond
+                           true @a
+                           false @a
+                           :else @a)]
+       (println x))
+    ;;->
+    '(do
+       (init a 1)
+       (init x (if true
+                 a
+                 (if false
+                   a
+                   a)))
+       (invoke println x))
+    ;;->
+    "let mut a: i64 = 1;
+let x: i64 = if true
+{
+a
+}
+else
+{
+if false
+{
+a
+}
+else
+{
+a
+}
+};
+println!(\"{}\", x);"))
+
+
+(deftest propagated-types4-test
+  (inner-form
+    ;; TODO: it would be nice to be able to type infer from x to the inner vectors
+    '(let [x (atom ^{:t {:mvector [:long]}} [])]
+       (reset! x ^{:t {:mvector [:long]}} [1 2 3]))
+    ;;->
+    '(do
+       (init x [])
+       (assign x [1 2 3]))
+    ;;->
+    "let mut x: Vec<i64> = {
+let mut tmp_1: Vec<i64> = Vec::new();
+tmp_1
+};
+x = {
+let mut tmp_2: Vec<i64> = Vec::new();
+tmp_2.push(1);
+tmp_2.push(2);
+tmp_2.push(3);
+tmp_2
+};"))
+
+(deftest propagated-types5-test
+  (inner-form
+    ;; TODO: it would be nice to annotate x here instead
+    '(let [x (atom ^{:t {:mvector [:long]}} [])]
+       (swap! x conj 1))
+    ;;->
+    '(do
+       (init x [])
+       (invoke conj x 1))
+    ;;->
+    "let mut x: Vec<i64> = {
+let mut tmp_1: Vec<i64> = Vec::new();
+tmp_1
+};
+x.push(1);"))
+
+
+(deftest propagated-types6-test
+  (top-level-form
+    '(defn f ^{:t :void} [^String s]
+       ;; TODO: type of x should be inferred from s
+       (let [^String x s]
+         (println x)))
+    ;;->
+    '(function f [s]
+               (do
+                 (init x s)
+                 (invoke println x)))
+    ;;->
+    "pub fn f(s: String) -> () {
+let x: String = s;
+println!(\"{}\", x);
+}"))
+
+(deftest propagated-types7-test
+  ;; TODO: we should propagate from the arglist return type to the return expression
+  #_(top-level-form
+      '(defn f ^{:t {:vector [:int]}} []
+         [1])
+      ;;->
+      '(function f []
+                 (return [1]))
+      ;;->
+      "public static final ArrayList<Integer> f() {
+  final ArrayList<Integer> tmp1 = new ArrayList<Integer>();
+  tmp1.add(1);
+  return tmp1;
+  }"))
+
+
+(deftest propagated-types8-test
+  (top-level-form
+    '(defn f ^Integer [^Integer num]
+       (let [i (atom num)]
+         i))
+    ;;->
+    '(function f [num]
+               (do (init i num)
+                   (return i)))
+    ;;->
+    "pub fn f(num: i32) -> i32 {
+let mut i: i32 = num;
+return i;
+}"))
+
+
+(deftest propagated-types9-test
+  (inner-form
+    '(let [result (StringBuffer.)]
+       result)
+    ;;->
+    '(do
+       (init result (new StringBuffer))
+       result)
+    ;;->
+    "let result: String = String::new();
+result;"))
+
+(deftest propagated-types10-test
+  (inner-form
+    '(let [^{:t {:mvector [:int]}} result (atom [])]
+       @result)
+    ;;->
+    '(do
+       (init result [])
+       result)
+    ;;->
+    "let mut result: Vec<i32> = {
+let mut tmp_1: Vec<i32> = Vec::new();
+tmp_1
+};
+result;"))

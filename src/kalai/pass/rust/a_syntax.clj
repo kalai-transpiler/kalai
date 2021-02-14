@@ -67,6 +67,20 @@
     (lambda ?name ?docstring ?body)
     (r/lambda ?name ?docstring ?body)
 
+    ;; Note: Rust will not compile when conditionals as expressions don't have
+    ;; an "else" branch (that is, only has a "then" branch).
+    ;; Therefore, we should eventually deprecate this rule that only has a
+    ;; "then" branch. The reason we still include it is so that the user will
+    ;; eventually get a downstream Rust compiler error message.
+    (if ?condition ?then)
+    (r/if (m/app expression ?condition)
+      (r/block (m/app expression ?then)))
+
+    (if ?condition ?then ?else)
+    (r/if (m/app expression ?condition)
+      (r/block (m/app expression ?then))
+      (r/block (m/app expression ?else)))
+
     ;; faithfully reproduce Clojure semantics for do as a collection of
     ;; side-effect statements and a return expression
     (do . !x ... ?last)

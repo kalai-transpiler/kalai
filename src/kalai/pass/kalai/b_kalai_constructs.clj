@@ -186,6 +186,12 @@
 
 (def conditionals
   (s/rewrite
+    (if (m/pred keyword? ?test) ?then)
+    (m/app inner-form ?then)
+
+    (if (m/pred keyword? ?test) ?then ?else)
+    (m/app inner-form ?then)
+
     (if ?test ?then)
     (if (m/app inner-form ?test) (m/app inner-form ?then))
 

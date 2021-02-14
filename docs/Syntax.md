@@ -35,7 +35,15 @@ Ex: statically typed languages requires type annotations for new identifiers
 
 ### If statements as expressions
 
-* We support this in Java with some extra work
+* We support this in Java with some extra work (using groups)
+* Rust will not compile when conditionals as expressions don't have
+  an "else" branch (that is, only has a "then" branch)
+  - Therefore, we only support conditionals as expressions with the "else" branch, too
+  - We do not validate the input for having the "else" branch, and therefore rely on the target language compiler(s) downstream to throw errors to the user 
+  
+### Cond expressions
+
+* Default cases must only use a keyword (ex: `:else`, `:default`, or any other keyword). Do not use literal `true`.
 
 ### Data literals for collections
 
