@@ -644,3 +644,24 @@ Can we ignore nil? No, b/c you have initialize Clojure state containers with som
   - Basically, how Java works with primitives & objects
 * Currently, wrapping `r/literal` around strings that we create in implementation that should not become `String::from(...)` when stringified.
   - We expect to wrap things in `r/borrowed` in the future, wherever needed (ex: specific interop method args; user fn args).
+
+
+## Build considerations
+
+* We cannot use `src/main/java/` convention because Rust provides no way to specify the source location, and must have src under `src`
+* Therefore we can't use gradle to build all languages, so we use a language specific build tool for each language
+* Source goes in `java/src` instead, which is compatible with `rust/src`
+* Language specific dependency/build tool config goes in the `java` or `rust` root directory.
+* Who has control over `rust/Cargo.toml` and `java/build.gradle`??
+  - we could try to generate it, but seems risky
+  - we can rely on users to create them, which requires documentation
+* Rust needs a ringleader namespace to be a library or binary, we'll need to document that
+  
+TODO:
+* Rust forces you to refer to all namespaces to include them, and use `mod`
+* Maybe we need to translate `ns` specially?
+1. user code has to have an entry point that defines all other things to include
+   eg `src/lib.rs`, `src/bin.rs` <= should we follow this convention or not?
+2. Do we need to change the rust output to make required ns available
+* Test the CLI
+* Figure out how users will make a project that uses Kalai

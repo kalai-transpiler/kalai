@@ -1,9 +1,9 @@
-(ns kalai.core
+(ns kalai.exec.main
   (:require [clojure.tools.cli :as cli]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [kalai.emit.langs :as l]
-            [kalai.compile :as compile]))
+            [kalai.exec.kalai-to-language :as kalai-to-language]))
 
 (def cli-options
   [["-i" "--in DIRECTORY" "Input directory"
@@ -30,6 +30,6 @@
       (let [{:keys [verbose]} options]
         (when verbose
           (println "Options" (pr-str options)))
-        (compile/transpile options)
+        (kalai-to-language/transpile-all options)
         (when verbose
           (println "Done"))))))
