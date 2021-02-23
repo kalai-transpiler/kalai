@@ -3,7 +3,7 @@
   :url "https://github.com/echeran/kalai"
   :license {:name "EPL-2.0"
             :url "https://www.eclipse.org/legal/epl-2.0/"}
-  :main kalai.core
+  :main kalai.exec.main
   ;; default stack size produces a stackoverflow expection when compiling some meander expressions,
   ;; so making it explicitly larger
   :jvm-opts ["-Xss2m"]

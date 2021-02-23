@@ -3,13 +3,12 @@
     ;; Loading placation enables it to provide better string diffs,
     ;; however not all tooling plays nicely with it
     ;;[kalai.placation]
-            [kalai.compile :as c]
+            [kalai.exec.kalai-to-language :as t]
             [kalai.pass.kalai.pipeline :as kalai-pipeline]
             [kalai.pass.java.pipeline :as java-pipeline]
             [kalai.pass.rust.pipeline :as rust-pipeline]
             [kalai.util :as u]
-            [clojure.string :as str]
-            [clojure.tools.analyzer.jvm :as az]))
+            [clojure.string :as str]))
 
 (defn as-ns [form]
   (list '(ns test-package.test-class)
@@ -45,7 +44,7 @@
   `(do
      (reset! u/c 0)
      (is ;; to capture expections for test reporting
-       (let [asts# (c/analyze-forms (~as ~input))
+       (let [asts# (t/analyze-forms (~as ~input))
              a2b# (kalai-pipeline/asts->kalai asts#)]
          (and
            (testing "compiling to kalai"
@@ -57,11 +56,7 @@
                  (or
                    (is (= ~expected (~remove-java b2c#)))
                    (println "Kalai to target failed")))
-               (reset! u/c 0)
-               #_(let [a2c# (c/transpile-forms (~as ~input))]
-                 (testing "compiling to target"
-                   (or (is (= a2c# b2c#))
-                       (println "Clojure to target failed")))))))))))
+               (reset! u/c 0))))))))
 
 (defmacro ns-form [input kalai-s-expression expected]
   (test-form input kalai-s-expression expected
