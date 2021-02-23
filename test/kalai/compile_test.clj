@@ -8,7 +8,7 @@
 
 (deftest compile-source-file-test
   (reset! u/c 0)
-  (let [transpiled-file (io/file "examples/java/src/b/typeAlias.java")]
+  (let [transpiled-file (io/file "examples/java/src/b/TypeAlias.java")]
     (if (.exists transpiled-file)
       (.delete transpiled-file))
     (k/transpile-file (io/file "examples/src/main/clj/b/type_alias.clj")

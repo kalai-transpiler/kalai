@@ -3,7 +3,7 @@
     ;; Loading placation enables it to provide better string diffs,
     ;; however not all tooling plays nicely with it
     ;;[kalai.placation]
-            [kalai.kalai-to-language :as t]
+            [kalai.exec.kalai-to-language :as t]
             [kalai.pass.kalai.pipeline :as kalai-pipeline]
             [kalai.pass.java.pipeline :as java-pipeline]
             [kalai.pass.rust.pipeline :as rust-pipeline]
