@@ -88,4 +88,6 @@
   [options]
   (doseq [^File source-file (file-seq (io/file (:src-dir options)))
           :when (not (.isDirectory source-file))]
+    (when (:verbose options)
+      (println "transpiling source file:" (str source-file)))
     (transpile-file source-file options)))

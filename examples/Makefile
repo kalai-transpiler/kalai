@@ -1,10 +1,12 @@
+.PHONY: build clean setup
 #all: clean build
 
 clean:
-	echo
+	rm -rf java/src java/build
+	rm -rf rust/src rust/target
 
 setup:
-	echo
+	clj --version && cargo --version && gradle --version
 
 build:
-	clj -M -m kalai.exec.main
+	clj -M -m kalai.exec.main --src-dir src/main/clj --verbose
