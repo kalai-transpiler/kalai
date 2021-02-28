@@ -2,6 +2,12 @@ plugins {
     id 'application'
 }
 
+// DO NOT CHECK THIS IN!!
+apply plugin: 'java'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+
 sourceSets {
     main {
         java {
