@@ -8,7 +8,8 @@
             [clojure.tools.analyzer.jvm.utils :as azu]
             [clojure.string :as str]
             [clojure.java.io :as io]
-            [camel-snake-kebab.core :as csk])
+            [camel-snake-kebab.core :as csk]
+            [kalai.util :as u])
   (:import (java.io File)
            (java.nio.file Paths)))
 
@@ -50,6 +51,7 @@
     (az/analyze-ns file-path)))
 
 (defn read-kalai [file]
+  (reset! u/c 0)
   (-> (analyze-file file)
       (kalai-pipeline/asts->kalai)))
 

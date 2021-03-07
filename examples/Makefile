@@ -1,5 +1,5 @@
 .PHONY: build clean setup
-#all: clean build
+all: build
 
 clean:
 	rm -rf java/src java/build
@@ -10,3 +10,6 @@ setup:
 
 build:
 	clojure -M -m kalai.exec.main --src-dir src/main/clj --verbose
+	cd rust && cargo build
+	cd java && gradle build
+
