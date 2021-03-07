@@ -1,5 +1,5 @@
 [package]
-name = "examples"
+name = "demo_01"
 version = "0.1.0"
 authors = [
     "Elango Cheran <elango.cheran@gmail.com>",

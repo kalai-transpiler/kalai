@@ -8,6 +8,6 @@ use std::env;
 fn main () {
 let args: Vec<String> = env::args().collect();
 {
-println!("{}", b.required.f(1));
+println!("{}", b::required::f(1));
 }
 }

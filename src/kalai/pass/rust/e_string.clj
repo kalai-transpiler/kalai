@@ -128,13 +128,12 @@
                                    (stringify value)))))))
 
 (defn invoke-str [function-name & args]
-  (let [metameta (some-> function-name meta :var meta)]
-    (if metameta
-      (str (csk/->snake_case (str (:ns metameta))) "." (str (:name metameta))
+  (let [varmeta (some-> function-name meta :var meta)]
+    (if (and (str/includes? (str function-name) "/") varmeta)
+      (str (csk/->snake_case (str/replace (str (:ns varmeta)) "." "::"))
+           "::" (csk/->snake_case (:name varmeta))
            (args-list args))
-      (str (if (str/includes? function-name "-")
-             (csk/->snake_case function-name)
-             function-name)
+      (str (csk/->snake_case function-name)
            (args-list args)))))
 
 (defn function-str [name params body]

@@ -36,4 +36,5 @@
         (kalai-to-language/transpile-all options)
         (lc/build languages transpile-dir)
         (when verbose
-          (println "Done"))))))
+          (println "Done")))))
+  (shutdown-agents))

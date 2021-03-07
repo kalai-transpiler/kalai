@@ -6,7 +6,7 @@ import java.util.ArrayList;
 public class Demo01 {
 public static final String format(final int num) {
 int i = num;
-final java.lang.StringBuffer result = new StringBuffer();
+java.lang.StringBuffer result = new StringBuffer();
 {
 while (!(i == 0)) {
 final int quotient = (i / 10);

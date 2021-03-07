@@ -42,7 +42,7 @@ tmp_1
 };
 }
 lazy_static! {
-static ref digits_map: HashMap<char,i32> = a.demo_02.getDigitsMap();
+static ref digits_map: HashMap<char,i32> = get_digits_map();
 }
 pub fn parse(s: String) -> i32 {
 let mut result: i32 = 0;
@@ -113,7 +113,7 @@ tmp_2
 return m;
 }
 lazy_static! {
-static ref number_systems_map: HashMap<String,Vec<char>> = a.demo_02.getNumberSystemsMap();
+static ref number_systems_map: HashMap<String,Vec<char>> = get_number_systems_map();
 }
 pub fn get_grouping_separators_map() -> HashMap<String,char> {
 return {
@@ -125,7 +125,7 @@ tmp_6
 };
 }
 lazy_static! {
-static ref grouping_separators_map: HashMap<String,char> = a.demo_02.getGroupingSeparatorsMap();
+static ref grouping_separators_map: HashMap<String,char> = get_grouping_separators_map();
 }
 pub fn get_separator_positions(num_length: i32, grouping_strategy: String) -> Vec<i32> {
 let mut result: Vec<i32> = {
@@ -214,7 +214,7 @@ i = quotient;
 {
 let sep: char = grouping_separators_map.get(&number_system);
 let num_length: i32 = result.len().try_into().unwrap();
-let separator_positions: Vec<i32> = a.demo_02.getSeparatorPositions(num_length, grouping_strategy);
+let separator_positions: Vec<i32> = get_separator_positions(num_length, grouping_strategy);
 let num_positions: i32 = separator_positions.len().try_into().unwrap();
 let mut idx: i32 = 0;
 while (idx < num_positions) {
@@ -231,12 +231,12 @@ return result;
 fn main () {
 let args: Vec<String> = env::args().collect();
 {
-println!("{}", a.demo_02.parse(String::from("٥٠٣٠١")));
-println!("{}", a.demo_02.parse(String::from("৫০৩০১")));
-println!("{}", a.demo_02.parse(String::from("7,654,321")));
-println!("{}", a.demo_02.parse(String::from("76,54,321")));
-println!("{}", a.demo_02.format(7654321, String::from("LATIN"), String::from("ON_ALIGNED_3_2")));
-println!("{}", a.demo_02.format(7654321, String::from("ARABIC"), String::from("ON_ALIGNED_3_3")));
-println!("{}", a.demo_02.format(7654321, String::from("BENGALI"), String::from("ON_ALIGNED_3_3")));
+println!("{}", parse(String::from("٥٠٣٠١")));
+println!("{}", parse(String::from("৫০৩০১")));
+println!("{}", parse(String::from("7,654,321")));
+println!("{}", parse(String::from("76,54,321")));
+println!("{}", format(7654321, String::from("LATIN"), String::from("ON_ALIGNED_3_2")));
+println!("{}", format(7654321, String::from("ARABIC"), String::from("ON_ALIGNED_3_3")));
+println!("{}", format(7654321, String::from("BENGALI"), String::from("ON_ALIGNED_3_3")));
 }
 }
