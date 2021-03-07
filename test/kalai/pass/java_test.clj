@@ -1072,8 +1072,7 @@ System.out.println(v.get(1));"))
          (invoke conj result i)
          (assign i (operator - i 3))))
     ;;->
-    "ArrayList<Integer> tmp1 = new ArrayList<Integer>();
-ArrayList<Integer> result = tmp1;
+    "ArrayList<Integer> result = new ArrayList<Integer>();
 int i = 10;
 while ((0 < i)) {
 result.add(i);
@@ -1092,8 +1091,7 @@ i = (i - 3);
              (method size separatorPositions))
        (invoke println "hi"))
     ;;->
-    "ArrayList<Integer> tmp1 = new ArrayList<Integer>();
-final ArrayList<Integer> separatorPositions = tmp1;
+    "final ArrayList<Integer> separatorPositions = new ArrayList<Integer>();
 final int numPositions = separatorPositions.size();
 System.out.println(\"hi\");"))
 
@@ -1191,8 +1189,7 @@ System.out.println(z);"))
        (init z y)
        (invoke println z))
     ;;->
-    "ArrayList<Integer> tmp1 = new ArrayList<Integer>();
-final ArrayList<Integer> x = tmp1;
+    "final ArrayList<Integer> x = new ArrayList<Integer>();
 final ArrayList<Integer> y = x;
 final ArrayList<Integer> z = y;
 System.out.println(z);"))
@@ -1250,13 +1247,12 @@ System.out.println(x);"))
        (init x [])
        (assign x [1 2 3]))
     ;;->
-    "ArrayList<Long> tmp1 = new ArrayList<Long>();
-ArrayList<Long> x = tmp1;
-ArrayList<Long> tmp2 = new ArrayList<Long>();
-tmp2.add(1);
-tmp2.add(2);
-tmp2.add(3);
-x = tmp2;"))
+    "ArrayList<Long> x = new ArrayList<Long>();
+ArrayList<Long> tmp1 = new ArrayList<Long>();
+tmp1.add(1);
+tmp1.add(2);
+tmp1.add(3);
+x = tmp1;"))
 
 (deftest propagated-types5-test
   (inner-form
@@ -1268,8 +1264,7 @@ x = tmp2;"))
        (init x [])
        (invoke conj x 1))
     ;;->
-    "ArrayList<Long> tmp1 = new ArrayList<Long>();
-ArrayList<Long> x = tmp1;
+    "ArrayList<Long> x = new ArrayList<Long>();
 x.add(1);"))
 
 (deftest propagated-types6-test
@@ -1339,5 +1334,4 @@ return i;
        (init result [])
        result)
     ;;->
-    "ArrayList<Integer> tmp1 = new ArrayList<Integer>();
-ArrayList<Integer> result = tmp1;"))
+    "ArrayList<Integer> result = new ArrayList<Integer>();"))

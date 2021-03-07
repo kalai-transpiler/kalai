@@ -1,11 +1,14 @@
 [package]
-name = "hello"
+name = "examples"
 version = "0.1.0"
-authors = ["Timothy Pratley <timothypratley@gmail.com>"]
+authors = [
+    "Elango Cheran <elango.cheran@gmail.com>",
+    "Timothy Pratley <timothypratley@gmail.com>"]
 edition = "2018"
 
-[lib]
-path = "src/b/type_alias.rs"
+[[bin]]
+name = "demo_01"
+path = "src/a/demo_01.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

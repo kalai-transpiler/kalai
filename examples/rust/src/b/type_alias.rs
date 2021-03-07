@@ -7,8 +7,8 @@ use std::convert::TryInto;
 use std::env;
 lazy_static! {
 static ref x: HashMap<i64,String> = {
-let mut tmp_17: HashMap<i64,String> = HashMap::new();
-tmp_17
+let mut tmp_1: HashMap<i64,String> = HashMap::new();
+tmp_1
 };
 }
 pub fn f(y: HashMap<i64,String>) -> HashMap<i64,String> {
