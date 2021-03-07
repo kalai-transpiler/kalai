@@ -1,4 +1,4 @@
-(ns b.loop)
+(ns b.loops)
 
 (defn add ^{:t :int} [^{:t :int} a ^{:t :int} b]
   (dotimes [i 10]

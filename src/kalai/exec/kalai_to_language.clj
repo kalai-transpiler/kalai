@@ -73,12 +73,27 @@
     (.mkdirs (io/file (.getParent output-file)))
     (spit output-file content)))
 
-(defn transpile-file [^File source-file {:keys [src-dir transpile-dir languages]}]
+(defn transpile-file [^File source-file {:keys [src-dir transpile-dir languages verbose]}]
+  (when verbose
+    (println "transpiling source file:" (str source-file)))
   (let [kalai (read-kalai source-file)
         relative-path (relative (io/file src-dir) source-file)]
     (doseq [[language translate] (select-keys translators languages)]
       (-> (translate kalai)
           (write-file relative-path transpile-dir language)))))
+
+(defn write-module-definition [dir]
+  (spit (io/file dir "mod.rs")
+        (str/join (->> (map (memfn ^File getName) (.listFiles dir))
+                       (map #(str/replace % #".rs$" ""))
+                       (remove #{"mod"})
+                       (sort)
+                       (map #(str "pub mod " % ";\n"))))))
+
+(defn write-module-definitions [{:keys [transpile-dir]}]
+  (doseq [dir (file-seq (io/file transpile-dir (name :l/rust) "src"))
+          :when (.isDirectory dir)]
+    (write-module-definition dir)))
 
 (defn transpile-all
   "options is a map of
@@ -90,6 +105,5 @@
   [options]
   (doseq [^File source-file (file-seq (io/file (:src-dir options)))
           :when (not (.isDirectory source-file))]
-    (when (:verbose options)
-      (println "transpiling source file:" (str source-file)))
-    (transpile-file source-file options)))
+    (transpile-file source-file options))
+  (write-module-definitions options))

@@ -1,4 +1,4 @@
-pub mod r#loop;
+pub mod loops;
 pub mod required;
 pub mod requirer;
 pub mod simple;

@@ -3,7 +3,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
-public class Loop {
+public class Loops {
 public static final int add(final int a, final int b) {
 long i = 0;
 while ((i < 10)) {
