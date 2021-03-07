@@ -16,6 +16,9 @@
                        :transpile-dir "examples"
                        :languages     #{::l/java}})
     (is (.exists transpiled-file))
+    ;; We're leaving this single-file compilation test because it is possible
+    ;; in our current Java impl to compile a single file in isolation (no proj
+    ;; structure & build file required).
     (is (nil? (lc/compile-target-file transpiled-file
                                       ::l/java
                                       "examples/tmp")))))
@@ -30,11 +33,13 @@
                        :transpile-dir "examples"
                        :languages     #{::l/rust}})
     (is (.exists transpiled-file))
-    (is (nil? (lc/compile-target-file transpiled-file
+    ;; Because we depend on a crate by default, we would need to use `cargo`,
+    ;; not `rustc`
+    #_(is (nil? (lc/compile-target-file transpiled-file
                                       ::l/rust
                                       "examples/tmp")))))
 
-(deftest compile-test
+(deftest compile-java-test
   (reset! u/c 0)
   (let [x {:src-dir       "examples/src/main/clj"
            :transpile-dir "examples"

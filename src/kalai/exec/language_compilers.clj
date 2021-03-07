@@ -30,6 +30,10 @@
       (str out \newline err))))
 
 (defn build [languages dir]
+  ;; TODO: we might want to print something out and return error code if it
+  ;; fails.
+  ;; TODO: consider exiting early when one of the individual language targets
+  ;; fails.
   (when (contains? languages ::l/rust)
     (cargo-build (io/file dir "rust")))
   (when (contains? languages ::l/java)

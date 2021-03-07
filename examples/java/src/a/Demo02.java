@@ -109,8 +109,7 @@ return tmp6;
 }
 static final HashMap<String,Character> groupingSeparatorsMap = a.Demo02.getGroupingSeparatorsMap();
 public static final ArrayList<Integer> getSeparatorPositions(final int numLength, final String groupingStrategy) {
-ArrayList<Integer> tmp7 = new ArrayList<Integer>();
-ArrayList<Integer> result = tmp7;
+ArrayList<Integer> result = new ArrayList<Integer>();
 if (groupingStrategy.equals("NONE"))
 {
 return result;

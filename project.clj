@@ -1,4 +1,4 @@
-(defproject kalai "0.1.0-SNAPSHOT"
+(defproject com.github.echeran/kalai "0.1.0-SNAPSHOT"
   :description "Kalai transpiler is a source-to-source transpiler to convert Clojure to multiple target languages (Rust, C++, Java, ...)"
   :url "https://github.com/echeran/kalai"
   :license {:name "EPL-2.0"

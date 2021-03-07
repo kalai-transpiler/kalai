@@ -49,12 +49,19 @@
 (def expression
   (s/rewrite
     ;; Data Literals
+
+    ;;;; empty collections don't need a tmp
+    (m/and (m/or [] {} #{})
+           (m/pred empty?)
+           (m/app (comp :t meta) ?t))
+    ;;->
+    (j/new ?t)
+
     ;;;; vector []
     (m/and [!x ...]
            ?expr
-           (m/app meta ?meta)
-           (m/let [?t (:t ?meta)
-                   ?tmp (u/tmp ?t ?expr)]))
+           (m/app (comp :t meta) ?t)
+           (m/let [?tmp (u/tmp ?t ?expr)]))
     ;;->
     (group
       (j/init ?tmp (j/new ?t))
@@ -65,9 +72,8 @@
     (m/and {}
            ?expr
            (m/seqable [!k !v] ...)
-           (m/app meta ?meta)
-           (m/let [?t (:t ?meta)
-                   ?tmp (u/tmp ?t ?expr)]))
+           (m/app (comp :t meta) ?t)
+           (m/let [?tmp (u/tmp ?t ?expr)]))
     ;;->
     (group
       (j/init ?tmp (j/new ?t))
@@ -80,9 +86,8 @@
     (m/and #{}
            ?expr
            (m/seqable !k ...)
-           (m/app meta ?meta)
-           (m/let [?t (:t ?meta)
-                   ?tmp (u/tmp ?t ?expr)]))
+           (m/app (comp :t meta) ?t)
+           (m/let [?tmp (u/tmp ?t ?expr)]))
     ;;->
     (group
       (j/init ?tmp (j/new ?t))
