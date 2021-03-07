@@ -665,3 +665,11 @@ TODO:
 2. Do we need to change the rust output to make required ns available
 * Test the CLI
 * Figure out how users will make a project that uses Kalai
+
+####
+
+We have patterns, and it be nice to transfer state from outer patterns to inner patterns, but we don't know how to do that.
+For example:
+The namespace pattern, we'd like to preserve the current space and have it present when transpiling functions, so we could annotate them as being in the same namespace.
+We've been able to avoid this question so far because tools analyser represents state for every node.
+We only support `(:require [b.required :as r])` for now (not :refer or :use) because we don't have a solution to state yet.

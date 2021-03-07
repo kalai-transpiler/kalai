@@ -10,11 +10,11 @@ while ((i < 10)) {
 System.out.println(i);
 i = (i + 1);
 }
-ArrayList<Integer> tmp7 = new ArrayList<Integer>();
-tmp7.add(1);
-tmp7.add(2);
-tmp7.add(3);
-for (int ii : tmp7) {
+ArrayList<Integer> tmp15 = new ArrayList<Integer>();
+tmp15.add(1);
+tmp15.add(2);
+tmp15.add(3);
+for (int ii : tmp15) {
 System.out.println(ii);
 }
 {

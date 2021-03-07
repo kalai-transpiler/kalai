@@ -3,7 +3,7 @@
 
 (defn format ^String [^Integer num]
   (let [i (atom ^Integer num)
-        ^StringBuffer result (StringBuffer.)]
+        ^:mut ^StringBuffer result (StringBuffer.)]
     (while (not (= @i 0))
       (let [^int quotient (quot @i 10)
             ^int remainder (rem @i 10)]
