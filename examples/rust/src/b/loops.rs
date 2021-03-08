@@ -12,11 +12,11 @@ println!("{}", i);
 i = (i + 1);
 }
 for ii in {
-let mut tmp_15: Vec<i32> = Vec::new();
-tmp_15.push(1);
-tmp_15.push(2);
-tmp_15.push(3);
-tmp_15
+let mut tmp_1: Vec<i32> = Vec::new();
+tmp_1.push(1);
+tmp_1.push(2);
+tmp_1.push(3);
+tmp_1
 } {
 println!("{}", ii);
 }

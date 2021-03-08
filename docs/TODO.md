@@ -16,8 +16,8 @@
   - make shared passes apply for all target languages
     - if so, can make them ignore leading target language symbol prefix (ex: "j/", "r/")
     - a block is just a block, why bother with r/block, j/block
-  - add support for data literals in intialization
-  - support initialization for top-level forms (const vs. let, static and/or lazy_static!{..})
+  - StringBuffer mutability should be inferred
+  
 * Types!!!
   - Document target language type conversions (when added)
   - Validate types and narrow the set of accepted types
@@ -38,7 +38,7 @@
       - If it's hard to work with both primitives and Boxed,
         we can fall back to only using Boxed
       - Java types equal non-universal types, which is equal types, which is equal to user defined
-  - Top level def of data literal needs static block initialization `(def x [1])`
+  - Top level def of data literal needs static block initialization `(def x [1])` for Java
   - Debug why `^Character localDigit (get numberSystemDigits remainder)` transpiles to a type declaration of `Object` but `^{:t :char} localDigit (get numberSystemDigits remainder)` gives the proper type `char` in demo02. Same for `^char sep`.
   - Troubleshoot issue in `getNumberSystemsMap` in demo02 where data literal to be return must have type annotation within a `let` binding else types are missing in Kalai compilation phase (note: also the only nested data structure in demo02)
   - Might be a nice-to-have to propagate function return type to variable identifier in variable assignments, ex: `(def x (fn-call 1 2 3))`

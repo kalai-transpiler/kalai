@@ -3,18 +3,18 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
-public class Loop {
+public class Loops {
 public static final int add(final int a, final int b) {
 long i = 0;
 while ((i < 10)) {
 System.out.println(i);
 i = (i + 1);
 }
-ArrayList<Integer> tmp7 = new ArrayList<Integer>();
-tmp7.add(1);
-tmp7.add(2);
-tmp7.add(3);
-for (int ii : tmp7) {
+ArrayList<Integer> tmp2 = new ArrayList<Integer>();
+tmp2.add(1);
+tmp2.add(2);
+tmp2.add(3);
+for (int ii : tmp2) {
 System.out.println(ii);
 }
 {

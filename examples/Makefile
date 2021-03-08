@@ -1,12 +1,15 @@
 .PHONY: build clean setup
-#all: clean build
+all: build
 
 clean:
 	rm -rf java/src java/build
 	rm -rf rust/src rust/target
 
 setup:
-	clj --version && cargo --version && gradle --version
+	clojure --version && cargo --version && gradle --version
 
 build:
-	clj -M -m kalai.exec.main --src-dir src/main/clj --verbose
+	clojure -M -m kalai.exec.main --src-dir src/main/clj --verbose
+	cd rust && cargo build
+	cd java && gradle build
+

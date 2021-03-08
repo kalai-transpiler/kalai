@@ -1,5 +1,5 @@
 [package]
-name = "examples"
+name = "demo_01"
 version = "0.1.0"
 authors = [
     "Elango Cheran <elango.cheran@gmail.com>",
@@ -9,6 +9,10 @@ edition = "2018"
 [[bin]]
 name = "demo_01"
 path = "src/a/demo_01.rs"
+
+[[bin]]
+name = "demo_02"
+path = "src/a/demo_02.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

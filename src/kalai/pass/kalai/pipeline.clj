@@ -14,5 +14,4 @@
        (b-kalai-constructs/rewrite)
        (c-operators/rewrite)
        (d-annotate-return/rewrite)
-       (f/rewrite)
-       ))
+       (f/rewrite)))

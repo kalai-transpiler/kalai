@@ -45,12 +45,11 @@
       (r/method toString (u/of-t StringBuffer ?this))
       ?this
 
-      #_#_(r/method insert (u/of-t StringBuffer ?this) ?idx ?s2)
-      (r/block
-        (m/let [t (u/tmp StringBuffer)]
-               (r/assign t ?this)
-               (r/invoke truncate t ?idx)
-               (r/invoke push_str t ?s2)))
+      (r/method insert (u/of-t StringBuffer ?this) ?idx (u/of-t :char ?s2))
+      (r/method insert ?this ?idx ?s2)
+
+      (r/method insert (u/of-t StringBuffer ?this) ?idx ?s2)
+      (r/method insert_str ?this ?idx (r/ref (r/method to_string ?s2)))
 
       ;; TODO: these should be (u/var)
       (r/invoke clojure.lang.RT/count ?x)
