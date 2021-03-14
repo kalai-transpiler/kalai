@@ -162,14 +162,7 @@ return result;
 }
 else
 {
-if (true)
-{
 return result;
-}
-else
-{
-return null;
-}
 }
 }
 }
@@ -177,7 +170,7 @@ return null;
 }
 public static final String format(final int num, final String numberSystem, final String groupingStrategy) {
 int i = num;
-final java.lang.StringBuffer result = new StringBuffer();
+java.lang.StringBuffer result = new StringBuffer();
 {
 while (!(i == 0)) {
 final int quotient = (i / 10);

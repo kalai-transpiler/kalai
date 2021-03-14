@@ -46,15 +46,15 @@ static ref digits_map: HashMap<char,i32> = get_digits_map();
 }
 pub fn parse(s: String) -> i32 {
 let mut result: i32 = 0;
-let str_length: i32 = s.len().try_into().unwrap();
+let str_length: i32 = s.chars().count().try_into().unwrap();
 {
 let mut i: i32 = 0;
 while (i < str_length) {
 {
-let digit: char = s.get(i).unwrap();
-if digits_map.containsKey(digit)
+let digit: char = s.chars().nth(i as usize).unwrap();
+if digits_map.contains_key(&digit)
 {
-let digit_val: i32 = digits_map.get(&digit);
+let digit_val: &i32 = digits_map.get(&digit).unwrap();
 result = ((10 * result) + digit_val);
 }
 }
@@ -184,14 +184,7 @@ return result;
 }
 else
 {
-if true
-{
 return result;
-}
-else
-{
-return ();
-}
 }
 }
 }
@@ -199,28 +192,28 @@ return ();
 }
 pub fn format(num: i32, number_system: String, grouping_strategy: String) -> String {
 let mut i: i32 = num;
-let result: String = String::new();
+let mut result: String = String::new();
 {
 while !(i == 0) {
 let quotient: i32 = (i / 10);
 let remainder: i32 = (i % 10);
-let number_system_digits: Vec<char> = number_systems_map.get(&number_system);
-let local_digit: char = number_system_digits.get(&remainder);
+let number_system_digits: &Vec<char> = number_systems_map.get(&number_system).unwrap();
+let local_digit: char = *number_system_digits.get(remainder as usize).unwrap();
 {
-result.insert(0, local_digit);
+result.insert(0 as usize, local_digit);
 i = quotient;
 }
 }
 {
-let sep: char = grouping_separators_map.get(&number_system);
-let num_length: i32 = result.len().try_into().unwrap();
+let sep: &char = grouping_separators_map.get(&number_system).unwrap();
+let num_length: i32 = result.chars().count().try_into().unwrap();
 let separator_positions: Vec<i32> = get_separator_positions(num_length, grouping_strategy);
 let num_positions: i32 = separator_positions.len().try_into().unwrap();
 let mut idx: i32 = 0;
 while (idx < num_positions) {
 {
-let position: i32 = separator_positions.get(idx).unwrap();
-result.insert(position, sep);
+let position: i32 = *separator_positions.get(idx as usize).unwrap();
+result.insert(position as usize, *sep);
 }
 idx = (idx + 1);
 }

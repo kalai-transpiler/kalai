@@ -5,7 +5,8 @@
             [camel-snake-kebab.core :as csk]
             [puget.printer :as puget]
             [clojure.java.io :as io]
-            [kalai.types :as types])
+            [kalai.types :as types]
+            [kalai.util :as u])
   (:import (clojure.lang IMeta)))
 
 (declare stringify)
@@ -102,12 +103,22 @@
         (doto (maybe-warn-type-missing variable-name)))))
 
 (defn variable-name-type-str [variable-name]
-  (let [{:keys [mut t]} (meta variable-name)]
+  (let [{:keys [t mut ref]} (meta variable-name)]
+    ;; let mut char_vec: &Vec<char> = ;
+    ;; let char_vec: &Vec<char> = ;
+    ;; let mut char_vec: Vec<char> = ;
+    ;;
+    ;; fn f(char_vec: &mut Vec<char>) {...
+    ;; fn f(char_vec: &Vec<char>) {...
+    ;; NOT POSSIBLE? (or doesn't make sense?): fn f(char_vec: mut Vec<char>) {...
     (str (when mut "mut ") (csk/->snake_case variable-name)
          ;; Rust has type inference, so we can leave temp variable types off
          ;; TODO: probably don't want to use "MISSING_TYPE" though
          (when (not= t "MISSING_TYPE")
-           (str ": " (type-str variable-name))))))
+           (str ": " (when ref "&") (type-str variable-name))))))
+
+(defn cast-str [identifier t]
+  (space-separated (stringify identifier) "as" (name t)))
 
 (defn init-str
   ([variable-name]
@@ -123,9 +134,9 @@
                                      (stringify value)))
          "}")
        (statement (space-separated "let"
-                                   (variable-name-type-str variable-name)
-                                   "="
-                                   (stringify value)))))))
+                    (variable-name-type-str variable-name)
+                    "="
+                    (stringify value)))))))
 
 (defn invoke-str [function-name & args]
   (let [varmeta (some-> function-name meta :var meta)]
@@ -234,8 +245,13 @@ use std::env;")
 (defn ref-str [s]
   (if (and (instance? IMeta s)
            (:ref (meta s)))
+    ;; this prevents a ref from becoming a double-ref.
+    ;; we probably don't want to be doing this?
     (stringify s)
     (str "&" (stringify s))))
+
+(defn deref-str [s]
+  (str "*" (stringify s)))
 
 ;;;; This is the main entry point
 
@@ -258,7 +274,9 @@ use std::env;")
    'r/method               method-str
    'r/new                  new-str
    'r/literal              literal-str
-   'r/ref                  ref-str})
+   'r/cast                 cast-str
+   'r/ref                  ref-str
+   'r/deref                deref-str})
 
 (def stringify
   (s/match

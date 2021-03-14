@@ -1,4 +1,4 @@
-.PHONY: build clean setup
+.PHONY: build clean setup transpile rust java
 all: build
 
 clean:
@@ -13,3 +13,11 @@ build:
 	cd rust && cargo build
 	cd java && gradle build
 
+transpile:
+	clojure -M -m kalai.exec.main --src-dir src/main/clj --verbose
+
+rust:
+	cd rust && cargo build
+
+java:
+	cd java && gradle build

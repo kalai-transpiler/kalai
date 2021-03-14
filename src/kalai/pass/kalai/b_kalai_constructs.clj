@@ -177,12 +177,7 @@
     ~(inner-form ?x)
 
     ((u/var ~#'deref) ?ref)
-    ?ref
-
-    ;; TODO: might be better to leave this to function-calls
-    ;; TODO: sets use 'contains', array lists use count
-    ((u/var ~#'contains?) ?coll ?x)
-    (method containsKey ?coll ?x)))
+    ?ref))
 
 (def conditionals
   (s/rewrite

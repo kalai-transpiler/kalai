@@ -23,14 +23,18 @@
                                  (str/join " ")))
                 & ?args)
 
+
       ;; Remember that ^{:t java.lang.String} gets converted to ^{:t :string} upstream
       ;; (AST rewriting), whereas other Java class/types are left as-is in the metadata
       ;; map.
+      ;; TODO: consolidate the <string>.length(), <StringBuffer>.length(), and
+      ;; clojure.lang.RT/count(<string>) rules into one rule
       (r/method length (u/of-t :string ?this))
-      (r/method unwrap (r/method try_into (r/method len ?this)))
+      (r/method unwrap (r/method try_into (r/method count (r/method chars ?this))))
 
       (r/method length (u/of-t StringBuffer ?this))
-      (r/method unwrap (r/method try_into (r/method len ?this)))
+      (r/method unwrap (r/method try_into (r/method count (r/method chars ?this))))
+
 
       (r/method size ?this)
       (r/method unwrap (r/method try_into (r/method len ?this)))
@@ -45,22 +49,39 @@
       (r/method toString (u/of-t StringBuffer ?this))
       ?this
 
+
       (r/method insert (u/of-t StringBuffer ?this) ?idx (u/of-t :char ?s2))
-      (r/method insert ?this ?idx ?s2)
+      (r/method insert ?this (r/cast ?idx :usize)
+        ~(if (:ref (meta ?s2))
+           (list 'r/deref ?s2)
+           ?s2))
 
       (r/method insert (u/of-t StringBuffer ?this) ?idx ?s2)
-      (r/method insert_str ?this ?idx (r/ref (r/method to_string ?s2)))
+      (r/method insert_str ?this (r/cast ?idx :usize) (r/ref (r/method to_string ?s2)))
+
 
       ;; TODO: these should be (u/var)
+      (r/invoke clojure.lang.RT/count (u/of-t :string ?x))
+      (r/method unwrap (r/method try_into (r/method count (r/method chars ?x))))
+
       (r/invoke clojure.lang.RT/count ?x)
       (r/method unwrap (r/method try_into (r/method len ?x)))
 
-      ;; TODO: need to do different stuff depending on the type
-      (r/invoke clojure.lang.RT/nth ?x ?n)
-      (r/method unwrap (r/method get ?x ?n))
 
+      (r/invoke clojure.lang.RT/nth (u/of-t :string ?x) ?n)
+      (r/method unwrap (r/method nth (r/method chars ?x) (r/cast ?n :usize)))
+
+      (r/invoke clojure.lang.RT/nth ?x ?n)
+      (r/deref (r/method unwrap (r/method get ?x (r/cast ?n :usize))))
+
+
+      ;; TODO: for vectors, we should detect the vector type and do a
+      ;; cast of the index argument to `usize` like we do for `nth`
       (r/invoke clojure.lang.RT/get ?x ?k)
-      (r/method get ?x (r/ref ?k))
+      (r/method unwrap (r/method get ?x (r/ref ?k)))
+
+      (r/invoke (u/var ~#'contains?) ?coll ?x)
+      (r/method contains_key ?coll (r/ref ?x))
 
       (r/invoke (u/var ~#'assoc) & ?more)
       (r/method insert & ?more)

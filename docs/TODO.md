@@ -1,6 +1,16 @@
 # TODO
 
 * Rust etc
+  - make `StringBuffer` transpile to `Vec<char>` to help demo02 compile
+  - dealing with refs?
+    - do we make the user annotate the type in every assignment?
+    - or do we infer this in the S-exprs?
+    - how do we know when to deref a ref vs. not deref when it is not a ref (ex: Vec.insert() in demo_02.rs code)
+    - or what should the question be?
+    - current workaround in demo02.clj
+      - annotated the types manually in the code
+      - ex: `^:ref ^{:t {:mvector [:char]}} numberSystemDigits (get numberSystemsMap numberSystem)`
+        (which used to be `^{:t {:mvector [:char]}} numberSystemDigits (get numberSystemsMap numberSystem)`)
   - parameterize pipeline & test helpers to be target lang-driven
   - add Java tests to Rust tests that we skipped over for temporary expediency reasons
   - things that were difficult for emitter approach in Rust
