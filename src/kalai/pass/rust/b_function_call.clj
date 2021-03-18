@@ -47,7 +47,7 @@
       (r/method push_str ?this ?x)
 
       (r/method toString (u/of-t StringBuffer ?this))
-      ?this
+      (r/method collect (r/method iter ?this))
 
 
       (r/method insert (u/of-t StringBuffer ?this) ?idx (u/of-t :char ?s2))

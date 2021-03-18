@@ -17,7 +17,7 @@ result.insert_str(0 as usize, &remainder.to_string());
 i = quotient;
 }
 }
-return result;
+return result.iter().collect();
 }
 }
 fn main () {

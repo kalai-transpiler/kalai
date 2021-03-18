@@ -218,7 +218,7 @@ result.insert(position as usize, *sep);
 idx = (idx + 1);
 }
 }
-return result;
+return result.iter().collect();
 }
 }
 fn main () {
