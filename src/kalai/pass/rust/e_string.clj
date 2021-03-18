@@ -68,12 +68,23 @@
    :void    "()"
    :any     "Any"})
 
+;; Forward declaration of `t-str` to break cycle of references.
+;; We expect this not to create an infinite loop in practice, otherwise
+;; the types specified in types/lang-types-mapping is not configured correctly.
+(declare t-str)
+
 (defn rust-type [t]
   (or (get kalai-type->rust t)
       ;; TODO: breaking the rules for interop... is this a bad idea?
       (when t
-        (or (get-in types/lang-type-mappings [:kalai.emit.langs/rust t])
-            (pr-str t)))
+        (or
+          (let [custom-rust-type-data (get-in types/lang-type-mappings [:kalai.emit.langs/rust t])]
+            ;; `custom-rust-type-data` may be a symbol, but could also be a
+            ;; a data structure, just as we might find in `:t` of the metadata
+            ;; map upstream in the S-exprs. So we pass to `t-str` to ensure a
+            ;; proper stringified type output.
+            (t-str custom-rust-type-data))
+          (pr-str t)))
       "TYPE_MISSING"))
 
 (def t-str
