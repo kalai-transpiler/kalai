@@ -74,8 +74,12 @@ See also `kalai.emit.langs/TARGET-LANGS`
 ## Documentation
 
 [Rationale](./docs/Rationale.md)
+
 [Design](./docs/Design.md)
+
 [TODO](./docs/TODO.md)
+
+[Contributing](./docs/Contributing.md)
 
 ## Development
 
