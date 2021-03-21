@@ -7,17 +7,17 @@ use std::convert::TryInto;
 use std::env;
 pub fn format(num: i32) -> String {
 let mut i: i32 = num;
-let mut result: String = String::new();
+let mut result: Vec<char> = Vec::new();
 {
 while !(i == 0) {
 let quotient: i32 = (i / 10);
 let remainder: i32 = (i % 10);
 {
-result.insert_str(0, &remainder.to_string());
+result.splice(0..0, remainder.to_string().chars().collect::<Vec<char>>());
 i = quotient;
 }
 }
-return result;
+return result.iter().collect();
 }
 }
 fn main () {

@@ -4,6 +4,8 @@
             [meander.strategy.epsilon :as s])
   (:import (clojure.lang IMeta)))
 
+(def TYPE-MISSING-STR "TYPE_MISSING")
+
 (def primitive-types
   #{:int
     :long
@@ -109,4 +111,4 @@
     (get-kalai-type-from-java-type (type expr))))
 
 (def lang-type-mappings
-  {:kalai.emit.langs/rust {java.lang.StringBuffer 'String}})
+  {:kalai.emit.langs/rust {java.lang.StringBuffer '{:mvector [:char]}}})

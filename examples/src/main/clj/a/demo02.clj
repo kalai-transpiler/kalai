@@ -42,7 +42,7 @@
     (dotimes [^{:t :int} i strLength]
       (let [^{:t :char} digit (nth s i)]
         (if (contains? digitsMap digit)
-          (let [^Integer digitVal (get digitsMap digit)]
+          (let [^:ref ^Integer digitVal (get digitsMap digit)]
             (reset! result (+ (* 10 @result) digitVal))))))
     @result))
 
@@ -97,21 +97,21 @@
             (reset! i (- @i 3)))
           @result))
 
-      true
+      :else
       @result)))
 
 (defn format
   ^String [^Integer num, ^String numberSystem, ^String groupingStrategy]
   (let [^{:t :int} i (atom num)
-        ^StringBuffer result (StringBuffer.)]
+        ^:mut ^StringBuffer result (StringBuffer.)]
     (while (not (= @i 0))
       (let [^Integer quotient (quot @i 10)
             ^Integer remainder (rem @i 10)
-            ^{:t {:mvector [:char]}} numberSystemDigits (get numberSystemsMap numberSystem)
-            ^{:t :char} localDigit (get numberSystemDigits remainder)]
+            ^:ref ^{:t {:mvector [:char]}} numberSystemDigits (get numberSystemsMap numberSystem)
+            ^{:t :char} localDigit (nth numberSystemDigits remainder)]
         (.insert result 0 localDigit)
         (reset! i quotient)))
-    (let [^{:t :char} sep (get groupingSeparatorsMap numberSystem)
+    (let [^:ref ^{:t :char} sep (get groupingSeparatorsMap numberSystem)
           ^{:t :int} numLength (.length result)
           ^{:t {:mvector [:int]}} separatorPositions (getSeparatorPositions numLength groupingStrategy)
           ^{:t :int} numPositions (count separatorPositions)]

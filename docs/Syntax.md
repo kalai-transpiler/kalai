@@ -13,6 +13,11 @@ Ex: statically typed languages requires type annotations for new identifiers
 ### Types
 
 * Need type info on variables due to statically typed languages as target languages
+* Functions that return sizes are limited to integer sizes despite target languages supporting
+abstract concepts of size. Specifically, integer size = a Java integer = 32-bit signed. All
+  Java integers return integer sizes of collections, strings, etc. A language like Rust uses `usize`
+  for a platform dependent size, which must be cast to `i32`, `u32`, `i64`, `u64`, etc. to match the
+  type specified by the user's input code.
 
 ### Switch / Match
 
@@ -51,3 +56,5 @@ Ex: statically typed languages requires type annotations for new identifiers
 * Languages like Rust have literal syntax for some but not all collections
   * Rust: vectors -> `vec!`, but not for set and map)
     C++: can support literal values in initialization statement only, for some versions of C++ and later only
+    
+    

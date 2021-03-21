@@ -288,7 +288,6 @@ extern crate lazy_static;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::vec::Vec;
-use std::convert::TryInto;
 use std::env;
 lazy_static! {
 static ref x: HashMap<i64,String> = {
@@ -832,7 +831,7 @@ println!(\"{}\", 3);
 let mut tmp_1: HashMap<String,i64> = HashMap::new();
 tmp_1.insert(String::from(\":k\"), 1);
 tmp_1
-}.get(&String::from(\":k\")));"))
+}.get(&String::from(\":k\")).unwrap());"))
 
 (deftest keywords-as-functions2-test
   (inner-form
@@ -844,7 +843,7 @@ tmp_1
 let mut tmp_1: HashSet<String> = HashSet::new();
 tmp_1.insert(String::from(\":k\"));
 tmp_1
-}.get(&String::from(\":k\"));"))
+}.get(&String::from(\":k\")).unwrap();"))
 
 (deftest switch-case-test
   (inner-form
@@ -1011,9 +1010,9 @@ else
 let b: String = String::new();
 let c: String = String::new();
 {
-a.len().try_into().unwrap();
-b.len().try_into().unwrap();
-c.len().try_into().unwrap();
+a.chars().count() as i32;
+b.chars().count() as i32;
+c.chars().count() as i32;
 }"))
 
 (deftest interop1b-test
@@ -1030,11 +1029,11 @@ c.len().try_into().unwrap();
          (method length a)
          (method length b)))
     ;;->
-    "let a: String = String::new();
-let b: String = String::new();
+    "let a: Vec<char> = Vec::new();
+let b: Vec<char> = Vec::new();
 {
-a.len().try_into().unwrap();
-b.len().try_into().unwrap();
+a.len() as i32;
+b.len() as i32;
 }"))
 
 (deftest interop2-test
@@ -1071,7 +1070,7 @@ tmp_1
     ;;->
     '(init x (invoke clojure.lang.RT/count "abc"))
     ;;->
-    "let x: i32 = String::from(\"abc\").len().try_into().unwrap();"))
+    "let x: i32 = String::from(\"abc\").len() as i32;"))
 
 ;; Because Rust strings semantically differ from Java strings, we're not even
 ;; sure if `nth` on strings even makes sense across languages. If/when we
@@ -1107,7 +1106,7 @@ tmp_1.push(2);
 tmp_1.push(3);
 tmp_1
 };
-println!(\"{}\", v.get(1).unwrap());"))
+println!(\"{}\", *v.get(1 as usize).unwrap());"))
 
 
 (deftest interop7-test
@@ -1151,7 +1150,7 @@ i = (i - 3);
 let mut tmp_1: Vec<i32> = Vec::new();
 tmp_1
 };
-let num_positions: i32 = separator_positions.len().try_into().unwrap();
+let num_positions: i32 = separator_positions.len() as i32;
 println!(\"{}\", String::from(\"hi\"));"))
 
 
@@ -1355,7 +1354,7 @@ return i;
        (init result (new StringBuffer))
        result)
     ;;->
-    "let result: String = String::new();
+    "let result: Vec<char> = Vec::new();
 result;"))
 
 (deftest propagated-types10-test

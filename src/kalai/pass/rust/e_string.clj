@@ -5,7 +5,8 @@
             [camel-snake-kebab.core :as csk]
             [puget.printer :as puget]
             [clojure.java.io :as io]
-            [kalai.types :as types])
+            [kalai.types :as types]
+            [kalai.util :as u])
   (:import (clojure.lang IMeta)))
 
 (declare stringify)
@@ -67,15 +68,32 @@
    :void    "()"
    :any     "Any"})
 
-(defn rust-type [t]
+;; Forward declaration of `t-str` to break cycle of references.
+;; We expect this not to create an infinite loop in practice, otherwise
+;; the types specified in types/lang-types-mapping is not configured correctly.
+(declare t-str)
+
+(defn rust-type
+  "`t` is either the :t value we would find in metadata (in the S-exprs) or
+  would be data of the same form for a target-language specific type
+  (ex: `:usize`)."
+  [t]
   (or (get kalai-type->rust t)
       ;; TODO: breaking the rules for interop... is this a bad idea?
       (when t
-        (or (get-in types/lang-type-mappings [:kalai.emit.langs/rust t])
-            (pr-str t)))
-      "TYPE_MISSING"))
+        ;; TODO: refactor (move) the `get-in` call upstream in the pipeline so that
+        ;; values for `:t` conform to a narrow consistent spec.
+        (if-let [custom-rust-type-data (get-in types/lang-type-mappings [:kalai.emit.langs/rust t])]
+          (t-str custom-rust-type-data)
+          (if (keyword? t)
+            (name t)
+            (pr-str t))))
+      types/TYPE-MISSING-STR))
 
 (def t-str
+  "?t may be a symbol, but could also be a
+  a data structure, just as we might find in `:t ` of the metadata
+  map upstream in the S-exprs."
   (s/rewrite
     {?t [& ?ts]}
     ~(str (rust-type ?t)
@@ -91,7 +109,7 @@
     (str (.getName (io/file file)) ":" line ":" column)))
 
 (defn maybe-warn-type-missing [t x]
-  (when (str/includes? t "TYPE_MISSING")
+  (when (str/includes? t types/TYPE-MISSING-STR)
     (binding [*print-meta* true]
       (println "WARNING: missing type detected" x
                (where (meta (:expr (meta x))))))))
@@ -102,12 +120,22 @@
         (doto (maybe-warn-type-missing variable-name)))))
 
 (defn variable-name-type-str [variable-name]
-  (let [{:keys [mut t]} (meta variable-name)]
+  (let [{:keys [t mut ref]} (meta variable-name)]
+    ;; let mut char_vec: &Vec<char> = ;
+    ;; let char_vec: &Vec<char> = ;
+    ;; let mut char_vec: Vec<char> = ;
+    ;;
+    ;; fn f(char_vec: &mut Vec<char>) {...
+    ;; fn f(char_vec: &Vec<char>) {...
+    ;; NOT POSSIBLE? (or doesn't make sense?): fn f(char_vec: mut Vec<char>) {...
     (str (when mut "mut ") (csk/->snake_case variable-name)
          ;; Rust has type inference, so we can leave temp variable types off
          ;; TODO: probably don't want to use "MISSING_TYPE" though
-         (when (not= t "MISSING_TYPE")
-           (str ": " (type-str variable-name))))))
+         (when (not= t types/TYPE-MISSING-STR)
+           (str ": " (when ref "&") (type-str variable-name))))))
+
+(defn cast-str [identifier t]
+  (space-separated (stringify identifier) "as" (t-str t)))
 
 (defn init-str
   ([variable-name]
@@ -123,9 +151,9 @@
                                      (stringify value)))
          "}")
        (statement (space-separated "let"
-                                   (variable-name-type-str variable-name)
-                                   "="
-                                   (stringify value)))))))
+                    (variable-name-type-str variable-name)
+                    "="
+                    (stringify value)))))))
 
 (defn invoke-str [function-name & args]
   (let [varmeta (some-> function-name meta :var meta)]
@@ -170,7 +198,6 @@ extern crate lazy_static;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::vec::Vec;
-use std::convert::TryInto;
 use std::env;")
 
 (defn module-str [& forms]
@@ -218,7 +245,10 @@ use std::env;")
   (str (space-separated (stringify x) "=>" (str (stringify then) ","))))
 
 (defn method-str [method object & args]
-  (str (stringify object) "." method (args-list args)))
+  (str (stringify object) "." method
+    (when-let [t (-> method meta :t)]
+      (str "::<" (t-str t) ">"))
+    (args-list args)))
 
 (defn new-str [t & args]
   (str (if (symbol? t)
@@ -234,8 +264,16 @@ use std::env;")
 (defn ref-str [s]
   (if (and (instance? IMeta s)
            (:ref (meta s)))
+    ;; this prevents a ref from becoming a double-ref.
+    ;; we probably don't want to be doing this?
     (stringify s)
     (str "&" (stringify s))))
+
+(defn deref-str [s]
+  (str "*" (stringify s)))
+
+(defn range-str [start-idx end-idx]
+  (str (stringify start-idx) ".." (stringify end-idx)))
 
 ;;;; This is the main entry point
 
@@ -258,7 +296,10 @@ use std::env;")
    'r/method               method-str
    'r/new                  new-str
    'r/literal              literal-str
-   'r/ref                  ref-str})
+   'r/cast                 cast-str
+   'r/ref                  ref-str
+   'r/deref                deref-str
+   'r/range                range-str})
 
 (def stringify
   (s/match
