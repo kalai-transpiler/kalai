@@ -59,7 +59,7 @@
            ?s2))
 
       (r/method insert (u/of-t StringBuffer ?this) ?idx ?s2)
-      (r/method insert ?this (r/cast ?idx :usize) (r/method cloned (r/method collect (r/method chars (r/method to_string ?s2)))))
+      (r/method splice ?this (r/range ?idx ?idx) (r/method ^{:t {:mvector [:char]}} collect (r/method chars (r/method to_string ?s2))))
 
 
       ;; TODO: these should be (u/var)

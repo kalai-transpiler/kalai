@@ -4,6 +4,8 @@
             [meander.strategy.epsilon :as s])
   (:import (clojure.lang IMeta)))
 
+(def TYPE-MISSING-STR "TYPE_MISSING")
+
 (def primitive-types
   #{:int
     :long

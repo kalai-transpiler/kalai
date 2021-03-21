@@ -13,7 +13,7 @@ while !(i == 0) {
 let quotient: i32 = (i / 10);
 let remainder: i32 = (i % 10);
 {
-result.insert(0 as usize, remainder.to_string().chars().collect().cloned());
+result.splice(0..0, remainder.to_string().chars().collect::<Vec<char>>());
 i = quotient;
 }
 }
