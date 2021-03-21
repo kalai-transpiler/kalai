@@ -32,8 +32,10 @@
       (r/method length (u/of-t :string ?this))
       (r/method unwrap (r/method try_into (r/method count (r/method chars ?this))))
 
+      ;; TODO: do we support the Clojure casting functions `int`, `float`, etc. to
+      ;; give users control on more precise types?
       (r/method length (u/of-t StringBuffer ?this))
-      (r/method unwrap (r/method try_into (r/method count (r/method chars ?this))))
+      (r/cast (r/method len ?this) :int)
 
 
       (r/method size ?this)
@@ -57,7 +59,7 @@
            ?s2))
 
       (r/method insert (u/of-t StringBuffer ?this) ?idx ?s2)
-      (r/method insert_str ?this (r/cast ?idx :usize) (r/ref (r/method to_string ?s2)))
+      (r/method insert ?this (r/cast ?idx :usize) (r/method cloned (r/method collect (r/method chars (r/method to_string ?s2)))))
 
 
       ;; TODO: these should be (u/var)

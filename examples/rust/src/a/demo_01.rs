@@ -13,7 +13,7 @@ while !(i == 0) {
 let quotient: i32 = (i / 10);
 let remainder: i32 = (i % 10);
 {
-result.insert_str(0 as usize, &remainder.to_string());
+result.insert(0 as usize, remainder.to_string().chars().collect().cloned());
 i = quotient;
 }
 }
