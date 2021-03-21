@@ -30,7 +30,7 @@
       ;; TODO: consolidate the <string>.length(), <StringBuffer>.length(), and
       ;; clojure.lang.RT/count(<string>) rules into one rule
       (r/method length (u/of-t :string ?this))
-      (r/method unwrap (r/method try_into (r/method count (r/method chars ?this))))
+      (r/cast (r/method count (r/method chars ?this)) :int)
 
       ;; TODO: do we support the Clojure casting functions `int`, `float`, etc. to
       ;; give users control on more precise types?
@@ -39,7 +39,7 @@
 
 
       (r/method size ?this)
-      (r/method unwrap (r/method try_into (r/method len ?this)))
+      (r/cast (r/method len ?this) :int)
 
       (r/new ?sym)
       (r/new ~(or (get-in types/lang-type-mappings [:kalai.emit.langs/rust (:t (meta ?sym))])
@@ -64,10 +64,10 @@
 
       ;; TODO: these should be (u/var)
       (r/invoke clojure.lang.RT/count (u/of-t :string ?x))
-      (r/method unwrap (r/method try_into (r/method count (r/method chars ?x))))
+      (r/cast (r/method count (r/method chars ?x)) :int)
 
       (r/invoke clojure.lang.RT/count ?x)
-      (r/method unwrap (r/method try_into (r/method len ?x)))
+      (r/cast (r/method len ?x) :int)
 
 
       (r/invoke clojure.lang.RT/nth (u/of-t :string ?x) ?n)
@@ -99,7 +99,7 @@
 
       (r/invoke (u/var ~#'update) ?x ?k ?f & ?args)
       (r/method insert ?x ?k
-                (m/app rewrite (r/invoke ?f (r/method unwrap (r/invoke clojure.lang.RT/get ?x ?k)) & ?args)))
+                (m/app rewrite (r/invoke ?f (r/invoke clojure.lang.RT/get ?x ?k) & ?args)))
 
       ?else
       ?else)))

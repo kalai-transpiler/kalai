@@ -46,7 +46,7 @@ static ref digits_map: HashMap<char,i32> = get_digits_map();
 }
 pub fn parse(s: String) -> i32 {
 let mut result: i32 = 0;
-let str_length: i32 = s.chars().count().try_into().unwrap();
+let str_length: i32 = s.chars().count() as i32;
 {
 let mut i: i32 = 0;
 while (i < str_length) {
@@ -208,7 +208,7 @@ i = quotient;
 let sep: &char = grouping_separators_map.get(&number_system).unwrap();
 let num_length: i32 = result.len() as i32;
 let separator_positions: Vec<i32> = get_separator_positions(num_length, grouping_strategy);
-let num_positions: i32 = separator_positions.len().try_into().unwrap();
+let num_positions: i32 = separator_positions.len() as i32;
 let mut idx: i32 = 0;
 while (idx < num_positions) {
 {
