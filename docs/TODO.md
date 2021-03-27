@@ -1,8 +1,7 @@
 # TODO
 
 * Rust etc
-  - make `StringBuffer` transpile to `Vec<char>` to help demo02 compile
-  - dealing with refs?
+    - dealing with refs?
     - do we make the user annotate the type in every assignment?
     - or do we infer this in the S-exprs?
     - how do we know when to deref a ref vs. not deref when it is not a ref (ex: Vec.insert() in demo_02.rs code)
@@ -33,21 +32,6 @@
   - Validate types and narrow the set of accepted types
   - Define common types
     - supporting universals: numeric types should be signed
-    - add a pass to convert Java types to target language types
-      * depends on choosing another language, too boring in Java
-      - Boxed and primitives need to be unified
-      - If it's hard to work with both primitives and Boxed,
-        we can fall back to only using Boxed
-      - Java types equal non-universal - Document target language type conversions (when added)
-  - Validate types and narrow the set of accepted types
-  - Define common types
-    - supporting universals: numeric types should be signed
-    - add a pass to convert Java types to target language types
-      * depends on choosing another language, too boring in Java
-      - Boxed and primitives need to be unified
-      - If it's hard to work with both primitives and Boxed,
-        we can fall back to only using Boxed
-      - Java types equal non-universal types, which is equal types, which is equal to user defined
   - Top level def of data literal needs static block initialization `(def x [1])` for Java
   - Debug why `^Character localDigit (get numberSystemDigits remainder)` transpiles to a type declaration of `Object` but `^{:t :char} localDigit (get numberSystemDigits remainder)` gives the proper type `char` in demo02. Same for `^char sep`.
   - Troubleshoot issue in `getNumberSystemsMap` in demo02 where data literal to be return must have type annotation within a `let` binding else types are missing in Kalai compilation phase (note: also the only nested data structure in demo02)
@@ -55,6 +39,10 @@
   - Propagate return type of fn to a data literal passed as return value in fn body implementation, ex: `(defn f ^{:t {:mmap [:char :int]}} [] {})`
   - Option types
   - (let [x (String. "abc")]) should infer :t :string
+    * does this already happen 
+    * also, consider turning "user-defined types" (non-Kalai supported primitives) (ex: `'java.lang.StringBuffer`) into Kalai style
+    target-language type representation in target-language pipeline phase (ex: Rust syntax pass converts `'StringBuffer` into
+      `{:mvector [:char]}` as early as possible)
 * Test organization
   - grouping functionality
   - generate docsy from tests
@@ -73,9 +61,9 @@
   - support array types (?) (ex: Java main method)
   - In C++ make sure that string concatenation of numbers is wrapped by std::to_string https://stackoverflow.com/questions/191757/how-to-concatenate-a-stdstring-and-an-int
   - implement `str`
-* Match demo01 and demo02
+* Extend demo01 and demo02
   - try using `case` instead of `cond` in `getSeparatorPositions` of demo02
-  - logic unit tests
+  - transpile logic unit tests into target languages
 * Miscellaneous
   - Filename syntax should be language specific
   - Update Design doc headings & organization
