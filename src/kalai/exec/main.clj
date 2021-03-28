@@ -1,20 +1,23 @@
-(ns kalai.core
+(ns kalai.exec.main
   (:require [clojure.tools.cli :as cli]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [kalai.emit.langs :as l]
-            [kalai.compile :as compile]))
+            [kalai.exec.kalai-to-language :as kalai-to-language]
+            [kalai.exec.language-compilers :as lc]))
 
 (def cli-options
-  [["-i" "--in DIRECTORY" "Input directory"
+  [["-s" "--src-dir DIRECTORY" "Input directory"
     :missing "Input directory is missing"
     :validate [(fn check-filename [filename]
                  (.exists (io/file filename)))
-               "File must exist"]]
-   ["-o" "--out DIRECTORY" "Output directory"
-    :default "out"]
-   ["-l" "--language LANGUAGE" (str "Target language (" (str/join ", " (keys l/USER-TARGET-LANG-NAMES)) ")")
-    :parse-fn l/USER-TARGET-LANG-NAMES
+               "File must exist"]
+    :default "src/main/clj"]
+   ["-t" "--transpile-dir DIRECTORY" "Output directory"
+    :default "."]
+   ["-l" "--languages LANGUAGE" (str "Target language (" (str/join ", " (keys l/USER-TARGET-LANG-NAMES)) ")")
+    ;;:parse-fn l/USER-TARGET-LANG-NAMES
+    :default #{::l/java ::l/rust}
     :validate [some?]]
    ["-v" "--verbose" "Reports progress"]
    ["-h" "--help" "Print usage information"]])
@@ -27,9 +30,11 @@
       (:help options) (do (println "Options:")
                           (println summary))
       :else
-      (let [{:keys [verbose]} options]
+      (let [{:keys [verbose languages transpile-dir]} options]
         (when verbose
           (println "Options" (pr-str options)))
-        (compile/compile options)
+        (kalai-to-language/transpile-all options)
+        (lc/build languages transpile-dir)
         (when verbose
-          (println "Done"))))))
+          (println "Done")))))
+  (shutdown-agents))

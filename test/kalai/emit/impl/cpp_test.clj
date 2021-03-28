@@ -1,5 +1,4 @@
 (ns kalai.emit.impl.cpp-test
-  (:refer-clojure :exclude [format])
   (:require [kalai.common :refer :all]
             [kalai.emit.api :refer :all]
             [kalai.emit.langs :as l]
@@ -411,7 +410,7 @@ numberWords.insert(std::make_pair(\"three\", 3));"
 
 (defexpect demo
   (let [ast (az/analyze '(defclass "NumFmt"
-                           (defn format ^String [^Integer num]
+                           (defn format2 ^String [^Integer num]
                              (let [^Integer i (atom num)
                                    ^StringBuffer result (atom (new-strbuf))]
                                (while (not (= @i 0))
@@ -423,7 +422,7 @@ numberWords.insert(std::make_pair(\"three\", 3));"
     (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
 "class NumFmt
 {
-  std::string format(int num)
+  std::string format2(int num)
   {
     {
       int i = num;
@@ -444,7 +443,7 @@ numberWords.insert(std::make_pair(\"three\", 3));"
   ;; TODO: make emitters for args to a static call / function call invoke discard the parens around derefs.
   ;; Then this test should be removed, and test above can have a simplified output.
   (let [ast (az/analyze '(defclass "NumFmt"
-                           (defn format ^String [^Integer num]
+                           (defn format2 ^String [^Integer num]
                              (let [^Integer i (atom num)
                                    ^StringBuffer result (atom (new-strbuf))]
                                (while (not (= i 0))
@@ -456,7 +455,7 @@ numberWords.insert(std::make_pair(\"three\", 3));"
     (expect (emit (map->AstOpts {:ast ast :lang ::l/cpp}))
 "class NumFmt
 {
-  std::string format(int num)
+  std::string format2(int num)
   {
     {
       int i = num;

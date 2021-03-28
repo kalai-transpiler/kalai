@@ -1,4 +1,3 @@
-
 (ns kalai.emit.impl.java
   (:require [kalai.common :refer :all]
             [kalai.emit.interface :as iface :refer :all]
@@ -6,8 +5,7 @@
             [kalai.emit.impl.util.java-type-util :as java-type-util]
             [kalai.emit.impl.util.common-type-util :as common-type-util]
             [clojure.edn :as edn]
-            [clojure.string :as string]
-            [clojure.tools.analyzer.jvm :as az])
+            [clojure.string :as string])
   (:import [java.util List Map]))
 
 (defmethod iface/emit-complex-type [::l/java List]
@@ -137,6 +135,8 @@
                         :type-class-ast type-class-ast}
             expr-ast-opts-init-impl-state (assoc expr-ast-opts :impl-state impl-state)]
         (java-type-util/java-emit-assignment-map-nested expr-ast-opts-init-impl-state)))))
+
+
 
 (defmethod iface/emit-defn ::l/java 
   [ast-opts]
