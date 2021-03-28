@@ -581,6 +581,9 @@ When translating interop calls, do we match on the Java syntax (ex: `(j/invoke (
 
 ## Supporting a new target language
 
+To target another language, provide a language specific pass.
+See [pass](src/kalai/pass).
+
 Current approach for supporting the 2nd language (Rust, after first supporting Java):
 
 * Copied all the files from Java pass to Rust pass

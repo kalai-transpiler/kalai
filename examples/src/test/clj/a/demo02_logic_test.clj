@@ -1,6 +1,6 @@
-(ns kalai.demo.demo02-logic-test
+(ns a.demo02-logic-test
   (:refer-clojure :exclude [format])
-  (:require [kalai.demo.demo02 :as demo :refer :all]
+  (:require [a.demo02 :as demo :refer :all]
             [clojure.test :refer [deftest testing]]
             [expectations.clojure.test :refer :all]))
 
