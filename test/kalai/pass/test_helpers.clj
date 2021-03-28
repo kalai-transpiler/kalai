@@ -1,8 +1,5 @@
 (ns kalai.pass.test-helpers
   (:require [clojure.test :refer [testing is]]
-    ;; Loading placation enables it to provide better string diffs,
-    ;; however not all tooling plays nicely with it
-    ;;[kalai.placation]
             [kalai.exec.kalai-to-language :as t]
             [kalai.pass.kalai.pipeline :as kalai-pipeline]
             [kalai.pass.java.pipeline :as java-pipeline]

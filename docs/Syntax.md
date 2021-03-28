@@ -3,6 +3,26 @@
 
 ## Overview
 
+Kalai supports the majority of Clojure language constructs.
+
+Namespaces translate to classes,
+functions translate to static functions,
+defs and lets translate to variables,
+atoms translate to mutable data structures,
+data literals default to equivalent persistent data structures via libraries when used.
+
+Kalai expressly disallows top-level forms other than `defn` and `def`.
+For example:
+
+```clojure
+(ns foo.bar)
+(println "hi")
+```
+
+While valid in Clojure,
+most target languages disallow code execution during compilation,
+so Kalai will reject this code.
+
 * Certain languages have requirements that are narrower than other languages
 * Supporting all languages requires supporting the narrowest requirement
 
@@ -56,5 +76,4 @@ abstract concepts of size. Specifically, integer size = a Java integer = 32-bit 
 * Languages like Rust have literal syntax for some but not all collections
   * Rust: vectors -> `vec!`, but not for set and map)
     C++: can support literal values in initialization statement only, for some versions of C++ and later only
-    
     

@@ -1,6 +1,6 @@
 # Kalai Transpiler
 
-Kalai is a source-to-source transpiler from Clojure to other languages (Rust, C++, Java, ...).
+Kalai is a source-to-source transpiler from Clojure to other languages (Rust, Java, C++, ...).
 
 The goal of Kalai is to allow useful algorithms to be encoded once and then automatically be made available natively to other target programming languages.
 
@@ -10,7 +10,9 @@ The goal of Kalai is to allow useful algorithms to be encoded once and then auto
 
 ## Supported forms
 
-Kalai supports the majority of Clojure language constructs.
+Kalai is designed to operate on working Clojure source code.
+Kalai does not introduce any new syntax on top of Clojure.
+Kalai supports a sufficient subset of Clojure language constructs to represent many useful algorithms and applications.
 
 Namespaces translate to classes,
 functions translate to static functions,
@@ -30,71 +32,75 @@ While valid in Clojure,
 most target languages disallow code execution during compilation,
 so Kalai will reject this code.
 
-A formal grammar will be provided in the future.
-
-## Usage
-
-If you have code written in `your.namespace`, then you can emit code as follows, assuming there is a file `src/your/namespace.clj` relative to the current directory:
-
-```clj
-lein run -i src/your/namespace.clj -o someoutdir -l rust
-```
-
-In this example, an output file will be written to `someoutdir/your/namespace.rs`.
-
-From the root directory of this project, you can run
-
-```
-lein run -i examples/a/demo01.clj -o out -l rust
-```
-
-creates `out/examples/a/demo01.rs`
-
-```
-lein run -i examples/a/demo02.clj -o out -l java
-```
-
-creates `out/examples/a/demo01.java`
-
-### Demo unit test cases
-
-Example demo 1 has input code at [`test/kalai/demo/demo01.clj`](test/kalai/demo/demo01.clj) and emitter tests at [`test/kalai/demo/demo01.clj`](./test/kalai/demo/demo01_test.clj).
-
-Example demo 2 has input code at [`test/kalai/demo/demo02.clj`](test/kalai/demo/demo02.clj) and emitter tests at [`test/kalai/demo/demo02.clj`](./test/kalai/demo/demo02_test.clj) and logic tests at [`test/kalai/demo/demo02_logic_test.clj`](./test/kalai/demo/demo02_logic_test.clj).
+Read more about supported forms in [docs/Syntax.md](./docs/Syntax.md).
 
 ### Implemented target languages
 
 - Rust
-- C++
 - Java
-- Clojure (Kalai is source compatible with Clojure)
 
 See also `kalai.emit.langs/TARGET-LANGS`
 
-## Documentation
+## Usage
 
-[Rationale](./docs/Rationale.md)
+The easiest way to get started is to follow the pattern established in the `examples` folder.
+The [examples/deps.edn](./examples/deps.edn) defines how you can invoke Kalai.
+You can replace `{:local/root ".."}` version with `{:mvn/version "<INSERT VERSION HERE>"}` if you wish to rely on a release version.
 
-[Design](./docs/Design.md)
+The [examples/Makefile](./examples/Makefile) defines tasks to invoke Kalai and downstream compilers.
 
-[TODO](./docs/TODO.md)
+### Setup to run examples
 
-[Contributing](./docs/Contributing.md)
+You will need to install the following tools:
+
+- `clojure` command-line tool (from the [official Clojure distribution](https://clojure.org/guides/getting_started), ex: `brew install clojure/tools/clojure
+  ` on macOS)
+- Make (simple commands to run transpile+compile examples)
+- Gradle (compile Java transpiled code in examples)
+- Cargo (compile Rust transpiled code in examples)
+
+### Running examples
+
+Start in the `examples` directory:
+
+```
+cd examples
+```
+
+To transpile the examples and invoke the downstream compilers:
+
+```
+make
+```
+
+To only invoke the Kalai transpiler:
+
+```
+make transpile
+```
+
+If you don't want to use Make, you can invoke Kalai using the Clojure CLI:
+
+```
+clojure -M -m kalai.exec.main --src-dir src/main/clj --verbose
+```
+
+To run the compiled output:
+
+`./rust/target/debug/demo_01`
+
 
 ## Development
+
+Pull requests welcome! See [Contributing](./docs/Contributing.md).
+
+Planned work is sketched out in [TODO](./docs/TODO.md).
 
 ### Extending or adding languages
 
 To target another language, provide a language specific pass.
-See [pass](src/kalai/pass).
+See [Design](docs/Design.md) and [pass](src/kalai/pass).
 
-### Implementation
-
-See [Design](docs/Design.md).
-
-### Contributing
-
-Issues and Pull requests are welcome!
 
 ## License
 

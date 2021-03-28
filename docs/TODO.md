@@ -1,5 +1,6 @@
 # TODO
 
+* Create a task in `examples` to run the logic tests
 * Rust etc
     - dealing with refs?
     - do we make the user annotate the type in every assignment?
@@ -52,7 +53,9 @@
     - markdown inversion
     - GitHub action
     - local action
+  - Resurect placation or find some way of doing that better
 * Interop
+  - Add demo03 from https://github.com/echeran/kalai/pull/13 (environment variables)
   - Support import statements (ex: for user-defined classes; automatically created when user uses data collections)
   - expand the "function-call" pass (core/interop/kalai/custom)
     - depends on us choosing another target language
