@@ -15,7 +15,15 @@ jobs:
 
     - uses: actions/checkout@v2
 
+    - uses: actions/cache@v1
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/project.clj') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
     - name: Install dependencies
       run: lein deps
+
     - name: Run tests
       run: lein test
