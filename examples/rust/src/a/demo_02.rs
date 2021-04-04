@@ -3,31 +3,10 @@ extern crate lazy_static;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::vec::Vec;
-use std::convert::TryInto;
 use std::env;
 pub fn get_digits_map() -> HashMap<char,i32> {
 return {
 let mut tmp_1: HashMap<char,i32> = HashMap::new();
-tmp_1.insert('٠', 0);
-tmp_1.insert('١', 1);
-tmp_1.insert('٢', 2);
-tmp_1.insert('٣', 3);
-tmp_1.insert('٤', 4);
-tmp_1.insert('٥', 5);
-tmp_1.insert('০', 0);
-tmp_1.insert('٦', 6);
-tmp_1.insert('১', 1);
-tmp_1.insert('٧', 7);
-tmp_1.insert('২', 2);
-tmp_1.insert('٨', 8);
-tmp_1.insert('৩', 3);
-tmp_1.insert('٩', 9);
-tmp_1.insert('৪', 4);
-tmp_1.insert('৫', 5);
-tmp_1.insert('৬', 6);
-tmp_1.insert('৭', 7);
-tmp_1.insert('৮', 8);
-tmp_1.insert('৯', 9);
 tmp_1.insert('0', 0);
 tmp_1.insert('1', 1);
 tmp_1.insert('2', 2);
@@ -38,6 +17,26 @@ tmp_1.insert('6', 6);
 tmp_1.insert('7', 7);
 tmp_1.insert('8', 8);
 tmp_1.insert('9', 9);
+tmp_1.insert('٠', 0);
+tmp_1.insert('١', 1);
+tmp_1.insert('٢', 2);
+tmp_1.insert('٣', 3);
+tmp_1.insert('٤', 4);
+tmp_1.insert('٥', 5);
+tmp_1.insert('٦', 6);
+tmp_1.insert('٧', 7);
+tmp_1.insert('٨', 8);
+tmp_1.insert('٩', 9);
+tmp_1.insert('০', 0);
+tmp_1.insert('১', 1);
+tmp_1.insert('২', 2);
+tmp_1.insert('৩', 3);
+tmp_1.insert('৪', 4);
+tmp_1.insert('৫', 5);
+tmp_1.insert('৬', 6);
+tmp_1.insert('৭', 7);
+tmp_1.insert('৮', 8);
+tmp_1.insert('৯', 9);
 tmp_1
 };
 }
@@ -80,32 +79,32 @@ tmp_3.push('٨');
 tmp_3.push('٩');
 tmp_3
 });
-tmp_2.insert(String::from("LATIN"), {
+tmp_2.insert(String::from("BENGALI"), {
 let mut tmp_4: Vec<char> = Vec::new();
-tmp_4.push('0');
-tmp_4.push('1');
-tmp_4.push('2');
-tmp_4.push('3');
-tmp_4.push('4');
-tmp_4.push('5');
-tmp_4.push('6');
-tmp_4.push('7');
-tmp_4.push('8');
-tmp_4.push('9');
+tmp_4.push('০');
+tmp_4.push('১');
+tmp_4.push('২');
+tmp_4.push('৩');
+tmp_4.push('৪');
+tmp_4.push('৫');
+tmp_4.push('৬');
+tmp_4.push('৭');
+tmp_4.push('৮');
+tmp_4.push('৯');
 tmp_4
 });
-tmp_2.insert(String::from("BENGALI"), {
+tmp_2.insert(String::from("LATIN"), {
 let mut tmp_5: Vec<char> = Vec::new();
-tmp_5.push('০');
-tmp_5.push('১');
-tmp_5.push('২');
-tmp_5.push('৩');
-tmp_5.push('৪');
-tmp_5.push('৫');
-tmp_5.push('৬');
-tmp_5.push('৭');
-tmp_5.push('৮');
-tmp_5.push('৯');
+tmp_5.push('0');
+tmp_5.push('1');
+tmp_5.push('2');
+tmp_5.push('3');
+tmp_5.push('4');
+tmp_5.push('5');
+tmp_5.push('6');
+tmp_5.push('7');
+tmp_5.push('8');
+tmp_5.push('9');
 tmp_5
 });
 tmp_2
@@ -119,8 +118,8 @@ pub fn get_grouping_separators_map() -> HashMap<String,char> {
 return {
 let mut tmp_6: HashMap<String,char> = HashMap::new();
 tmp_6.insert(String::from("ARABIC"), '٬');
-tmp_6.insert(String::from("LATIN"), ',');
 tmp_6.insert(String::from("BENGALI"), ',');
+tmp_6.insert(String::from("LATIN"), ',');
 tmp_6
 };
 }

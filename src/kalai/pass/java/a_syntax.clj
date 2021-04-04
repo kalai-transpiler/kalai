@@ -71,7 +71,7 @@
     ;;;; map {}
     (m/and {}
            ?expr
-           (m/seqable [!k !v] ...)
+           (m/app u/sort-any-type ([!k !v] ...))
            (m/app (comp :t meta) ?t)
            (m/let [?tmp (u/tmp ?t ?expr)]))
     ;;->
@@ -85,7 +85,7 @@
     ;;;; set #{}
     (m/and #{}
            ?expr
-           (m/seqable !k ...)
+           (m/app u/sort-any-type (!k ...))
            (m/app (comp :t meta) ?t)
            (m/let [?tmp (u/tmp ?t ?expr)]))
     ;;->

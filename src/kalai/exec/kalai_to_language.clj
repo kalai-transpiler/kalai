@@ -51,7 +51,6 @@
     (az/analyze-ns file-path)))
 
 (defn read-kalai [file]
-  (reset! u/c 0)
   (-> (analyze-file file)
       (kalai-pipeline/asts->kalai)))
 
@@ -59,6 +58,7 @@
   (.getPath (.relativize (.toURI base) (.toURI file))))
 
 (defn write-file [^String content ^String relative-path ^File transpile-dir lang]
+  (reset! u/c 0)
   (let [file-naming (get file-naming-conventions lang)
         ;; "src" might be "test" sometimes, and might be language specific
         path (Paths/get (name lang) (into-array String ["src" relative-path]))

@@ -1,7 +1,8 @@
 (ns kalai.pass.java.b-function-call
   (:require [kalai.util :as u]
             [meander.strategy.epsilon :as s]
-            [meander.epsilon :as m]))
+            [meander.epsilon :as m]
+            [clojure.string :as str]))
 
 ;; TODO: user extension point, is dynamic var good?
 ;; can it be more data driven?
@@ -61,6 +62,16 @@
       (j/invoke (u/var ~#'update) ?x ?k ?f & ?args)
       (j/method put ?x ?k
                 (m/app rewrite (j/invoke ?f (j/method get ?x ?k) & ?args)))
+
+      (j/invoke (m/and (m/pred symbol?)
+                       (m/pred #(not (:var (meta %))))
+                       (m/pred #(str/includes? (str %) "/"))
+                       ?static-function)
+                & ?more)
+      (j/invoke ~(-> (str ?static-function)
+                     (str/replace "/" ".")
+                     (symbol))
+                & ?more)
 
       ?else
       ?else)))
