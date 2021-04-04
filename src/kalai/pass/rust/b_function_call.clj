@@ -62,6 +62,9 @@
       (r/method splice ?this (r/range ?idx ?idx) (r/method ^{:t {:mvector [:char]}} collect (r/method chars (r/method to_string ?s2))))
 
 
+      (r/invoke java.lang.System/getenv ?x)
+      (r/method unwrap (r/invoke "std::env::var" ?x))
+
       ;; TODO: these should be (u/var)
       (r/invoke clojure.lang.RT/count (u/of-t :string ?x))
       (r/cast (r/method count (r/method chars ?x)) :int)

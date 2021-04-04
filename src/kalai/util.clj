@@ -40,7 +40,7 @@
     `(match/pred #(match-t? ~t %) ~x)
     &form))
 
-;; Return the value in :var in the metadata map
+;; Matches a var
 (m/defsyntax var [v]
   (case (::syntax/phase &env)
     :meander/match

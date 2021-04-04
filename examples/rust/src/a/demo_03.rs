@@ -4,6 +4,9 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::vec::Vec;
 use std::env;
-pub fn f(x: i64) -> i64 {
-return (1 + x);
+fn main () {
+let args: Vec<String> = env::args().collect();
+{
+println!("{}", std::env::var(String::from("USER")).unwrap());
+}
 }

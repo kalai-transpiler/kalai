@@ -3,7 +3,6 @@ extern crate lazy_static;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::vec::Vec;
-use std::convert::TryInto;
 use std::env;
 pub fn get_digits_map() -> HashMap<char,i32> {
 return {
