@@ -43,6 +43,8 @@ See also `kalai.emit.langs/TARGET-LANGS`
 
 ## Usage
 
+[![Clojars Project](https://img.shields.io/clojars/v/com.github.echeran/kalai.svg)](https://clojars.org/com.github.echeran/kalai)
+
 The easiest way to get started is to follow the pattern established in the `examples` folder.
 The [examples/deps.edn](./examples/deps.edn) defines how you can invoke Kalai.
 You can replace `{:local/root ".."}` version with `{:mvn/version "<INSERT VERSION HERE>"}` if you wish to rely on a release version.

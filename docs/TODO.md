@@ -1,6 +1,7 @@
 # TODO
 
 * Create a task in `examples` to run the logic tests
+* Verify that examples can compile using deployed artifact (namely, if/how to update deps.clj and/or pom.xml)
 * Rust etc
     - dealing with refs?
     - do we make the user annotate the type in every assignment?
