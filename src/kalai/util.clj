@@ -56,3 +56,10 @@
   ([x k v & more]
    {:pre [(even? (count more))]}
    (apply maybe-meta-assoc (maybe-meta-assoc x k v) more)))
+
+(defn sort-any-type [coll]
+  (if (map? coll)
+    (let [{numbers true non-numbers false} (group-by (comp number? key) coll)]
+      (concat (sort-by key numbers) (sort-by (comp str key) non-numbers)))
+    (let [{numbers true non-numbers false} (group-by number? coll)]
+      (concat (sort numbers) (sort-by str non-numbers)))))
