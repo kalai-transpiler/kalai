@@ -1,8 +1,21 @@
 # TODO
 
-* Create a task in `examples` to run the logic tests
+* SQL builder application
+  - Heterogeneous collections
+    * Copy over any Java tests for heterogeneous colls to Rust and make work
+    * Handle ":any" type in Rust
+      - Rust std::any:Any cannot work (is trait, not type/enum)
+      - serde Value (enum) is interesting, but leads to follow-on enum handling
+        * to cast from Value back to primitive, need to allow user to cast, and support cast with match statement
+        * need to support casting as a Kalai construct in general, anyways, if we support ":any"
+          - Needed for Java anyways (?) (we don't actually test in Java casting Object -> concrete type ?)
+    * Uncertain alternative: use persistent collections to circumvent question (if they support heterogeneous?)
+* Create a task in `examples` to run the output (binaries, logic tests, etc.)
+  - There should be a make task should run the final compiled binary (b/c invocation is non-trivial)
+  - Stretch: make should also run logic unit tests
 * Verify that examples can compile using deployed artifact (namely, if/how to update deps.clj and/or pom.xml)
 * Rust etc
+    - how to deal with multiple overloads of fns in Rust?
     - dealing with refs?
     - do we make the user annotate the type in every assignment?
     - or do we infer this in the S-exprs?

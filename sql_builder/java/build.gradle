@@ -1,0 +1,18 @@
+plugins {
+    id 'application'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs 'src'
+        }
+    }
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+}
