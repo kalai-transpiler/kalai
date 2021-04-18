@@ -84,16 +84,23 @@
 
 (defn write-module-definition [dir]
   (spit (io/file dir "mod.rs")
-        (str/join (->> (map (memfn ^File getName) (.listFiles dir))
+        (str/join (->> (.listFiles dir)
+                       (remove (fn [file]
+                                 (and
+                                   (.isFile file)
+                                   (re-find #"fn main \(\) \{\n" (slurp file)))))
+                       (map (memfn ^File getName))
                        (map #(str/replace % #".rs$" ""))
-                       (remove #{"mod"})
+                       (remove #{"mod" "lib"})
                        (sort)
                        (map #(str "pub mod " % ";\n"))))))
 
 (defn write-module-definitions [{:keys [transpile-dir]}]
-  (doseq [dir (file-seq (io/file transpile-dir (name :l/rust) "src"))
-          :when (.isDirectory dir)]
-    (write-module-definition dir)))
+  (let [src (io/file transpile-dir (name :l/rust) "src")]
+    (doseq [dir (file-seq src)
+            :when (.isDirectory dir)]
+      (write-module-definition dir))
+    (.renameTo (io/file src "mod.rs") (io/file src "lib.rs"))))
 
 (defn transpile-all
   "options is a map of

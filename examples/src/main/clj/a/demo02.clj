@@ -120,7 +120,7 @@
           (.insert result position sep))))
     (.toString result)))
 
-(defn -main ^{:t :void} [& args]
+(defn -main ^{:t :void} [& _args]
   (println (parse "\u0665\u0660\u0663\u0660\u0661"))
   (println (parse "৫০৩০১"))
   (println (parse "7,654,321"))

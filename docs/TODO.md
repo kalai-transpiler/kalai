@@ -15,6 +15,7 @@
   - Stretch: make should also run logic unit tests
 * Verify that examples can compile using deployed artifact (namely, if/how to update deps.clj and/or pom.xml)
 * Rust etc
+    - swap! doesn't seem to work atm
     - how to deal with multiple overloads of fns in Rust?
     - dealing with refs?
     - do we make the user annotate the type in every assignment?

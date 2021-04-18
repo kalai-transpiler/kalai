@@ -1,12 +1,6 @@
-#[macro_use]
-extern crate lazy_static;
-use std::collections::HashMap;
-use std::collections::HashSet;
-use std::vec::Vec;
-use std::env;
-pub fn get_digits_map() -> HashMap<char,i32> {
+pub fn get_digits_map() -> std::collections::HashMap<char,i32> {
 return {
-let mut tmp_1: HashMap<char,i32> = HashMap::new();
+let mut tmp_1: std::collections::HashMap<char,i32> = std::collections::HashMap::new();
 tmp_1.insert('0', 0);
 tmp_1.insert('1', 1);
 tmp_1.insert('2', 2);
@@ -40,8 +34,8 @@ tmp_1.insert('৯', 9);
 tmp_1
 };
 }
-lazy_static! {
-static ref digits_map: HashMap<char,i32> = get_digits_map();
+lazy_static::lazy_static! {
+static ref digits_map: std::collections::HashMap<char,i32> = get_digits_map();
 }
 pub fn parse(s: String) -> i32 {
 let mut result: i32 = 0;
@@ -62,11 +56,11 @@ i = (i + 1);
 return result;
 }
 }
-pub fn get_number_systems_map() -> HashMap<String,Vec<char>> {
-let m: HashMap<String,Vec<char>> = {
-let mut tmp_2: HashMap<String,Vec<char>> = HashMap::new();
+pub fn get_number_systems_map() -> std::collections::HashMap<String,std::vec::Vec<char>> {
+let m: std::collections::HashMap<String,std::vec::Vec<char>> = {
+let mut tmp_2: std::collections::HashMap<String,std::vec::Vec<char>> = std::collections::HashMap::new();
 tmp_2.insert(String::from("ARABIC"), {
-let mut tmp_3: Vec<char> = Vec::new();
+let mut tmp_3: std::vec::Vec<char> = std::vec::Vec::new();
 tmp_3.push('٠');
 tmp_3.push('١');
 tmp_3.push('٢');
@@ -80,7 +74,7 @@ tmp_3.push('٩');
 tmp_3
 });
 tmp_2.insert(String::from("BENGALI"), {
-let mut tmp_4: Vec<char> = Vec::new();
+let mut tmp_4: std::vec::Vec<char> = std::vec::Vec::new();
 tmp_4.push('০');
 tmp_4.push('১');
 tmp_4.push('২');
@@ -94,7 +88,7 @@ tmp_4.push('৯');
 tmp_4
 });
 tmp_2.insert(String::from("LATIN"), {
-let mut tmp_5: Vec<char> = Vec::new();
+let mut tmp_5: std::vec::Vec<char> = std::vec::Vec::new();
 tmp_5.push('0');
 tmp_5.push('1');
 tmp_5.push('2');
@@ -111,24 +105,24 @@ tmp_2
 };
 return m;
 }
-lazy_static! {
-static ref number_systems_map: HashMap<String,Vec<char>> = get_number_systems_map();
+lazy_static::lazy_static! {
+static ref number_systems_map: std::collections::HashMap<String,std::vec::Vec<char>> = get_number_systems_map();
 }
-pub fn get_grouping_separators_map() -> HashMap<String,char> {
+pub fn get_grouping_separators_map() -> std::collections::HashMap<String,char> {
 return {
-let mut tmp_6: HashMap<String,char> = HashMap::new();
+let mut tmp_6: std::collections::HashMap<String,char> = std::collections::HashMap::new();
 tmp_6.insert(String::from("ARABIC"), '٬');
 tmp_6.insert(String::from("BENGALI"), ',');
 tmp_6.insert(String::from("LATIN"), ',');
 tmp_6
 };
 }
-lazy_static! {
-static ref grouping_separators_map: HashMap<String,char> = get_grouping_separators_map();
+lazy_static::lazy_static! {
+static ref grouping_separators_map: std::collections::HashMap<String,char> = get_grouping_separators_map();
 }
-pub fn get_separator_positions(num_length: i32, grouping_strategy: String) -> Vec<i32> {
-let mut result: Vec<i32> = {
-let mut tmp_7: Vec<i32> = Vec::new();
+pub fn get_separator_positions(num_length: i32, grouping_strategy: String) -> std::vec::Vec<i32> {
+let mut result: std::vec::Vec<i32> = {
+let mut tmp_7: std::vec::Vec<i32> = std::vec::Vec::new();
 tmp_7
 };
 if (grouping_strategy == String::from("NONE"))
@@ -191,12 +185,12 @@ return result;
 }
 pub fn format(num: i32, number_system: String, grouping_strategy: String) -> String {
 let mut i: i32 = num;
-let mut result: Vec<char> = Vec::new();
+let mut result: std::vec::Vec<char> = std::vec::Vec::new();
 {
 while !(i == 0) {
 let quotient: i32 = (i / 10);
 let remainder: i32 = (i % 10);
-let number_system_digits: &Vec<char> = number_systems_map.get(&number_system).unwrap();
+let number_system_digits: &std::vec::Vec<char> = number_systems_map.get(&number_system).unwrap();
 let local_digit: char = *number_system_digits.get(remainder as usize).unwrap();
 {
 result.insert(0 as usize, local_digit);
@@ -206,7 +200,7 @@ i = quotient;
 {
 let sep: &char = grouping_separators_map.get(&number_system).unwrap();
 let num_length: i32 = result.len() as i32;
-let separator_positions: Vec<i32> = get_separator_positions(num_length, grouping_strategy);
+let separator_positions: std::vec::Vec<i32> = get_separator_positions(num_length, grouping_strategy);
 let num_positions: i32 = separator_positions.len() as i32;
 let mut idx: i32 = 0;
 while (idx < num_positions) {
@@ -221,7 +215,7 @@ return result.iter().collect();
 }
 }
 fn main () {
-let args: Vec<String> = env::args().collect();
+let args: std::vec::Vec<String> = std::env::args().collect();
 {
 println!("{}", parse(String::from("٥٠٣٠١")));
 println!("{}", parse(String::from("৫০৩০১")));

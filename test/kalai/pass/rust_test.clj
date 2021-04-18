@@ -289,7 +289,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::vec::Vec;
 use std::env;
-lazy_static! {
+lazy_static::lazy_static! {
 static ref x: HashMap<i64,String> = {
 let mut tmp_1: HashMap<i64,String> = HashMap::new();
 tmp_1

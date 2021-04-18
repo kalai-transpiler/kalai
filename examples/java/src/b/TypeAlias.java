@@ -9,4 +9,7 @@ public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
 final HashMap<Long,String> z = y;
 return z;
 }
+public static final void main(String[] args) {
+System.out.println("OK");
+}
 }
