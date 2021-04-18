@@ -19,9 +19,18 @@ Write once compile everywhere
 ### The value of data oriented programming
 
 ## Why is Clojure a good source language?
+included in [Why Clojure is good for transpilers](https://elangocheran.com/2020/03/18/why-clojure-lisp-is-good-for-writing-transpilers/)
+
 
 ## What are the other options
 * J2OBJC, J2CL, 1:1 translations
 * Haxe 1:many from OCaml
 
 [See Design](Design.md)
+
+## Tradeoffs
+
+### Dynamism/REPL
+
+We lose REPL / interactive development style in order to gain cross-lang/platform reach 
+

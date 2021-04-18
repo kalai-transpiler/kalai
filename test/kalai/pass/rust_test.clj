@@ -671,8 +671,9 @@ tmp_1
 println!(\"{}\", x);"))
 
 (deftest data-literals8-test
-  ;; TODO: Rust has an Any trait, but no Any type...
-  ;; therefore Kalai can't support any (remove it)
+  ;; Rust has an Any trait, but no Any type...
+  ;; therefore Kalai can't support Any.
+  ;; We think we can use an enum like Serde does
   #_(inner-form
     '(let [x ^{:t {:mvector [:any]}}
              [1

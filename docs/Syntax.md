@@ -45,6 +45,12 @@ abstract concepts of size. Specifically, integer size = a Java integer = 32-bit 
   * Default is required when arm case values do not exhaustively cover the full space of values for the type
 * Java requires the switch argument to be a primitive or String or Enum (?)
 
+### Functions / Overloads / Arities
+
+* Rust requires no overloaded functions
+  - A function name can only be used once -- like C, not like C++/Java
+  - So we disallow overloaded fns in Clojure input (aka a "multi-arity fn" in Clojure) 
+
 ## Functionality omissions due to current lack of need 
 
 ### Enums (or lack thereof)

@@ -1,0 +1,16 @@
+[package]
+name = "sql_builder"
+version = "0.1.0"
+authors = [
+    "Elango Cheran <elango.cheran@gmail.com>",
+    "Timothy Pratley <timothypratley@gmail.com>"]
+edition = "2018"
+
+[lib]
+name = "sql_builder"
+path = "src/sql_builder/core.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+lazy_static = "1.4.0"
