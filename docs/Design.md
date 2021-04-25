@@ -230,7 +230,7 @@ keyword ref is true, but there is no inverse implication, as
 ref can be true while mut is false.
 
 ```rust
-let mut m = HashMap::new();
+let mut m = std::collections::HashMap::new();
 &m.insert(k, v);
 printer_fn(&m);
 

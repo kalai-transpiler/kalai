@@ -15,7 +15,7 @@
     ;;->
     '(init x 3)
     ;;->
-    "lazy_static! {
+    "lazy_static::lazy_static! {
 static ref x: i32 = 3;
 }"))
 
@@ -25,7 +25,7 @@ static ref x: i32 = 3;
     ;;->
     '(init x)
     ;;->
-    "lazy_static! {
+    "lazy_static::lazy_static! {
 static ref x: i32 = ();
 }"))
 
@@ -283,20 +283,14 @@ let y: i64 = 5;"))
                             (init z y)
                             (return z))))
     ;;->
-    "#[macro_use]
-extern crate lazy_static;
-use std::collections::HashMap;
-use std::collections::HashSet;
-use std::vec::Vec;
-use std::env;
-lazy_static::lazy_static! {
-static ref x: HashMap<i64,String> = {
-let mut tmp_1: HashMap<i64,String> = HashMap::new();
+    "lazy_static::lazy_static! {
+static ref x: std::collections::HashMap<i64,String> = {
+let mut tmp_1: std::collections::HashMap<i64,String> = std::collections::HashMap::new();
 tmp_1
 };
 }
-pub fn f(y: HashMap<i64,String>) -> HashMap<i64,String> {
-let z: HashMap<i64,String> = y;
+pub fn f(y: std::collections::HashMap<i64,String>) -> std::collections::HashMap<i64,String> {
+let z: std::collections::HashMap<i64,String> = y;
 return z;
 }"))
 
@@ -307,8 +301,8 @@ return z;
     ;;->
     '(init x)
     ;;->
-    "lazy_static! {
-static ref x: HashMap<i64,String> = ();
+    "lazy_static::lazy_static! {
+static ref x: std::collections::HashMap<i64,String> = ();
 }"))
 
 (deftest generic-types2-test
@@ -317,7 +311,7 @@ static ref x: HashMap<i64,String> = ();
     ;;->
     '(init x)
     ;;->
-    "static final HashMap<String,ArrayList<Character>> x;"))
+    "static final std::collections::HashMap<String,ArrayList<Character>> x;"))
 
 
 (deftest generic-types3-test
@@ -329,8 +323,8 @@ static ref x: HashMap<i64,String> = ();
        (init x [1 2])
        (invoke println x))
     ;;->
-    "let x: Vec<i64> = {
-let mut tmp_1: Vec<i64> = Vec::new();
+    "let x: std::vec::Vec<i64> = {
+let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
 tmp_1.push(1);
 tmp_1.push(2);
 tmp_1
@@ -343,8 +337,8 @@ println!(\"{}\", x);"))
     ;;->
     '(init x {:a "asdf"})
     ;;->
-    "let x: HashMap<String,String> = {
-let mut tmp_1: HashMap<String,String> = HashMap::new();
+    "let x: std::collections::HashMap<String,String> = {
+let mut tmp_1: std::collections::HashMap<String,String> = std::collections::HashMap::new();
 tmp_1.insert(String::from(\":a\"), String::from(\"asdf\"));
 tmp_1
 };"))
@@ -371,7 +365,7 @@ tmp_1
     '(function -main [& my-args] (invoke println 1))
     ;;->
     "fn main () {
-let my_args: Vec<String> = env::args().collect();
+let my_args: std::vec::Vec<String> = std::env::args().collect();
 {
 println!(\"{}\", 1);
 }
@@ -381,7 +375,7 @@ println!(\"{}\", 1);
   (top-level-form
     '(def my-var 1)
     '(init my-var 1)
-    "lazy_static! {
+    "lazy_static::lazy_static! {
 static ref my_var: i64 = 1;
 }"))
 
@@ -442,9 +436,9 @@ tmp_1
     ;;->
     '(init x [1 2])
     ;;->
-    "lazy_static! {
-static ref x: Vec<i64> = {
-let mut tmp_1: Vec<i64> = Vec::new();
+    "lazy_static::lazy_static! {
+static ref x: std::vec::Vec<i64> = {
+let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
 tmp_1.push(1);
 tmp_1.push(2);
 tmp_1
@@ -460,8 +454,8 @@ tmp_1
        (init x [1 2])
        x)
     ;;->
-    "let x: Vec<i64> = {
-let mut tmp_1: Vec<i64> = Vec::new();
+    "let x: std::vec::Vec<i64> = {
+let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
 tmp_1.push(1);
 tmp_1.push(2);
 tmp_1
@@ -570,15 +564,15 @@ println!(\"{}\", x);"))
                 2 ["hello" "there"]})
        (invoke println x))
     ;;->
-    "let x: HashMap<i64,Vec<String>> = {
-let mut tmp_1: HashMap<i64,Vec<String>> = HashMap::new();
+    "let x: std::collections::HashMap<i64,std::vec::Vec<String>> = {
+let mut tmp_1: std::collections::HashMap<i64,std::vec::Vec<String>> = std::collections::HashMap::new();
 tmp_1.insert(1, {
-let mut tmp_2: Vec<String> = Vec::new();
+let mut tmp_2: std::vec::Vec<String> = std::vec::Vec::new();
 tmp_2.push(String::from(\"hi\"));
 tmp_2
 });
 tmp_1.insert(2, {
-let mut tmp_3: Vec<String> = Vec::new();
+let mut tmp_3: std::vec::Vec<String> = std::vec::Vec::new();
 tmp_3.push(String::from(\"hello\"));
 tmp_3.push(String::from(\"there\"));
 tmp_3
@@ -696,8 +690,8 @@ println!(\"{}\", x);"))
     ;;->
     '(init x {"key" (operator + 1 2)})
     ;;->
-    "let x: HashMap<String,i64> = {
-let mut tmp_1: HashMap<String,i64> = HashMap::new();
+    "let x: std::collections::HashMap<String,i64> = {
+let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
 tmp_1.insert(String::from(\"key\"), (1 + 2));
 tmp_1
 };"))
@@ -751,7 +745,7 @@ println!(\"{}\", (x == y));"))
               (invoke println x))
     ;;->
     "for x in {
-let mut tmp_1: Vec<i64> = Vec::new();
+let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
 tmp_1.push(1);
 tmp_1.push(2);
 tmp_1.push(3);
@@ -829,7 +823,7 @@ println!(\"{}\", 3);
     '(invoke println (invoke clojure.lang.RT/get {:k 1} :k))
     ;;->
     "println!(\"{}\", {
-let mut tmp_1: HashMap<String,i64> = HashMap::new();
+let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
 tmp_1.insert(String::from(\":k\"), 1);
 tmp_1
 }.get(&String::from(\":k\")).unwrap());"))
@@ -841,7 +835,7 @@ tmp_1
     '(invoke clojure.lang.RT/get #{:k} :k)
     ;;->
     "{
-let mut tmp_1: HashSet<String> = HashSet::new();
+let mut tmp_1: std::collections::HashSet<String> = std::collections::HashSet::new();
 tmp_1.insert(String::from(\":k\"));
 tmp_1
 }.get(&String::from(\":k\")).unwrap();"))
@@ -1030,8 +1024,8 @@ c.chars().count() as i32;
          (method length a)
          (method length b)))
     ;;->
-    "let a: Vec<char> = Vec::new();
-let b: Vec<char> = Vec::new();
+    "let a: std::vec::Vec<char> = std::vec::Vec::new();
+let b: std::vec::Vec<char> = std::vec::Vec::new();
 {
 a.len() as i32;
 b.len() as i32;
@@ -1044,7 +1038,7 @@ b.len() as i32;
     '(invoke assoc {:a 1} :b 2)
     ;;->
     "{
-let mut tmp_1: HashMap<String,i64> = HashMap::new();
+let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
 tmp_1.insert(String::from(\":a\"), 1);
 tmp_1
 }.insert(String::from(\":b\"), 2);"))
@@ -1056,11 +1050,11 @@ tmp_1
     '(invoke update {:a 1} :a inc)
     ;;->
     "{
-let mut tmp_1: HashMap<String,i64> = HashMap::new();
+let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
 tmp_1.insert(String::from(\":a\"), 1);
 tmp_1
 }.insert(String::from(\":a\"), ({
-let mut tmp_1: HashMap<String,i64> = HashMap::new();
+let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
 tmp_1.insert(String::from(\":a\"), 1);
 tmp_1
 }.get(&String::from(\":a\")).unwrap() + 1));"))
@@ -1100,8 +1094,8 @@ System.out.println(s.charAt(1));"))
        (invoke println
                (invoke clojure.lang.RT/nth v 1)))
     ;;->
-    "let v: Vec<i32> = {
-let mut tmp_1: Vec<i32> = Vec::new();
+    "let v: std::vec::Vec<i32> = {
+let mut tmp_1: std::vec::Vec<i32> = std::vec::Vec::new();
 tmp_1.push(1);
 tmp_1.push(2);
 tmp_1.push(3);
@@ -1125,8 +1119,8 @@ println!(\"{}\", *v.get(1 as usize).unwrap());"))
          (invoke conj result i)
          (assign i (operator - i 3))))
     ;;->
-    "let mut result: Vec<i32> = {
-let mut tmp_1: Vec<i32> = Vec::new();
+    "let mut result: std::vec::Vec<i32> = {
+let mut tmp_1: std::vec::Vec<i32> = std::vec::Vec::new();
 tmp_1
 };
 let mut i: i32 = 10;
@@ -1147,8 +1141,8 @@ i = (i - 3);
              (method size separatorPositions))
        (invoke println "hi"))
     ;;->
-    "let separator_positions: Vec<i32> = {
-let mut tmp_1: Vec<i32> = Vec::new();
+    "let separator_positions: std::vec::Vec<i32> = {
+let mut tmp_1: std::vec::Vec<i32> = std::vec::Vec::new();
 tmp_1
 };
 let num_positions: i32 = separator_positions.len() as i32;
@@ -1268,12 +1262,12 @@ println!(\"{}\", x);"))
        (init x [])
        (assign x [1 2 3]))
     ;;->
-    "let mut x: Vec<i64> = {
-let mut tmp_1: Vec<i64> = Vec::new();
+    "let mut x: std::vec::Vec<i64> = {
+let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
 tmp_1
 };
 x = {
-let mut tmp_2: Vec<i64> = Vec::new();
+let mut tmp_2: std::vec::Vec<i64> = std::vec::Vec::new();
 tmp_2.push(1);
 tmp_2.push(2);
 tmp_2.push(3);
@@ -1290,8 +1284,8 @@ tmp_2
        (init x [])
        (invoke conj x 1))
     ;;->
-    "let mut x: Vec<i64> = {
-let mut tmp_1: Vec<i64> = Vec::new();
+    "let mut x: std::vec::Vec<i64> = {
+let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
 tmp_1
 };
 x.push(1);"))
@@ -1355,7 +1349,7 @@ return i;
        (init result (new StringBuffer))
        result)
     ;;->
-    "let result: Vec<char> = Vec::new();
+    "let result: std::vec::Vec<char> = std::vec::Vec::new();
 result;"))
 
 (deftest propagated-types10-test
@@ -1367,8 +1361,8 @@ result;"))
        (init result [])
        result)
     ;;->
-    "let mut result: Vec<i32> = {
-let mut tmp_1: Vec<i32> = Vec::new();
+    "let mut result: std::vec::Vec<i32> = {
+let mut tmp_1: std::vec::Vec<i32> = std::vec::Vec::new();
 tmp_1
 };
 result;"))
