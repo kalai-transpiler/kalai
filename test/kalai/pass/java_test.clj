@@ -272,9 +272,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 public class TestClass {
-static final std::collections::HashMap<Long,String> x;
-public static final std::collections::HashMap<Long,String> f(final std::collections::HashMap<Long,String> y) {
-final std::collections::HashMap<Long,String> z = y;
+static final HashMap<Long,String> x;
+public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
+final HashMap<Long,String> z = y;
 return z;
 }
 }"))
@@ -285,7 +285,7 @@ return z;
     ;;->
     '(init x)
     ;;->
-    "static final std::collections::HashMap<Long,String> x;"))
+    "static final HashMap<Long,String> x;"))
 
 (deftest generic-types2-test
   (top-level-form
@@ -293,7 +293,7 @@ return z;
     ;;->
     '(init x)
     ;;->
-    "static final std::collections::HashMap<String,ArrayList<Character>> x;"))
+    "static final HashMap<String,ArrayList<Character>> x;"))
 
 (deftest generic-types3-test
   (inner-form
@@ -316,9 +316,9 @@ System.out.println(x);"))
     ;;->
     '(init x {:a "asdf"})
     ;;->
-    "HashMap<String,String> tmp1 = new std::collections::HashMap<String,String>();
+    "HashMap<String,String> tmp1 = new HashMap<String,String>();
 tmp1.put(\":a\", \"asdf\");
-final std::collections::HashMap<String,String> x = tmp1;"))
+final HashMap<String,String> x = tmp1;"))
 
 (deftest generic-types5-test
   #_(inner-form
@@ -528,7 +528,7 @@ System.out.println(x);"))
                 2 ["hello" "there"]})
        (invoke println x))
     ;;->
-    "HashMap<Long,ArrayList<String>> tmp1 = new std::collections::HashMap<Long,ArrayList<String>>();
+    "HashMap<Long,ArrayList<String>> tmp1 = new HashMap<Long,ArrayList<String>>();
 ArrayList<String> tmp2 = new ArrayList<String>();
 tmp2.add(\"hi\");
 tmp1.put(1, tmp2);
@@ -536,7 +536,7 @@ ArrayList<String> tmp3 = new ArrayList<String>();
 tmp3.add(\"hello\");
 tmp3.add(\"there\");
 tmp1.put(2, tmp3);
-final std::collections::HashMap<Long,ArrayList<String>> x = tmp1;
+final HashMap<Long,ArrayList<String>> x = tmp1;
 System.out.println(x);"))
 
 (deftest data-literals7-2-test
@@ -639,9 +639,9 @@ System.out.println(x);"))
        (init x {1 [{2 3} #{4 [5 6]}]})
        (invoke println x))
     ;;->
-    "HashMap<Object,Object> tmp1 = new std::collections::HashMap<Object,Object>();
+    "HashMap<Object,Object> tmp1 = new HashMap<Object,Object>();
 ArrayList<Object> tmp2 = new ArrayList<Object>();
-HashMap<Long,Long> tmp3 = new std::collections::HashMap<Long,Long>();
+HashMap<Long,Long> tmp3 = new HashMap<Long,Long>();
 tmp3.put(2, 3);
 tmp2.add(tmp3);
 HashSet<Object> tmp4 = new HashSet<Object>();
@@ -652,7 +652,7 @@ tmp5.add(6);
 tmp4.add(tmp5);
 tmp2.add(tmp4);
 tmp1.put(1, tmp2);
-final std::collections::HashMap<Object,Object> x = tmp1;
+final HashMap<Object,Object> x = tmp1;
 System.out.println(x);"))
 
 (deftest data-literals10-test
@@ -661,9 +661,9 @@ System.out.println(x);"))
     ;;->
     '(init x {"key" (operator + 1 2)})
     ;;->
-    "HashMap<String,Long> tmp1 = new std::collections::HashMap<String,Long>();
+    "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
 tmp1.put(\"key\", (1 + 2));
-final std::collections::HashMap<String,Long> x = tmp1;"))
+final HashMap<String,Long> x = tmp1;"))
 
 (deftest string-equality-test
   (inner-form
@@ -789,7 +789,7 @@ System.out.println(3);
     ;;->
     '(invoke clojure.lang.RT/get {:k 1} :k)
     ;;->
-    "HashMap<String,Long> tmp1 = new std::collections::HashMap<String,Long>();
+    "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
 tmp1.put(\":k\", 1);
 tmp1.get(\":k\");"))
 
@@ -1005,7 +1005,7 @@ b.length();
     ;;->
     '(invoke assoc {:a 1} :b 2)
     ;;->
-    "HashMap<String,Long> tmp1 = new std::collections::HashMap<String,Long>();
+    "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
 tmp1.put(\":a\", 1);
 tmp1.put(\":b\", 2);"))
 
@@ -1015,7 +1015,7 @@ tmp1.put(\":b\", 2);"))
     ;;->
     '(invoke update {:a 1} :a inc)
     ;;->
-    "HashMap<String,Long> tmp1 = new std::collections::HashMap<String,Long>();
+    "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
 tmp1.put(\":a\", 1);
 tmp1.put(\":a\", (tmp1.get(\":a\") + 1));"))
 
