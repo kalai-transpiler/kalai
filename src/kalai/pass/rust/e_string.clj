@@ -52,11 +52,11 @@
 ;; TODO: do we need an :object type?
 (def kalai-type->rust
   {:map     "PMap"
-   :mmap    "HashMap"
+   :mmap    "std::collections::HashMap"
    :set     "PSet"
-   :mset    "HashSet"
+   :mset    "std::collections::HashSet"
    :vector  "PVector"
-   :mvector "Vec"
+   :mvector "std::vec::Vec"
    :bool    "bool"
    :byte    "i8"
    :char    "char"
@@ -123,11 +123,11 @@
   (let [{:keys [t mut ref]} (meta variable-name)]
     ;; let mut char_vec: &Vec<char> = ;
     ;; let char_vec: &Vec<char> = ;
-    ;; let mut char_vec: Vec<char> = ;
+    ;; let mut char_vec: std::vec::Vec<char> = ;
     ;;
-    ;; fn f(char_vec: &mut Vec<char>) {...
+    ;; fn f(char_vec: &mut std::vec::Vec<char>) {...
     ;; fn f(char_vec: &Vec<char>) {...
-    ;; NOT POSSIBLE? (or doesn't make sense?): fn f(char_vec: mut Vec<char>) {...
+    ;; NOT POSSIBLE? (or doesn't make sense?): fn f(char_vec: mut std::vec::Vec<char>) {...
     (str (when mut "mut ") (csk/->snake_case variable-name)
          ;; Rust has type inference, so we can leave temp variable types off
          ;; TODO: probably don't want to use "MISSING_TYPE" though
@@ -144,7 +144,7 @@
    (let [{:keys [global]} (meta variable-name)]
      (if global
        (line-separated
-         "lazy_static! {"
+         "lazy_static::lazy_static! {"
          (statement (space-separated "static ref"
                                      (variable-name-type-str variable-name)
                                      "="
@@ -158,7 +158,8 @@
 (defn invoke-str [function-name & args]
   (let [varmeta (some-> function-name meta :var meta)]
     (if (and (str/includes? (str function-name) "/") varmeta)
-      (str (csk/->snake_case (str/replace (str (:ns varmeta)) "." "::"))
+      (str "examples::"
+           (csk/->snake_case (str/replace (str (:ns varmeta)) "." "::"))
            "::" (csk/->snake_case (:name varmeta))
            (args-list args))
       (str (csk/->snake_case function-name)
@@ -171,7 +172,7 @@
       (str
         (space-separated 'fn 'main (params-list [])
                          (line-separated "{"
-                                         (str "let " (csk/->snake_case (second params)) ": Vec<String> = env::args().collect();")
+                                         (str "let " (csk/->snake_case (second params)) ": std::vec::Vec<String> = std::env::args().collect();")
                                          (stringify body)
                                          "}"))))
     (str
@@ -192,17 +193,8 @@
      (apply space-separated
             (interpose op (map stringify (cons x xs)))))))
 
-(def std-imports
-  "#[macro_use]
-extern crate lazy_static;
-use std::collections::HashMap;
-use std::collections::HashSet;
-use std::vec::Vec;
-use std::env;")
-
 (defn module-str [& forms]
   (apply line-separated
-    std-imports
     (map stringify forms)))
 
 (defn return-str [x]

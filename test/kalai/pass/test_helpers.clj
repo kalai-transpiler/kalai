@@ -71,13 +71,12 @@
 (defn remove-rust-class [s]
   (->> s
     (str/split-lines)
-    (drop 6)
     (str/join \newline)))
 
 (defn remove-rust-function [s]
   (->> s
     (str/split-lines)
-    (drop 7)
+    (drop 1)
     (butlast)
     (str/join \newline)))
 

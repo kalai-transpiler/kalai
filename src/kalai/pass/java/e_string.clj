@@ -129,8 +129,11 @@
             packagename (str/join "." (for [z (butlast xs)]
                                         (str/lower-case (csk/->camelCase z))))
             classname (csk/->PascalCase (last xs))]
-        (str packagename "." classname "." (str (:name metameta))
+        (str packagename "." classname "."
+             (csk/->camelCase (str (:name metameta)))
              (args-list args)))
+      ;; function-name might be a fully qualified Java name with capitals
+      ;; that we don't want to camelCase
       (str (if (str/includes? function-name "-")
              (csk/->camelCase function-name)
              function-name)

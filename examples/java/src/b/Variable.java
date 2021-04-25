@@ -8,7 +8,10 @@ public static final long sideEffect() {
 long y = 2;
 {
 y = 3;
-return (y + 4);
+return y;
 }
+}
+public static final void main(String[] args) {
+System.out.println(b.Variable.sideEffect());
 }
 }

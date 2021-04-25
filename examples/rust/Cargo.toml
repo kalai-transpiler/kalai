@@ -1,10 +1,11 @@
 [package]
-name = "demo_01"
+name = "examples"
 version = "0.1.0"
 authors = [
     "Elango Cheran <elango.cheran@gmail.com>",
     "Timothy Pratley <timothypratley@gmail.com>"]
 edition = "2018"
+
 
 [[bin]]
 name = "demo_01"
@@ -18,7 +19,32 @@ path = "src/a/demo_02.rs"
 name = "demo_03"
 path = "src/a/demo_03.rs"
 
+
+[[bin]]
+name = "loops"
+path = "src/b/loops.rs"
+
+[[bin]]
+name = "requirer"
+path = "src/b/requirer.rs"
+
+[[bin]]
+name = "simple"
+path = "src/b/simple.rs"
+
+[[bin]]
+name = "type_alias"
+path = "src/b/type_alias.rs"
+
+[[bin]]
+name = "variable"
+path = "src/b/variable.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "examples"
+path = "src/lib.rs"
 
 [dependencies]
 lazy_static = "1.4.0"

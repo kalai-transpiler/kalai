@@ -11,6 +11,6 @@
         (reset! i quotient)))
     (.toString result)))
 
-(defn -main ^{:t :void} [& args]
+(defn -main ^{:t :void} [& _args]
   (format 2345)
   (println (format 2345)))

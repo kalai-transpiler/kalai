@@ -1,16 +1,16 @@
-#[macro_use]
-extern crate lazy_static;
-use std::collections::HashMap;
-use std::collections::HashSet;
-use std::vec::Vec;
-use std::env;
-lazy_static! {
-static ref x: HashMap<i64,String> = {
-let mut tmp_1: HashMap<i64,String> = HashMap::new();
+lazy_static::lazy_static! {
+static ref x: std::collections::HashMap<i64,String> = {
+let mut tmp_1: std::collections::HashMap<i64,String> = std::collections::HashMap::new();
 tmp_1
 };
 }
-pub fn f(y: HashMap<i64,String>) -> HashMap<i64,String> {
-let z: HashMap<i64,String> = y;
+pub fn f(y: std::collections::HashMap<i64,String>) -> std::collections::HashMap<i64,String> {
+let z: std::collections::HashMap<i64,String> = y;
 return z;
+}
+fn main () {
+let args: std::vec::Vec<String> = std::env::args().collect();
+{
+println!("{}", String::from("OK"));
+}
 }
