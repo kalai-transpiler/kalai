@@ -27,3 +27,15 @@ jobs:
 
     - name: Run tests
       run: lein test
+    
+    - name: Transpile & build examples
+      run: |
+        pushd examples
+        make
+        popd
+
+    - name: Transpile & build sql_builder
+      run: |
+        pushd sql_builder
+        make
+        popd
