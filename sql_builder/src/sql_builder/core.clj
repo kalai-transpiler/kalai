@@ -2,9 +2,12 @@
   (:refer-clojure :exclude [format]))
 
 (defn format
-  [query-map options]
-  ["a" "b" "3"])
+  ^{:t {:mvector [:string]}}
+  [^{:t {:mmap [:string :string]}} query-map
+   ^{:t {:mmap [:string :string]}} options]
+  ^{:t {:mvector [:string]}} ["a" "b" "3"])
 
 (defn format-no-opts
-  [query-map]
-  (format query-map {}))
+  ^{:t {:mvector [:string]}}
+  [^{:t {:mmap [:string :string]}} query-map]
+  (format query-map ^{:t {:mmap [:string :string]}} {}))
