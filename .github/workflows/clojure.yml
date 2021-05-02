@@ -22,13 +22,13 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
 
-      - name: Install clojure tools
-        uses: DeLaGuardo/setup-clojure@3.2
-        with:
-          # Install just one or all simultaneously
-          cli: 1.10.1.693 # Clojure CLI based on tools.deps
-          lein: latest     # or use 'latest' to always provision latest version of leiningen
-          boot: latest     # or use 'latest' to always provision latest version of boot
+    - name: Install clojure tools
+      uses: DeLaGuardo/setup-clojure@3.2
+      with:
+        # Install just one or all simultaneously
+        cli: 1.10.1.693 # Clojure CLI based on tools.deps
+        lein: latest     # or use 'latest' to always provision latest version of leiningen
+        boot: latest     # or use 'latest' to always provision latest version of boot
 
     - name: Install dependencies
       run: lein deps
