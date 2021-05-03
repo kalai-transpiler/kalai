@@ -9,6 +9,9 @@
         * to cast from Value back to primitive, need to allow user to cast, and support cast with match statement
         * need to support casting as a Kalai construct in general, anyways, if we support ":any"
           - Needed for Java anyways (?) (we don't actually test in Java casting Object -> concrete type ?)
+        * when getting from a collection we receive a reference type that may need to be immediately cloned
+          (unless we use refs everywhere or solve it some other way)
+          Note that `get` returns an Option of a reference
     * Uncertain alternative: use persistent collections to circumvent question (if they support heterogeneous?)
 * Create a task in `examples` to run the output (binaries, logic tests, etc.)
   - There should be a make task should run the final compiled binary (b/c invocation is non-trivial)
