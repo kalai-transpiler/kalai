@@ -17,7 +17,7 @@
     ;;->
     (r/block
       (r/init ?tmp (r/new ?t))
-      . (r/expression-statement (r/method push ?tmp (m/app expression !x))) ...
+      . (r/expression-statement (r/method push ?tmp (r/method clone (m/app expression !x)))) ...
       ?tmp)
 
     ;;;; map {}
@@ -31,8 +31,8 @@
     (r/block
       (r/init ?tmp (r/new ?t))
       . (r/expression-statement (r/method insert ?tmp
-                                          (m/app expression !k)
-                                          (m/app expression !v))) ...
+                                          (r/method clone (m/app expression !k))
+                                          (r/method clone (m/app expression !v)))) ...
       ?tmp)
 
     ;;;; set #{}
@@ -45,7 +45,7 @@
     ;;->
     (r/block
       (r/init ?tmp (r/new ?t))
-      . (r/expression-statement (r/method insert ?tmp (m/app expression !k))) ...
+      . (r/expression-statement (r/method insert ?tmp (r/method clone (m/app expression !k)))) ...
       ?tmp)
 
     ;; Interop

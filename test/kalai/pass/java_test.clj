@@ -803,6 +803,40 @@ tmp1.get(\":k\");"))
 tmp1.add(\":k\");
 tmp1.get(\":k\");"))
 
+(deftest collection-put-get-test
+  (inner-form
+    '(let [k "k"
+           m ^{:t {:mmap [:string :long]}} {k 1}
+           ^{:t :long} v (get m k)]
+       v)
+    ;;->
+    '(do
+       (init k "k")
+       (init m {k 1})
+       (init v (invoke clojure.lang.RT/get m k))
+       v)
+    ;;->
+    "final String k = \"k\";
+HashMap<String,Long> tmp1 = new HashMap<String,Long>();
+tmp1.put(k, 1);
+final HashMap<String,Long> m = tmp1;
+final long v = m.get(k);"
+    ))
+
+#_(deftest collection-closure-test
+  (inner-form
+    '(let [c [1 2 3]
+           f (fn [] (conj c 4))
+           g (fn [] (conj c 5))
+           d (f)
+           e (g)]
+       c)
+    ;;->
+    '()
+    ;;->
+    ""
+    ))
+
 (deftest switch-case-test
   (inner-form
     '(case 1
