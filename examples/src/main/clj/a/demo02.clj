@@ -42,7 +42,7 @@
     (dotimes [^{:t :int} i strLength]
       (let [^{:t :char} digit (nth s i)]
         (if (contains? digitsMap digit)
-          (let [^:ref ^Integer digitVal (get digitsMap digit)]
+          (let [^Integer digitVal (get digitsMap digit)]
             (reset! result (+ (* 10 @result) digitVal))))))
     @result))
 
@@ -107,11 +107,11 @@
     (while (not (= @i 0))
       (let [^Integer quotient (quot @i 10)
             ^Integer remainder (rem @i 10)
-            ^:ref ^{:t {:mvector [:char]}} numberSystemDigits (get numberSystemsMap numberSystem)
+            ^{:t {:mvector [:char]}} numberSystemDigits (get numberSystemsMap numberSystem)
             ^{:t :char} localDigit (nth numberSystemDigits remainder)]
         (.insert result 0 localDigit)
         (reset! i quotient)))
-    (let [^:ref ^{:t :char} sep (get groupingSeparatorsMap numberSystem)
+    (let [^{:t :char} sep (get groupingSeparatorsMap numberSystem)
           ^{:t :int} numLength (.length result)
           ^{:t {:mvector [:int]}} separatorPositions (getSeparatorPositions numLength groupingStrategy)
           ^{:t :int} numPositions (count separatorPositions)]
