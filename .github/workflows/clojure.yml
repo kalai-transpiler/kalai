@@ -40,10 +40,12 @@ jobs:
       run: |
         pushd examples
         make
+        git diff --exit-code
         popd
 
     - name: Transpile & build sql_builder
       run: |
         pushd sql_builder
         make
+        git diff --exit-code
         popd
