@@ -26,7 +26,7 @@ jobs:
       uses: DeLaGuardo/setup-clojure@3.2
       with:
         # Install just one or all simultaneously
-        cli: 1.10.1.693 # Clojure CLI based on tools.deps
+        cli:  1.10.2.796 # Clojure CLI based on tools.deps
         lein: latest     # or use 'latest' to always provision latest version of leiningen
         boot: latest     # or use 'latest' to always provision latest version of boot
 
@@ -40,10 +40,12 @@ jobs:
       run: |
         pushd examples
         make
+        git diff --exit-code
         popd
 
     - name: Transpile & build sql_builder
       run: |
         pushd sql_builder
         make
+        git diff --exit-code
         popd

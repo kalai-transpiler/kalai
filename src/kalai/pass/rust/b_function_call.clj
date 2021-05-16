@@ -77,31 +77,31 @@
       (r/method unwrap (r/method nth (r/method chars ?x) (r/cast ?n :usize)))
 
       (r/invoke clojure.lang.RT/nth ?x ?n)
-      (r/deref (r/method unwrap (r/method get ?x (r/cast ?n :usize))))
+      (r/method clone (r/method unwrap (r/method get ?x (r/cast ?n :usize))))
 
 
       ;; TODO: for vectors, we should detect the vector type and do a
       ;; cast of the index argument to `usize` like we do for `nth`
       (r/invoke clojure.lang.RT/get ?x ?k)
-      (r/method unwrap (r/method get ?x (r/ref ?k)))
+      (r/method clone (r/method unwrap (r/method get ?x (r/ref ?k))))
 
       (r/invoke (u/var ~#'contains?) ?coll ?x)
       (r/method contains_key ?coll (r/ref ?x))
 
-      (r/invoke (u/var ~#'assoc) & ?more)
-      (r/method insert & ?more)
+      (r/invoke (u/var ~#'assoc) ?coll . !arg ...)
+      (r/method insert ?coll . (r/method clone !arg) ...)
 
       (r/invoke (u/var ~#'dissoc) & ?more)
       (r/method remove & ?more)
 
-      (r/invoke (u/var ~#'conj) & ?more)
-      (r/method push & ?more)
+      (r/invoke (u/var ~#'conj) ?coll . !arg ...)
+      (r/method push ?coll . (r/method clone !arg) ...)
 
       (r/invoke (u/var ~#'inc) ?x)
       (r/operator + ?x 1)
 
       (r/invoke (u/var ~#'update) ?x ?k ?f & ?args)
-      (r/method insert ?x ?k
+      (r/method insert ?x (r/method clone ?k)
                 (m/app rewrite (r/invoke ?f (r/invoke clojure.lang.RT/get ?x ?k) & ?args)))
 
       ?else

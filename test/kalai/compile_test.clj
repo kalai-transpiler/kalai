@@ -11,8 +11,8 @@
   (let [transpiled-file (io/file "examples/java/src/b/TypeAlias.java")]
     (if (.exists transpiled-file)
       (.delete transpiled-file))
-    (k/transpile-file (io/file "examples/src/main/clj/b/type_alias.clj")
-                      {:src-dir "examples/src/main/clj"
+    (k/transpile-file (io/file "examples/src/b/type_alias.clj")
+                      {:src-dir "examples/src"
                        :transpile-dir "examples"
                        :languages     #{::l/java}})
     (is (.exists transpiled-file))
@@ -28,8 +28,8 @@
   (let [transpiled-file (io/file "examples/rust/src/b/type_alias.rs")]
     (if (.exists transpiled-file)
       (.delete transpiled-file))
-    (k/transpile-file (io/file "examples/src/main/clj/b/type_alias.clj")
-                      {:src-dir "examples/src/main/clj"
+    (k/transpile-file (io/file "examples/src/b/type_alias.clj")
+                      {:src-dir "examples/src"
                        :transpile-dir "examples"
                        :languages     #{::l/rust}})
     (is (.exists transpiled-file))
@@ -41,7 +41,7 @@
 
 (deftest compile-java-test
   (reset! u/c 0)
-  (let [x {:src-dir       "examples/src/main/clj"
+  (let [x {:src-dir       "examples/src"
            :transpile-dir "examples"
            :languages     #{::l/java}}]
     (is (= "" (with-out-str (k/transpile-all x))))
@@ -49,7 +49,7 @@
 
 (deftest compile-rust-test
   (reset! u/c 0)
-  (let [x {:src-dir       "examples/src/main/clj"
+  (let [x {:src-dir       "examples/src"
            :transpile-dir "examples"
            :language      #{::l/rust}}]
     (is (= "" (with-out-str (k/transpile-all x))))
