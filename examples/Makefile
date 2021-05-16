@@ -9,12 +9,12 @@ setup:
 	clojure --version && cargo --version && gradle --version
 
 build:
-	clojure -M -m kalai.exec.main --src-dir src/main/clj --verbose
+	clojure -M -m kalai.exec.main --src-dir src --verbose
 	cd rust && cargo build
 	cd java && gradle build
 
 transpile:
-	clojure -M -m kalai.exec.main --src-dir src/main/clj --verbose
+	clojure -M -m kalai.exec.main --src-dir src --verbose
 
 rust:
 	cd rust && cargo build
