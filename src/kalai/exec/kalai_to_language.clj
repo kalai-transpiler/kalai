@@ -104,13 +104,13 @@
 
 (defn transpile-all
   "options is a map of
-  {:src-dir \"src/main/clj\"           ;; a directory containing Kalai source files that are inputs to transpilation>
+  {:src-dir \"src\"           ;; a directory containing Kalai source files that are inputs to transpilation>
    :transpile-dir \"src/main\"         ;; a the root directory for target language transpiled output>
    :languages #{:kalai.emit.lang/java} ;; the desired target languages
    }"
   ;; TODO: consider adding a spec to this
   [options]
-  (doseq [^File source-file (file-seq (io/file (:src-dir options)))
+  (doseq [^File source-file (file-seq (io/file (:src-dir options "src")))
           :when (not (.isDirectory source-file))]
     (transpile-file source-file options))
   (write-module-definitions options))

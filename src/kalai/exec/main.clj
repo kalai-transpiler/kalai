@@ -12,7 +12,7 @@
     :validate [(fn check-filename [filename]
                  (.exists (io/file filename)))
                "File must exist"]
-    :default "src/main/clj"]
+    :default "src"]
    ["-t" "--transpile-dir DIRECTORY" "Output directory"
     :default "."]
    ["-l" "--languages LANGUAGE" (str "Target language (" (str/join ", " (keys l/USER-TARGET-LANG-NAMES)) ")")
