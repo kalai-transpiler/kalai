@@ -84,7 +84,7 @@ make transpile
 If you don't want to use Make, you can invoke Kalai using the Clojure CLI:
 
 ```
-clojure -M -m kalai.exec.main --src-dir src/main/clj --verbose
+clojure -M -m kalai.exec.main --verbose
 ```
 
 To run the compiled output:

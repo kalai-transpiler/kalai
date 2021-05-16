@@ -110,7 +110,7 @@
    }"
   ;; TODO: consider adding a spec to this
   [options]
-  (doseq [^File source-file (file-seq (io/file (:src-dir options "src")))
+  (doseq [^File source-file (file-seq (io/file (:src-dir options)))
           :when (not (.isDirectory source-file))]
     (transpile-file source-file options))
   (write-module-definitions options))
