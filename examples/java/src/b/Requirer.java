@@ -5,6 +5,6 @@ import java.util.List;
 import java.util.ArrayList;
 public class Requirer {
 public static final void main(String[] args) {
-System.out.println(b.Required.f(1));
+System.out.println(b.Required.f(1L));
 }
 }

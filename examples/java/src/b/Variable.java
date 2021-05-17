@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.ArrayList;
 public class Variable {
 public static final long sideEffect() {
-long y = 2;
+long y = 2L;
 {
-y = 3;
+y = 3L;
 return y;
 }
 }

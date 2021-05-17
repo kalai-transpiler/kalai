@@ -6,7 +6,7 @@
 
 (deftest init1-test
   (top-level-form
-    '(def ^{:t :int} x 3)
+    '(def ^{:t :int} x (int 3))
     ;;->
     '(init x 3)
     ;;->
@@ -22,7 +22,7 @@
 
 (deftest init3-test
   (inner-form
-    '(let [^{:t :int} x 1]
+    '(let [^{:t :int} x (int 1)]
        x)
     ;;->
     '(do
@@ -33,7 +33,7 @@
 
 (deftest init4-test
   (inner-form
-    '(let [^Integer x (Integer. 1)]
+    '(let [^Integer x (Integer. (int 1))]
        x)
     ;;->
     '(do
@@ -65,14 +65,14 @@
   (testing
     "In Kalai, you repesent a function just how you would in Clojure"
     (top-level-form
-      '(defn f ^Integer [^Integer x]
+      '(defn f ^Long [^Long x]
          (inc x))
       ;;->
       '(function f [x]
                  (return (operator + x 1)))
       ;;->
-      "public static final int f(final int x) {
-return (x + 1);
+      "public static final long f(final long x) {
+return (x + 1L);
 }")))
 
 ;; TODO: differentiate between mutable swap and not
@@ -105,7 +105,7 @@ return (x + 1);
     '((ns test-package.test-class)
       (defn f
         (^{:t :int} [^{:t :int} x]
-         (inc x))
+         (+ x (int 1)))
         (^{:t :int} [^{:t :int} x ^{:t :int} y]
          (+ x y))))
     ;;->
@@ -147,7 +147,7 @@ System.out.println(x);
 (deftest local-variables-test
   (inner-form
     '(let [x (atom (int 0))]
-       (reset! x (+ @x 2)))
+       (reset! x (+ @x (int 2))))
     ;;->
     '(do
        (init x 0)
@@ -183,8 +183,8 @@ System.out.println((x + y));
 
 (deftest local-variables3-test
   (inner-form
-    '(with-local-vars [^int x 1
-                       ^int y 2]
+    '(with-local-vars [^int x (int 1)
+                       ^int y (int 2)]
        (println (+ (var-get x) (var-get y))))
     ;;->
     '(do (init x 1)
@@ -221,8 +221,8 @@ System.out.println((x + y));"))
          (assign y (operator + y 4))
          y))
     ;;->
-    "long y = (2 - 4);
-y = (y + 4);"))
+    "long y = (2L - 4L);
+y = (y + 4L);"))
 
 ;; # Types
 
@@ -248,7 +248,7 @@ final boolean x = true;
 {
 final boolean z = true;
 }
-final long y = 5;"))
+final long y = 5L;"))
 
 (deftest type-aliasing-test
   (ns-form
@@ -305,8 +305,8 @@ return z;
        (invoke println x))
     ;;->
     "ArrayList<Long> tmp1 = new ArrayList<Long>();
-tmp1.add(1);
-tmp1.add(2);
+tmp1.add(1L);
+tmp1.add(2L);
 final ArrayList<Long> x = tmp1;
 System.out.println(x);"))
 
@@ -353,7 +353,7 @@ final HashMap<String,String> x = tmp1;"))
   (top-level-form
     '(def my-var 1)
     '(init my-var 1)
-    "static final long myVar = 1;"))
+    "static final long myVar = 1L;"))
 
 (deftest hyphen-test2
   (top-level-form
@@ -365,7 +365,7 @@ final HashMap<String,String> x = tmp1;"))
                  (init my-binding 2)
                  (return my-binding)))
     "public static final long myFunction(final long myArg) {
-final long myBinding = 2;
+final long myBinding = 2L;
 return myBinding;
 }"))
 
@@ -383,11 +383,11 @@ return myBinding;
     ;;->
     "if (true)
 {
-System.out.println(1);
+System.out.println(1L);
 }
 else
 {
-System.out.println(2);
+System.out.println(2L);
 }"))
 
 ;; # Data Literals
@@ -400,8 +400,8 @@ System.out.println(2);
     '(init x [1 2])
     ;;->
     "PVector<Long> tmp1 = new PVector<Long>();
-tmp1.add(1);
-tmp1.add(2);
+tmp1.add(1L);
+tmp1.add(2L);
 final PVector<Long> x = tmp1;"))
 
 ;; selecting between Vector and PVector<Object>
@@ -414,8 +414,8 @@ final PVector<Long> x = tmp1;"))
     '(init x [1 2])
     ;;->
     "ArrayList<Long> tmp1 = new ArrayList<Long>();
-tmp1.add(1);
-tmp1.add(2);
+tmp1.add(1L);
+tmp1.add(2L);
 final ArrayList<Long> x = tmp1;"))
 
 (deftest data-literals3-test
@@ -428,8 +428,8 @@ final ArrayList<Long> x = tmp1;"))
        x)
     ;;->
     "ArrayList<Long> tmp1 = new ArrayList<Long>();
-tmp1.add(1);
-tmp1.add(2);
+tmp1.add(1L);
+tmp1.add(2L);
 final ArrayList<Long> x = tmp1;"))
 
 (deftest data-literals4-test
@@ -442,12 +442,12 @@ final ArrayList<Long> x = tmp1;"))
        (assign x [3 4]))
     ;;->
     "PVector<Long> tmp1 = new PVector<Long>();
-tmp1.add(1);
-tmp1.add(2);
+tmp1.add(1L);
+tmp1.add(2L);
 PVector<Long> x = tmp1;
 PVector<Long> tmp2 = new PVector<Long>();
-tmp2.add(3);
-tmp2.add(4);
+tmp2.add(3L);
+tmp2.add(4L);
 x = tmp2;"))
 
 (deftest data-literals5-test
@@ -457,8 +457,8 @@ x = tmp2;"))
     '(init x {1 2 3 4})
     ;;->
     "PMap<Long,Long> tmp1 = new PMap<Long,Long>();
-tmp1.put(1, 2);
-tmp1.put(3, 4);
+tmp1.put(1L, 2L);
+tmp1.put(3L, 4L);
 final PMap<Long,Long> x = tmp1;"))
 
 (deftest data-literals6-test
@@ -468,8 +468,8 @@ final PMap<Long,Long> x = tmp1;"))
     '(init x #{1 2})
     ;;->
     "PSet<Long> tmp1 = new PSet<Long>();
-tmp1.add(1);
-tmp1.add(2);
+tmp1.add(1L);
+tmp1.add(2L);
 final PSet<Long> x = tmp1;"))
 
 ;; TODO: What about heterogeneous collections,
@@ -487,10 +487,10 @@ final PSet<Long> x = tmp1;"))
     ;;->
     "PVector<PVector<Long>> tmp1 = new PVector<PVector<Long>>();
 PVector<Long> tmp2 = new PVector<Long>();
-tmp2.add(1);
+tmp2.add(1L);
 tmp1.add(tmp2);
 PVector<Long> tmp3 = new PVector<Long>();
-tmp3.add(2);
+tmp3.add(2L);
 tmp1.add(tmp3);
 final PVector<PVector<Long>> x = tmp1;
 System.out.println(x);"))
@@ -531,11 +531,11 @@ System.out.println(x);"))
     "HashMap<Long,ArrayList<String>> tmp1 = new HashMap<Long,ArrayList<String>>();
 ArrayList<String> tmp2 = new ArrayList<String>();
 tmp2.add(\"hi\");
-tmp1.put(1, tmp2);
+tmp1.put(1L, tmp2);
 ArrayList<String> tmp3 = new ArrayList<String>();
 tmp3.add(\"hello\");
 tmp3.add(\"there\");
-tmp1.put(2, tmp3);
+tmp1.put(2L, tmp3);
 final HashMap<Long,ArrayList<String>> x = tmp1;
 System.out.println(x);"))
 
@@ -554,12 +554,12 @@ System.out.println(x);"))
     "PVector<PMap<PSet<Long>,PVector<String>>> tmp1 = new PVector<PMap<PSet<Long>,PVector<String>>>();
 PMap<PSet<Long>,PVector<String>> tmp2 = new PMap<PSet<Long>,PVector<String>>();
 PSet<Long> tmp3 = new PSet<Long>();
-tmp3.add(1);
+tmp3.add(1L);
 PVector<String> tmp4 = new PVector<String>();
 tmp4.add(\"hi\");
 tmp2.put(tmp3, tmp4);
 PSet<Long> tmp5 = new PSet<Long>();
-tmp5.add(2);
+tmp5.add(2L);
 PVector<String> tmp6 = new PVector<String>();
 tmp6.add(\"hello\");
 tmp6.add(\"there\");
@@ -584,12 +584,12 @@ System.out.println(x);"))
     "PVector<PMap<PSet<Long>,PVector<String>>> tmp1 = new PVector<PMap<PSet<Long>,PVector<String>>>();
 PMap<PSet<Long>,PVector<String>> tmp2 = new PMap<PSet<Long>,PVector<String>>();
 PSet<Long> tmp3 = new PSet<Long>();
-tmp3.add(1);
+tmp3.add(1L);
 PVector<String> tmp4 = new PVector<String>();
 tmp4.add(\"hi\");
 tmp2.put(tmp3, tmp4);
 PSet<Long> tmp5 = new PSet<Long>();
-tmp5.add(2);
+tmp5.add(2L);
 PVector<String> tmp6 = new PVector<String>();
 tmp6.add(\"hello\");
 tmp6.add(\"there\");
@@ -598,6 +598,14 @@ tmp1.add(tmp2);
 final PVector<PMap<PSet<Long>,PVector<String>>> x = tmp1;
 System.out.println(x);"))
 
+(deftest t
+  (inner-form
+    '(let [^{:t :long} x ^{:cast :long} (int 1)])
+    '(do
+       (init x 1)
+       nil)
+    "final long x = 1;"))
+
 ;; TODO: deprecated, we can't support any in all languages, so remove it
 (deftest data-literals8-test
   (inner-form
@@ -605,26 +613,47 @@ System.out.println(x);"))
              [1
               ^{:t {:mvector [:long]}} [2]
               3
-              ^{:t {:mvector [:any]}} [^{:t {:mvector [:long]}} [4]]]]
-       (println x))
+              ^{:t {:mvector [:any]}} [^{:t {:mvector [:long]}} [4]]]
+           ^{:t :long} a ^{:cast :long} (nth x (int 0))]
+       (println x)
+       (println (+ 7 a)))
     ;;->
     '(do
        (init x [1 [2] 3 [[4]]])
-       (invoke println x))
+       (init
+         a
+         (invoke
+           clojure.lang.RT/nth
+           x
+           0))
+       (do
+         (invoke
+           println
+           x)
+         (invoke
+           println
+           (operator
+             +
+             7
+             a))))
     ;;->
     "ArrayList<Object> tmp1 = new ArrayList<Object>();
-tmp1.add(1);
+tmp1.add(1L);
 ArrayList<Long> tmp2 = new ArrayList<Long>();
-tmp2.add(2);
+tmp2.add(2L);
 tmp1.add(tmp2);
-tmp1.add(3);
+tmp1.add(3L);
 ArrayList<Object> tmp3 = new ArrayList<Object>();
 ArrayList<Long> tmp4 = new ArrayList<Long>();
-tmp4.add(4);
+tmp4.add(4L);
 tmp3.add(tmp4);
 tmp1.add(tmp3);
 final ArrayList<Object> x = tmp1;
-System.out.println(x);"))
+final long a = x.get(0);
+{
+System.out.println(x);
+System.out.println((7L + a));
+}"))
 
 ;; TODO: deprecated, we can't support any in all languages, so remove it
 (deftest data-literals9-test
@@ -642,16 +671,16 @@ System.out.println(x);"))
     "HashMap<Object,Object> tmp1 = new HashMap<Object,Object>();
 ArrayList<Object> tmp2 = new ArrayList<Object>();
 HashMap<Long,Long> tmp3 = new HashMap<Long,Long>();
-tmp3.put(2, 3);
+tmp3.put(2L, 3L);
 tmp2.add(tmp3);
 HashSet<Object> tmp4 = new HashSet<Object>();
-tmp4.add(4);
+tmp4.add(4L);
 ArrayList<Long> tmp5 = new ArrayList<Long>();
-tmp5.add(5);
-tmp5.add(6);
+tmp5.add(5L);
+tmp5.add(6L);
 tmp4.add(tmp5);
 tmp2.add(tmp4);
-tmp1.put(1, tmp2);
+tmp1.put(1L, tmp2);
 final HashMap<Object,Object> x = tmp1;
 System.out.println(x);"))
 
@@ -662,7 +691,7 @@ System.out.println(x);"))
     '(init x {"key" (operator + 1 2)})
     ;;->
     "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
-tmp1.put(\"key\", (1 + 2));
+tmp1.put(\"key\", (1L + 2L));
 final HashMap<String,Long> x = tmp1;"))
 
 (deftest string-equality-test
@@ -714,18 +743,18 @@ System.out.println(x.equals(y));"))
               (invoke println x))
     ;;->
     "ArrayList<Long> tmp1 = new ArrayList<Long>();
-tmp1.add(1);
-tmp1.add(2);
-tmp1.add(3);
-tmp1.add(4);
+tmp1.add(1L);
+tmp1.add(2L);
+tmp1.add(3L);
+tmp1.add(4L);
 for (int x : tmp1) {
 System.out.println(x);
 }"))
 
 (deftest for-loop-test
   (inner-form
-    '(dotimes [^{:t :int} x 5]
-       (println x))
+    (list 'dotimes [^{:t :int} 'x (int 5)]
+       '(println x))
     ;;->
     '(group
        (init x 0)
@@ -733,7 +762,7 @@ System.out.println(x);
          (invoke println x)
          (assign x (operator + x 1))))
     ;;->
-    "int x = 0;
+    "long x = 0;
 while ((x < 5)) {
 System.out.println(x);
 x = (x + 1);
@@ -766,19 +795,19 @@ System.out.println(\"hi\");
     ;;->
     "if (true)
 {
-System.out.println(1);
+System.out.println(1L);
 }
 else
 {
 if (false)
 {
-System.out.println(2);
+System.out.println(2L);
 }
 else
 {
 if (true)
 {
-System.out.println(3);
+System.out.println(3L);
 }
 }
 }"))
@@ -790,7 +819,7 @@ System.out.println(3);
     '(invoke clojure.lang.RT/get {:k 1} :k)
     ;;->
     "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
-tmp1.put(\":k\", 1);
+tmp1.put(\":k\", 1L);
 tmp1.get(\":k\");"))
 
 (deftest keywords-as-functions2-test
@@ -818,7 +847,7 @@ tmp1.get(\":k\");"))
     ;;->
     "final String k = \"k\";
 HashMap<String,Long> tmp1 = new HashMap<String,Long>();
-tmp1.put(k, 1);
+tmp1.put(k, 1L);
 final HashMap<String,Long> m = tmp1;
 final long v = m.get(k);"
     ))
@@ -837,6 +866,7 @@ final long v = m.get(k);"
     ""
     ))
 
+;; TODO: due to a quirk of Clojure, cases can be ints, I don't think this will compile
 (deftest switch-case-test
   (inner-form
     '(case 1
@@ -848,7 +878,7 @@ final long v = m.get(k);"
               2 [2 :b]}
              :c)
     ;;->
-    "switch (1) {
+    "switch (1L) {
 case 1 : \":a\";
 break;
 case 2 : \":b\";
@@ -897,11 +927,11 @@ break;
     "long tmp1;
 if (true)
 {
-tmp1 = 1;
+tmp1 = 1L;
 }
 else
 {
-tmp1 = 2;
+tmp1 = 2L;
 }
 long tmp2;
 if (true)
@@ -909,11 +939,11 @@ if (true)
 long tmp3;
 if (true)
 {
-tmp3 = 3;
+tmp3 = 3L;
 }
 else
 {
-tmp3 = 4;
+tmp3 = 4L;
 }
 {
 tmp2 = tmp3;
@@ -921,7 +951,7 @@ tmp2 = tmp3;
 }
 else
 {
-tmp2 = 5;
+tmp2 = 5L;
 }
 System.out.println((tmp1 + tmp2));"))
 
@@ -958,16 +988,16 @@ System.out.println((tmp1 + tmp2));"))
     "long tmp1;
 if (true)
 {
-System.out.println(1);
+System.out.println(1L);
 {
-tmp1 = 2;
+tmp1 = 2L;
 }
 }
 else
 {
-tmp1 = 3;
+tmp1 = 3L;
 }
-System.out.println((tmp1 + 4));"))
+System.out.println((tmp1 + 4L));"))
 
 
 (deftest conditional-expression3-test
@@ -983,24 +1013,24 @@ System.out.println((tmp1 + 4));"))
     "long tmp1;
 if (true)
 {
-tmp1 = 1;
+tmp1 = 1L;
 }
 else
 {
 long tmp2;
 if (false)
 {
-tmp2 = 2;
+tmp2 = 2L;
 }
 else
 {
-tmp2 = 3;
+tmp2 = 3L;
 }
 {
 tmp1 = tmp2;
 }
 }
-System.out.println((tmp1 + 4));"))
+System.out.println((tmp1 + 4L));"))
 
 (deftest operator-test
   (inner-form
@@ -1010,7 +1040,7 @@ System.out.println((tmp1 + 4));"))
     '(invoke println
              (operator ! (operator == 1 (operator + 1 1))))
     ;;->
-    "System.out.println(!(1 == (1 + 1)));"))
+    "System.out.println(!(1L == (1L + 1L)));"))
 
 (deftest interop-test
   (inner-form
@@ -1040,8 +1070,8 @@ b.length();
     '(invoke assoc {:a 1} :b 2)
     ;;->
     "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
-tmp1.put(\":a\", 1);
-tmp1.put(\":b\", 2);"))
+tmp1.put(\":a\", 1L);
+tmp1.put(\":b\", 2L);"))
 
 (deftest interop3-test
   (inner-form
@@ -1050,8 +1080,8 @@ tmp1.put(\":b\", 2);"))
     '(invoke update {:a 1} :a inc)
     ;;->
     "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
-tmp1.put(\":a\", 1);
-tmp1.put(\":a\", (tmp1.get(\":a\") + 1));"))
+tmp1.put(\":a\", 1L);
+tmp1.put(\":a\", (tmp1.get(\":a\") + 1L));"))
 
 (deftest interop4-test
   (inner-form
@@ -1064,7 +1094,7 @@ tmp1.put(\":a\", (tmp1.get(\":a\") + 1));"))
 (deftest interop5-test
   (inner-form
     '(let [^String s "abc"]
-       (println (nth s 1)))
+       (println (nth s (int 1))))
     ;;->
     '(do
        (init s "abc")
@@ -1076,8 +1106,8 @@ System.out.println(s.charAt(1));"))
 
 (deftest interop6-test
   (inner-form
-    '(let [^{:t {:mvector [:int]}} v [1 2 3]]
-       (println (nth v 1)))
+    '(let [^{:t {:mvector [:int]}} v [(int 1) (int 2) (int 3)]]
+       (println (nth v (int 1))))
     ;;->
     '(do
        (init v [1 2 3])
@@ -1095,9 +1125,9 @@ System.out.println(v.get(1));"))
   (inner-form
     '(let [result (atom ^{:t {:mvector [:int]}} [])
            i (atom (int 10))]
-       (while (< 0 @i)
+       (while (< (int 0) @i)
          (swap! result conj @i)
-         (reset! i (- @i 3))))
+         (reset! i (- @i (int 3)))))
     ;;->
     '(do
        (init result [])
@@ -1150,11 +1180,11 @@ System.out.println(\"hi\");"))
     "public static final long f() {
 if (true)
 {
-return 1;
+return 1L;
 }
 else
 {
-final long x = 2;
+final long x = 2L;
 {
 System.out.println(\"hi\");
 return x;
@@ -1173,7 +1203,7 @@ return x;
        (init y x)
        (invoke println y))
     ;;->
-    "final long x = 1;
+    "final long x = 1L;
 final long y = x;
 System.out.println(y);"))
 
@@ -1188,7 +1218,7 @@ System.out.println(y);"))
        (init y x)
        (invoke println y))
     ;;->
-    "final int x = 1;
+    "final int x = 1L;
 final int y = x;
 System.out.println(y);"))
 
@@ -1205,7 +1235,7 @@ System.out.println(y);"))
        (init z y)
        (invoke println z))
     ;;->
-    "final long x = 1;
+    "final long x = 1L;
 final long y = x;
 final long z = y;
 System.out.println(z);"))
@@ -1247,7 +1277,7 @@ System.out.println(z);"))
                    a)))
        (invoke println x))
     ;;->
-    "long a = 1;
+    "long a = 1L;
 long tmp1;
 if (true)
 {
@@ -1283,9 +1313,9 @@ System.out.println(x);"))
     ;;->
     "ArrayList<Long> x = new ArrayList<Long>();
 ArrayList<Long> tmp1 = new ArrayList<Long>();
-tmp1.add(1);
-tmp1.add(2);
-tmp1.add(3);
+tmp1.add(1L);
+tmp1.add(2L);
+tmp1.add(3L);
 x = tmp1;"))
 
 (deftest propagated-types5-test
@@ -1299,7 +1329,7 @@ x = tmp1;"))
        (invoke conj x 1))
     ;;->
     "ArrayList<Long> x = new ArrayList<Long>();
-x.add(1);"))
+x.add(1L);"))
 
 (deftest propagated-types6-test
   (top-level-form

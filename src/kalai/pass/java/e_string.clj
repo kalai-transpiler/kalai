@@ -275,6 +275,12 @@ import java.util.ArrayList;")
     (m/pred char? ?c)
     (str \' ?c \')
 
+    (m/pred #(instance? Long %) ?x)
+    (str ?x "L")
+
+    (m/pred float? ?x)
+    (str ?x "F")
+
     nil
     "null"
 
