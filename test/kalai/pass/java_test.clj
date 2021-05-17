@@ -127,7 +127,8 @@ return (x + 1);
 public static final int f(final int x, final int y) {
 return (x + y);
 }
-}"))
+}
+"))
 
 ;; Custom type void does not return a value
 (deftest function4-test
@@ -277,7 +278,8 @@ public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
 final HashMap<Long,String> z = y;
 return z;
 }
-}"))
+}
+"))
 
 (deftest generic-types-test
   (top-level-form
