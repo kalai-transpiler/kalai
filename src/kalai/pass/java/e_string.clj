@@ -293,7 +293,7 @@ import java.util.ArrayList;")
 
 (defn stringify-entry [form]
   (try
-    (stringify form)
+    (str (stringify form) \newline)
     (catch Exception ex
       (println "Outer form:")
       (puget/cprint form)

@@ -7,7 +7,7 @@ println!("{}", i);
 i = (i + 1);
 }
 for ii in {
-let mut tmp_1: std::vec::Vec<i32> = std::vec::Vec::new();
+let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
 tmp_1.push(1.clone());
 tmp_1.push(2.clone());
 tmp_1.push(3.clone());
@@ -16,7 +16,7 @@ tmp_1
 println!("{}", ii);
 }
 {
-let mut x: i32 = 0;
+let mut x: i64 = 0;
 while (x < 10) {
 x = (x + 1);
 println!("{}", x);
