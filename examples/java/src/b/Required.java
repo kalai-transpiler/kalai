@@ -5,6 +5,6 @@ import java.util.List;
 import java.util.ArrayList;
 public class Required {
 public static final long f(final long x) {
-return (1 + x);
+return (1L + x);
 }
 }

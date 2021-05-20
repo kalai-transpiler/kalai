@@ -510,6 +510,19 @@ tmp_1.insert(2.clone());
 tmp_1
 };"))
 
+(deftest t
+  (inner-form
+    '(let [^{:t :int} x (int 1)
+           ^{:t :long} y ^{:cast :long} x]
+       (println y))
+    '(do
+       (init x 1)
+       (init y x)
+       (invoke println y))
+    "let x: i32 = 1;
+let y: i64 = x as i64;
+println!(\"{}\", y);"))
+
 ;; TODO: What about heterogeneous collections,
 ;; do we want to allow them? [1 [2]] if so what is the type?
 ;; Do all languages have an "Object" concept?

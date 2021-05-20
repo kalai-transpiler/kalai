@@ -275,6 +275,12 @@ import java.util.ArrayList;")
     (m/pred char? ?c)
     (str \' ?c \')
 
+    (m/pred #(instance? Long %) ?x)
+    (str ?x "L")
+
+    (m/pred float? ?x)
+    (str ?x "F")
+
     nil
     "null"
 
@@ -287,7 +293,7 @@ import java.util.ArrayList;")
 
 (defn stringify-entry [form]
   (try
-    (stringify form)
+    (str (stringify form) \newline)
     (catch Exception ex
       (println "Outer form:")
       (puget/cprint form)

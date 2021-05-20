@@ -4,7 +4,6 @@
             [clojure.tools.analyzer.ast :as ast]
             [kalai.util :as u]
             [kalai.types :as types]
-            [clojure.tools.analyzer.passes.jvm.emit-form :as e]
             [clojure.string :as str])
   (:import (clojure.lang IMeta)))
 
@@ -138,17 +137,21 @@
   (:t (meta x)))
 
 (defn propagate-ast-type
-  "If possible, associate the representative type of `from-ast` to `to-imeta`,
+  "If possible, associate the representative type of `from-imeta` or `from-ast` to `to-imeta`,
   otherwise, just return `to-imeta` exactly as-is.
   Return `to-imeta` as-is if:
     * `to-imeta` cannot take metadata
     * `to-imeta` already has type info, as inferred by truthy value for `:t` in
     metadata"
-  [from-ast to-imeta ast]
+  [from-ast from-imeta to-imeta ast]
   (if (and (instance? IMeta to-imeta)
            (not (t-from-meta to-imeta)))
-    (u/maybe-meta-assoc to-imeta :t (or (ast-t from-ast)
-                                        (resolve-tag (:tag (meta to-imeta)) ast)))
+    (u/maybe-meta-assoc to-imeta
+                        :t (or (:t (meta from-imeta))
+                               (ast-t from-ast)
+                               (resolve-tag (:tag (meta to-imeta)) ast)
+                               (resolve-tag (:tag (meta from-imeta)) ast))
+                        :mut (:mut (meta from-imeta)))
     to-imeta))
 
 (defn set-coll-t [val t]
@@ -323,15 +326,15 @@
     ;; TODO: this must happen after value->binding
     ;; locals are usages of a declared binding
     {:op   :local
-     :form ?symbol
-     :env  {:locals {?symbol {:form ?symbol-with-meta
-                              :init ?init}}
+     :form ?symbol-local
+     :env  {:locals {?symbol-local {:form ?symbol-bound
+                                    :init ?init}}
             :as     ?env}
      &     ?more
      :as   ?ast}
     ;;->
     {:op   :local
-     :form ~(propagate-ast-type ?init ?symbol-with-meta ?ast)
+     :form ~(propagate-ast-type ?init ?symbol-bound ?symbol-local ?ast)
      :env  ?env
      &     ?more}
 

@@ -1,5 +1,6 @@
 # TODO
 
+* In Java, nth index can only be an int, we should do that on behalf of the user and document that constraint.
 * SQL builder application
   - Heterogeneous collections
     * Copy over any Java tests for heterogeneous colls to Rust and make work

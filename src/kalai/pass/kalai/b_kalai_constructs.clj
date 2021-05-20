@@ -2,8 +2,7 @@
   (:require [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]
             [kalai.util :as u]
-            [clojure.string :as str])
-  (:import (clojure.lang IMeta)))
+            [clojure.string :as str]))
 
 (declare inner-form)
 
@@ -72,12 +71,13 @@
         (if (clojure.lang.Numbers/lt ?sym ?auto)
           (do . !body ... (recur (clojure.lang.Numbers/unchecked_inc ?sym))))))
     (group
-      (init ~(with-meta ?sym {:t   (or (:t (meta ?sym)) 'int)
-                              :mut true})
-            0)
+      (init ~(with-meta ?sym (merge (meta ?sym)
+                                    {:t   (or (:t (meta ?sym)) :int)
+                                     :mut true}))
+            ~(int 0))
       (while (operator < ?sym ?n)
         . (m/app inner-form !body) ...
-        (assign ?sym (operator + ?sym 1))))
+        (assign ?sym (operator + ?sym ~(int 1)))))
 
     ;; TODO: test with
     ;;;; (doseq [x [1 2]] (println x) (println x))

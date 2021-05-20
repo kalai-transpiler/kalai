@@ -43,6 +43,9 @@ jobs:
         git diff --exit-code
         popd
 
+    - name: Compare transpilation to repo files for examples
+      run: git diff-index --exit-code HEAD
+
     - name: Transpile & build sql_builder
       run: |
         pushd sql_builder

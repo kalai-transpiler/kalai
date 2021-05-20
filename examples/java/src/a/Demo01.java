@@ -8,7 +8,7 @@ public static final String format(final int num) {
 int i = num;
 java.lang.StringBuffer result = new StringBuffer();
 {
-while (!(i == 0)) {
+while (!(i == 0L)) {
 final int quotient = (i / 10);
 final int remainder = (i % 10);
 {

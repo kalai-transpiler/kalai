@@ -3,36 +3,36 @@
 
 (defn getDigitsMap ^{:t {:mmap [:char :int]}} []
   ^{:t {:mmap [:char :int]}}
-  {\0     0
-   \1     1
-   \2     2
-   \3     3
-   \4     4
-   \5     5
-   \6     6
-   \7     7
-   \8     8
-   \9     9
-   \u0660 0
-   \u0661 1
-   \u0662 2
-   \u0663 3
-   \u0664 4
-   \u0665 5
-   \u0666 6
-   \u0667 7
-   \u0668 8
-   \u0669 9
-   \u09E6 0
-   \u09E7 1
-   \u09E8 2
-   \u09E9 3
-   \u09EA 4
-   \u09EB 5
-   \u09EC 6
-   \u09ED 7
-   \u09EE 8
-   \u09EF 9})
+  {\0     (int 0)
+   \1     (int 1)
+   \2     (int 2)
+   \3     (int 3)
+   \4     (int 4)
+   \5     (int 5)
+   \6     (int 6)
+   \7     (int 7)
+   \8     (int 8)
+   \9     (int 9)
+   \u0660 (int 0)
+   \u0661 (int 1)
+   \u0662 (int 2)
+   \u0663 (int 3)
+   \u0664 (int 4)
+   \u0665 (int 5)
+   \u0666 (int 6)
+   \u0667 (int 7)
+   \u0668 (int 8)
+   \u0669 (int 9)
+   \u09E6 (int 0)
+   \u09E7 (int 1)
+   \u09E8 (int 2)
+   \u09E9 (int 3)
+   \u09EA (int 4)
+   \u09EB (int 5)
+   \u09EC (int 6)
+   \u09ED (int 7)
+   \u09EE (int 8)
+   \u09EF (int 9)})
 
 (def ^{:t {:mmap [:char :int]}} digitsMap (getDigitsMap))
 
@@ -43,7 +43,7 @@
       (let [^{:t :char} digit (nth s i)]
         (if (contains? digitsMap digit)
           (let [^Integer digitVal (get digitsMap digit)]
-            (reset! result (+ (* 10 @result) digitVal))))))
+            (reset! result (+ (* (int 10) @result) digitVal))))))
     @result))
 
 (defn getNumberSystemsMap
@@ -75,26 +75,26 @@
       @result
 
       (= groupingStrategy "ON_ALIGNED_3_3")
-      (let [^{:t :int} i (atom (- numLength 3))]
-        (while (< 0 @i)
+      (let [^{:t :int} i (atom (- numLength (int 3)))]
+        (while (< (int 0) @i)
           (swap! result conj @i)
-          (reset! i (- @i 3)))
+          (reset! i (- @i (int 3))))
         @result)
 
       (= groupingStrategy "ON_ALIGNED_3_2")
-      (let [^{:t :int} i (atom (- numLength 3))]
-        (while (< 0 @i)
+      (let [^{:t :int} i (atom (- numLength (int 3)))]
+        (while (< (int 0) @i)
           (swap! result conj @i)
-          (reset! i (- @i 2)))
+          (reset! i (- @i (int 2))))
         @result)
 
       (= groupingStrategy "MIN_2")
-      (if (<= numLength 4)
+      (if (<= numLength (int 4))
         @result
-        (let [^{:t :int} i (atom (- numLength 3))]
-          (while (< 0 @i)
+        (let [^{:t :int} i (atom (- numLength (int 3)))]
+          (while (< (int 0) @i)
             (swap! result conj @i)
-            (reset! i (- @i 3)))
+            (reset! i (- @i (int 3))))
           @result))
 
       :else
@@ -104,12 +104,12 @@
   ^String [^Integer num, ^String numberSystem, ^String groupingStrategy]
   (let [^{:t :int} i (atom num)
         ^:mut ^StringBuffer result (StringBuffer.)]
-    (while (not (= @i 0))
-      (let [^Integer quotient (quot @i 10)
-            ^Integer remainder (rem @i 10)
+    (while (not (= @i (int 0)))
+      (let [^Integer quotient (quot @i (int 10))
+            ^Integer remainder (rem @i (int 10))
             ^{:t {:mvector [:char]}} numberSystemDigits (get numberSystemsMap numberSystem)
             ^{:t :char} localDigit (nth numberSystemDigits remainder)]
-        (.insert result 0 localDigit)
+        (.insert result (int 0) localDigit)
         (reset! i quotient)))
     (let [^{:t :char} sep (get groupingSeparatorsMap numberSystem)
           ^{:t :int} numLength (.length result)
@@ -126,6 +126,6 @@
   (println (parse "7,654,321"))
   (println (parse "76,54,321"))
 
-  (println (format 7654321 "LATIN" "ON_ALIGNED_3_2"))
-  (println (format 7654321 "ARABIC" "ON_ALIGNED_3_3"))
-  (println (format 7654321 "BENGALI" "ON_ALIGNED_3_3")))
+  (println (format (int 7654321) "LATIN" "ON_ALIGNED_3_2"))
+  (println (format (int 7654321) "ARABIC" "ON_ALIGNED_3_3"))
+  (println (format (int 7654321) "BENGALI" "ON_ALIGNED_3_3")))
