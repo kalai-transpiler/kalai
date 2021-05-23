@@ -523,6 +523,42 @@ tmp_1
 let y: i64 = x as i64;
 println!(\"{}\", y);"))
 
+;; TODO: revisit if necessary, but for now don't bother
+(deftest t2
+  #_(inner-form
+    '(let [^{:t :int} x (int 1)
+           ^{:t :int} z (int 3)
+           ^{:t :long} y ^{:cast :long} (+ x z)]
+       (println y))
+    '(do
+       (init x 1)
+       (init y x)
+       (invoke println y))
+    "let x: i32 = 1;
+let y: i64 = x as i64;
+println!(\"{}\", y);"))
+
+;; TODO: for now, you can do this just fine
+(deftest t2a
+    #_(inner-form
+      '(let [^{:t :int} w (int 1)
+             ^{:t :int} x (int 3)
+             ^{:t :int} y (+ w x)
+             ^{:t :long} z ^{:cast :long} y]
+         (println z))
+      '(do
+         (init w 1)
+         (init x 3)
+         (init y (+ w z))
+         (init z y)
+         (invoke println z))
+      "let w: i32 = 1;
+let x: i32 = 3;
+let y: i32 = w + x;
+let z: i64 = y as i64;
+println!(\"{}\", z);"))
+
+
 ;; TODO: What about heterogeneous collections,
 ;; do we want to allow them? [1 [2]] if so what is the type?
 ;; Do all languages have an "Object" concept?
