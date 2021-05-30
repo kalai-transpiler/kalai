@@ -325,8 +325,8 @@ static ref x: std::collections::HashMap<i64,String> = ();
     ;;->
     "let x: std::vec::Vec<i64> = {
 let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp_1.push(1.clone());
-tmp_1.push(2.clone());
+tmp_1.push(1);
+tmp_1.push(2);
 tmp_1
 };
 println!(\"{}\", x);"))
@@ -339,7 +339,7 @@ println!(\"{}\", x);"))
     ;;->
     "let x: std::collections::HashMap<String,String> = {
 let mut tmp_1: std::collections::HashMap<String,String> = std::collections::HashMap::new();
-tmp_1.insert(String::from(\":a\").clone(), String::from(\"asdf\").clone());
+tmp_1.insert(String::from(\":a\"), String::from(\"asdf\"));
 tmp_1
 };"))
 
@@ -425,8 +425,8 @@ println!(\"{}\", 2);
     ;;->
     "let x: PVector<i64> = {
 let mut tmp_1: PVector<i64> = PVector::new();
-tmp_1.push(1.clone());
-tmp_1.push(2.clone());
+tmp_1.push(1);
+tmp_1.push(2);
 tmp_1
 };"))
 
@@ -439,8 +439,8 @@ tmp_1
     "lazy_static::lazy_static! {
 static ref x: std::vec::Vec<i64> = {
 let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp_1.push(1.clone());
-tmp_1.push(2.clone());
+tmp_1.push(1);
+tmp_1.push(2);
 tmp_1
 };
 }"))
@@ -456,8 +456,8 @@ tmp_1
     ;;->
     "let x: std::vec::Vec<i64> = {
 let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp_1.push(1.clone());
-tmp_1.push(2.clone());
+tmp_1.push(1);
+tmp_1.push(2);
 tmp_1
 };
 x;"))
@@ -473,14 +473,14 @@ x;"))
     ;;->
     "let mut x: PVector<i64> = {
 let mut tmp_1: PVector<i64> = PVector::new();
-tmp_1.push(1.clone());
-tmp_1.push(2.clone());
+tmp_1.push(1);
+tmp_1.push(2);
 tmp_1
 };
 x = {
 let mut tmp_2: PVector<i64> = PVector::new();
-tmp_2.push(3.clone());
-tmp_2.push(4.clone());
+tmp_2.push(3);
+tmp_2.push(4);
 tmp_2
 };"))
 
@@ -492,8 +492,8 @@ tmp_2
     ;;->
     "let x: PMap<i64,i64> = {
 let mut tmp_1: PMap<i64,i64> = PMap::new();
-tmp_1.insert(1.clone(), 2.clone());
-tmp_1.insert(3.clone(), 4.clone());
+tmp_1.insert(1, 2);
+tmp_1.insert(3, 4);
 tmp_1
 };"))
 
@@ -505,12 +505,25 @@ tmp_1
     ;;->
     "let x: PSet<i64> = {
 let mut tmp_1: PSet<i64> = PSet::new();
-tmp_1.insert(1.clone());
-tmp_1.insert(2.clone());
+tmp_1.insert(1);
+tmp_1.insert(2);
 tmp_1
 };"))
 
-(deftest t
+(deftest user-cast-test
+  (inner-form
+    '(let [^{:t :int} x (int 1)
+           ^{:t :long} y ^{:cast :long} x]
+       (println y))
+    '(do
+       (init x 1)
+       (init y x)
+       (invoke println y))
+    "let x: i32 = 1;
+let y: i64 = x as i64;
+println!(\"{}\", y);"))
+
+(deftest user-cast-test
   (inner-form
     '(let [^{:t :int} x (int 1)
            ^{:t :long} y ^{:cast :long} x]
@@ -558,10 +571,6 @@ let y: i32 = w + x;
 let z: i64 = y as i64;
 println!(\"{}\", z);"))
 
-
-;; TODO: What about heterogeneous collections,
-;; do we want to allow them? [1 [2]] if so what is the type?
-;; Do all languages have an "Object" concept?
 (deftest data-literals7-test
   (inner-form
     '(let [^{:t {:vector [{:vector [:long]}]}} x
@@ -576,12 +585,12 @@ println!(\"{}\", z);"))
 let mut tmp_1: PVector<PVector<i64>> = PVector::new();
 tmp_1.push({
 let mut tmp_2: PVector<i64> = PVector::new();
-tmp_2.push(1.clone());
+tmp_2.push(1);
 tmp_2
 }.clone());
 tmp_1.push({
 let mut tmp_3: PVector<i64> = PVector::new();
-tmp_3.push(2.clone());
+tmp_3.push(2);
 tmp_3
 }.clone());
 tmp_1
@@ -615,15 +624,15 @@ println!(\"{}\", x);"))
     ;;->
     "let x: std::collections::HashMap<i64,std::vec::Vec<String>> = {
 let mut tmp_1: std::collections::HashMap<i64,std::vec::Vec<String>> = std::collections::HashMap::new();
-tmp_1.insert(1.clone(), {
+tmp_1.insert(1, {
 let mut tmp_2: std::vec::Vec<String> = std::vec::Vec::new();
-tmp_2.push(String::from(\"hi\").clone());
+tmp_2.push(String::from(\"hi\"));
 tmp_2
 }.clone());
-tmp_1.insert(2.clone(), {
+tmp_1.insert(2, {
 let mut tmp_3: std::vec::Vec<String> = std::vec::Vec::new();
-tmp_3.push(String::from(\"hello\").clone());
-tmp_3.push(String::from(\"there\").clone());
+tmp_3.push(String::from(\"hello\"));
+tmp_3.push(String::from(\"there\"));
 tmp_3
 }.clone());
 tmp_1
@@ -648,21 +657,21 @@ tmp_1.push({
 let mut tmp_2: PMap<PSet<i64>,PVector<String>> = PMap::new();
 tmp_2.insert({
 let mut tmp_3: PSet<i64> = PSet::new();
-tmp_3.insert(1.clone());
+tmp_3.insert(1);
 tmp_3
 }.clone(), {
 let mut tmp_4: PVector<String> = PVector::new();
-tmp_4.push(String::from(\"hi\").clone());
+tmp_4.push(String::from(\"hi\"));
 tmp_4
 }.clone());
 tmp_2.insert({
 let mut tmp_5: PSet<i64> = PSet::new();
-tmp_5.insert(2.clone());
+tmp_5.insert(2);
 tmp_5
 }.clone(), {
 let mut tmp_6: PVector<String> = PVector::new();
-tmp_6.push(String::from(\"hello\").clone());
-tmp_6.push(String::from(\"there\").clone());
+tmp_6.push(String::from(\"hello\"));
+tmp_6.push(String::from(\"there\"));
 tmp_6
 }.clone());
 tmp_2
@@ -690,21 +699,21 @@ tmp_1.push({
 let mut tmp_2: PMap<PSet<i64>,PVector<String>> = PMap::new();
 tmp_2.insert({
 let mut tmp_3: PSet<i64> = PSet::new();
-tmp_3.insert(1.clone());
+tmp_3.insert(1);
 tmp_3
 }.clone(), {
 let mut tmp_4: PVector<String> = PVector::new();
-tmp_4.push(String::from(\"hi\").clone());
+tmp_4.push(String::from(\"hi\"));
 tmp_4
 }.clone());
 tmp_2.insert({
 let mut tmp_5: PSet<i64> = PSet::new();
-tmp_5.insert(2.clone());
+tmp_5.insert(2);
 tmp_5
 }.clone(), {
 let mut tmp_6: PVector<String> = PVector::new();
-tmp_6.push(String::from(\"hello\").clone());
-tmp_6.push(String::from(\"there\").clone());
+tmp_6.push(String::from(\"hello\"));
+tmp_6.push(String::from(\"there\"));
 tmp_6
 }.clone());
 tmp_2
@@ -713,10 +722,64 @@ tmp_1
 };
 println!(\"{}\", x);"))
 
+(deftest dataliterals8-1-2-test
+  (inner-form
+    '(let [^{:t :any} x 1]
+       (println x))
+    '(do
+       (init x 1)
+       (invoke println x))
+    "let x: kalai::Value = kalai::Value::Long(1);
+println!(\"{}\", x);"))
+
+(deftest data-literals8-1-3-test
+  (inner-form
+    '(let [a 1
+           b 2
+           c 3
+           x ^{:t {:mvector [:any]}}
+             [a b c]]
+       (println x))
+    ;;->
+    '(do
+       (init a 1)
+       (init b 2)
+       (init c 3)
+       (init x [a b c])
+       (invoke println x))
+    ;;->
+    "let a: i64 = 1;
+let b: i64 = 2;
+let c: i64 = 3;
+let x: std::vec::Vec<kalai::Value> = {
+let mut tmp_1: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
+tmp_1.push(kalai::Value::Long(a.clone()));
+tmp_1.push(kalai::Value::Long(b.clone()));
+tmp_1.push(kalai::Value::Long(c.clone()));
+tmp_1
+};
+println!(\"{}\", x);"))
+
+(deftest data-literals8-1-test
+  (inner-form
+    '(let [x ^{:t {:mvector [:any]}}
+             [1 2 3]]
+       (println x))
+    ;;->
+    '(do
+       (init x [1 2 3])
+       (invoke println x))
+    ;;->
+    "let x: std::vec::Vec<kalai::Value> = {
+let mut tmp_1: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
+tmp_1.push(kalai::Value::Long(1));
+tmp_1.push(kalai::Value::Long(2));
+tmp_1.push(kalai::Value::Long(3));
+tmp_1
+};
+println!(\"{}\", x);"))
+
 (deftest data-literals8-test
-  ;; Rust has an Any trait, but no Any type...
-  ;; therefore Kalai can't support Any.
-  ;; We think we can use an enum like Serde does
   #_(inner-form
     '(let [x ^{:t {:mvector [:any]}}
              [1
@@ -741,7 +804,7 @@ println!(\"{}\", x);"))
     ;;->
     "let x: std::collections::HashMap<String,i64> = {
 let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp_1.insert(String::from(\"key\").clone(), (1 + 2).clone());
+tmp_1.insert(String::from(\"key\"), (1 + 2).clone());
 tmp_1
 };"))
 
@@ -795,10 +858,10 @@ println!(\"{}\", (x == y));"))
     ;;->
     "for x in {
 let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp_1.push(1.clone());
-tmp_1.push(2.clone());
-tmp_1.push(3.clone());
-tmp_1.push(4.clone());
+tmp_1.push(1);
+tmp_1.push(2);
+tmp_1.push(3);
+tmp_1.push(4);
 tmp_1
 } {
 println!(\"{}\", x);
@@ -873,7 +936,7 @@ println!(\"{}\", 3);
     ;;->
     "println!(\"{}\", {
 let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp_1.insert(String::from(\":k\").clone(), 1.clone());
+tmp_1.insert(String::from(\":k\"), 1);
 tmp_1
 }.get(&String::from(\":k\")).unwrap().clone());"))
 
@@ -885,7 +948,7 @@ tmp_1
     ;;->
     "{
 let mut tmp_1: std::collections::HashSet<String> = std::collections::HashSet::new();
-tmp_1.insert(String::from(\":k\").clone());
+tmp_1.insert(String::from(\":k\"));
 tmp_1
 }.get(&String::from(\":k\")).unwrap().clone();"))
 
@@ -905,7 +968,7 @@ tmp_1
     "let k: String = String::from(\"k\");
 let m: std::collections::HashMap<String,i64> = {
 let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp_1.insert(k.clone(), 1.clone());
+tmp_1.insert(k.clone(), 1);
 tmp_1
 };
 let v: i64 = m.get(&k).unwrap().clone();
@@ -1111,7 +1174,7 @@ b.len() as i32;
     ;;->
     "{
 let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp_1.insert(String::from(\":a\").clone(), 1.clone());
+tmp_1.insert(String::from(\":a\"), 1);
 tmp_1
 }.insert(String::from(\":b\").clone(), 2.clone());"))
 
@@ -1123,11 +1186,11 @@ tmp_1
     ;;->
     "{
 let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp_1.insert(String::from(\":a\").clone(), 1.clone());
+tmp_1.insert(String::from(\":a\"), 1);
 tmp_1
 }.insert(String::from(\":a\").clone(), ({
 let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp_1.insert(String::from(\":a\").clone(), 1.clone());
+tmp_1.insert(String::from(\":a\"), 1);
 tmp_1
 }.get(&String::from(\":a\")).unwrap().clone() + 1));"))
 
@@ -1168,9 +1231,9 @@ System.out.println(s.charAt(1));"))
     ;;->
     "let v: std::vec::Vec<i32> = {
 let mut tmp_1: std::vec::Vec<i32> = std::vec::Vec::new();
-tmp_1.push(1.clone());
-tmp_1.push(2.clone());
-tmp_1.push(3.clone());
+tmp_1.push(1);
+tmp_1.push(2);
+tmp_1.push(3);
 tmp_1
 };
 println!(\"{}\", v.get(1 as usize).unwrap().clone());"))
@@ -1340,9 +1403,9 @@ tmp_1
 };
 x = {
 let mut tmp_2: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp_2.push(1.clone());
-tmp_2.push(2.clone());
-tmp_2.push(3.clone());
+tmp_2.push(1);
+tmp_2.push(2);
+tmp_2.push(3);
 tmp_2
 };"))
 

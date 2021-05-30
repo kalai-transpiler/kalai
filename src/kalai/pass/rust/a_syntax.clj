@@ -1,9 +1,34 @@
 (ns kalai.pass.rust.a-syntax
   (:require [kalai.util :as u]
+            [kalai.types :as types]
             [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]))
 
 (declare statement)
+
+(defn clone
+  "Preserves the type information while wrapping a value in a clone method"
+  [expr]
+  (with-meta
+    (list 'r/method 'clone expr)
+    (or (meta expr)
+        (when-let [t (get types/java-types (type expr))]
+          {:t t}))))
+
+(declare expression)
+
+(defn literal? [x]
+  (or (number? x)
+      (string? x)
+      (keyword? x)))
+
+(defn wrap-value-enum [t x]
+  (let [wrap-owned-expression (if (literal? x)
+                                x
+                                (clone (expression x)))]
+    (if (= t :any)
+      (list 'r/value wrap-owned-expression)
+      wrap-owned-expression)))
 
 (def expression
   (s/rewrite
@@ -13,11 +38,12 @@
            ?expr
            (m/app meta ?meta)
            (m/let [?t (:t ?meta)
+                   {_ [?value-t]} ?t
                    ?tmp (u/tmp ?t ?expr)]))
     ;;->
     (r/block
       (r/init ?tmp (r/new ?t))
-      . (r/expression-statement (r/method push ?tmp (r/method clone (m/app expression !x)))) ...
+      . (r/expression-statement (r/method push ?tmp (m/app #(wrap-value-enum ?value-t %) !x))) ...
       ?tmp)
 
     ;;;; map {}
@@ -26,13 +52,14 @@
            (m/app u/sort-any-type ([!k !v] ...))
            (m/app meta ?meta)
            (m/let [?t (:t ?meta)
+                   {_ [?key-t ?value-t]} ?t
                    ?tmp (u/tmp ?t ?expr)]))
     ;;->
     (r/block
       (r/init ?tmp (r/new ?t))
       . (r/expression-statement (r/method insert ?tmp
-                                          (r/method clone (m/app expression !k))
-                                          (r/method clone (m/app expression !v)))) ...
+                                          (m/app #(wrap-value-enum ?key-t %) !k)
+                                          (m/app #(wrap-value-enum ?value-t %) !v))) ...
       ?tmp)
 
     ;;;; set #{}
@@ -41,11 +68,12 @@
            (m/app u/sort-any-type (!k ...))
            (m/app meta ?meta)
            (m/let [?t (:t ?meta)
+                   {_ [?key-t]} ?t
                    ?tmp (u/tmp ?t ?expr)]))
     ;;->
     (r/block
       (r/init ?tmp (r/new ?t))
-      . (r/expression-statement (r/method insert ?tmp (r/method clone (m/app expression !k)))) ...
+      . (r/expression-statement (r/method insert ?tmp (m/app #(wrap-value-enum ?key-t %) !k))) ...
       ?tmp)
 
     ;; Interop
@@ -103,6 +131,9 @@
   (s/rewrite
     (init ?name)
     (r/init ?name)
+
+    (init (m/and ?name (m/app meta {:t :any})) ?x)
+    (r/init ?name (r/value (m/app expression ?x)))
 
     (init ?name ?x)
     (r/init ?name (m/app expression ?x))))

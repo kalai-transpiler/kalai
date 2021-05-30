@@ -7,7 +7,8 @@
             [clojure.java.io :as io]
             [kalai.types :as types]
             [kalai.util :as u])
-  (:import (clojure.lang IMeta)))
+  (:import (clojure.lang IMeta)
+           (java.util Map Set Vector)))
 
 (declare stringify)
 
@@ -66,7 +67,7 @@
    :double  "f64"
    :string  "String"
    :void    "()"
-   :any     "Any"})
+   :any     "kalai::Value"})
 
 ;; Forward declaration of `t-str` to break cycle of references.
 ;; We expect this not to create an infinite loop in practice, otherwise
@@ -267,6 +268,45 @@
 (defn range-str [start-idx end-idx]
   (str (stringify start-idx) ".." (stringify end-idx)))
 
+(defn value-type [x]
+  (if (nil? x)
+    "Null"
+    (if (instance? IMeta x)
+      (let [{:keys [t]} (meta x)]
+        (case t
+          :map "PMap"
+          :mmap "MMap"
+          :set "PSet"
+          :mset "MSet"
+          :vector "PVector"
+          :mvector "MVector"
+          :bool "Bool"
+          :byte "Byte"
+          :int "Integer"
+          :long "Long"
+          :float "Float"
+          :double "Double"
+          :string "String"
+          :any "kalai::Value"
+          "MISSING"))
+      (condp instance? x
+        Byte "Byte"
+        Boolean "Bool"
+        Float "Float"
+        Double "Double"
+        Integer "Int"
+        Long "Long"
+        String "String"
+        Map "MMap"
+        Set "MSet"
+        Vector "MVector"
+        "MISSING"))))
+
+(defn value-str [x]
+  (str "kalai::Value::"
+       (value-type x)
+       (parens (stringify x))))
+
 ;;;; This is the main entry point
 
 (def str-fn-map
@@ -291,7 +331,8 @@
    'r/cast                 cast-str
    'r/ref                  ref-str
    'r/deref                deref-str
-   'r/range                range-str})
+   'r/range                range-str
+   'r/value                value-str})
 
 (def stringify
   (s/match

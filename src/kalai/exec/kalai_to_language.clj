@@ -100,9 +100,10 @@
 ;; https://github.com/clj-commons/fs
 (defn inject-kalai-helper-files [{:keys [transpile-dir languages]}]
   (when (contains? languages ::l/rust)
-    (let [file-to-copy (io/file (io/resource "rust/kalai.rs"))
-          dest-file-path (io/file transpile-dir "rust" "src" (.getName file-to-copy))]
-      (io/copy file-to-copy dest-file-path))))
+    (let [k (io/resource "rust/kalai.rs")
+          dest-file-path (io/file transpile-dir "rust" "src" "kalai.rs")]
+      (assert k "kalai.rs")
+      (spit dest-file-path (slurp k)))))
 
 (defn write-module-definitions [{:keys [transpile-dir languages]}]
   (when (contains? languages ::l/rust)
