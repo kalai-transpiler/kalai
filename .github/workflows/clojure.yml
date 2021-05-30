@@ -40,6 +40,7 @@ jobs:
       run: |
         pushd examples
         make
+        git diff --exit-code
         popd
 
     - name: Compare transpilation to repo files for examples
@@ -49,6 +50,7 @@ jobs:
       run: |
         pushd sql_builder
         make
+        git diff --exit-code
         popd
 
     - name: Compare transpilation to repo files for sql_builder
