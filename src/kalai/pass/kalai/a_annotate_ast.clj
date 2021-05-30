@@ -137,22 +137,22 @@
   (:t (meta x)))
 
 (defn propagate-ast-type
-  "If possible, associate the representative type of `from-imeta` or `from-ast` to `to-imeta`,
-  otherwise, just return `to-imeta` exactly as-is.
-  Return `to-imeta` as-is if:
-    * `to-imeta` cannot take metadata
-    * `to-imeta` already has type info, as inferred by truthy value for `:t` in
+  "If possible, associate the representative type of `symbol-bind-site` or `from-ast` to `symbol-call-site`,
+  otherwise, just return `symbol-call-site` exactly as-is.
+  Return `symbol-call-site` as-is if:
+    * `symbol-call-site` cannot take metadata
+    * `symbol-call-site` already has type info, as inferred by truthy value for `:t` in
     metadata"
-  [from-ast from-imeta to-imeta ast]
-  (if (and (instance? IMeta to-imeta)
-           (not (t-from-meta to-imeta)))
-    (u/maybe-meta-assoc to-imeta
-                        :t (or (:t (meta from-imeta))
+  [from-ast symbol-bind-site symbol-call-site ast]
+  (if (and (instance? IMeta symbol-call-site)
+           (not (t-from-meta symbol-call-site)))
+    (u/maybe-meta-assoc symbol-call-site
+                        :t (or (:t (meta symbol-bind-site))
                                (ast-t from-ast)
-                               (resolve-tag (:tag (meta to-imeta)) ast)
-                               (resolve-tag (:tag (meta from-imeta)) ast))
-                        :mut (:mut (meta from-imeta)))
-    to-imeta))
+                               (resolve-tag (:tag (meta symbol-call-site)) ast)
+                               (resolve-tag (:tag (meta symbol-bind-site)) ast))
+                        :mut (:mut (meta symbol-bind-site)))
+    symbol-call-site))
 
 (defn set-coll-t [val t]
   (m/rewrite t
@@ -326,15 +326,15 @@
     ;; TODO: this must happen after value->binding
     ;; locals are usages of a declared binding
     {:op   :local
-     :form ?symbol-local
-     :env  {:locals {?symbol-local {:form ?symbol-bound
+     :form ?symbol-call-site
+     :env  {:locals {?symbol-call-site {:form ?symbol-bind-site
                                     :init ?init}}
             :as     ?env}
      &     ?more
      :as   ?ast}
     ;;->
     {:op   :local
-     :form ~(propagate-ast-type ?init ?symbol-bound ?symbol-local ?ast)
+     :form ~(propagate-ast-type ?init ?symbol-bind-site ?symbol-call-site ?ast)
      :env  ?env
      &     ?more}
 

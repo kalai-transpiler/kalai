@@ -95,12 +95,22 @@
                        (sort)
                        (map #(str "pub mod " % ";\n"))))))
 
-(defn write-module-definitions [{:keys [transpile-dir]}]
-  (let [src (io/file transpile-dir (name :l/rust) "src")]
-    (doseq [dir (file-seq src)
-            :when (.isDirectory dir)]
-      (write-module-definition dir))
-    (.renameTo (io/file src "mod.rs") (io/file src "lib.rs"))))
+;; Note: if reosurce files are stored in a depth below the root directory, then
+;; a deeper copy using recursion would be necessary, which would be better handled using the fs library
+;; https://github.com/clj-commons/fs
+(defn inject-kalai-helper-files [{:keys [transpile-dir languages]}]
+  (when (contains? languages ::l/rust)
+    (let [file-to-copy (io/file (io/resource "rust/kalai.rs"))
+          dest-file-path (io/file transpile-dir "rust" "src" (.getName file-to-copy))]
+      (io/copy file-to-copy dest-file-path))))
+
+(defn write-module-definitions [{:keys [transpile-dir languages]}]
+  (when (contains? languages ::l/rust)
+    (let [src (io/file transpile-dir (name ::l/rust) "src")]
+      (doseq [dir (file-seq src)
+              :when (.isDirectory dir)]
+        (write-module-definition dir))
+      (.renameTo (io/file src "mod.rs") (io/file src "lib.rs")))))
 
 (defn transpile-all
   "options is a map of
@@ -113,4 +123,5 @@
   (doseq [^File source-file (file-seq (io/file (:src-dir options)))
           :when (not (.isDirectory source-file))]
     (transpile-file source-file options))
+  (inject-kalai-helper-files options)
   (write-module-definitions options))
