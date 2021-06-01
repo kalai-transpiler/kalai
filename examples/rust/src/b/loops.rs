@@ -8,9 +8,9 @@ i = (i + 1);
 }
 for ii in {
 let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp_1.push(1.clone());
-tmp_1.push(2.clone());
-tmp_1.push(3.clone());
+tmp_1.push(1);
+tmp_1.push(2);
+tmp_1.push(3);
 tmp_1
 } {
 println!("{}", ii);
