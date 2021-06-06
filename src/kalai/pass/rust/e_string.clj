@@ -282,7 +282,7 @@
           :mvector "MVector"
           :bool "Bool"
           :byte "Byte"
-          :int "Integer"
+          :int "Int"
           :long "Long"
           :float "Float"
           :double "Double"

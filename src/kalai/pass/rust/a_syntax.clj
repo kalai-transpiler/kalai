@@ -1,34 +1,10 @@
 (ns kalai.pass.rust.a-syntax
-  (:require [kalai.util :as u]
-            [kalai.types :as types]
+  (:require [kalai.pass.rust.util :as ru]
+            [kalai.util :as u]
             [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]))
 
 (declare statement)
-
-(defn clone
-  "Preserves the type information while wrapping a value in a clone method"
-  [expr]
-  (with-meta
-    (list 'r/method 'clone expr)
-    (or (meta expr)
-        (when-let [t (get types/java-types (type expr))]
-          {:t t}))))
-
-(declare expression)
-
-(defn literal? [x]
-  (or (number? x)
-      (string? x)
-      (keyword? x)))
-
-(defn wrap-value-enum [t x]
-  (let [wrap-owned-expression (if (literal? x)
-                                x
-                                (clone (expression x)))]
-    (if (= t :any)
-      (list 'r/value wrap-owned-expression)
-      wrap-owned-expression)))
 
 (def expression
   (s/rewrite
@@ -41,10 +17,12 @@
                    {_ [?value-t]} ?t
                    ?tmp (u/tmp ?t ?expr)]))
     ;;->
-    (r/block
-      (r/init ?tmp (r/new ?t))
-      . (r/expression-statement (r/method push ?tmp (m/app #(wrap-value-enum ?value-t %) !x))) ...
-      ?tmp)
+    (m/app
+      #(ru/preserve-type ?expr %)
+      (r/block
+        (r/init ?tmp (r/new ?t))
+        . (r/expression-statement (r/method push ?tmp (m/app #(ru/wrap-value-enum ?value-t %) (m/app expression !x)))) ...
+        ?tmp))
 
     ;;;; map {}
     (m/and {}
@@ -55,12 +33,14 @@
                    {_ [?key-t ?value-t]} ?t
                    ?tmp (u/tmp ?t ?expr)]))
     ;;->
-    (r/block
-      (r/init ?tmp (r/new ?t))
-      . (r/expression-statement (r/method insert ?tmp
-                                          (m/app #(wrap-value-enum ?key-t %) !k)
-                                          (m/app #(wrap-value-enum ?value-t %) !v))) ...
-      ?tmp)
+    (m/app
+      #(ru/preserve-type ?expr %)
+      (r/block
+        (r/init ?tmp (r/new ?t))
+        . (r/expression-statement (r/method insert ?tmp
+                                            (m/app #(ru/wrap-value-enum ?key-t %) (m/app expression !k))
+                                            (m/app #(ru/wrap-value-enum ?value-t %) (m/app expression !v)))) ...
+        ?tmp))
 
     ;;;; set #{}
     (m/and #{}
@@ -71,10 +51,12 @@
                    {_ [?key-t]} ?t
                    ?tmp (u/tmp ?t ?expr)]))
     ;;->
-    (r/block
-      (r/init ?tmp (r/new ?t))
-      . (r/expression-statement (r/method insert ?tmp (m/app #(wrap-value-enum ?key-t %) !k))) ...
-      ?tmp)
+    (m/app
+      #(ru/preserve-type ?expr %)
+      (r/block
+        (r/init ?tmp (r/new ?t))
+        . (r/expression-statement (r/method insert ?tmp (m/app #(ru/wrap-value-enum ?key-t %) (m/app expression !k)))) ...
+        ?tmp))
 
     ;; Interop
     (new ?c . !args ...)

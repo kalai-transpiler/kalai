@@ -1,5 +1,6 @@
 (ns kalai.pass.rust.b-function-call
-  (:require [kalai.util :as u]
+  (:require [kalai.pass.rust.util :as ru]
+            [kalai.util :as u]
             [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]
             [clojure.string :as str]
@@ -88,14 +89,24 @@
       (r/invoke (u/var ~#'contains?) ?coll ?x)
       (r/method contains_key ?coll (r/ref ?x))
 
-      (r/invoke (u/var ~#'assoc) ?coll . !arg ...)
-      (r/method insert ?coll . (r/method clone !arg) ...)
+      (r/invoke (u/var ~#'assoc)
+                (m/and ?coll
+                       (m/app meta {:t {_ [?key-t ?value-t]}}))
+                . !key !value ...)
+      (r/method insert ?coll
+                .
+                (m/app #(ru/wrap-value-enum :int %) !key)
+                (m/app #(ru/wrap-value-enum :float %) !value)
+                ...)
 
       (r/invoke (u/var ~#'dissoc) & ?more)
       (r/method remove & ?more)
 
-      (r/invoke (u/var ~#'conj) ?coll . !arg ...)
-      (r/method push ?coll . (r/method clone !arg) ...)
+      (r/invoke (u/var ~#'conj)
+                (m/and ?coll
+                       (m/app meta {:t {_ [?value-t]}}))
+                . !arg ...)
+      (r/method push ?coll . (m/app #(ru/wrap-value-enum ?value-t %) !arg) ...)
 
       (r/invoke (u/var ~#'inc) ?x)
       (r/operator + ?x 1)
