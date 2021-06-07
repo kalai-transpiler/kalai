@@ -760,6 +760,31 @@ tmp_1
 };
 println!(\"{}\", x);"))
 
+(deftest data-literals8-1-4-test
+  (inner-form
+    '(let [result (atom ^{:t {:mvector [:any]}} [])
+           ^{:t :int} i (atom (int 10))]
+       (while (< 0 @i)
+         (swap! result conj @i)
+         (reset! i (- @i 3))))
+    ;;->
+    '(do
+       (init result [])
+       (init i 10)
+       (while (operator < 0 i)
+         (invoke conj result i)
+         (assign i (operator - i 3))))
+    ;;->
+    "let mut result: std::vec::Vec<kalai::Value> = {
+let mut tmp_1: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
+tmp_1
+};
+let mut i: i32 = 10;
+while (0 < i) {
+result.push(kalai::Value::Int(i.clone()));
+i = (i - 3);
+}"))
+
 (deftest data-literals8-1-test
   (inner-form
     '(let [x ^{:t {:mvector [:any]}}
@@ -1176,7 +1201,7 @@ b.len() as i32;
 let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
 tmp_1.insert(String::from(\":a\"), 1);
 tmp_1
-}.insert(String::from(\":b\").clone(), 2.clone());"))
+}.insert(String::from(\":b\"), 2);"))
 
 (deftest interop3-test
   (inner-form
@@ -1423,7 +1448,7 @@ tmp_2
 let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
 tmp_1
 };
-x.push(1.clone());"))
+x.push(1);"))
 
 
 (deftest propagated-types6-test

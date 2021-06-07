@@ -14,6 +14,17 @@
           (unless we use refs everywhere or solve it some other way)
           Note that `get` returns an Option of a reference
     * Uncertain alternative: use persistent collections to circumvent question (if they support heterogeneous?)
+* Type propagation: inferred types (from an initialization value) don't get propagated to call site.
+  Ex:
+```
+(let [i (int 1)]
+  (+ i i))
+```
+  versus
+```
+(let [^{:t :int} i (int 1)]
+  (+ i i))
+```
 * Create a task in `examples` to run the output (binaries, logic tests, etc.)
   - There should be a make task should run the final compiled binary (b/c invocation is non-trivial)
   - Stretch: make should also run logic unit tests
