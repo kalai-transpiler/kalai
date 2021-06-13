@@ -1401,3 +1401,13 @@ return i;
        result)
     ;;->
     "ArrayList<Integer> result = new ArrayList<Integer>();"))
+
+;; TODO:
+(deftest destructure-test
+  #_(inner-form
+    '(let [{:keys [a b]} {:a "a" :b "b"}]
+       a)
+    ;;->
+    '()
+    ;;->
+    ""))

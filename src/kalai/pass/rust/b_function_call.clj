@@ -115,5 +115,8 @@
       (r/method insert ?x (r/method clone ?k)
                 (m/app rewrite (r/invoke ?f (r/invoke clojure.lang.RT/get ?x ?k) & ?args)))
 
+      (r/invoke (u/var ~#'str) & ?args)
+      (r/invoke 'format! (r/literal ~(str/join (repeat (count ?args) "{}"))) & ?args)
+
       ?else
       ?else)))

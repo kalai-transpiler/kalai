@@ -1526,3 +1526,9 @@ let mut tmp_1: std::vec::Vec<i32> = std::vec::Vec::new();
 tmp_1
 };
 result;"))
+
+(deftest str-test
+  (inner-form
+    '(str "a" "b")
+    '(invoke str "a" "b")
+    "format!(\"{}{}\", String::from(\"a\"), String::from(\"b\"));"))
