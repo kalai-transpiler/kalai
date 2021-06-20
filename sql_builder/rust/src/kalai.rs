@@ -268,3 +268,37 @@ pub fn cast_test() {
     let x2: i32 = f as i32;
     println!("x2 is {}", x2);
 }
+
+pub fn where_str_testing(join: Value) -> String {
+    if is_vector(join.clone()) {
+        return format!(
+            "{}{}{}",
+            String::from("("),
+            to_vector(join.clone()).iter().map(|val| where_str_testing(val.clone()))
+                .collect::<Vec<String>>()
+                .join(&format!("{}{}{}", String::from(" "), String::from("hi"), String::from(" "))),
+            String::from(")")
+        );
+    } else {
+        return to_string(join.clone());
+    }
+}
+
+#[test]
+pub fn iter_test() {
+    use std::iter::Iterator;
+    use std::slice::Iter;
+
+    let a = vec![1, 2, 3];
+    let a_iter = a.iter();
+    a_iter.map(|x| println!("{}", x));
+    // let mut b = [0, 1, 2].iter().intersperse(&100);
+
+    let b = vec!["1", "2", "3"];
+    let b_join_str = b.join(", ");
+    println!("b_join_str = {}", b_join_str);
+
+    let c = vec![Value::String("1".to_string())];
+    let c_join_str = c.iter().map(|val| where_str_testing(val.clone())).collect::<Vec<String>>().join(",");
+    println!("c_join_str = {}", c_join_str);
+}

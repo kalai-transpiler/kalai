@@ -2,41 +2,41 @@
   (:refer-clojure :exclude [format])
   (:require [clojure.string :as str]))
 
-(defn select-str [select]
+(defn select-str ^{:t :string} [^{:t {:mvector [:any]}} select]
   (str/join ", " select))
 
-(defn from-str [from]
+(defn from-str ^{:t :string} [^{:t {:mvector [:any]}} from]
   (str/join ", " from))
 
-(defn join-str [join]
+(defn join-str ^{:t :string} [^{:t {:mvector [:any]}} join]
   (str/join ", " join))
 
-(defn where-str [join]
+(defn where-str ^{:t :string} [^{:t :any} join]
   (if (vector? join)
-    (let [op (first join)
-          more (rest join)]
+    (let [^{:t :any} op (first join)
+          ^{:t :any} more (rest join)]
       (str "("
-           (str/join (interpose (str " " op " ")
-                                (map where-str more)))
+           (str/join (str " " op " ")
+                     (map where-str more))
            ")"))
     join))
 
-(defn group-by-str [join]
+(defn group-by-str ^{:t :string} [^{:t {:mvector [:any]}} join]
   (str/join ", " join))
 
-(defn having-str [having]
+(defn having-str ^{:t :string} [^{:t {:mvector [:any]}} having]
   (where-str having))
 
 (defn format
   "Converts query as data into an SQL string"
   ^{:t :string}
   [^{:t {:mmap [:string {:mvector [:any]}]}} query-map]
-  (let [select (:select query-map)
-        from (:from query-map)
-        join (:join query-map)
-        where-clause (:where query-map)
-        group-by (:group-by query-map)
-        having (:having query-map)]
+  (let [^{:t {:mvector [:any]}} select (:select query-map)
+        ^{:t {:mvector [:any]}} from (:from query-map)
+        ^{:t {:mvector [:any]}} join (:join query-map)
+        ^{:t {:mvector [:any]}} where-clause (:where query-map)
+        ^{:t {:mvector [:any]}} group-by (:group-by query-map)
+        ^{:t {:mvector [:any]}} having (:having query-map)]
     (str (when select (str "SELECT " (select-str select)))
          (when from (str " FROM " (from-str from)))
          (when join (str " JOIN " (join-str join)))

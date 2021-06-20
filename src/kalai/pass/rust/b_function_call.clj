@@ -4,7 +4,8 @@
             [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]
             [clojure.string :as str]
-            [kalai.types :as types]))
+            [kalai.types :as types]
+            [clojure.string :as string]))
 
 ;; TODO: user extension point, is dynamic var good?
 ;; can it be more data driven?
@@ -117,6 +118,17 @@
 
       (r/invoke (u/var ~#'str) & ?args)
       (r/invoke 'format! (r/literal ~(str/join (repeat (count ?args) "{}"))) & ?args)
+
+      ;; Assuming that ?xs are strings, for now
+      (r/invoke (u/var ~#'str/join) ?xs)
+      (r/method 'join ?xs)
+
+      ;; Assuming that ?xs are strings, and ?sep is a string, for now
+      (r/invoke (u/var ~#'str/join) ?sep ?xs)
+      (r/method 'join ?xs ?sep)
+
+      (r/invoke (u/var ~#'map) ?fn ?xs)
+      (r/method 'map ?xs ?fn)
 
       ?else
       ?else)))

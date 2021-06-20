@@ -4,40 +4,40 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 public class Core {
-public static final TYPE_MISSING selectStr(final TYPE_MISSING select) {
+public static final String selectStr(final ArrayList<Object> select) {
 return clojure.String.join(", ", select);
 }
-public static final TYPE_MISSING fromStr(final TYPE_MISSING from) {
+public static final String fromStr(final ArrayList<Object> from) {
 return clojure.String.join(", ", from);
 }
-public static final TYPE_MISSING joinStr(final TYPE_MISSING join) {
+public static final String joinStr(final ArrayList<Object> join) {
 return clojure.String.join(", ", join);
 }
-public static final TYPE_MISSING whereStr(final TYPE_MISSING join) {
+public static final String whereStr(final ArrayList<Object> join) {
 if (clojure.Core.vector?(join))
 {
 final Object op = clojure.Core.first(join);
 final Object more = clojure.Core.rest(join);
-return clojure.Core.str("(", clojure.String.join(clojure.Core.interpose(clojure.Core.str(" ", op, " "), clojure.Core.map(whereStr, more))), ")");
+return clojure.Core.str("(", clojure.String.join(clojure.Core.str(" ", op, " "), clojure.Core.map(whereStr, more)), ")");
 }
 else
 {
 return join;
 }
 }
-public static final TYPE_MISSING groupByStr(final TYPE_MISSING join) {
+public static final String groupByStr(final ArrayList<Object> join) {
 return clojure.String.join(", ", join);
 }
-public static final TYPE_MISSING havingStr(final TYPE_MISSING having) {
+public static final String havingStr(final ArrayList<Object> having) {
 return sqlbuilder.Core.whereStr(having);
 }
 public static final String format(final HashMap<String,ArrayList<Object>> queryMap) {
-final TYPE_MISSING select = queryMap.get(":select");
-final TYPE_MISSING from = queryMap.get(":from");
-final TYPE_MISSING join = queryMap.get(":join");
-final TYPE_MISSING whereClause = queryMap.get(":where");
-final TYPE_MISSING groupBy = queryMap.get(":group-by");
-final TYPE_MISSING having = queryMap.get(":having");
+final ArrayList<Object> select = queryMap.get(":select");
+final ArrayList<Object> from = queryMap.get(":from");
+final ArrayList<Object> join = queryMap.get(":join");
+final ArrayList<Object> whereClause = queryMap.get(":where");
+final ArrayList<Object> groupBy = queryMap.get(":group-by");
+final ArrayList<Object> having = queryMap.get(":having");
 "MISSING_TYPE" tmp1;
 if (select)
 {
