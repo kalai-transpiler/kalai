@@ -1,22 +1,28 @@
 pub fn format(num: i32) -> String {
-let mut i: i32 = num;
-let mut result: std::vec::Vec<char> = std::vec::Vec::new();
-{
-while !(i == 0) {
-let quotient: i32 = (i / 10);
-let remainder: i32 = (i % 10);
-{
-result.splice(0..0, remainder.to_string().chars().collect::<std::vec::Vec<char>>());
-i = quotient;
+    let mut i: i32 = num;
+    let mut result: std::vec::Vec<char> = std::vec::Vec::new();
+    {
+        while !(i == 0) {
+            let quotient: i32 = (i / 10);
+            let remainder: i32 = (i % 10);
+            {
+                result.splice(
+                    0..0,
+                    remainder
+                        .to_string()
+                        .chars()
+                        .collect::<std::vec::Vec<char>>(),
+                );
+                i = quotient;
+            }
+        }
+        return result.iter().collect();
+    }
 }
-}
-return result.iter().collect();
-}
-}
-fn main () {
-let args: std::vec::Vec<String> = std::env::args().collect();
-{
-format(2345);
-println!("{}", format(2345));
-}
+fn main() {
+    let args: std::vec::Vec<String> = std::env::args().collect();
+    {
+        format(2345);
+        println!("{}", format(2345));
+    }
 }

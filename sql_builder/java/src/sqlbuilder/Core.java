@@ -35,7 +35,7 @@ public static final String format(final HashMap<String,ArrayList<Object>> queryM
 final TYPE_MISSING select = queryMap.get(":select");
 final TYPE_MISSING from = queryMap.get(":from");
 final TYPE_MISSING join = queryMap.get(":join");
-final TYPE_MISSING where = queryMap.get(":where");
+final TYPE_MISSING whereClause = queryMap.get(":where");
 final TYPE_MISSING groupBy = queryMap.get(":group-by");
 final TYPE_MISSING having = queryMap.get(":having");
 "MISSING_TYPE" tmp1;
@@ -54,9 +54,9 @@ if (join)
 tmp3 = clojure.Core.str(" JOIN ", sqlbuilder.Core.joinStr(join));
 }
 "MISSING_TYPE" tmp4;
-if (where)
+if (whereClause)
 {
-tmp4 = clojure.Core.str(" WHERE ", sqlbuilder.Core.whereStr(where));
+tmp4 = clojure.Core.str(" WHERE ", sqlbuilder.Core.whereStr(whereClause));
 }
 "MISSING_TYPE" tmp5;
 if (groupBy)
