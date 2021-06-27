@@ -274,9 +274,16 @@ pub fn where_str_testing(join: Value) -> String {
         return format!(
             "{}{}{}",
             String::from("("),
-            to_vector(join.clone()).iter().map(|val| where_str_testing(val.clone()))
+            to_vector(join.clone())
+                .iter()
+                .map(|val| where_str_testing(val.clone()))
                 .collect::<Vec<String>>()
-                .join(&format!("{}{}{}", String::from(" "), String::from("hi"), String::from(" "))),
+                .join(&format!(
+                    "{}{}{}",
+                    String::from(" "),
+                    String::from("hi"),
+                    String::from(" ")
+                )),
             String::from(")")
         );
     } else {
@@ -299,6 +306,10 @@ pub fn iter_test() {
     println!("b_join_str = {}", b_join_str);
 
     let c = vec![Value::String("1".to_string())];
-    let c_join_str = c.iter().map(|val| where_str_testing(val.clone())).collect::<Vec<String>>().join(",");
+    let c_join_str = c
+        .iter()
+        .map(|val| where_str_testing(val.clone()))
+        .collect::<Vec<String>>()
+        .join(",");
     println!("c_join_str = {}", c_join_str);
 }

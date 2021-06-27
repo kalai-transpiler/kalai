@@ -2,29 +2,33 @@
   (:refer-clojure :exclude [format])
   (:require [clojure.string :as str]))
 
+(defn cast-to-str ^{:t :string} [^{:t :any} x]
+  ^{:cast :string} x)
+
 (defn select-str ^{:t :string} [^{:t {:mvector [:any]}} select]
-  (str/join ", " select))
+  (str/join ", " (map cast-to-str select)))
 
 (defn from-str ^{:t :string} [^{:t {:mvector [:any]}} from]
-  (str/join ", " from))
+  (str/join ", " (map cast-to-str  from)))
 
 (defn join-str ^{:t :string} [^{:t {:mvector [:any]}} join]
-  (str/join ", " join))
+  (str/join ", " (map cast-to-str join)))
 
 (defn where-str ^{:t :string} [^{:t :any} join]
   (if (vector? join)
-    (let [^{:t :any} op (first join)
-          ^{:t :any} more (rest join)]
+    (let [;;^{:t :any} op (first join)
+          ;;^{:t :any} more (rest join)
+          ^{:t {:mvector [:any]}} jj ^{:cast :vector} join]
       (str "("
-           (str/join (str " " op " ")
-                     (map where-str more))
+           (str/join (str " op ")
+                     (map where-str jj))
            ")"))
-    join))
+    ^{:cast :string} join))
 
 (defn group-by-str ^{:t :string} [^{:t {:mvector [:any]}} join]
-  (str/join ", " join))
+  (str/join ", " (map cast-to-str join)))
 
-(defn having-str ^{:t :string} [^{:t {:mvector [:any]}} having]
+(defn having-str ^{:t :string} [^{:t :any} having]
   (where-str having))
 
 (defn format
@@ -37,9 +41,23 @@
         ^{:t {:mvector [:any]}} where-clause (:where query-map)
         ^{:t {:mvector [:any]}} group-by (:group-by query-map)
         ^{:t {:mvector [:any]}} having (:having query-map)]
-    (str (when select (str "SELECT " (select-str select)))
-         (when from (str " FROM " (from-str from)))
-         (when join (str " JOIN " (join-str join)))
-         (when where-clause (str " WHERE " (where-str where-clause)))
-         (when group-by (str " GROUP BY " (group-by-str group-by)))
-         (when having (str " HAVING " (having-str having))))))
+    ;; TODO: need to handle nil semantic or have a default value
+    ;; for this example to work
+    (str (if select
+           (str "SELECT " (select-str select))
+           "")
+         (if from
+           (str " FROM " (from-str from))
+           "")
+         (if join
+           (str " JOIN " (join-str join))
+           "")
+         (if where-clause
+           (str " WHERE " (where-str where-clause))
+           "")
+         (if group-by
+           (str " GROUP BY " (group-by-str group-by))
+           "")
+         (if having
+           (str " HAVING " (having-str having))
+           ""))))

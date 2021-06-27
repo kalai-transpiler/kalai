@@ -35,6 +35,8 @@ They can be configured this way:
   - Make (simple commands to run transpile+compile examples)
   - Gradle (compile Java transpiled code in examples)
   - Rustup (install Rust compiler, Cargo, etc.)
+    MacOS: `brew uninstall rust` `brew install rustup` `rustup-init`
+    and start a new terminal session
   - Java JDK (OpenJDK seems fine, no version constraint known yet) 
   - `clojure` command-line tool (from the [official Clojure distribution](https://clojure.org/guides/getting_started),
     ex: `brew install clojure/tools/clojure` on macOS)

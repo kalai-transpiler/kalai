@@ -17,14 +17,14 @@
 (defn- parens [x]
   (str "(" x ")"))
 
-(defn- comma-separated [& xs]
+(defn- comma-separated [xs]
   (str/join ", " xs))
 
 (defn- params-list [params]
-  (parens (apply comma-separated params)))
+  (parens (comma-separated params)))
 
 (defn- args-list [args]
-  (parens (apply comma-separated (map stringify args))))
+  (parens (comma-separated (map stringify args))))
 
 (defn- space-separated [& xs]
   (str/join " " xs))
@@ -194,9 +194,12 @@
      (apply space-separated
             (interpose op (map stringify (cons x xs)))))))
 
+(def std-imports "use crate::kalai;")
+
 (defn module-str [& forms]
   (apply line-separated
-    (map stringify forms)))
+         std-imports
+         (map stringify forms)))
 
 (defn return-str [x]
   (space-separated 'return (stringify x)))
@@ -253,6 +256,10 @@
 
 (defn literal-str [s]
   (pr-str s))
+
+(defn lambda-str [args body]
+  (str "|" (comma-separated (map csk/->snake_case args)) "|"
+       (stringify body)))
 
 (defn ref-str [s]
   (if (and (instance? IMeta s)
@@ -328,6 +335,7 @@
    'r/method               method-str
    'r/new                  new-str
    'r/literal              literal-str
+   'r/lambda               lambda-str
    'r/cast                 cast-str
    'r/ref                  ref-str
    'r/deref                deref-str
