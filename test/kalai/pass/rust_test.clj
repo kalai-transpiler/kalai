@@ -365,7 +365,7 @@ tmp_1
     ;;->
     '(function -main [& my-args] (invoke println 1))
     ;;->
-    "fn main () {
+    "pub fn main () {
 let my_args: std::vec::Vec<String> = std::env::args().collect();
 {
 println!(\"{}\", 1);
