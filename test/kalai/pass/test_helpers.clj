@@ -70,24 +70,25 @@
 
 (defn remove-rust-class [s]
   (->> s
-    (str/split-lines)
-    (str/join \newline)))
+       (str/split-lines)
+       (drop 1)
+       (str/join \newline)))
 
 (defn remove-rust-function [s]
   (->> s
-    (str/split-lines)
-    (drop 1)
-    (butlast)
-    (str/join \newline)))
+       (str/split-lines)
+       (drop 2)
+       (butlast)
+       (str/join \newline)))
 
 (defmacro ns-form-rust [input kalai-s-expression expected]
   (test-form input kalai-s-expression expected
-    identity identity identity rust-pipeline/kalai->rust))
+             identity identity identity rust-pipeline/kalai->rust))
 
 (defmacro top-level-form-rust [input kalai-s-expression expected]
   (test-form input kalai-s-expression expected
-    as-ns remove-kalai-class remove-rust-class rust-pipeline/kalai->rust))
+             as-ns remove-kalai-class remove-rust-class rust-pipeline/kalai->rust))
 
 (defmacro inner-form-rust [input kalai-s-expression expected]
   (test-form input kalai-s-expression expected
-    as-function remove-kalai-function remove-rust-function rust-pipeline/kalai->rust))
+             as-function remove-kalai-function remove-rust-function rust-pipeline/kalai->rust))

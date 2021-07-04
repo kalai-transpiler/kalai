@@ -283,7 +283,8 @@ let y: i64 = 5;"))
                             (init z y)
                             (return z))))
     ;;->
-    "lazy_static::lazy_static! {
+    "use crate::kalai;
+lazy_static::lazy_static! {
 static ref x: std::collections::HashMap<i64,String> = {
 let mut tmp_1: std::collections::HashMap<i64,String> = std::collections::HashMap::new();
 tmp_1
