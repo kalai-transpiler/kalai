@@ -1,3 +1,4 @@
+use crate::kalai;
 pub fn get_digits_map() -> std::collections::HashMap<char, i32> {
     return {
         let mut tmp_1: std::collections::HashMap<char, i32> = std::collections::HashMap::new();
@@ -216,7 +217,7 @@ pub fn format(num: i32, number_system: String, grouping_strategy: String) -> Str
         return result.iter().collect();
     }
 }
-fn main() {
+pub fn main() {
     let args: std::vec::Vec<String> = std::env::args().collect();
     {
         println!("{}", parse(String::from("٥٠٣٠١")));

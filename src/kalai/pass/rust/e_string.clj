@@ -159,7 +159,7 @@
 (defn invoke-str [function-name & args]
   (let [varmeta (some-> function-name meta :var meta)]
     (if (and (str/includes? (str function-name) "/") varmeta)
-      (str "examples::"
+      (str "crate::"
            (csk/->snake_case (str/replace (str (:ns varmeta)) "." "::"))
            "::" (csk/->snake_case (:name varmeta))
            (args-list args))
@@ -171,7 +171,7 @@
     (do
       (assert (= '& (first params)) "Main method must have signature (defn -main [& args]...)")
       (str
-        (space-separated 'fn 'main (params-list [])
+        (space-separated 'pub 'fn 'main (params-list [])
                          (line-separated "{"
                                          (str "let " (csk/->snake_case (second params)) ": std::vec::Vec<String> = std::env::args().collect();")
                                          (stringify body)

@@ -1,3 +1,4 @@
+use crate::kalai;
 pub fn side_effect() -> i64 {
     let mut y: i64 = 2;
     {
@@ -6,7 +7,7 @@ pub fn side_effect() -> i64 {
         return y;
     }
 }
-fn main() {
+pub fn main() {
     let args: std::vec::Vec<String> = std::env::args().collect();
     {
         println!("{}", side_effect());

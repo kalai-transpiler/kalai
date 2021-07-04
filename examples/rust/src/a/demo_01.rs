@@ -1,3 +1,4 @@
+use crate::kalai;
 pub fn format(num: i32) -> String {
     let mut i: i32 = num;
     let mut result: std::vec::Vec<char> = std::vec::Vec::new();
@@ -19,7 +20,7 @@ pub fn format(num: i32) -> String {
         return result.iter().collect();
     }
 }
-fn main() {
+pub fn main() {
     let args: std::vec::Vec<String> = std::env::args().collect();
     {
         format(2345);

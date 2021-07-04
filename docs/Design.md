@@ -653,21 +653,18 @@ Can we ignore nil? No, b/c you have initialize Clojure state containers with som
 
 * We cannot use `src/main/java/` convention because Rust provides no way to specify the source location, and must have src under `src`
 * Therefore we can't use gradle to build all languages, so we use a language specific build tool for each language
-* Source goes in `java/src` instead, which is compatible with `rust/src`
+* The transpiled Java output goes into `java/src` instead, which is similar to `rust/src`
 * Language specific dependency/build tool config goes in the `java` or `rust` root directory.
-* Who has control over `rust/Cargo.toml` and `java/build.gradle`??
-  - we could try to generate it, but seems risky
-  - we can rely on users to create them, which requires documentation
-* Rust needs a ringleader namespace to be a library or binary, we'll need to document that
-  
-TODO:
-* Rust forces you to refer to all namespaces to include them, and use `mod`
-* Maybe we need to translate `ns` specially?
-1. user code has to have an entry point that defines all other things to include
-   eg `src/lib.rs`, `src/bin.rs` <= should we follow this convention or not?
-2. Do we need to change the rust output to make required ns available
-* Test the CLI
-* Figure out how users will make a project that uses Kalai
+  It has to be manually configured.
+* For creating binaries in Rust within the same cargo project as the transpiled output, our recommendation is to create `src_bin/main.rs`.
+  Have that file be a manually created "stub" that invokes the functions of the transpiled output.
+  The `Cargo.toml` file at the root of the cargo project will need to declare the path to the stub using the Cargo `[[bin]]` stanza according to Cargo documentation.
+  Keep in mind that fully qualifying references to modules in the "library" code that is created by the transpiled output must use the library name defined in Cargo.toml.
+  However, library code modules can refer to each other in the fully-qualified manner using the `crate::` alias.
+  See [`examples`](../examples/rust/Cargo.toml) and [`main.rs`](../examples/rust/src_bin/main.rs).
+  We always only create a library for transpiled Rust output.
+* For creating binaries in Java, nothing special is required as it is for Rust because the Java compiler and build tools do not place constraints on declaring upfront which classes are allowed to have main methods before executing them.
+  Also, there are no constraints on how a "binary"/executable class is allowed to refer to other "library" classes, as there are in Rust. 
 
 ####
 

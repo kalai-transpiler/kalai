@@ -1,4 +1,5 @@
-fn main() {
+use crate::kalai;
+pub fn main() {
     let args: std::vec::Vec<String> = std::env::args().collect();
     {
         let mut i: i64 = 0;
