@@ -275,7 +275,9 @@
 (defn range-str [start-idx end-idx]
   (str (stringify start-idx) ".." (stringify end-idx)))
 
-(defn value-type [x]
+(defn value-type
+  "This is specifically for our custom rust Value enum for heterogeneous collections"
+  [x]
   (if (nil? x)
     "Null"
     (if (instance? IMeta x)
@@ -294,8 +296,7 @@
           :float "Float"
           :double "Double"
           :string "String"
-          :any "kalai::Value"
-          "MISSING"))
+          nil))
       (condp instance? x
         Byte "Byte"
         Boolean "Bool"
@@ -307,12 +308,14 @@
         Map "MMap"
         Set "MSet"
         Vector "MVector"
-        "MISSING"))))
+        nil))))
 
-(defn value-str [x]
-  (str "kalai::Value::"
-       (value-type x)
-       (parens (stringify x))))
+(defn value-str
+  "Specifically for the Value enum for heterogeneous collections"
+  [x]
+  (if-let [t (value-type x)]
+    (str "kalai::Value::" t (parens (stringify x)))
+    (stringify x)))
 
 ;;;; This is the main entry point
 

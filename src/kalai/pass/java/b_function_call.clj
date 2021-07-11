@@ -1,8 +1,10 @@
 (ns kalai.pass.java.b-function-call
   (:require [kalai.util :as u]
+            [kalai.pass.java.util :as ju]
             [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [camel-snake-kebab.core :as csk]))
 
 ;; TODO: user extension point, is dynamic var good?
 ;; can it be more data driven?
@@ -21,6 +23,14 @@
   (m/rewrite (:t (meta x))
     {(m/pred #{:mmap :map :mset :set :mvector :vector}) (m/pred some?)} 'size
     ?else 'length))
+
+(defn class-name [sym]
+  (when-let [s (some-> sym meta :var meta :ns str)]
+    (let [xs (str/split s #"\.")
+          packagename (str/join "." (for [z (butlast xs)]
+                                      (str/lower-case (csk/->camelCase z))))
+          classname (csk/->PascalCase (last xs))]
+      (str packagename "." classname))))
 
 (def rewrite
   (s/bottom-up
@@ -63,6 +73,9 @@
       (j/method put ?x ?k
                 (m/app rewrite (j/invoke ?f (j/method get ?x ?k) & ?args)))
 
+      (j/invoke clojure.lang.Util/identical ?x nil)
+      (j/operator == ?x nil)
+
       (j/invoke (m/and (m/pred symbol?)
                        (m/pred #(not (:var (meta %))))
                        (m/pred #(str/includes? (str %) "/"))
@@ -72,6 +85,23 @@
                      (str/replace "/" ".")
                      (symbol))
                 & ?more)
+
+      (j/invoke (u/var ~#'vector?) ?x)
+      (j/operator instanceof ?x List)
+
+      (j/invoke (u/var ~#'str/join) ?col)
+      (j/invoke String.join "" ?col)
+
+      (j/invoke (u/var ~#'str/join) ?sep ?col)
+      (j/invoke String.join ?sep ?col)
+
+      (j/invoke (u/var ~#'map) ?fn ?xs)
+      (j/method collect
+                (j/method map (j/method stream ?xs) ~(symbol (ju/fully-qualified-function-identifier-str ?fn "::")))
+                (j/invoke Collectors.toList))
+
+      (j/invoke (u/var ~#'str) & ?args)
+      (j/operator + "" & ?args)
 
       ?else
       ?else)))

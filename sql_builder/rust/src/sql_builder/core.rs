@@ -28,7 +28,7 @@ pub fn join_str(join: std::vec::Vec<kalai::Value>) -> String {
 }
 pub fn where_str(join: kalai::Value) -> String {
     if kalai::is_vector(join.clone()) {
-        let jj: std::vec::Vec<kalai::Value> = kalai::to_vector(join.clone());
+        let jj: std::vec::Vec<kalai::Value> = kalai::to_mvector(join.clone());
         return format!(
             "{}{}{}",
             String::from("("),
@@ -54,48 +54,60 @@ pub fn group_by_str(join: std::vec::Vec<kalai::Value>) -> String {
 pub fn having_str(having: kalai::Value) -> String {
     return where_str(having);
 }
-pub fn format(query_map: std::collections::HashMap<String, std::vec::Vec<kalai::Value>>) -> String {
-    let select: std::vec::Vec<kalai::Value> =
-        query_map.get(&String::from(":select")).unwrap().clone();
-    let from: std::vec::Vec<kalai::Value> = query_map.get(&String::from(":from")).unwrap().clone();
-    let join: std::vec::Vec<kalai::Value> = query_map.get(&String::from(":join")).unwrap().clone();
-    let where_clause: std::vec::Vec<kalai::Value> =
-        query_map.get(&String::from(":where")).unwrap().clone();
-    let group_by: std::vec::Vec<kalai::Value> =
-        query_map.get(&String::from(":group-by")).unwrap().clone();
-    let having: std::vec::Vec<kalai::Value> =
-        query_map.get(&String::from(":having")).unwrap().clone();
+pub fn format(query_map: std::collections::HashMap<String, kalai::Value>) -> String {
+    let select: kalai::Value = query_map.get(&String::from(":select")).unwrap().clone();
+    let from: kalai::Value = query_map.get(&String::from(":from")).unwrap().clone();
+    let join: kalai::Value = query_map.get(&String::from(":join")).unwrap().clone();
+    let where_clause: kalai::Value = query_map.get(&String::from(":where")).unwrap().clone();
+    let group_by: kalai::Value = query_map.get(&String::from(":group-by")).unwrap().clone();
+    let having: kalai::Value = query_map.get(&String::from(":having")).unwrap().clone();
     return format!(
         "{}{}{}{}{}{}",
-        if select {
-            format!("{}{}", String::from("SELECT "), select_str(select))
-        } else {
+        if kalai::is_null(select.clone()) {
             String::from("")
-        },
-        if from {
-            format!("{}{}", String::from(" FROM "), from_str(from))
         } else {
-            String::from("")
+            format!(
+                "{}{}",
+                String::from("SELECT "),
+                select_str(kalai::to_mvector(select.clone()))
+            )
         },
-        if join {
-            format!("{}{}", String::from(" JOIN "), join_str(join))
+        if kalai::is_null(from.clone()) {
+            String::from("")
         } else {
-            String::from("")
+            format!(
+                "{}{}",
+                String::from(" FROM "),
+                from_str(kalai::to_mvector(from.clone()))
+            )
         },
-        if where_clause {
+        if kalai::is_null(join.clone()) {
+            String::from("")
+        } else {
+            format!(
+                "{}{}",
+                String::from(" JOIN "),
+                join_str(kalai::to_mvector(join.clone()))
+            )
+        },
+        if kalai::is_null(where_clause.clone()) {
+            String::from("")
+        } else {
             format!("{}{}", String::from(" WHERE "), where_str(where_clause))
-        } else {
-            String::from("")
         },
-        if group_by {
-            format!("{}{}", String::from(" GROUP BY "), group_by_str(group_by))
-        } else {
+        if kalai::is_null(group_by.clone()) {
             String::from("")
+        } else {
+            format!(
+                "{}{}",
+                String::from(" GROUP BY "),
+                group_by_str(kalai::to_mvector(group_by.clone()))
+            )
         },
-        if having {
+        if kalai::is_null(having.clone()) {
+            String::from("")
+        } else {
             format!("{}{}", String::from(" HAVING "), having_str(having))
-        } else {
-            String::from("")
         }
     );
 }

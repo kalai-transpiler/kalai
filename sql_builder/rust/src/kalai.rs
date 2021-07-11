@@ -11,8 +11,11 @@ pub enum Value {
     Long(i64),
     String(String),
     MSet(std::collections::HashSet<Value>),
+    PSet(std::collections::HashSet<Value>), // TODO: use a persistent
     MVector(std::vec::Vec<Value>),
+    PVector(std::vec::Vec<Value>),
     MMap(std::collections::HashMap<Value, Value>),
+    PMap(std::collections::HashMap<Value, Value>),
 }
 
 // We are informing the compiler that this is an equivalence relation,
@@ -36,6 +39,26 @@ impl std::hash::Hash for Value {
                 hasher.finish();
             }
             Value::MMap(map) => {
+                let mut hasher = std::collections::hash_map::DefaultHasher::new();
+                for (key, val) in map {
+                    key.hash(&mut hasher);
+                    val.hash(&mut hasher);
+                }
+                hasher.finish();
+            }
+            Value::PSet(x) => {
+                let mut hasher = std::collections::hash_map::DefaultHasher::new();
+                for key in x {
+                    key.hash(&mut hasher);
+                }
+                hasher.finish();
+            }
+            Value::PVector(x) => {
+                let mut hasher = std::collections::hash_map::DefaultHasher::new();
+                x.hash(&mut hasher);
+                hasher.finish();
+            }
+            Value::PMap(map) => {
                 let mut hasher = std::collections::hash_map::DefaultHasher::new();
                 for (key, val) in map {
                     key.hash(&mut hasher);
@@ -93,143 +116,171 @@ impl std::hash::Hash for Value {
 }
 
 pub fn to_int(v: Value) -> i32 {
-    return match v {
+    match v {
         Value::Int(x) => x,
         _ => panic!("not an int"),
-    };
+    }
 }
 
 pub fn is_int(v: Value) -> bool {
-    return match v {
-        Value::Int(x) => true,
+    match v {
+        Value::Int(_) => true,
         _ => false,
-    };
+    }
 }
 
 pub fn to_long(v: Value) -> i64 {
-    return match v {
+    match v {
         Value::Long(x) => x,
         _ => panic!("not a long"),
-    };
+    }
 }
 
 pub fn is_long(v: Value) -> bool {
-    return match v {
-        Value::Long(x) => true,
+    match v {
+        Value::Long(_) => true,
         _ => false,
-    };
+    }
 }
 
 pub fn to_string(v: Value) -> String {
-    return match v {
+    match v {
         Value::String(x) => x,
         _ => panic!("not a String"),
-    };
+    }
 }
 
 pub fn is_string(v: Value) -> bool {
-    return match v {
-        Value::String(x) => true,
+    match v {
+        Value::String(_) => true,
         _ => false,
-    };
+    }
 }
 
 pub fn to_bool(v: Value) -> bool {
-    return match v {
+    match v {
         Value::Bool(x) => x,
         _ => panic!("not a bool"),
-    };
+    }
 }
 
 pub fn is_bool(v: Value) -> bool {
-    return match v {
-        Value::Bool(x) => true,
+    match v {
+        Value::Bool(_) => true,
         _ => false,
-    };
+    }
 }
 
 pub fn to_byte(v: Value) -> u8 {
-    return match v {
+    match v {
         Value::Byte(x) => x,
         _ => panic!("not a byte"),
-    };
+    }
 }
 
 pub fn is_byte(v: Value) -> bool {
-    return match v {
-        Value::Byte(x) => true,
+    match v {
+        Value::Byte(_) => true,
         _ => false,
-    };
+    }
 }
 
 pub fn to_float(v: Value) -> f32 {
-    return match v {
+    match v {
         Value::Float(x) => x,
         _ => panic!("not a float"),
-    };
+    }
 }
 
 pub fn is_float(v: Value) -> bool {
-    return match v {
-        Value::Float(x) => true,
+    match v {
+        Value::Float(_) => true,
         _ => false,
-    };
+    }
 }
 
 pub fn to_double(v: Value) -> f64 {
-    return match v {
+    match v {
         Value::Double(x) => x,
         _ => panic!("not a double"),
-    };
+    }
 }
 
 pub fn is_double(v: Value) -> bool {
-    return match v {
-        Value::Double(x) => true,
+    match v {
+        Value::Double(_) => true,
         _ => false,
-    };
+    }
+}
+
+pub fn to_mmap(v: Value) -> std::collections::HashMap<Value, Value> {
+    match v {
+        Value::MMap(x) => x,
+        _ => panic!("not a map"),
+    }
 }
 
 pub fn to_map(v: Value) -> std::collections::HashMap<Value, Value> {
-    return match v {
-        Value::MMap(x) => x,
+    match v {
+        Value::PMap(x) => x,
         _ => panic!("not a map"),
-    };
+    }
 }
 
 pub fn is_map(v: Value) -> bool {
-    return match v {
-        Value::MMap(x) => true,
+    match v {
+        Value::MMap(_) => true,
+        Value::PMap(_) => true,
         _ => false,
-    };
+    }
+}
+
+pub fn to_mvector(v: Value) -> std::vec::Vec<Value> {
+    match v {
+        Value::MVector(x) => x,
+        _ => panic!("not a vector"),
+    }
 }
 
 pub fn to_vector(v: Value) -> std::vec::Vec<Value> {
-    return match v {
-        Value::MVector(x) => x,
-        _ => panic!("not a map"),
-    };
+    match v {
+        Value::PVector(x) => x,
+        _ => panic!("not a vector"),
+    }
 }
 
 pub fn is_vector(v: Value) -> bool {
-    return match v {
-        Value::MVector(x) => true,
+    match v {
+        Value::MVector(_) => true,
+        Value::PVector(_) => true,
         _ => false,
-    };
+    }
+}
+
+pub fn to_mset(v: Value) -> std::collections::HashSet<Value> {
+    match v {
+        Value::MSet(x) => x,
+        _ => panic!("not a set"),
+    }
 }
 
 pub fn to_set(v: Value) -> std::collections::HashSet<Value> {
-    return match v {
-        Value::MSet(x) => x,
-        _ => panic!("not a map"),
-    };
+    match v {
+        Value::PSet(x) => x,
+        _ => panic!("not a set"),
+    }
 }
 
 pub fn is_set(v: Value) -> bool {
-    return match v {
-        Value::MSet(x) => true,
+    match v {
+        Value::MSet(_) => true,
+        Value::PSet(_) => true,
         _ => false,
-    };
+    }
+}
+
+pub fn is_null(v: Value) -> bool {
+    v == Value::Null
 }
 
 // Demonstrates basic enum matching on Value
@@ -271,7 +322,7 @@ pub fn cast_test() {
 
 pub fn where_str_testing(join: Value) -> String {
     if is_vector(join.clone()) {
-        return format!(
+        format!(
             "{}{}{}",
             String::from("("),
             to_vector(join.clone())
@@ -285,9 +336,9 @@ pub fn where_str_testing(join: Value) -> String {
                     String::from(" ")
                 )),
             String::from(")")
-        );
+        )
     } else {
-        return to_string(join.clone());
+        to_string(join.clone())
     }
 }
 

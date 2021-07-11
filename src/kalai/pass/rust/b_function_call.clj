@@ -141,5 +141,8 @@
       (r/invoke (u/var ~#'vector?) ?x)
       (r/invoke "kalai::is_vector" (r/method clone ?x))
 
+      (r/invoke clojure.lang.Util/identical ?x nil)
+      (r/invoke "kalai::is_null" (r/method clone ?x))
+
       ?else
       ?else)))

@@ -4,7 +4,8 @@
             [clojure.string :as str]
             [camel-snake-kebab.core :as csk]
             [puget.printer :as puget]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [kalai.pass.java.util :as ju]))
 
 (declare stringify)
 
@@ -121,23 +122,10 @@
                                (csk/->camelCase variable-name)
                                "=" (stringify value)))))
 
+
 (defn invoke-str [function-name & args]
-  (let [metameta (some-> function-name meta :var meta)]
-    (if metameta
-      (let [s (str (:ns metameta))
-            xs (str/split s #"\.")
-            packagename (str/join "." (for [z (butlast xs)]
-                                        (str/lower-case (csk/->camelCase z))))
-            classname (csk/->PascalCase (last xs))]
-        (str packagename "." classname "."
-             (csk/->camelCase (str (:name metameta)))
-             (args-list args)))
-      ;; function-name might be a fully qualified Java name with capitals
-      ;; that we don't want to camelCase
-      (str (if (str/includes? function-name "-")
-             (csk/->camelCase function-name)
-             function-name)
-           (args-list args)))))
+  (str (ju/fully-qualified-function-identifier-str function-name ".")
+       (args-list args)))
 
 (defn function-str [name params body]
   (if (= '-main name)
@@ -168,7 +156,8 @@
   "import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.ArrayList;")
+import java.util.ArrayList;
+import java.util.stream.Collectors;")
 
 (defn class-str [ns-name body]
   (let [parts (str/split (str ns-name) #"\.")
@@ -235,6 +224,9 @@ import java.util.ArrayList;")
                    (maybe-warn-type-missing class-name)))
                (args-list args))))
 
+(defn cast-str [v t]
+  (str (parens (t-str t)) (stringify v)))
+
 ;;;; This is the main entry point
 
 (def str-fn-map
@@ -255,7 +247,8 @@ import java.util.ArrayList;")
    'j/case                 case-str
    'j/default              default-str
    'j/method               method-str
-   'j/new                  new-str})
+   'j/new                  new-str
+   'j/cast                 cast-str})
 
 (def stringify
   (s/match
@@ -285,7 +278,9 @@ import java.util.ArrayList;")
     "null"
 
     ;; identifier
-    (m/pred symbol? ?s)
+    (m/pred #(and (symbol? %)
+                  (str/includes? (str %) "-"))
+            ?s)
     (csk/->camelCase (str ?s))
 
     ?else

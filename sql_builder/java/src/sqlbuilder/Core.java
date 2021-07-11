@@ -3,97 +3,98 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 public class Core {
 public static final String castToStr(final Object x) {
-return x;
+return (String)x;
 }
 public static final String selectStr(final ArrayList<Object> select) {
-return clojure.String.join(", ", clojure.Core.map(castToStr, select));
+return String.join(", ", select.stream().map(sqlbuilder.Core::castToStr).collect(Collectors.toList()));
 }
 public static final String fromStr(final ArrayList<Object> from) {
-return clojure.String.join(", ", clojure.Core.map(castToStr, from));
+return String.join(", ", from.stream().map(sqlbuilder.Core::castToStr).collect(Collectors.toList()));
 }
 public static final String joinStr(final ArrayList<Object> join) {
-return clojure.String.join(", ", clojure.Core.map(castToStr, join));
+return String.join(", ", join.stream().map(sqlbuilder.Core::castToStr).collect(Collectors.toList()));
 }
 public static final String whereStr(final Object join) {
-if (clojure.Core.vector?(join))
+if ((join instanceof List))
 {
-final ArrayList<Object> jj = join;
-return clojure.Core.str("(", clojure.String.join(clojure.Core.str(" op "), clojure.Core.map(whereStr, jj)), ")");
+final ArrayList<Object> jj = (ArrayList)join;
+return ("" + "(" + String.join(("" + " op "), jj.stream().map(sqlbuilder.Core::whereStr).collect(Collectors.toList())) + ")");
 }
 else
 {
-return join;
+return (String)join;
 }
 }
 public static final String groupByStr(final ArrayList<Object> join) {
-return clojure.String.join(", ", clojure.Core.map(castToStr, join));
+return String.join(", ", join.stream().map(sqlbuilder.Core::castToStr).collect(Collectors.toList()));
 }
 public static final String havingStr(final Object having) {
 return sqlbuilder.Core.whereStr(having);
 }
-public static final String format(final HashMap<String,ArrayList<Object>> queryMap) {
-final ArrayList<Object> select = queryMap.get(":select");
-final ArrayList<Object> from = queryMap.get(":from");
-final ArrayList<Object> join = queryMap.get(":join");
-final ArrayList<Object> whereClause = queryMap.get(":where");
-final ArrayList<Object> groupBy = queryMap.get(":group-by");
-final ArrayList<Object> having = queryMap.get(":having");
-"MISSING_TYPE" tmp1;
-if (select)
-{
-tmp1 = clojure.Core.str("SELECT ", sqlbuilder.Core.selectStr(select));
-}
-else
+public static final String format(final HashMap<String,Object> queryMap) {
+final Object select = queryMap.get(":select");
+final Object from = queryMap.get(":from");
+final Object join = queryMap.get(":join");
+final Object whereClause = queryMap.get(":where");
+final Object groupBy = queryMap.get(":group-by");
+final Object having = queryMap.get(":having");
+String tmp1;
+if ((select == null))
 {
 tmp1 = "";
 }
-"MISSING_TYPE" tmp2;
-if (from)
-{
-tmp2 = clojure.Core.str(" FROM ", sqlbuilder.Core.fromStr(from));
-}
 else
+{
+tmp1 = ("" + "SELECT " + sqlbuilder.Core.selectStr((ArrayList)select));
+}
+String tmp2;
+if ((from == null))
 {
 tmp2 = "";
 }
-"MISSING_TYPE" tmp3;
-if (join)
-{
-tmp3 = clojure.Core.str(" JOIN ", sqlbuilder.Core.joinStr(join));
-}
 else
+{
+tmp2 = ("" + " FROM " + sqlbuilder.Core.fromStr((ArrayList)from));
+}
+String tmp3;
+if ((join == null))
 {
 tmp3 = "";
 }
-"MISSING_TYPE" tmp4;
-if (whereClause)
-{
-tmp4 = clojure.Core.str(" WHERE ", sqlbuilder.Core.whereStr(whereClause));
-}
 else
+{
+tmp3 = ("" + " JOIN " + sqlbuilder.Core.joinStr((ArrayList)join));
+}
+String tmp4;
+if ((whereClause == null))
 {
 tmp4 = "";
 }
-"MISSING_TYPE" tmp5;
-if (groupBy)
-{
-tmp5 = clojure.Core.str(" GROUP BY ", sqlbuilder.Core.groupByStr(groupBy));
-}
 else
+{
+tmp4 = ("" + " WHERE " + sqlbuilder.Core.whereStr(whereClause));
+}
+String tmp5;
+if ((groupBy == null))
 {
 tmp5 = "";
 }
-"MISSING_TYPE" tmp6;
-if (having)
-{
-tmp6 = clojure.Core.str(" HAVING ", sqlbuilder.Core.havingStr(having));
-}
 else
+{
+tmp5 = ("" + " GROUP BY " + sqlbuilder.Core.groupByStr((ArrayList)groupBy));
+}
+String tmp6;
+if ((having == null))
 {
 tmp6 = "";
 }
-return clojure.Core.str(tmp1, tmp2, tmp3, tmp4, tmp5, tmp6);
+else
+{
+tmp6 = ("" + " HAVING " + sqlbuilder.Core.havingStr(having));
+}
+return ("" + tmp1 + tmp2 + tmp3 + tmp4 + tmp5 + tmp6);
 }
 }

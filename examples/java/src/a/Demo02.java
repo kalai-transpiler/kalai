@@ -3,6 +3,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 public class Demo02 {
 public static final HashMap<Character,Integer> getDigitsMap() {
 HashMap<Character,Integer> tmp1 = new HashMap<Character,Integer>();

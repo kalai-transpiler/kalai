@@ -16,9 +16,7 @@
 
 (defn where-str ^{:t :string} [^{:t :any} join]
   (if (vector? join)
-    (let [;;^{:t :any} op (first join)
-          ;;^{:t :any} more (rest join)
-          ^{:t {:mvector [:any]}} jj ^{:cast :vector} join]
+    (let [^{:t {:mvector [:any]}} jj ^{:cast :mvector} join]
       (str "("
            (str/join (str " op ")
                      (map where-str jj))
@@ -34,30 +32,30 @@
 (defn format
   "Converts query as data into an SQL string"
   ^{:t :string}
-  [^{:t {:mmap [:string {:mvector [:any]}]}} query-map]
-  (let [^{:t {:mvector [:any]}} select (:select query-map)
-        ^{:t {:mvector [:any]}} from (:from query-map)
-        ^{:t {:mvector [:any]}} join (:join query-map)
-        ^{:t {:mvector [:any]}} where-clause (:where query-map)
-        ^{:t {:mvector [:any]}} group-by (:group-by query-map)
-        ^{:t {:mvector [:any]}} having (:having query-map)]
+  [^{:t {:mmap [:string :any]}} query-map]
+  (let [^{:t :any} select (:select query-map)
+        ^{:t :any} from (:from query-map)
+        ^{:t :any} join (:join query-map)
+        ^{:t :any} where-clause (:where query-map)
+        ^{:t :any} group-by (:group-by query-map)
+        ^{:t :any} having (:having query-map)]
     ;; TODO: need to handle nil semantic or have a default value
     ;; for this example to work
-    (str (if select
-           (str "SELECT " (select-str select))
-           "")
-         (if from
-           (str " FROM " (from-str from))
-           "")
-         (if join
-           (str " JOIN " (join-str join))
-           "")
-         (if where-clause
-           (str " WHERE " (where-str where-clause))
-           "")
-         (if group-by
-           (str " GROUP BY " (group-by-str group-by))
-           "")
-         (if having
-           (str " HAVING " (having-str having))
-           ""))))
+    (str (if (nil? select)
+           ""
+           (str "SELECT " (select-str ^{:cast :mvector} select)))
+         (if (nil? from)
+           ""
+           (str " FROM " (from-str ^{:cast :mvector} from)))
+         (if (nil? join)
+           ""
+           (str " JOIN " (join-str ^{:cast :mvector} join)))
+         (if (nil? where-clause)
+           ""
+           (str " WHERE " (where-str where-clause)))
+         (if (nil? group-by)
+           ""
+           (str " GROUP BY " (group-by-str ^{:cast :mvector} group-by)))
+         (if (nil? having)
+           ""
+           (str " HAVING " (having-str having))))))
