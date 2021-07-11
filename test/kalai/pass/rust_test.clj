@@ -283,7 +283,8 @@ let y: i64 = 5;"))
                             (init z y)
                             (return z))))
     ;;->
-    "lazy_static::lazy_static! {
+    "use crate::kalai;
+lazy_static::lazy_static! {
 static ref x: std::collections::HashMap<i64,String> = {
 let mut tmp_1: std::collections::HashMap<i64,String> = std::collections::HashMap::new();
 tmp_1
@@ -364,7 +365,7 @@ tmp_1
     ;;->
     '(function -main [& my-args] (invoke println 1))
     ;;->
-    "fn main () {
+    "pub fn main () {
 let my_args: std::vec::Vec<String> = std::env::args().collect();
 {
 println!(\"{}\", 1);
@@ -1526,3 +1527,9 @@ let mut tmp_1: std::vec::Vec<i32> = std::vec::Vec::new();
 tmp_1
 };
 result;"))
+
+(deftest str-test
+  (inner-form
+    '(str "a" "b")
+    '(invoke str "a" "b")
+    "format!(\"{}{}\", String::from(\"a\"), String::from(\"b\"));"))

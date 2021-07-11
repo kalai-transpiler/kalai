@@ -4,7 +4,8 @@
             [meander.strategy.epsilon :as s]
             [meander.epsilon :as m]
             [clojure.string :as str]
-            [kalai.types :as types]))
+            [kalai.types :as types]
+            [clojure.string :as string]))
 
 ;; TODO: user extension point, is dynamic var good?
 ;; can it be more data driven?
@@ -55,9 +56,9 @@
 
       (r/method insert (u/of-t StringBuffer ?this) ?idx (u/of-t :char ?s2))
       (r/method insert ?this (r/cast ?idx :usize)
-        ~(if (:ref (meta ?s2))
-           (list 'r/deref ?s2)
-           ?s2))
+                ~(if (:ref (meta ?s2))
+                   (list 'r/deref ?s2)
+                   ?s2))
 
       (r/method insert (u/of-t StringBuffer ?this) ?idx ?s2)
       (r/method splice ?this (r/range ?idx ?idx) (r/method ^{:t {:mvector [:char]}} collect (r/method chars (r/method to_string ?s2))))
@@ -114,6 +115,34 @@
       (r/invoke (u/var ~#'update) ?x ?k ?f & ?args)
       (r/method insert ?x (r/method clone ?k)
                 (m/app rewrite (r/invoke ?f (r/invoke clojure.lang.RT/get ?x ?k) & ?args)))
+
+      (r/invoke (u/var ~#'str) & ?args)
+      (r/invoke format! (r/literal ~(str/join (repeat (count ?args) "{}"))) & ?args)
+
+      ;; Assuming that ?xs are strings, for now
+      (r/invoke (u/var ~#'str/join) ?xs)
+      (r/method join ?xs)
+
+      ;; Assuming that ?xs are strings, and ?sep is a string, for now
+      (r/invoke (u/var ~#'str/join) ?sep ?xs)
+      (r/method join
+                (r/method "collect::<Vec<String>>" ?xs)
+                (r/ref ?sep))
+
+      (r/invoke (u/var ~#'map) ?fn ?xs)
+      (r/method map
+                (r/method iter
+                          (r/method clone ?xs))
+                ;; TODO: maybe gensym the argname
+                (r/lambda [kalai_elem]
+                          (r/invoke ?fn (r/method clone kalai_elem))))
+
+      ;; TODO: do we really need to clone here???
+      (r/invoke (u/var ~#'vector?) ?x)
+      (r/invoke "kalai::is_vector" (r/method clone ?x))
+
+      (r/invoke clojure.lang.Util/identical ?x nil)
+      (r/invoke "kalai::is_null" (r/method clone ?x))
 
       ?else
       ?else)))

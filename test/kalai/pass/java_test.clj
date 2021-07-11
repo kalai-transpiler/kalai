@@ -120,6 +120,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 public class TestClass {
 public static final int f(final int x) {
 return (x + 1);
@@ -272,6 +273,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 public class TestClass {
 static final HashMap<Long,String> x;
 public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
@@ -1401,3 +1403,13 @@ return i;
        result)
     ;;->
     "ArrayList<Integer> result = new ArrayList<Integer>();"))
+
+;; TODO:
+(deftest destructure-test
+  #_(inner-form
+    '(let [{:keys [a b]} {:a "a" :b "b"}]
+       a)
+    ;;->
+    '()
+    ;;->
+    ""))

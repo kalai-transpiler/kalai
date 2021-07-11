@@ -55,11 +55,11 @@ The [examples/Makefile](./examples/Makefile) defines tasks to invoke Kalai and d
 
 You will need to install the following tools:
 
-- `clojure` command-line tool (from the [official Clojure distribution](https://clojure.org/guides/getting_started), ex: `brew install clojure/tools/clojure
-  ` on macOS)
+- `clojure` command-line tool (from the [official Clojure distribution](https://clojure.org/guides/getting_started),
+  ex: `brew install clojure/tools/clojure` on macOS)
 - Make (simple commands to run transpile+compile examples)
 - Gradle (compile Java transpiled code in examples)
-- Cargo (compile Rust transpiled code in examples)
+- Rustup (install Rust compiler, Cargo, etc.)
 
 ### Running examples
 

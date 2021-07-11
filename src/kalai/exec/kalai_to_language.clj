@@ -85,10 +85,6 @@
 (defn write-module-definition [dir]
   (spit (io/file dir "mod.rs")
         (str/join (->> (.listFiles dir)
-                       (remove (fn [file]
-                                 (and
-                                   (.isFile file)
-                                   (re-find #"fn main \(\) \{\n" (slurp file)))))
                        (map (memfn ^File getName))
                        (map #(str/replace % #".rs$" ""))
                        (remove #{"mod" "lib"})

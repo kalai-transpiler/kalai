@@ -17,14 +17,14 @@
 (defn- parens [x]
   (str "(" x ")"))
 
-(defn- comma-separated [& xs]
+(defn- comma-separated [xs]
   (str/join ", " xs))
 
 (defn- params-list [params]
-  (parens (apply comma-separated params)))
+  (parens (comma-separated params)))
 
 (defn- args-list [args]
-  (parens (apply comma-separated (map stringify args))))
+  (parens (comma-separated (map stringify args))))
 
 (defn- space-separated [& xs]
   (str/join " " xs))
@@ -159,7 +159,7 @@
 (defn invoke-str [function-name & args]
   (let [varmeta (some-> function-name meta :var meta)]
     (if (and (str/includes? (str function-name) "/") varmeta)
-      (str "examples::"
+      (str "crate::"
            (csk/->snake_case (str/replace (str (:ns varmeta)) "." "::"))
            "::" (csk/->snake_case (:name varmeta))
            (args-list args))
@@ -171,7 +171,7 @@
     (do
       (assert (= '& (first params)) "Main method must have signature (defn -main [& args]...)")
       (str
-        (space-separated 'fn 'main (params-list [])
+        (space-separated 'pub 'fn 'main (params-list [])
                          (line-separated "{"
                                          (str "let " (csk/->snake_case (second params)) ": std::vec::Vec<String> = std::env::args().collect();")
                                          (stringify body)
@@ -194,9 +194,12 @@
      (apply space-separated
             (interpose op (map stringify (cons x xs)))))))
 
+(def std-imports "use crate::kalai;")
+
 (defn module-str [& forms]
   (apply line-separated
-    (map stringify forms)))
+         std-imports
+         (map stringify forms)))
 
 (defn return-str [x]
   (space-separated 'return (stringify x)))
@@ -254,6 +257,10 @@
 (defn literal-str [s]
   (pr-str s))
 
+(defn lambda-str [args body]
+  (str "|" (comma-separated (map csk/->snake_case args)) "|"
+       (stringify body)))
+
 (defn ref-str [s]
   (if (and (instance? IMeta s)
            (:ref (meta s)))
@@ -268,7 +275,9 @@
 (defn range-str [start-idx end-idx]
   (str (stringify start-idx) ".." (stringify end-idx)))
 
-(defn value-type [x]
+(defn value-type
+  "This is specifically for our custom rust Value enum for heterogeneous collections"
+  [x]
   (if (nil? x)
     "Null"
     (if (instance? IMeta x)
@@ -287,8 +296,7 @@
           :float "Float"
           :double "Double"
           :string "String"
-          :any "kalai::Value"
-          "MISSING"))
+          nil))
       (condp instance? x
         Byte "Byte"
         Boolean "Bool"
@@ -300,12 +308,14 @@
         Map "MMap"
         Set "MSet"
         Vector "MVector"
-        "MISSING"))))
+        nil))))
 
-(defn value-str [x]
-  (str "kalai::Value::"
-       (value-type x)
-       (parens (stringify x))))
+(defn value-str
+  "Specifically for the Value enum for heterogeneous collections"
+  [x]
+  (if-let [t (value-type x)]
+    (str "kalai::Value::" t (parens (stringify x)))
+    (stringify x)))
 
 ;;;; This is the main entry point
 
@@ -328,6 +338,7 @@
    'r/method               method-str
    'r/new                  new-str
    'r/literal              literal-str
+   'r/lambda               lambda-str
    'r/cast                 cast-str
    'r/ref                  ref-str
    'r/deref                deref-str

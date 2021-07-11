@@ -4,7 +4,8 @@ Pull requests welcome!
 
 ## Editor config
 
-Currently, Cursive for IntelliJ is the editor we use to keep code formatting consistent. (TBD: make this editor-agnostic.)
+Currently, Cursive for IntelliJ is the editor we use to keep code formatting consistent.
+(TBD: make this editor-agnostic.)
 
 Editor > Code Style > Clojure > General
 * Align reader conditionals - turned on
@@ -33,11 +34,18 @@ They can be configured this way:
 * Build systems used at the command line:
   - Make (simple commands to run transpile+compile examples)
   - Gradle (compile Java transpiled code in examples)
-  - Cargo (compile Rust transpiled code in examples)
-  - `clojure` command-line tool (from the [official Clojure distribution](https://clojure.org/guides/getting_started), ex: `brew install clojure/tools/clojure
-    ` on macOS)
+  - Rustup (install Rust compiler, Cargo, etc.)
+    MacOS: `brew uninstall rust` `brew install rustup` `rustup-init`
+    and start a new terminal session
+  - Java JDK (OpenJDK seems fine, no version constraint known yet) 
+  - `clojure` command-line tool (from the [official Clojure distribution](https://clojure.org/guides/getting_started),
+    ex: `brew install clojure/tools/clojure` on macOS)
   - [Leiningen](https://leiningen.org/) for running unit tests (ex: locally and in CI) 
  
+## Building and Executing
+
+At the top level, run `make`. This compiles and runs tests for the Kalai implementation code, and then it
+does transpilation for the `examples` dir and `sql_builder` dir.
 
 ## Editing tips
 
