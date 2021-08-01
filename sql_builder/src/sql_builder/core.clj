@@ -14,14 +14,19 @@
 (defn join-str ^{:t :string} [^{:t {:mvector [:any]}} join]
   (str/join ", " (map cast-to-str join)))
 
-(defn where-str ^{:t :string} [^{:t :any} join]
-  (if (vector? join)
-    (let [^{:t {:mvector [:any]}} jj ^{:cast :mvector} join]
+;; TODO: honeySQL supports variadic clauses which are assumed to be `and`
+(defn where-str ^{:t :string} [^{:t :any} clause]
+  (if (vector? clause)
+    (let [^{:t {:mvector [:any]}} v ^{:cast :mvector} clause
+          op (first v)
+          more (next v)
+          ;;[op & more] v
+          ]
       (str "("
-           (str/join (str " op ")
-                     (map where-str jj))
+           (str/join (str " " op " ")
+                     (map where-str more))
            ")"))
-    ^{:cast :string} join))
+    ^{:cast :string} clause))
 
 (defn group-by-str ^{:t :string} [^{:t {:mvector [:any]}} join]
   (str/join ", " (map cast-to-str join)))

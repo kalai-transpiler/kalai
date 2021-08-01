@@ -26,21 +26,22 @@ pub fn join_str(join: std::vec::Vec<kalai::Value>) -> String {
         .collect::<Vec<String>>()
         .join(&String::from(", "));
 }
-pub fn where_str(join: kalai::Value) -> String {
-    if kalai::is_vector(join.clone()) {
-        let jj: std::vec::Vec<kalai::Value> = kalai::to_mvector(join.clone());
+pub fn where_str(clause: kalai::Value) -> String {
+    if kalai::is_vector(clause.clone()) {
+        let v: std::vec::Vec<kalai::Value> = kalai::to_mvector(clause.clone());
+        let mut s = v.into_iter();
+        let op: kalai::Value = s.by_ref().next().unwrap();
+        let more = s.by_ref().skip(1);
         return format!(
             "{}{}{}",
             String::from("("),
-            jj.clone()
-                .iter()
-                .map(|kalai_elem| where_str(kalai_elem.clone()))
+            more.map(|kalai_elem| where_str(kalai_elem.clone()))
                 .collect::<Vec<String>>()
-                .join(&format!("{}", String::from(" op "))),
+                .join(&format!("{}{}{}", String::from(" "), kalai::to_string(op), String::from(" "))),
             String::from(")")
         );
     } else {
-        return kalai::to_string(join.clone());
+        return kalai::to_string(clause.clone());
     }
 }
 pub fn group_by_str(join: std::vec::Vec<kalai::Value>) -> String {
