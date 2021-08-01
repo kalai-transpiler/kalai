@@ -12,6 +12,7 @@ build:
 	clojure -M -m kalai.exec.main --verbose
 	cd rust && cargo fmt
 	cd rust && cargo build
+	cd java && gradle googleJavaFormat
 	cd java && gradle build
 
 transpile:
