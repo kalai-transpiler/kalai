@@ -1,5 +1,10 @@
 plugins {
     id 'application'
+    id 'com.github.sherter.google-java-format' version '0.9'
+}
+
+googleJavaFormat {
+  toolVersion = '1.7'
 }
 
 sourceSets {
@@ -11,7 +16,7 @@ sourceSets {
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
