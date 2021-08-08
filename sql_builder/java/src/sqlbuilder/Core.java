@@ -12,40 +12,29 @@ public class Core {
 
   public static final String selectStr(final ArrayList<Object> select) {
     return String.join(
-        ", ",
-        clojure.Core.seq(select).stream()
-            .map(sqlbuilder.Core::castToStr)
-            .collect(Collectors.toList()));
+        ", ", select.stream().map(sqlbuilder.Core::castToStr).collect(Collectors.toList()));
   }
 
   public static final String fromStr(final ArrayList<Object> from) {
     return String.join(
-        ", ",
-        clojure.Core.seq(from).stream()
-            .map(sqlbuilder.Core::castToStr)
-            .collect(Collectors.toList()));
+        ", ", from.stream().map(sqlbuilder.Core::castToStr).collect(Collectors.toList()));
   }
 
   public static final String joinStr(final ArrayList<Object> join) {
     return String.join(
-        ", ",
-        clojure.Core.seq(join).stream()
-            .map(sqlbuilder.Core::castToStr)
-            .collect(Collectors.toList()));
+        ", ", join.stream().map(sqlbuilder.Core::castToStr).collect(Collectors.toList()));
   }
 
   public static final String whereStr(final Object clause) {
     if ((clause instanceof List)) {
       final ArrayList<Object> v = (ArrayList) clause;
-      final Object vFirst = clojure.Core.first(clojure.Core.seq(v));
+      final Object vFirst = v.stream().findFirst().get();
       final String op = (String) vFirst;
       return (""
           + "("
           + String.join(
               ("" + " " + op + " "),
-              clojure.Core.next(clojure.Core.seq(v)).stream()
-                  .map(sqlbuilder.Core::whereStr)
-                  .collect(Collectors.toList()))
+              v.stream().skip(1L).map(sqlbuilder.Core::whereStr).collect(Collectors.toList()))
           + ")");
     } else {
       return (String) clause;
@@ -54,10 +43,7 @@ public class Core {
 
   public static final String groupByStr(final ArrayList<Object> join) {
     return String.join(
-        ", ",
-        clojure.Core.seq(join).stream()
-            .map(sqlbuilder.Core::castToStr)
-            .collect(Collectors.toList()));
+        ", ", join.stream().map(sqlbuilder.Core::castToStr).collect(Collectors.toList()));
   }
 
   public static final String havingStr(final Object having) {
@@ -65,12 +51,12 @@ public class Core {
   }
 
   public static final String format(final HashMap<String, Object> queryMap) {
-    final Object select = clojure.lang.RT.get(queryMap, ":select", null);
-    final Object from = clojure.lang.RT.get(queryMap, ":from", null);
-    final Object join = clojure.lang.RT.get(queryMap, ":join", null);
-    final Object whereClause = clojure.lang.RT.get(queryMap, ":where", null);
-    final Object groupBy = clojure.lang.RT.get(queryMap, ":group-by", null);
-    final Object having = clojure.lang.RT.get(queryMap, ":having", null);
+    final Object select = queryMap.getOrDefault(":select", null);
+    final Object from = queryMap.getOrDefault(":from", null);
+    final Object join = queryMap.getOrDefault(":join", null);
+    final Object whereClause = queryMap.getOrDefault(":where", null);
+    final Object groupBy = queryMap.getOrDefault(":group-by", null);
+    final Object having = queryMap.getOrDefault(":having", null);
     String tmp1;
     if ((select == null)) {
       tmp1 = "";

@@ -38,6 +38,18 @@
       (j/invoke (u/var ~#'println) & ?more)
       (j/invoke System.out.println & ?more)
 
+      ;; TODO: put a predicate to ensure ?coll is not a seq because Rust .iter()
+      ;; is not allowed/available on a Rust Iterator
+      (j/invoke (u/var ~#'seq) ?coll)
+      (j/method stream ?coll)
+
+      (j/invoke (u/var ~#'first) ?seq)
+      (j/method get (j/method findFirst ?seq))
+
+      (j/invoke (u/var ~#'next) ?seq)
+      (j/method skip ?seq 1)
+
+
       ;; TODO: these should be (u/var)
       (j/invoke clojure.lang.RT/count ?x)
       (j/method (m/app count-for ?x) ?x)
@@ -48,6 +60,10 @@
 
       (j/invoke clojure.lang.RT/get ?x ?k)
       (j/method get ?x ?k)
+
+      ;; TODO: this only works on Maps, is there an equivalent for Lists (vectors) and Sets?
+      (j/invoke clojure.lang.RT/get ?x ?k ?default)
+      (j/method getOrDefault ?x ?k ?default)
 
       (j/invoke (u/var ~#'contains?) ?coll ?x)
       (j/method containsKey ?coll ?x)
@@ -97,7 +113,7 @@
 
       (j/invoke (u/var ~#'map) ?fn ?xs)
       (j/method collect
-                (j/method map (j/method stream ?xs) ~(symbol (ju/fully-qualified-function-identifier-str ?fn "::")))
+                (j/method map ?xs ~(symbol (ju/fully-qualified-function-identifier-str ?fn "::")))
                 (j/invoke Collectors.toList))
 
       (j/invoke (u/var ~#'str) & ?args)
