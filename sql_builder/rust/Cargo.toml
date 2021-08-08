@@ -6,6 +6,10 @@ authors = [
     "Timothy Pratley <timothypratley@gmail.com>"]
 edition = "2018"
 
+[[bin]]
+name = "sql_builder_run_examples"
+path = "src_bin/main.rs"
+
 [lib]
 name = "sql_builder"
 path = "src/lib.rs"

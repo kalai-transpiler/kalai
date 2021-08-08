@@ -25,11 +25,13 @@
                                  (str/join " ")))
                 & ?args)
 
-      (r/invoke (u/var ~#'seq) ?seq)
-      (r/method peekable (r/method iter ?seq))
+      ;; TODO: put a predicate to ensure ?coll is not a seq because Rust .iter()
+      ;; is not allowed/available on a Rust Iterator
+      (r/invoke (u/var ~#'seq) ?coll)
+      (r/method into_iter (r/method clone ?coll))
 
       (r/invoke (u/var ~#'first) ?seq)
-      (r/deref (r/deref (r/method unwrap (r/method peek ?seq))))
+      (r/method unwrap (r/method next ?seq))
 
       (r/invoke (u/var ~#'next) ?seq)
       (r/method skip ?seq 1)
@@ -93,6 +95,9 @@
       (r/invoke clojure.lang.RT/get ?x ?k)
       (r/method clone (r/method unwrap (r/method get ?x (r/ref ?k))))
 
+      (r/invoke clojure.lang.RT/get ?x ?k ?default)
+      (r/method clone (r/method unwrap_or (r/method get ?x (r/ref ?k)) (r/ref ?default)))
+
       (r/invoke (u/var ~#'contains?) ?coll ?x)
       (r/method contains_key ?coll (r/ref ?x))
 
@@ -137,8 +142,7 @@
 
       (r/invoke (u/var ~#'map) ?fn ?xs)
       (r/method map
-                (r/method iter
-                          (r/method clone ?xs))
+                (r/method clone ?xs)
                 ;; TODO: maybe gensym the argname
                 (r/lambda [kalai_elem]
                           (r/invoke ?fn (r/method clone kalai_elem))))
