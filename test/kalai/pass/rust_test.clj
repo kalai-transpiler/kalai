@@ -19,6 +19,7 @@
 static ref x: i32 = 3;
 }"))
 
+;; TODO: this test doesn't make sense in Rust because top-level bindings can't be empty
 (deftest init2-test
   (top-level-form
     '(def ^Integer x)
@@ -26,7 +27,7 @@ static ref x: i32 = 3;
     '(init x)
     ;;->
     "lazy_static::lazy_static! {
-static ref x: i32 = ();
+static ref x: i32 = kalai::Value::Null;
 }"))
 
 (deftest init3-test

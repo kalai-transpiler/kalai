@@ -25,6 +25,16 @@
                                  (str/join " ")))
                 & ?args)
 
+      ;; TODO: put a predicate to ensure ?coll is not a seq because Rust .iter()
+      ;; is not allowed/available on a Rust Iterator
+      (r/invoke (u/var ~#'seq) ?coll)
+      (r/method into_iter (r/method clone ?coll))
+
+      (r/invoke (u/var ~#'first) ?seq)
+      (r/method unwrap (r/method next ?seq))
+
+      (r/invoke (u/var ~#'next) ?seq)
+      (r/method skip ?seq 1)
 
       ;; Remember that ^{:t java.lang.String} gets converted to ^{:t :string} upstream
       ;; (AST rewriting), whereas other Java class/types are left as-is in the metadata
@@ -53,7 +63,6 @@
       (r/method toString (u/of-t StringBuffer ?this))
       (r/method collect (r/method iter ?this))
 
-
       (r/method insert (u/of-t StringBuffer ?this) ?idx (u/of-t :char ?s2))
       (r/method insert ?this (r/cast ?idx :usize)
                 ~(if (:ref (meta ?s2))
@@ -62,7 +71,6 @@
 
       (r/method insert (u/of-t StringBuffer ?this) ?idx ?s2)
       (r/method splice ?this (r/range ?idx ?idx) (r/method ^{:t {:mvector [:char]}} collect (r/method chars (r/method to_string ?s2))))
-
 
       (r/invoke java.lang.System/getenv ?x)
       (r/method unwrap (r/invoke "std::env::var" ?x))
@@ -86,6 +94,9 @@
       ;; cast of the index argument to `usize` like we do for `nth`
       (r/invoke clojure.lang.RT/get ?x ?k)
       (r/method clone (r/method unwrap (r/method get ?x (r/ref ?k))))
+
+      (r/invoke clojure.lang.RT/get ?x ?k ?default)
+      (r/method clone (r/method unwrap_or (r/method get ?x (r/ref ?k)) (r/ref ?default)))
 
       (r/invoke (u/var ~#'contains?) ?coll ?x)
       (r/method contains_key ?coll (r/ref ?x))
@@ -131,8 +142,7 @@
 
       (r/invoke (u/var ~#'map) ?fn ?xs)
       (r/method map
-                (r/method iter
-                          (r/method clone ?xs))
+                (r/method clone ?xs)
                 ;; TODO: maybe gensym the argname
                 (r/lambda [kalai_elem]
                           (r/invoke ?fn (r/method clone kalai_elem))))

@@ -6,25 +6,31 @@
   ^{:cast :string} x)
 
 (defn select-str ^{:t :string} [^{:t {:mvector [:any]}} select]
-  (str/join ", " (map cast-to-str select)))
+  (str/join ", " (map cast-to-str (seq select))))
 
 (defn from-str ^{:t :string} [^{:t {:mvector [:any]}} from]
-  (str/join ", " (map cast-to-str  from)))
+  (str/join ", " (map cast-to-str (seq from))))
 
 (defn join-str ^{:t :string} [^{:t {:mvector [:any]}} join]
-  (str/join ", " (map cast-to-str join)))
+  (str/join ", " (map cast-to-str (seq join))))
 
-(defn where-str ^{:t :string} [^{:t :any} join]
-  (if (vector? join)
-    (let [^{:t {:mvector [:any]}} jj ^{:cast :mvector} join]
+;; TODO: honeySQL supports variadic clauses which are assumed to be `and`
+(defn where-str ^{:t :string} [^{:t :any} clause]
+  (if (vector? clause)
+    (let [^{:t {:mvector [:any]}} v ^{:cast :mvector} clause
+          ^{:t :any} v-first (first (seq v))
+          ^{:t :string} op ^{:cast :string} v-first
+          ;;more (next (seq v))
+          ;;[op & more] v
+          ]
       (str "("
-           (str/join (str " op ")
-                     (map where-str jj))
+           (str/join (str " " op " ")
+                     (map where-str (next (seq v))))
            ")"))
-    ^{:cast :string} join))
+    ^{:cast :string} clause))
 
 (defn group-by-str ^{:t :string} [^{:t {:mvector [:any]}} join]
-  (str/join ", " (map cast-to-str join)))
+  (str/join ", " (map cast-to-str (seq join))))
 
 (defn having-str ^{:t :string} [^{:t :any} having]
   (where-str having))
@@ -33,12 +39,12 @@
   "Converts query as data into an SQL string"
   ^{:t :string}
   [^{:t {:mmap [:string :any]}} query-map]
-  (let [^{:t :any} select (:select query-map)
-        ^{:t :any} from (:from query-map)
-        ^{:t :any} join (:join query-map)
-        ^{:t :any} where-clause (:where query-map)
-        ^{:t :any} group-by (:group-by query-map)
-        ^{:t :any} having (:having query-map)]
+  (let [^{:t :any} select (get query-map :select nil)
+        ^{:t :any} from (get query-map :from nil)
+        ^{:t :any} join (get query-map :join nil)
+        ^{:t :any} where-clause (get query-map :where nil)
+        ^{:t :any} group-by (get query-map :group-by nil)
+        ^{:t :any} having (get query-map :having nil)]
     ;; TODO: need to handle nil semantic or have a default value
     ;; for this example to work
     (str (if (nil? select)

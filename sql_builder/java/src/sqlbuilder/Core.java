@@ -25,17 +25,19 @@ public class Core {
         ", ", join.stream().map(sqlbuilder.Core::castToStr).collect(Collectors.toList()));
   }
 
-  public static final String whereStr(final Object join) {
-    if ((join instanceof List)) {
-      final ArrayList<Object> jj = (ArrayList) join;
+  public static final String whereStr(final Object clause) {
+    if ((clause instanceof List)) {
+      final ArrayList<Object> v = (ArrayList) clause;
+      final Object vFirst = v.stream().findFirst().get();
+      final String op = (String) vFirst;
       return (""
           + "("
           + String.join(
-              ("" + " op "),
-              jj.stream().map(sqlbuilder.Core::whereStr).collect(Collectors.toList()))
+              ("" + " " + op + " "),
+              v.stream().skip(1L).map(sqlbuilder.Core::whereStr).collect(Collectors.toList()))
           + ")");
     } else {
-      return (String) join;
+      return (String) clause;
     }
   }
 
@@ -49,12 +51,12 @@ public class Core {
   }
 
   public static final String format(final HashMap<String, Object> queryMap) {
-    final Object select = queryMap.get(":select");
-    final Object from = queryMap.get(":from");
-    final Object join = queryMap.get(":join");
-    final Object whereClause = queryMap.get(":where");
-    final Object groupBy = queryMap.get(":group-by");
-    final Object having = queryMap.get(":having");
+    final Object select = queryMap.getOrDefault(":select", null);
+    final Object from = queryMap.getOrDefault(":from", null);
+    final Object join = queryMap.getOrDefault(":join", null);
+    final Object whereClause = queryMap.getOrDefault(":where", null);
+    final Object groupBy = queryMap.getOrDefault(":group-by", null);
+    final Object having = queryMap.getOrDefault(":having", null);
     String tmp1;
     if ((select == null)) {
       tmp1 = "";

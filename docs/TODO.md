@@ -21,6 +21,7 @@
           (unless we use refs everywhere or solve it some other way)
           Note that `get` returns an Option of a reference
     * Uncertain alternative: use persistent collections to circumvent question (if they support heterogeneous?)
+  - Support `(:key obj default-val)` syntax (currently: only `(get obj :key default-val)` supported)
 * Type propagation: inferred types (from an initialization value) don't get propagated to call site.
   Ex:
 ```
