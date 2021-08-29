@@ -218,7 +218,7 @@ pub fn format(num: i32, number_system: String, grouping_strategy: String) -> Str
     }
 }
 pub fn main() {
-    let args: std::vec::Vec<String> = std::env::args().collect();
+    let _args: std::vec::Vec<String> = std::env::args().collect();
     {
         println!("{}", parse(String::from("٥٠٣٠١")));
         println!("{}", parse(String::from("৫০৩০১")));

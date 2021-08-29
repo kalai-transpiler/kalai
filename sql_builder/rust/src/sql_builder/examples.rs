@@ -8,7 +8,7 @@ pub fn f_1() -> String {
             kalai::Value::MVector(
                 {
                     let mut tmp_2: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
-                    tmp_2.push(kalai::Value::String(String::from(":foo")));
+                    tmp_2.push(kalai::Value::String(String::from("foo")));
                     tmp_2
                 }
                 .clone(),
@@ -19,9 +19,9 @@ pub fn f_1() -> String {
             kalai::Value::MVector(
                 {
                     let mut tmp_3: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
-                    tmp_3.push(kalai::Value::String(String::from(":a")));
-                    tmp_3.push(kalai::Value::String(String::from(":b")));
-                    tmp_3.push(kalai::Value::String(String::from(":c")));
+                    tmp_3.push(kalai::Value::String(String::from("a")));
+                    tmp_3.push(kalai::Value::String(String::from("b")));
+                    tmp_3.push(kalai::Value::String(String::from("c")));
                     tmp_3
                 }
                 .clone(),
@@ -32,8 +32,8 @@ pub fn f_1() -> String {
             kalai::Value::MVector(
                 {
                     let mut tmp_4: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
-                    tmp_4.push(kalai::Value::String(String::from(":=")));
-                    tmp_4.push(kalai::Value::String(String::from(":f.a")));
+                    tmp_4.push(kalai::Value::String(String::from("=")));
+                    tmp_4.push(kalai::Value::String(String::from("f.a")));
                     tmp_4.push(kalai::Value::String(String::from("baz")));
                     tmp_4
                 }
@@ -43,4 +43,19 @@ pub fn f_1() -> String {
         tmp_1
     };
     return crate::sql_builder::core::format(query_map);
+}
+pub fn main() {
+    let _args: std::vec::Vec<String> = std::env::args().collect();
+    {
+        let query_str: String = f_1();
+        println!(
+            "{}",
+            format!(
+                "{}{}{}",
+                String::from("example query string: ["),
+                query_str,
+                String::from("]")
+            )
+        );
+    }
 }
