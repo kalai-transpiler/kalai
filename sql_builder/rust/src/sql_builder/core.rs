@@ -1,6 +1,15 @@
 use crate::kalai;
 pub fn cast_to_str(x: kalai::Value) -> String {
-    return kalai::to_string(x.clone());
+    if kalai::is_vector(x.clone()) {
+        let v: std::vec::Vec<kalai::Value> = kalai::to_mvector(x.clone());
+        let v_first: kalai::Value = v.get(0 as usize).unwrap().clone();
+        let table_name: String = kalai::to_string(v_first.clone());
+        let v_second: kalai::Value = v.get(1 as usize).unwrap().clone();
+        let table_alias: String = kalai::to_string(v_second.clone());
+        return format!("{}{}{}", table_name, String::from(" AS "), table_alias);
+    } else {
+        return kalai::to_string(x.clone());
+    }
 }
 pub fn select_str(select: std::vec::Vec<kalai::Value>) -> String {
     return select

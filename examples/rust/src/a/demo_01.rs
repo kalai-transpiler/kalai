@@ -21,7 +21,7 @@ pub fn format(num: i32) -> String {
     }
 }
 pub fn main() {
-    let args: std::vec::Vec<String> = std::env::args().collect();
+    let _args: std::vec::Vec<String> = std::env::args().collect();
     {
         format(2345);
         println!("{}", format(2345));

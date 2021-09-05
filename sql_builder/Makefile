@@ -1,5 +1,7 @@
-.PHONY: build clean setup transpile rust java
-all: build
+.PHONY: all run_all build clean setup transpile rust java run_rust run_java
+all: build run_all
+
+run_all: run_rust run_java
 
 clean:
 	rm -rf java/src java/build
@@ -24,3 +26,9 @@ rust:
 
 java:
 	cd java && gradle build
+
+run_rust:
+	cd rust && cargo run sql_builder_run_examples
+
+run_java:
+	cd java/build/classes/java/main/ && java sqlbuilder.Examples

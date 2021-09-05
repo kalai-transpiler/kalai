@@ -7,7 +7,16 @@ import java.util.stream.Collectors;
 
 public class Core {
   public static final String castToStr(final Object x) {
-    return (String) x;
+    if ((x instanceof List)) {
+      final ArrayList<Object> v = (ArrayList) x;
+      final Object vFirst = v.get(0);
+      final String tableName = (String) vFirst;
+      final Object vSecond = v.get(1);
+      final String tableAlias = (String) vSecond;
+      return ("" + tableName + " AS " + tableAlias);
+    } else {
+      return (String) x;
+    }
   }
 
   public static final String selectStr(final ArrayList<Object> select) {

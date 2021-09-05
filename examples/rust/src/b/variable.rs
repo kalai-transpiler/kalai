@@ -8,7 +8,7 @@ pub fn side_effect() -> i64 {
     }
 }
 pub fn main() {
-    let args: std::vec::Vec<String> = std::env::args().collect();
+    let _args: std::vec::Vec<String> = std::env::args().collect();
     {
         println!("{}", side_effect());
     }

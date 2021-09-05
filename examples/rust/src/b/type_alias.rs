@@ -10,7 +10,7 @@ pub fn f(y: std::collections::HashMap<i64, String>) -> std::collections::HashMap
     return z;
 }
 pub fn main() {
-    let args: std::vec::Vec<String> = std::env::args().collect();
+    let _args: std::vec::Vec<String> = std::env::args().collect();
     {
         println!("{}", String::from("OK"));
     }

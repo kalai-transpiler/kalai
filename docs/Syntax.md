@@ -38,6 +38,14 @@ abstract concepts of size. Specifically, integer size = a Java integer = 32-bit 
   Java integers return integer sizes of collections, strings, etc. A language like Rust uses `usize`
   for a platform dependent size, which must be cast to `i32`, `u32`, `i64`, `u64`, etc. to match the
   type specified by the user's input code.
+  
+### Keywords
+
+* Keywords are treated as strings in the target language.
+We can't use them as functions nor check whether a value is a keyword using `keyword?`.
+* The decision is based on the lack of benefit in the target languages, especially in a context of transpiling to the target languages.
+Keywords had/have 2 main benefits in Clojure: 1) interning so that only a single instance is stored, and 2) using keywords as functions (mainly for lookups in first position, but also for HOFs (ex: `map`).
+  But subsequent versions of Java now intern string literals, and the functions-in-first-position syntax only benefits Clojure/Lisp.
 
 ### Switch / Match
 

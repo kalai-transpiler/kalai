@@ -35,6 +35,12 @@
 (defn statement [s]
   (str s ";"))
 
+(defn identifier [s]
+  (let [s-str (str s)
+        snake-case (csk/->snake_case s-str)]
+    (if (= \_ (first s-str))
+      (str \_ snake-case)
+      snake-case)))
 
 ;;;; These are what our symbols should resolve to
 
@@ -129,7 +135,7 @@
     ;; fn f(char_vec: &mut std::vec::Vec<char>) {...
     ;; fn f(char_vec: &Vec<char>) {...
     ;; NOT POSSIBLE? (or doesn't make sense?): fn f(char_vec: mut std::vec::Vec<char>) {...
-    (str (when mut "mut ") (csk/->snake_case variable-name)
+    (str (when mut "mut ") (identifier variable-name)
          ;; Rust has type inference, so we can leave temp variable types off
          ;; TODO: probably don't want to use "MISSING_TYPE" though
          (when (not= t types/TYPE-MISSING-STR)
@@ -160,10 +166,10 @@
   (let [varmeta (some-> function-name meta :var meta)]
     (if (and (str/includes? (str function-name) "/") varmeta)
       (str "crate::"
-           (csk/->snake_case (str/replace (str (:ns varmeta)) "." "::"))
-           "::" (csk/->snake_case (:name varmeta))
+           (identifier (str/replace (str (:ns varmeta)) "." "::"))
+           "::" (identifier (:name varmeta))
            (args-list args))
-      (str (csk/->snake_case function-name)
+      (str (identifier function-name)
            (args-list args)))))
 
 (defn function-str [name params body]
@@ -173,14 +179,14 @@
       (str
         (space-separated 'pub 'fn 'main (params-list [])
                          (line-separated "{"
-                                         (str "let " (csk/->snake_case (second params)) ": std::vec::Vec<String> = std::env::args().collect();")
+                                         (str "let " (identifier (second params)) ": std::vec::Vec<String> = std::env::args().collect();")
                                          (stringify body)
                                          "}"))))
     (str
       (space-separated "pub" "fn"
-                       (csk/->snake_case name))
+                       (identifier name))
       (space-separated (params-list (for [param params]
-                                      (space-separated (str (csk/->snake_case param) ":")
+                                      (space-separated (str (identifier param) ":")
                                                        (type-str param))))
                        "->"
                        (type-str params)
@@ -258,7 +264,7 @@
   (pr-str s))
 
 (defn lambda-str [args body]
-  (str "|" (comma-separated (map csk/->snake_case args)) "|"
+  (str "|" (comma-separated (map identifier args)) "|"
        (stringify body)))
 
 (defn ref-str [s]
@@ -375,11 +381,7 @@
 
     ;; identifier
     (m/pred symbol? ?s)
-    (let [s-str (str ?s)
-          snake-case (csk/->snake_case s-str)]
-      (if (= \_ (first s-str))
-        (str \_ snake-case)
-        snake-case))
+    (identifier ?s)
 
     ?else
     (pr-str ?else)))

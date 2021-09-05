@@ -3,7 +3,14 @@
   (:require [clojure.string :as str]))
 
 (defn cast-to-str ^{:t :string} [^{:t :any} x]
-  ^{:cast :string} x)
+  (if (vector? x)
+    (let [^{:t {:mvector [:any]}} v ^{:cast :mvector} x
+          ^{:t :any} v-first (nth v (int 0))
+          ^{:t :string} table-name ^{:cast :string} v-first
+          ^{:t :any} v-second (nth v (int 1))
+          ^{:t :string} table-alias ^{:cast :string} v-second]
+      (str table-name " AS " table-alias))
+    ^{:cast :string} x))
 
 (defn select-str ^{:t :string} [^{:t {:mvector [:any]}} select]
   (str/join ", " (map cast-to-str (seq select))))
@@ -19,10 +26,7 @@
   (if (vector? clause)
     (let [^{:t {:mvector [:any]}} v ^{:cast :mvector} clause
           ^{:t :any} v-first (first (seq v))
-          ^{:t :string} op ^{:cast :string} v-first
-          ;;more (next (seq v))
-          ;;[op & more] v
-          ]
+          ^{:t :string} op ^{:cast :string} v-first]
       (str "("
            (str/join (str " " op " ")
                      (map where-str (next (seq v))))

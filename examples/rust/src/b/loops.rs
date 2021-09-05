@@ -1,6 +1,6 @@
 use crate::kalai;
 pub fn main() {
-    let args: std::vec::Vec<String> = std::env::args().collect();
+    let _args: std::vec::Vec<String> = std::env::args().collect();
     {
         let mut i: i64 = 0;
         while (i < 10) {
