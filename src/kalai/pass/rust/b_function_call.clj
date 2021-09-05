@@ -151,6 +151,33 @@
       (r/invoke (u/var ~#'vector?) ?x)
       (r/invoke "kalai::is_vector" (r/method clone ?x))
 
+      (r/invoke (u/var ~#'set?) ?x)
+      (r/invoke "kalai::is_set" (r/method clone ?x))
+
+      (r/invoke (u/var ~#'map?) ?x)
+      (r/invoke "kalai::is_map" (r/method clone ?x))
+
+      (r/invoke (u/var ~#'string?) ?x)
+      (r/invoke "kalai::is_string" (r/method clone ?x))
+
+      (r/invoke clojure.core/instance? ~Integer ?x)
+      (r/invoke "kalai::is_int" (r/method clone ?x))
+
+      (r/invoke clojure.core/instance? ~Long ?x)
+      (r/invoke "kalai::is_long" (r/method clone ?x))
+
+      (r/invoke clojure.core/instance? ~Byte ?x)
+      (r/invoke "kalai::is_byte" (r/method clone ?x))
+
+      (r/invoke (u/var ~#'boolean?) ?x)
+      (r/invoke "kalai::is_bool" (r/method clone ?x))
+
+      (r/invoke (u/var ~#'double) ?x)
+      (r/invoke "kalai::is_double" (r/method clone ?x))
+
+      (r/invoke (u/var ~#'float) ?x)
+      (r/invoke "kalai::is_float" (r/method clone ?x))
+
       (r/invoke clojure.lang.Util/identical ?x nil)
       (r/invoke "kalai::is_null" (r/method clone ?x))
 

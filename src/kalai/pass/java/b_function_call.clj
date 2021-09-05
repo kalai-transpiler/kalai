@@ -92,18 +92,35 @@
       (j/invoke clojure.lang.Util/identical ?x nil)
       (j/operator == ?x nil)
 
-      (j/invoke (m/and (m/pred symbol?)
-                       (m/pred #(not (:var (meta %))))
-                       (m/pred #(str/includes? (str %) "/"))
-                       ?static-function)
-                & ?more)
-      (j/invoke ~(-> (str ?static-function)
-                     (str/replace "/" ".")
-                     (symbol))
-                & ?more)
-
       (j/invoke (u/var ~#'vector?) ?x)
       (j/operator instanceof ?x List)
+
+      (j/invoke (u/var ~#'set?) ?x)
+      (j/operator instanceof ?x Set)
+
+      (j/invoke (u/var ~#'map?) ?x)
+      (j/operator instanceof ?x Map)
+
+      (j/invoke (u/var ~#'string?) ?x)
+      (j/operator instanceof ?x String)
+
+      (j/invoke clojure.core/instance? ~Integer ?x)
+      (j/operator instanceof ?x Integer)
+
+      (j/invoke clojure.core/instance? ~Long ?x)
+      (j/operator instanceof ?x Long)
+
+      (j/invoke clojure.core/instance? ~Byte ?x)
+      (j/operator instanceof ?x Byte)
+
+      (j/invoke (u/var ~#'boolean?) ?x)
+      (j/operator instanceof ?x Boolean)
+
+      (j/invoke (u/var ~#'double) ?x)
+      (j/operator instanceof ?x Double)
+
+      (j/invoke (u/var ~#'float) ?x)
+      (j/operator instanceof ?x Float)
 
       (j/invoke (u/var ~#'str/join) ?col)
       (j/invoke String.join "" ?col)
@@ -118,6 +135,17 @@
 
       (j/invoke (u/var ~#'str) & ?args)
       (j/operator + "" & ?args)
+
+      ;; Keep this below any match by symbol rules!
+      (j/invoke (m/and (m/pred symbol?)
+                       (m/pred #(not (:var (meta %))))
+                       (m/pred #(str/includes? (str %) "/"))
+                       ?static-function)
+                & ?more)
+      (j/invoke ~(-> (str ?static-function)
+                     (str/replace "/" ".")
+                     (symbol))
+                & ?more)
 
       ?else
       ?else)))
