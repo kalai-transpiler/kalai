@@ -13,7 +13,7 @@ public class Core {
       final String tableName = (String) vFirst;
       final Object vSecond = v.get(1);
       final String tableAlias = (String) vSecond;
-      return ("" + tableName + " as " + tableAlias);
+      return ("" + tableName + " AS " + tableAlias);
     } else {
       return (String) x;
     }

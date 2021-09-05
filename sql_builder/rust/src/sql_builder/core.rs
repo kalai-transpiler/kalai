@@ -6,7 +6,7 @@ pub fn cast_to_str(x: kalai::Value) -> String {
         let table_name: String = kalai::to_string(v_first.clone());
         let v_second: kalai::Value = v.get(1 as usize).unwrap().clone();
         let table_alias: String = kalai::to_string(v_second.clone());
-        return format!("{}{}{}", table_name, String::from(" as "), table_alias);
+        return format!("{}{}{}", table_name, String::from(" AS "), table_alias);
     } else {
         return kalai::to_string(x.clone());
     }
