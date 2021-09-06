@@ -81,7 +81,7 @@ pub fn f_2() -> String {
                             let mut tmp_9: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
                             tmp_9.push(kalai::Value::String(String::from("=")));
                             tmp_9.push(kalai::Value::String(String::from("a")));
-                            tmp_9.push(kalai::Value::String(String::from("1")));
+                            tmp_9.push(kalai::Value::Long(1));
                             tmp_9
                         }
                         .clone(),
@@ -91,7 +91,7 @@ pub fn f_2() -> String {
                             let mut tmp_10: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
                             tmp_10.push(kalai::Value::String(String::from("<")));
                             tmp_10.push(kalai::Value::String(String::from("b")));
-                            tmp_10.push(kalai::Value::String(String::from("100")));
+                            tmp_10.push(kalai::Value::Long(100));
                             tmp_10
                         }
                         .clone(),
@@ -169,7 +169,7 @@ pub fn f_3() -> String {
                             let mut tmp_18: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
                             tmp_18.push(kalai::Value::String(String::from("=")));
                             tmp_18.push(kalai::Value::String(String::from("quux.a")));
-                            tmp_18.push(kalai::Value::String(String::from("1")));
+                            tmp_18.push(kalai::Value::Long(1));
                             tmp_18
                         }
                         .clone(),
@@ -179,7 +179,7 @@ pub fn f_3() -> String {
                             let mut tmp_19: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
                             tmp_19.push(kalai::Value::String(String::from("<")));
                             tmp_19.push(kalai::Value::String(String::from("bar")));
-                            tmp_19.push(kalai::Value::String(String::from("100")));
+                            tmp_19.push(kalai::Value::Long(100));
                             tmp_19
                         }
                         .clone(),
@@ -190,6 +190,78 @@ pub fn f_3() -> String {
             ),
         );
         tmp_11
+    };
+    return crate::sql_builder::core::format(query_map);
+}
+pub fn f_4() -> String {
+    let query_map: std::collections::HashMap<String, kalai::Value> = {
+        let mut tmp_20: std::collections::HashMap<String, kalai::Value> =
+            std::collections::HashMap::new();
+        tmp_20.insert(
+            String::from(":columns"),
+            kalai::Value::MVector(
+                {
+                    let mut tmp_21: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
+                    tmp_21.push(kalai::Value::String(String::from("name")));
+                    tmp_21.push(kalai::Value::String(String::from("surname")));
+                    tmp_21.push(kalai::Value::String(String::from("age")));
+                    tmp_21
+                }
+                .clone(),
+            ),
+        );
+        tmp_20.insert(
+            String::from(":insert-into"),
+            kalai::Value::MVector(
+                {
+                    let mut tmp_22: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
+                    tmp_22.push(kalai::Value::String(String::from("properties")));
+                    tmp_22
+                }
+                .clone(),
+            ),
+        );
+        tmp_20.insert(
+            String::from(":values"),
+            kalai::Value::MVector(
+                {
+                    let mut tmp_23: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
+                    tmp_23.push(kalai::Value::MVector(
+                        {
+                            let mut tmp_24: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
+                            tmp_24.push(kalai::Value::String(String::from("'Jon'")));
+                            tmp_24.push(kalai::Value::String(String::from("'Smith'")));
+                            tmp_24.push(kalai::Value::Long(34));
+                            tmp_24
+                        }
+                        .clone(),
+                    ));
+                    tmp_23.push(kalai::Value::MVector(
+                        {
+                            let mut tmp_25: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
+                            tmp_25.push(kalai::Value::String(String::from("'Andrew'")));
+                            tmp_25.push(kalai::Value::String(String::from("'Cooper'")));
+                            tmp_25.push(kalai::Value::Long(12));
+                            tmp_25
+                        }
+                        .clone(),
+                    ));
+                    tmp_23.push(kalai::Value::MVector(
+                        {
+                            let mut tmp_26: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
+                            tmp_26.push(kalai::Value::String(String::from("'Jane'")));
+                            tmp_26.push(kalai::Value::String(String::from("'Daniels'")));
+                            tmp_26.push(kalai::Value::Long(56));
+                            tmp_26
+                        }
+                        .clone(),
+                    ));
+                    tmp_23
+                }
+                .clone(),
+            ),
+        );
+        tmp_20
     };
     return crate::sql_builder::core::format(query_map);
 }
@@ -226,7 +298,19 @@ pub fn main() {
                 "{}",
                 format!(
                     "{}{}{}",
-                    String::from("example 2 query string: ["),
+                    String::from("example 3 query string: ["),
+                    query_str,
+                    String::from("]")
+                )
+            );
+        }
+        {
+            let query_str: String = f_4();
+            println!(
+                "{}",
+                format!(
+                    "{}{}{}",
+                    String::from("example 4 query string: ["),
                     query_str,
                     String::from("]")
                 )

@@ -10,10 +10,8 @@ setup:
 
 build:
 	clojure -M -m kalai.exec.main --verbose
-	cd rust && cargo fmt
-	cd rust && cargo build
-	cd java && gradle googleJavaFormat
-	cd java && gradle build
+	cd rust && (cargo fmt && cargo build) || cargo build
+	cd java && (gradle googleJavaFormat && gradle build) || gradle build
 
 transpile:
 	clojure -M -m kalai.exec.main --verbose

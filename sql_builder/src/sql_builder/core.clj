@@ -10,7 +10,13 @@
           ^{:t :any} v-second (nth v (int 1))
           ^{:t :string} table-alias ^{:cast :string} v-second]
       (str table-name " AS " table-alias))
-    ^{:cast :string} x))
+    (if (string? x)
+      (str ^{:cast :string} x)
+      (if (instance? Integer x)
+        (str ^{:cast :int} x)
+        (if (instance? Long x)
+          (str ^{:cast :long} x)
+          "")))))
 
 (defn select-str ^{:t :string} [^{:t {:mvector [:any]}} select]
   (str/join ", " (map cast-to-str (seq select))))
@@ -31,13 +37,17 @@
            (str/join (str " " op " ")
                      (map where-str (next (seq v))))
            ")"))
-    ^{:cast :string} clause))
+    (cast-to-str clause)))
 
 (defn group-by-str ^{:t :string} [^{:t {:mvector [:any]}} join]
   (str/join ", " (map cast-to-str (seq join))))
 
 (defn having-str ^{:t :string} [^{:t :any} having]
   (where-str having))
+
+(defn row-str ^{:t :string} [^{:t :any} row]
+  (let [^{:t {:mvector [:any]}} mrow ^{:cast :mvector} row]
+    (str "(" (str/join ", " (map cast-to-str (seq mrow))) ")")))
 
 (defn format
   "Converts query as data into an SQL string"
@@ -48,10 +58,20 @@
         ^{:t :any} join (get query-map :join nil)
         ^{:t :any} where-clause (get query-map :where nil)
         ^{:t :any} group-by (get query-map :group-by nil)
-        ^{:t :any} having (get query-map :having nil)]
+        ^{:t :any} having (get query-map :having nil)
+        ^{:t :any} insert-into (get query-map :insert-into nil)
+        ^{:t :any} columns (get query-map :columns nil)
+        ^{:t :any} values (get query-map :values nil)]
     ;; TODO: need to handle nil semantic or have a default value
     ;; for this example to work
-    (str (if (nil? select)
+    (str (if (nil? insert-into)
+           ""
+           (str "INSERT INTO " (from-str ^{:cast :mvector} insert-into) "(" (select-str ^{:cast :mvector} columns) ")\n"
+                "VALUES\n"
+                (str/join ",\n" (let [^{:t {:mvector [:any]}} v2 ^{:cast :mvector} values]
+                                  (map row-str (seq v2))))))
+
+         (if (nil? select)
            ""
            (str "SELECT " (select-str ^{:cast :mvector} select)))
          (if (nil? from)
