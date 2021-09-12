@@ -302,9 +302,9 @@ pub fn enum2_test() {
     m.insert(Value::Int(3), Value::MVector(v));
     let mval: Value = Value::MMap(m);
 
-    let mval_map: std::collections::HashMap<Value, Value> = to_map(mval);
+    let mval_map: std::collections::HashMap<Value, Value> = to_mmap(mval);
     let mval_vecval: Value = mval_map.get(&Value::Int(3)).unwrap().clone();
-    let mval_vec: std::vec::Vec<Value> = to_vector(mval_vecval);
+    let mval_vec: std::vec::Vec<Value> = to_mvector(mval_vecval);
     let mval_vec_first: &Value = mval_vec.get(0).unwrap();
 
     println!("mval_vec_first = {:?}", mval_vec_first);

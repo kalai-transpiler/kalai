@@ -7,7 +7,6 @@ use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::vec::Vec;
 
-
 // Trait objects provide dynamic dispatch in Rust. But they don't allow / need OOP inheritance
 // for the dispatch.
 //
@@ -18,7 +17,6 @@ use std::vec::Vec;
 // So we want to explore switching from an enum, which cannot be extended once it is defined, into
 // a trait, which can be extended on new types, similar to Clojure protocols. This would allow users
 // to have their own types and have the ability to extend the trait on their own types thesmelves.
-
 
 // `Animal` is a trait. Is an example of how we might be able to migrate the `Value` enum to be
 // a trait that can be used for trait objects in collections.
@@ -91,7 +89,6 @@ impl std::hash::Hash for dyn Animal {
     }
 }
 
-
 // impl std::hash::Hash for Cat {
 //     fn hash<H: std::hash::Hasher>(&self, _state: &mut H) {
 //         let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -108,15 +105,10 @@ impl std::hash::Hash for dyn Animal {
 //     }
 // }
 
-
 // a standalone function that shows the usage of trait objects in functions
 fn animal_talk(a: &dyn Animal) {
     a.talk();
 }
-
-
-
-
 
 trait Value {}
 
@@ -153,12 +145,12 @@ impl Value for Null {}
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
     use super::{Animal, Cat, Dog};
+    use std::collections::HashMap;
 
     #[test]
     fn debug_print() {
-        let v = vec![1, 2, 3,];
+        let v = vec![1, 2, 3];
         println!("{:?}", v);
     }
 
