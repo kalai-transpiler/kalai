@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::convert::TryInto;
 use std::fmt;
-use std::fmt::Debug;
+use std::fmt::{Debug};
 use std::hash::{Hash, Hasher};
 use std::vec::Vec;
 
@@ -105,33 +105,88 @@ impl std::hash::Hash for dyn Animal {
 //     }
 // }
 
-// a standalone function that shows the usage of trait objects in functions
-fn animal_talk(a: &dyn Animal) {
-    a.talk();
-}
+// // a standalone function that shows the usage of trait objects in functions
+// fn animal_talk(a: &dyn Animal) {
+//     a.talk();
+// }
 
-trait Value {}
+trait Value: Hash+PartialEq {}
 
-impl Value for Cat {}
+#[derive(PartialEq, Hash, Debug)]
+struct Nil {}
 
-impl Value for Dog {}
+#[derive(PartialEq, Debug)]
+struct Float(f32);
 
-impl Eq for dyn Value {}
+#[derive(PartialEq, Debug)]
+struct Double(f64);
 
-impl PartialEq for dyn Value {
-    fn eq(&self, other: &Self) -> bool {
-        true
+#[derive(Debug)]
+struct Set<T: Hash+PartialEq>(HashSet<T>);
+
+#[derive(Debug)]
+struct Map<K: Hash+PartialEq,V: Hash+PartialEq>(HashMap<K,V>);
+
+impl Value for i32 {}
+impl Value for i64 {}
+// Floats and Doubles have different edge cases for +-0 and NaN in different languages
+// https://internals.rust-lang.org/t/f32-f64-should-implement-hash/5436/4
+// We work around Rust's desire to not hash them by hashing the bits of the float
+// https://stackoverflow.com/questions/39638363/how-can-i-use-a-hashmap-with-f64-as-key-in-rust
+// The reason we need to hash is to allow them to be keys in order to be Values
+impl Hash for Float {
+    fn hash<H>(&self, hasher: &mut H)
+        where
+            H: Hasher,
+    {
+        self.0.to_bits().hash(hasher);
+        hasher.finish();
     }
 }
+impl Value for Float {}
 
-struct Null {}
+impl Hash for Double {
+    fn hash<H>(&self, hasher: &mut H)
+        where
+            H: Hasher,
+    {
+        self.0.to_bits().hash(hasher);
+        hasher.finish();
+    }
+}
+impl Value for Double {}
 
-impl Value for u32 {}
-impl Value for u64 {}
 impl Value for bool {}
 impl Value for &str {}
 impl Value for String {}
-impl Value for Null {}
+impl Value for Nil {}
+
+impl<T: Hash+PartialEq> Hash for Set<T> {
+    fn hash<H>(&self, hasher: &mut H)
+        where
+            H: Hasher,
+    {
+        for key in &self.0 {
+            key.hash(hasher);
+        }
+        hasher.finish();
+    }
+}
+// impl<T: PartialEq> Value for Set<T> {}
+
+impl<K: Hash+PartialEq,V: Hash+PartialEq> Hash for Map<K,V> {
+    fn hash<H>(&self, hasher: &mut H)
+        where
+            H: Hasher,
+    {
+        for (key, val) in &self.0 {
+            key.hash(hasher);
+            val.hash(hasher);
+        }
+        hasher.finish();
+    }
+}
+// impl<K: PartialEq,V: PartialEq> Value for Map<K,V> {}
 
 // TODO: figure out null check helper fn
 // fn is_null(x: &dyn Value) -> bool {
@@ -146,7 +201,10 @@ impl Value for Null {}
 #[cfg(test)]
 mod tests {
     use super::{Animal, Cat, Dog};
-    use std::collections::HashMap;
+    use super::{Value, Nil, Float, Double};
+    use std::collections::{HashMap, HashSet};
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
 
     #[test]
     fn debug_print() {
@@ -171,5 +229,65 @@ mod tests {
         let mut m1: HashMap<&dyn Animal, &str> = HashMap::new();
         m1.insert(&d, "dog");
         println!("{:?}", m1);
+    }
+
+    #[test]
+    fn nil_hash() {
+        let nil1 = Nil {};
+        let nil2 = Nil {};
+        assert_eq!(nil1, nil2);
+
+
+        let mut hasher = DefaultHasher::new();
+        nil1.hash(&mut hasher);
+        let nil1_hash = hasher.finish();
+        println!("nil1 hash = {}", nil1_hash);
+
+        let mut hasher = DefaultHasher::new();
+        nil2.hash(&mut hasher);
+        let nil2_hash = hasher.finish();
+        println!("nil2 hash = {}", nil2_hash);
+
+        assert_eq!(nil1_hash, nil2_hash);
+
+    }
+
+    #[test]
+    fn test_float_structs() {
+        let f = Float(3.14);
+        println!("{:?}", f);
+
+        let d = Double(1.414);
+
+        /*
+        TODO: resolve the compiler error below.
+        Note: Value is a trait, and Double is a struct
+        Note: think of trait=Clojure protocol, struct=Clojure record
+        Note: Maybe we can search for "constrain trait type parameter using PartialEq"
+        TODO: consider replacing `T: Hash+PartialEq` with `T: Value` in the definition of Set and Hash wrapper structs
+
+error[E0038]: the trait `traitobjs::Value` cannot be made into an object
+   --> src/traitobjs.rs:262:17
+    |
+262 |         let v: &dyn Value = &d;
+    |                 ^^^^^^^^^ `traitobjs::Value` cannot be made into an object
+    |
+note: for a trait to be "object safe" it needs to allow building a vtable to allow the call to be resolvable dynamically; for more information visit <https://doc.rust-lang.org/reference/items/traits.html#object-safety>
+   --> src/traitobjs.rs:113:19
+    |
+113 | trait Value: Hash+PartialEq {}
+    |       -----       ^^^^^^^^^ ...because it uses `Self` as a type parameter
+    |       |
+    |       this trait cannot be made into an object...
+         */
+        let v: &dyn Value = &d;
+
+
+
+        // let mut set: HashSet<Box<dyn Value>> = HashSet::new();
+        // &set.insert(Box::new(f));
+        // &set.insert(Box::new(d));
+        //
+        // println!("size of HashSet<Value> is {:?}", set.size());
     }
 }
