@@ -110,7 +110,7 @@ impl std::hash::Hash for dyn Animal {
 //     a.talk();
 // }
 
-trait Value: Hash+PartialEq {}
+trait Value {}
 
 #[derive(PartialEq, Hash, Debug)]
 struct Nil {}
@@ -122,10 +122,10 @@ struct Float(f32);
 struct Double(f64);
 
 #[derive(Debug)]
-struct Set<T: Hash+PartialEq>(HashSet<T>);
+struct Set<T: Hash>(HashSet<T>);
 
 #[derive(Debug)]
-struct Map<K: Hash+PartialEq,V: Hash+PartialEq>(HashMap<K,V>);
+struct Map<K: Hash,V: Hash>(HashMap<K,V>);
 
 impl Value for i32 {}
 impl Value for i64 {}
@@ -161,7 +161,7 @@ impl Value for &str {}
 impl Value for String {}
 impl Value for Nil {}
 
-impl<T: Hash+PartialEq> Hash for Set<T> {
+impl<T: Hash> Hash for Set<T> {
     fn hash<H>(&self, hasher: &mut H)
         where
             H: Hasher,
@@ -174,7 +174,7 @@ impl<T: Hash+PartialEq> Hash for Set<T> {
 }
 // impl<T: PartialEq> Value for Set<T> {}
 
-impl<K: Hash+PartialEq,V: Hash+PartialEq> Hash for Map<K,V> {
+impl<K: Hash,V: Hash> Hash for Map<K,V> {
     fn hash<H>(&self, hasher: &mut H)
         where
             H: Hasher,
