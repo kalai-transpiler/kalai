@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -6,6 +7,7 @@ use std::fmt;
 use std::fmt::{Debug};
 use std::hash::{Hash, Hasher};
 use std::vec::Vec;
+use std::ops::Deref;
 
 // Trait objects provide dynamic dispatch in Rust. But they don't allow / need OOP inheritance
 // for the dispatch.
@@ -112,6 +114,29 @@ impl std::hash::Hash for dyn Animal {
 
 trait Value {}
 
+// impl<V> PartialEq for Box<V>
+// where V: Value + Eq + Hash
+// {
+//     fn eq(&self, other: &Rhs) -> bool {
+//         (**self).eq(**other)
+//     }
+// }
+
+
+// impl<V> Value for Set<V>
+//     where V: Value + Hash + Eq
+// {}
+//
+// impl<V> Value for Set<V>
+// where V: Value + Hash + Eq
+// {}
+
+
+
+
+
+
+
 #[derive(PartialEq, Hash, Debug)]
 struct Nil {}
 
@@ -121,8 +146,7 @@ struct Float(f32);
 #[derive(PartialEq, Debug)]
 struct Double(f64);
 
-#[derive(Debug)]
-struct Set<T: Hash>(HashSet<T>);
+struct Set(HashSet<Box<dyn Value2>>);
 
 #[derive(Debug)]
 struct Map<K: Hash,V: Hash>(HashMap<K,V>);
@@ -161,17 +185,17 @@ impl Value for &str {}
 impl Value for String {}
 impl Value for Nil {}
 
-impl<T: Hash> Hash for Set<T> {
-    fn hash<H>(&self, hasher: &mut H)
-        where
-            H: Hasher,
-    {
-        for key in &self.0 {
-            key.hash(hasher);
-        }
-        hasher.finish();
-    }
-}
+// impl<T: Hash> Hash for Set<T> {
+//     fn hash<H>(&self, hasher: &mut H)
+//         where
+//             H: Hasher,
+//     {
+//         for key in &self.0 {
+//             key.hash(hasher);
+//         }
+//         hasher.finish();
+//     }
+// }
 // impl<T: PartialEq> Value for Set<T> {}
 
 impl<K: Hash,V: Hash> Hash for Map<K,V> {
@@ -198,10 +222,113 @@ impl<K: Hash,V: Hash> Hash for Map<K,V> {
 //     }
 // }
 
+
+
+
+// implementing Value2 trait based on SO answer at:
+// https://stackoverflow.com/a/49779676
+
+trait Value2 {
+    fn hash_id(&self) -> u64;
+    fn as_any(&self) -> &dyn Any;
+    fn eq_test(&self, other: &dyn Value2) -> bool;
+}
+
+impl Hash for Box<dyn Value2> {
+    fn hash<H>(&self, state: &mut H) where H: Hasher {
+        self.hash_id().hash(state)
+    }
+}
+
+impl PartialEq for Box<dyn Value2> {
+    fn eq(&self, other: &Self) -> bool {
+        self.eq_test(other.deref())
+    }
+}
+
+impl Eq for Box<dyn Value2> {}
+
+
+
+
+
+impl Value2 for Double {
+    fn hash_id(&self) -> u64
+    {
+        self.0.to_bits()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn eq_test(&self, other: &dyn Value2) -> bool {
+        match other.as_any().downcast_ref::<Double>() {
+            Some(dbl) => {
+                &self.0 == &dbl.0
+            }
+            None => false,
+        }
+    }
+}
+
+impl Value2 for Float {
+    fn hash_id(&self) -> u64
+    {
+        self.0.to_bits() as u64
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn eq_test(&self, other: &dyn Value2) -> bool {
+        match other.as_any().downcast_ref::<Float>() {
+            Some(dbl) => {
+                &self.0 == &dbl.0
+            }
+            None => false,
+        }
+    }
+}
+
+
+
+impl Value2 for Set {
+    fn hash_id(&self) -> u64
+    {
+        let mut hasher = DefaultHasher::new();
+        for key in &self.0 {
+            key.hash(&mut hasher);
+        }
+        hasher.finish()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn eq_test(&self, other: &dyn Value2) -> bool {
+        match other.as_any().downcast_ref::<Set>() {
+            Some(set) => {
+                &self.0 == &set.0
+            }
+            None => false,
+        }
+    }
+}
+
+
+
+
 #[cfg(test)]
 mod tests {
     use super::{Animal, Cat, Dog};
     use super::{Value, Nil, Float, Double};
+
+    use super::Set;
+    use super::Value2;
+
     use std::collections::{HashMap, HashSet};
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
@@ -259,35 +386,71 @@ mod tests {
 
         let d = Double(1.414);
 
-        /*
-        TODO: resolve the compiler error below.
-        Note: Value is a trait, and Double is a struct
-        Note: think of trait=Clojure protocol, struct=Clojure record
-        Note: Maybe we can search for "constrain trait type parameter using PartialEq"
-        TODO: consider replacing `T: Hash+PartialEq` with `T: Value` in the definition of Set and Hash wrapper structs
+        // let v: &dyn Value = &d;
 
-error[E0038]: the trait `traitobjs::Value` cannot be made into an object
-   --> src/traitobjs.rs:262:17
-    |
-262 |         let v: &dyn Value = &d;
-    |                 ^^^^^^^^^ `traitobjs::Value` cannot be made into an object
-    |
-note: for a trait to be "object safe" it needs to allow building a vtable to allow the call to be resolvable dynamically; for more information visit <https://doc.rust-lang.org/reference/items/traits.html#object-safety>
-   --> src/traitobjs.rs:113:19
-    |
-113 | trait Value: Hash+PartialEq {}
-    |       -----       ^^^^^^^^^ ...because it uses `Self` as a type parameter
-    |       |
-    |       this trait cannot be made into an object...
-         */
-        let v: &dyn Value = &d;
-
-
-
+        // TODO: make this work
         // let mut set: HashSet<Box<dyn Value>> = HashSet::new();
         // &set.insert(Box::new(f));
         // &set.insert(Box::new(d));
         //
-        // println!("size of HashSet<Value> is {:?}", set.size());
+        // println!("size of HashSet<Box<dyn Value>> is {:?}", set.len());
+        // assert_eq!(2, set.len());
+    }
+
+    #[test]
+    fn test_value2_trait() {
+        let f = Float(3.14);
+        let d = Double(1.414);
+        let mut my_map = HashMap::<Box<dyn Value2>, i32>::new();
+        my_map.insert(Box::new(f), 1);
+        my_map.insert(Box::new(d), 2);
+
+        println!("{:?}", my_map.get(&(Box::new(Float(6.28)) as Box<dyn Value2>)));
+        println!("{:?}", my_map.get(&(Box::new(Float(9.42)) as Box<dyn Value2>)));
+        println!("{:?}", my_map.get(&(Box::new(Double(2.828)) as Box<dyn Value2>)));
+        println!("{:?}", my_map.get(&(Box::new(Double(5.656)) as Box<dyn Value2>)));
+
+        println!("size of HashMap<Box<Value2,i32>> is {:?}", my_map.len());
+        assert_eq!(2, my_map.len());
+    }
+
+    #[test]
+    fn test_float_structs_with_value2_trait() {
+        let f = Float(3.14);
+        println!("{:?}", f);
+
+        let d = Double(1.414);
+
+        let v: &dyn Value2 = &d;
+
+        let mut set: HashSet<Box<dyn Value2>> = HashSet::new();
+        &set.insert(Box::new(f));
+        &set.insert(Box::new(d));
+
+        println!("size of HashSet<Box<Value2>> is {:?}", set.len());
+        assert_eq!(2, set.len());
+
+        let mut inner_set2: HashSet<Box<dyn Value2>> = HashSet::new();
+        &inner_set2.insert(Box::new(Double(98.6)));
+        &inner_set2.insert(Box::new(Float(37.0)));
+        let set2: Set = Set(inner_set2);
+
+        println!("size of Set (unnamed arg of type HashSet<Box<Value2>>) is {:?}", set2.0.len());
+        assert_eq!(2, set2.0.len());
+    }
+
+    #[test]
+    fn test_set_eq() {
+        let mut set1 = HashSet::new();
+        &set1.insert(2);
+        &set1.insert(3);
+        &set1.insert(5);
+
+        let mut set2 = HashSet::new();
+        &set2.insert(2);
+        &set2.insert(3);
+        &set2.insert(5);
+
+        assert_eq!(set1, set2);
     }
 }
