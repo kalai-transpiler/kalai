@@ -3,11 +3,11 @@ use std::collections::hash_map::DefaultHasher;
 use std::collections::{HashMap, BinaryHeap};
 use std::collections::HashSet;
 use std::convert::TryInto;
-use std::fmt;
+use std::{fmt, ops};
 use std::fmt::{Debug};
 use std::hash::{Hash, Hasher};
 use std::vec::Vec;
-use std::ops::Deref;
+use std::ops::{Deref, Add};
 
 // Trait objects provide dynamic dispatch in Rust. But they don't allow / need OOP inheritance
 // for the dispatch.
@@ -20,122 +20,12 @@ use std::ops::Deref;
 // a trait, which can be extended on new types, similar to Clojure protocols. This would allow users
 // to have their own types and have the ability to extend the trait on their own types thesmelves.
 
-// `Animal` is a trait. Is an example of how we might be able to migrate the `Value` enum to be
-// a trait that can be used for trait objects in collections.
-
-trait Animal {
-    fn talk(&self);
-
-    fn hash(&self, state: &mut std::collections::hash_map::DefaultHasher);
-}
-
-// Structs don't need fields, per se. (And traits don't need methods, per se, ex: Rust's Eq).
-
-struct Cat {}
-
-struct Dog {}
-
-impl Animal for Cat {
-    fn talk(&self) {
-        println!("meow");
-    }
-
-    // We need to implement std::hash::Hash for Animal because Values can be the key for
-    // HashSet and HashMap. In order to allow users to maintain the ability to extend the trait
-    // for their own types, they need to define how the hashing works on their type (struct). This
-    // is also necessary because trait implementations for a struct must exist in the same module as
-    // the struct definition itself.
-    fn hash(&self, _state: &mut std::collections::hash_map::DefaultHasher) {
-        let mut hasher = std::collections::hash_map::DefaultHasher::new();
-        hasher.write(b"cat");
-        hasher.finish();
-    }
-}
-
-impl Animal for Dog {
-    fn talk(&self) {
-        println!("bark");
-    }
-    fn hash(&self, _state: &mut std::collections::hash_map::DefaultHasher) {
-        let mut hasher = std::collections::hash_map::DefaultHasher::new();
-        hasher.write(b"cat");
-        hasher.finish();
-    }
-}
-
-// for debugging / testing purposes only
-impl Debug for dyn Animal {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "dyn Animal: {}", "I'm talking!")
-    }
-}
-
-impl Eq for dyn Animal {}
-
-impl PartialEq for dyn Animal {
-    fn eq(&self, other: &Self) -> bool {
-        true
-    }
-}
-
-// as stated above, needed for when Values are used in sets and in the keys of maps.
-impl std::hash::Hash for dyn Animal {
-    fn hash<H: std::hash::Hasher>(&self, _state: &mut H) {
-        // ignore the concrete type of the dyn Animal for now...
-        // maybe this would help for when we do: https://stackoverflow.com/questions/33687447/how-to-get-a-reference-to-a-concrete-type-from-a-trait-object
-        let mut hasher = std::collections::hash_map::DefaultHasher::new();
-        // &self.hash(&mut hasher);
-        // TODO: uncomment this and see if it works
-        // hasher.write(&self);
-        hasher.finish();
-    }
-}
-
-// impl std::hash::Hash for Cat {
-//     fn hash<H: std::hash::Hasher>(&self, _state: &mut H) {
-//         let mut hasher = std::collections::hash_map::DefaultHasher::new();
-//         &self.hash(&mut hasher);
-//         hasher.finish();
-//     }
-// }
-
-// impl std::hash::Hash for Dog {
-//     fn hash<H: std::hash::Hasher>(&self, _state: &mut H) {
-//         let mut hasher = std::collections::hash_map::DefaultHasher::new();
-//         &self.hash(&mut hasher);
-//         hasher.finish();
-//     }
-// }
-
-// // a standalone function that shows the usage of trait objects in functions
-// fn animal_talk(a: &dyn Animal) {
-//     a.talk();
-// }
-
-trait Value {}
-
-// impl<V> PartialEq for Box<V>
-// where V: Value + Eq + Hash
-// {
-//     fn eq(&self, other: &Rhs) -> bool {
-//         (**self).eq(**other)
-//     }
-// }
-
-
-// impl<V> Value for Set<V>
-//     where V: Value + Hash + Eq
-// {}
-//
-// impl<V> Value for Set<V>
-// where V: Value + Hash + Eq
-// {}
-
-
-
-
-
-
+// Note: the following structs are wrapping primitives to allow us functionality
+// (especially related to the `Value2` trait) that the primitives don't allow
+// us to have by default. These structs effectively implement the "New Type Idiom"
+// https://doc.rust-lang.org/rust-by-example/generics/new_types.html in Rust.
+// We need this for things like Float, Double, Set, Map, etc. in order to create
+// custom implementations that allow them to be put into keys of sets and maps, etc.
 
 #[derive(PartialEq, Hash, Debug)]
 struct Nil {}
@@ -151,77 +41,6 @@ struct Set(HashSet<Box<dyn Value2>>);
 
 #[derive(Debug)]
 struct Map<K: Hash,V: Hash>(HashMap<K,V>);
-
-impl Value for i32 {}
-impl Value for i64 {}
-// Floats and Doubles have different edge cases for +-0 and NaN in different languages
-// https://internals.rust-lang.org/t/f32-f64-should-implement-hash/5436/4
-// We work around Rust's desire to not hash them by hashing the bits of the float
-// https://stackoverflow.com/questions/39638363/how-can-i-use-a-hashmap-with-f64-as-key-in-rust
-// The reason we need to hash is to allow them to be keys in order to be Values
-impl Hash for Float {
-    fn hash<H>(&self, hasher: &mut H)
-        where
-            H: Hasher,
-    {
-        self.0.to_bits().hash(hasher);
-        hasher.finish();
-    }
-}
-impl Value for Float {}
-
-impl Hash for Double {
-    fn hash<H>(&self, hasher: &mut H)
-        where
-            H: Hasher,
-    {
-        self.0.to_bits().hash(hasher);
-        hasher.finish();
-    }
-}
-impl Value for Double {}
-
-impl Value for bool {}
-impl Value for &str {}
-impl Value for String {}
-impl Value for Nil {}
-
-// impl<T: Hash> Hash for Set<T> {
-//     fn hash<H>(&self, hasher: &mut H)
-//         where
-//             H: Hasher,
-//     {
-//         for key in &self.0 {
-//             key.hash(hasher);
-//         }
-//         hasher.finish();
-//     }
-// }
-// impl<T: PartialEq> Value for Set<T> {}
-
-impl<K: Hash,V: Hash> Hash for Map<K,V> {
-    fn hash<H>(&self, hasher: &mut H)
-        where
-            H: Hasher,
-    {
-        for (key, val) in &self.0 {
-            key.hash(hasher);
-            val.hash(hasher);
-        }
-        hasher.finish();
-    }
-}
-// impl<K: PartialEq,V: PartialEq> Value for Map<K,V> {}
-
-// TODO: figure out null check helper fn
-// fn is_null(x: &dyn Value) -> bool {
-//     let null_inst = Null {};
-//     if x == null_inst {
-//         true
-//     } else {
-//         false
-//     }
-// }
 
 
 
@@ -343,11 +162,47 @@ impl Value2 for Set {
 
 
 
+//
+// Float impls
+//
+
+impl ops::Add<Float> for Float {
+    type Output = Float;
+
+    fn add(self, rhs: Float) -> Self::Output {
+        Float(self.0 + rhs.0)
+    }
+}
+// ^ Here, we have Add(Float,Float).
+// Option 1: Now we need {Add, Subtract, Multiply, Divide, Modulo?}({Numerical}x{Numerical})
+// for "Numerical"={u8, i32, i64, f32, f64, Float, Double}. => 4x7x7 = ~200 impl blocks, which could
+// perhaps be reduced using Rust macros
+// Pros: Apply operators on Double/Float/Rust primitive num types like before
+//   Floating point type results are also Values
+// Cons: Users will have to know that Double/Float are not primitives and access the primitives with
+// .0
+// Option 2: Get the .insert/.get/.contains/.remove operations on Set(HashSet<T>),
+// Map(HashMap<K,V>), Vec<T> to convert to and from f32/f64 <-> Float/Double at those "boundaries"
+// Pros: Users would not need to deal with Float/Double directly
+// Cons: This may not actually work
+// When calling .get and the return is a Value, we need to be able to know the concrete type is
+// Double/Float and do the conversion back to f64/f32
+
+//
+// Set impls
+//
+
+// impl Set {
+//     pub fn contains<T: ?Sized>(&self, value: &T) -> bool {
+//
+//     }
+// }
+
+
 
 #[cfg(test)]
 mod tests {
-    use super::{Animal, Cat, Dog};
-    use super::{Value, Nil, Float, Double};
+    use super::{Nil, Float, Double};
 
     use super::Set;
     use super::Value2;
@@ -360,25 +215,6 @@ mod tests {
     fn debug_print() {
         let v = vec![1, 2, 3];
         println!("{:?}", v);
-    }
-
-    #[test]
-    fn coll_of_trait_objs() {
-        let d = Dog {};
-        let c = Cat {};
-
-        // creates a collection type for trait objects
-        let v2: Vec<&dyn Animal> = vec![&c, &d];
-        println!("{:?}", v2);
-
-        // creates a collection with trait objects as keys, thereby exercising the Hash trait
-        // implementations defined.
-        // TODO: does our hashing code for `dyn Animal` actually work? (Does it dispatch to the
-        // hashing of Cat and Dog?)
-        // TODO: does our simplistic hashing for Cat and Dog hold up if we add 2 dogs and 2 cats?
-        let mut m1: HashMap<&dyn Animal, &str> = HashMap::new();
-        m1.insert(&d, "dog");
-        println!("{:?}", m1);
     }
 
     #[test]
@@ -537,6 +373,15 @@ mod tests {
         assert_eq!(set1, set2);
     }
 
+    #[test]
+    fn test_float_op_add_overload() {
+        let f1 = Float(1.0);
+        let f2 = Float(2.0);
+
+        assert_eq!(f1+f2, Float(3.0));
+
+    }
+
     // Note: this test does not compile because "the trait `Hash` is not implemented for `HashSet<{integer}>`"
     // which results in the follow-on error "method cannot be called on `HashSet<HashSet<{integer}>>` due to unsatisfied trait bounds"
     // for calling `.insert` with an argument of a HashSet.
@@ -575,4 +420,21 @@ mod tests {
     //
     //     assert_eq!(set12, set21);
     // }
+
+
+    /*
+    let mut set = HashSet::new();
+    let f = 3.14;
+    &set.insert(f); // not allowed
+
+    let mut s = Set { HashSet::new() };
+    let f_box = Box::new(Float(3.14));
+    &s.0.insert(f_box);
+
+    &s.0.contains(Box::new(3.14));
+
+
+    let mut m = Map { HashMap::new() };
+    let k_
+     */
 }
