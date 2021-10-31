@@ -8,6 +8,7 @@ use std::fmt::{Debug};
 use std::hash::{Hash, Hasher};
 use std::vec::Vec;
 use std::ops::{Deref, Add};
+use std::borrow::Borrow;
 
 // Trait objects provide dynamic dispatch in Rust. But they don't allow / need OOP inheritance
 // for the dispatch.
@@ -28,19 +29,19 @@ use std::ops::{Deref, Add};
 // custom implementations that allow them to be put into keys of sets and maps, etc.
 
 #[derive(PartialEq, Hash, Debug)]
-struct Nil {}
+pub struct Nil {}
 
 #[derive(PartialEq, Debug)]
-struct Float(f32);
+pub struct Float(pub f32);
 
 #[derive(PartialEq, Debug)]
-struct Double(f64);
+pub struct Double(pub f64);
 
 #[derive(Debug)]
-struct Set(HashSet<Box<dyn Value2>>);
+pub struct Set(pub HashSet<Box<dyn Value2>>);
 
 #[derive(Debug)]
-struct Map<K: Hash,V: Hash>(HashMap<K,V>);
+pub struct Map<K: Hash,V: Hash>(pub HashMap<K,V>);
 
 
 
@@ -63,10 +64,51 @@ struct Map<K: Hash,V: Hash>(HashMap<K,V>);
 /// Note that `HashSet` does not implement the `Hash` trait, and that it is important
 /// when implementing the `Hash` trait for a `Set`/`HashSet` that the hash value be
 /// order-independent (regardless of the order of insertion or storage / storage iterator).
-trait Value2: Debug {
+///
+///
+/// ```
+/// use std::collections::HashSet;
+/// use sql_builder::traitobjs::{Set, Float, Value2, BValue};
+///
+/// let mut set = HashSet::<f32>::new();
+/// let f = 3.14;
+/// // &set.insert(f); // not allowed
+///
+/// let mut s = Set::default();
+/// let f_box = Box::new(Float(3.14));
+/// &s.0.insert(f_box);
+///
+/// &s.contains_f32(3.14);
+///
+///  // let f_box_2: Box<dyn Value2> = Box::new(Float(6.28));
+/// let f_box_2 = BValue::from(6.28);
+/// &s.contains(&f_box_2);
+/// ```
+pub trait Value2: Debug {
     fn hash_id(&self) -> u64;
     fn as_any(&self) -> &dyn Any;
     fn eq_test(&self, other: &dyn Value2) -> bool;
+}
+
+/// Because we want to insert values that implement the Value2 trait (in order to
+/// be added to collection types in an extensible way that is accessible to users),
+/// we are effectively inserting Value2 trait objects into the collections. Since
+/// Rust only allows collections to be defined with a fixed-size type, we cannot
+/// have, for example, `Set<Value2>`. Instead, we must use the `Box` type as the
+/// type of the collection. (`Box` represents a pointer, which has a fixed size.
+/// The pointer is to the location in the memory heap  that `Box` allocates for
+/// the object / trait object.) Therefore, when dealing with collections and our
+/// `Value2` trait, we have to deal with the `Box<dyn Value2>` representation of
+/// our value. (And in fact, we must upcast(?) a concrete type like `Float` into
+/// `Value2` (ex: `let f: Box<dyn Value2 = Box::new(Float(3.14));`) before being
+/// able to use that concrete-typed value).
+pub type BValue = Box<dyn Value2>;
+
+impl From<f32> for BValue {
+    fn from(x: f32) -> Self {
+        let b: BValue = Box::new(Float(x));
+        b
+    }
 }
 
 impl Hash for dyn Value2 {
@@ -82,7 +124,6 @@ impl PartialEq for dyn Value2 {
 }
 
 impl Eq for dyn Value2 {}
-
 
 
 
@@ -192,11 +233,24 @@ impl ops::Add<Float> for Float {
 // Set impls
 //
 
-// impl Set {
-//     pub fn contains<T: ?Sized>(&self, value: &T) -> bool {
-//
-//     }
-// }
+impl Default for Set {
+    fn default() -> Set {
+        Set(
+            HashSet::<Box<dyn Value2>>::new()
+        )
+    }
+}
+
+impl Set {
+    pub fn contains_f32(&self, x: f32) -> bool {
+        let value: Box<dyn Value2> = Box::new(Float(x));
+        self.0.contains(&value)
+    }
+
+    pub fn contains(&self, x: &Box<dyn Value2>) -> bool {
+        self.0.contains(x)
+    }
+}
 
 
 
@@ -356,6 +410,14 @@ mod tests {
         assert_eq!(set1, set2);
     }
 
+    #[test]
+    fn test_float_val_eq() {
+        let f1 = Float(3.0);
+        let f2 = Float(3.0);
+
+        assert_eq!(f1, f2);
+    }
+
     // This test proves that the Hash impl for Box<T> delegates to the Hash impl for T, and that
     // PartialEq on Box<T> is also delegating to PartialEq on T.
     #[test]
@@ -382,59 +444,4 @@ mod tests {
 
     }
 
-    // Note: this test does not compile because "the trait `Hash` is not implemented for `HashSet<{integer}>`"
-    // which results in the follow-on error "method cannot be called on `HashSet<HashSet<{integer}>>` due to unsatisfied trait bounds"
-    // for calling `.insert` with an argument of a HashSet.
-    //
-    // #[test]
-    // fn test_nested_set_eq() {
-    //     let mut set1 = HashSet::new();
-    //     &set1.insert(2);
-    //     &set1.insert(3);
-    //     &set1.insert(5);
-    //
-    //     let mut set2 = HashSet::new();
-    //     &set2.insert(3);
-    //     &set2.insert(5);
-    //     &set2.insert(2);
-    //
-    //     let mut set12 = HashSet::new();
-    //     &set12.insert(set1);
-    //     &set12.insert(set2);
-    //
-    //
-    //     let mut set1 = HashSet::new();
-    //     &set1.insert(2);
-    //     &set1.insert(3);
-    //     &set1.insert(5);
-    //
-    //     let mut set2 = HashSet::new();
-    //     &set2.insert(3);
-    //     &set2.insert(5);
-    //     &set2.insert(2);
-    //
-    //     let mut set21 = HashSet::new();
-    //     &set21.insert(set1);
-    //     &set21.insert(set2);
-    //
-    //
-    //     assert_eq!(set12, set21);
-    // }
-
-
-    /*
-    let mut set = HashSet::new();
-    let f = 3.14;
-    &set.insert(f); // not allowed
-
-    let mut s = Set { HashSet::new() };
-    let f_box = Box::new(Float(3.14));
-    &s.0.insert(f_box);
-
-    &s.0.contains(Box::new(3.14));
-
-
-    let mut m = Map { HashMap::new() };
-    let k_
-     */
 }
