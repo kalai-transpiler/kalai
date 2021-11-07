@@ -75,19 +75,23 @@ pub struct Map<K: Hash,V: Hash>(pub HashMap<K,V>);
 /// // &set.insert(f); // not allowed
 ///
 /// let mut s = Set::default();
-/// let f_box = Box::new(Float(3.14));
-/// &s.0.insert(f_box);
+/// s.insert_f32(3.14);
 ///
-/// &s.contains_f32(3.14);
+/// assert!(s.contains_f32(3.14));
 ///
-///  // let f_box_2: Box<dyn Value2> = Box::new(Float(6.28));
-/// let f_box_2 = BValue::from(6.28);
-/// &s.contains(&f_box_2);
+/// let f_box_2 = BValue::from(6.28);  // use this for .contains() querying
+/// assert!(!s.contains(&f_box_2));
+///
+/// let f_box_3 = BValue::from(6.28);  // put this into set
+/// s.insert(f_box_3);
+/// assert!(s.contains(&f_box_2));
 /// ```
 pub trait Value2: Debug {
     fn hash_id(&self) -> u64;
     fn as_any(&self) -> &dyn Any;
     fn eq_test(&self, other: &dyn Value2) -> bool;
+    // fn as_owned_any(self) -> Any;
+    fn as_owned_any_box(self) -> Box<dyn Any>;
 }
 
 /// Because we want to insert values that implement the Value2 trait (in order to
@@ -104,13 +108,6 @@ pub trait Value2: Debug {
 /// able to use that concrete-typed value).
 pub type BValue = Box<dyn Value2>;
 
-impl From<f32> for BValue {
-    fn from(x: f32) -> Self {
-        let b: BValue = Box::new(Float(x));
-        b
-    }
-}
-
 impl Hash for dyn Value2 {
     fn hash<H>(&self, state: &mut H) where H: Hasher {
         self.hash_id().hash(state)
@@ -125,8 +122,9 @@ impl PartialEq for dyn Value2 {
 
 impl Eq for dyn Value2 {}
 
-
-
+//
+// implementing Value2 for our custom-defined type wrapper structs
+//
 
 impl Value2 for Double {
     fn hash_id(&self) -> u64
@@ -145,6 +143,10 @@ impl Value2 for Double {
             }
             None => false,
         }
+    }
+
+    fn as_owned_any_box(self) -> Box<dyn Any> {
+        Box::from(self)
     }
 }
 
@@ -166,9 +168,11 @@ impl Value2 for Float {
             None => false,
         }
     }
+
+    fn as_owned_any_box(self) -> Box<dyn Any> {
+        Box::from(self)
+    }
 }
-
-
 
 impl Value2 for Set {
     fn hash_id(&self) -> u64
@@ -199,8 +203,23 @@ impl Value2 for Set {
             None => false,
         }
     }
+
+    fn as_owned_any_box(self) -> Box<dyn Any> {
+        Box::from(self)
+    }
 }
 
+
+//
+// BValue to/from impls
+//
+
+impl From<f32> for BValue {
+    fn from(x: f32) -> Self {
+        let b: BValue = Box::new(Float(x));
+        b
+    }
+}
 
 
 //
@@ -229,6 +248,17 @@ impl ops::Add<Float> for Float {
 // When calling .get and the return is a Value, we need to be able to know the concrete type is
 // Double/Float and do the conversion back to f64/f32
 
+
+impl From<BValue> for f32 {
+    fn from(v: BValue) -> f32 {
+        if let Some(float) = v.as_any().downcast_ref::<Float>() {
+            float.deref().0
+        } else {
+            panic!("Could not downcast Value into Float!");
+        }
+    }
+}
+
 //
 // Set impls
 //
@@ -243,12 +273,19 @@ impl Default for Set {
 
 impl Set {
     pub fn contains_f32(&self, x: f32) -> bool {
-        let value: Box<dyn Value2> = Box::new(Float(x));
-        self.0.contains(&value)
+        self.0.contains(&BValue::from(x))
+    }
+
+    pub fn insert_f32(&mut self, x: f32) -> bool {
+        self.0.insert(BValue::from(x))
     }
 
     pub fn contains(&self, x: &Box<dyn Value2>) -> bool {
         self.0.contains(x)
+    }
+
+    pub fn insert(&mut self, x: Box<dyn Value2>) -> bool {
+        self.0.insert(x)
     }
 }
 
@@ -264,6 +301,7 @@ mod tests {
     use std::collections::{HashMap, HashSet};
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
+    use crate::traitobjs::BValue;
 
     #[test]
     fn debug_print() {
@@ -441,7 +479,17 @@ mod tests {
         let f2 = Float(2.0);
 
         assert_eq!(f1+f2, Float(3.0));
-
     }
 
+    #[test]
+    fn test_value_to_concrete_struct() {
+        let v = BValue::from(3.14);
+
+        assert_eq!(f32::from(v), 3.14);
+    }
+
+    #[test]
+    fn test_map_get() {
+        // TODO: for next time
+    }
 }
