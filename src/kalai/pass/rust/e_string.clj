@@ -10,6 +10,8 @@
   (:import (clojure.lang IMeta Keyword)
            (java.util Map Set Vector)))
 
+;; forward declare stringfy to satisfy mutual recursion of `stringfy` and its helpers
+
 (declare stringify)
 
 ;;;; These are helpers
@@ -22,6 +24,9 @@
 
 (defn- params-list [params]
   (parens (comma-separated params)))
+
+(defn stringify-arg [arg]
+  (let [{:keys [mut ref]} (meta arg)]))
 
 (defn- args-list [args]
   (parens (comma-separated (map stringify args))))
@@ -37,10 +42,13 @@
 
 (defn identifier [s]
   (let [s-str (str s)
-        snake-case (csk/->snake_case s-str)]
-    (if (= \_ (first s-str))
-      (str \_ snake-case)
-      snake-case)))
+        id-first-char (first s-str)]
+    (if (Character/isUpperCase ^char id-first-char)
+      s-str
+      (let [snake-case (u/->snake_case s-str)]
+        (if (= \_ (first s-str))
+          (str \_ snake-case)
+          snake-case)))))
 
 ;;;; These are what our symbols should resolve to
 
@@ -131,14 +139,9 @@
     ;; let mut char_vec: &Vec<char> = ;
     ;; let char_vec: &Vec<char> = ;
     ;; let mut char_vec: std::vec::Vec<char> = ;
-    ;;
-    ;; fn f(char_vec: &mut std::vec::Vec<char>) {...
-    ;; fn f(char_vec: &Vec<char>) {...
-    ;; NOT POSSIBLE? (or doesn't make sense?): fn f(char_vec: mut std::vec::Vec<char>) {...
     (str (when mut "mut ") (identifier variable-name)
          ;; Rust has type inference, so we can leave temp variable types off
-         ;; TODO: probably don't want to use "MISSING_TYPE" though
-         (when (not= t types/TYPE-MISSING-STR)
+         (when t
            (str ": " (when ref "&") (type-str variable-name))))))
 
 (defn cast-str [identifier t]
@@ -172,6 +175,20 @@
       (str (identifier function-name)
            (args-list args)))))
 
+(defn param-str [param]
+  ;; fn f(char_vec: &mut std::vec::Vec<char>) {...
+  ;; fn f(char_vec: &Vec<char>) {...
+  ;; NOT POSSIBLE? (or doesn't make sense?): fn f(char_vec: mut std::vec::Vec<char>) {...
+  (let [{:keys [mut ref]} (meta param)]
+    (if (= param 'self)
+      (str (when ref "&")
+           (when mut "mut ")
+           "self")
+      (space-separated (str (identifier param) ":")
+                       (str (when ref "&")
+                            (when mut "mut ")
+                            (type-str param))))))
+
 (defn function-str [name params body]
   (if (= '-main name)
     (do
@@ -186,8 +203,7 @@
       (space-separated "pub" "fn"
                        (identifier name))
       (space-separated (params-list (for [param params]
-                                      (space-separated (str (identifier param) ":")
-                                                       (type-str param))))
+                                      (param-str param)))
                        "->"
                        (type-str params)
                        (stringify body)))))

@@ -91,15 +91,44 @@
                        (sort)
                        (map #(str "pub mod " % ";\n"))))))
 
+(defn f []
+  (let [set-helper-fn
+        '((ns BValue)
+          (defn from [x])
+          (defn contains-f32 ^{:t :bool} [^{:ref true} self, ^{:t :float} x]
+            (.contains self ^:ref (BValue/from x))))
+        set-helper-fn-str
+        (->> set-helper-fn
+             (analyze-forms)
+             (kalai-pipeline/asts->kalai)
+             (rust-pipeline/kalai->rust)
+             ;; remove the first line, which is "use crate::kalai;"
+             (str/split-lines)
+             (drop 4)
+             (str/join \newline))]
+    (str/join \newline ["impl Set {"
+                        set-helper-fn-str
+                        "}"])))
+
+
 ;; Note: if reosurce files are stored in a depth below the root directory, then
 ;; a deeper copy using recursion would be necessary, which would be better handled using the fs library
 ;; https://github.com/clj-commons/fs
 (defn inject-kalai-helper-files [{:keys [transpile-dir languages]}]
   (when (contains? languages ::l/rust)
     (let [k (io/resource "rust/kalai.rs")
-          dest-file-path (io/file transpile-dir "rust" "src" "kalai.rs")]
+          dest-file-path (io/file transpile-dir "rust" "src" "kalai.rs")
+          k-str (slurp k)
+          dest-file-str (str k-str
+                             ;; TODO: Decide if we want to append the contents to kalai.rs or have a different file
+                             ;; TODO: Fill out all helper methods for all wrapper types that we need, not just 1 example for Set
+                             ;; TODO: Replace current kalai.rs (Value enum) with traitobjs.rs (Value trait) <-> updating Clojure Rust pipeline code (ex: around collections)
+                             ;; \newline \newline
+                             ;;(f)
+                             ;;\newline
+                             )]
       (assert k "kalai.rs")
-      (spit dest-file-path (slurp k)))))
+      (spit dest-file-path dest-file-str))))
 
 (defn write-module-definitions [{:keys [transpile-dir languages]}]
   (when (contains? languages ::l/rust)
