@@ -10,19 +10,19 @@ use std::vec::Vec;
 use std::ops::{Deref, Add};
 use std::borrow::Borrow;
 
-/// Because we want to insert values that implement the Value2 trait (in order to
+/// Because we want to insert values that implement the Value trait (in order to
 /// be added to collection types in an extensible way that is accessible to users),
-/// we are effectively inserting Value2 trait objects into the collections. Since
+/// we are effectively inserting Value trait objects into the collections. Since
 /// Rust only allows collections to be defined with a fixed-size type, we cannot
-/// have, for example, `Set<Value2>`. Instead, we must use the `Box` type as the
+/// have, for example, `Set<Value>`. Instead, we must use the `Box` type as the
 /// type of the collection. (`Box` represents a pointer, which has a fixed size.
 /// The pointer is to the location in the memory heap  that `Box` allocates for
 /// the object / trait object.) Therefore, when dealing with collections and our
-/// `Value2` trait, we have to deal with the `BValue` representation of
+/// `Value` trait, we have to deal with the `BValue` representation of
 /// our value. (And in fact, we must upcast(?) a concrete type like `Float` into
-/// `Value2` (ex: `let f: Box<dyn Value2 = Box::new(Float(3.14));`) before being
+/// `Value` (ex: `let f: Box<dyn Value = Box::new(Float(3.14));`) before being
 /// able to use that concrete-typed value).
-pub type BValue = Box<dyn Value2>;
+pub type BValue = Box<dyn Value>;
 
 
 // Trait objects provide dynamic dispatch in Rust. But they don't allow / need OOP inheritance
@@ -37,7 +37,7 @@ pub type BValue = Box<dyn Value2>;
 // to have their own types and have the ability to extend the trait on their own types thesmelves.
 
 // Note: the following structs are wrapping primitives to allow us functionality
-// (especially related to the `Value2` trait) that the primitives don't allow
+// (especially related to the `Value` trait) that the primitives don't allow
 // us to have by default. These structs effectively implement the "New Type Idiom"
 // https://doc.rust-lang.org/rust-by-example/generics/new_types.html in Rust.
 // We need this for things like Float, Double, Set, Map, etc. in order to create
@@ -61,7 +61,7 @@ pub struct Map(pub HashMap<BValue,BValue>);
 
 
 
-// implementing Value2 trait based on SO answer at:
+// implementing Value trait based on SO answer at:
 // https://stackoverflow.com/a/49779676
 
 /// Implementing `hash_id` is necessary for the default Hash impl.
@@ -69,7 +69,7 @@ pub struct Map(pub HashMap<BValue,BValue>);
 /// and therefore for the default Eq impl by extension.
 ///
 /// `Set`s can contain `Set`s. This is because `Set` is a struct that
-/// wraps `HashSet<BValue>`, and because `Set` implements the `Value2`
+/// wraps `HashSet<BValue>`, and because `Set` implements the `Value`
 /// trait. In other words, `Set` is allowed to be recursive.
 ///
 /// For `Set`s and `Map`s to be recursive, they must implement the `Hash` trait
@@ -83,7 +83,7 @@ pub struct Map(pub HashMap<BValue,BValue>);
 ///
 /// ```
 /// use std::collections::HashSet;
-/// use sql_builder::traitobjs::{Set, Float, Value2, BValue};
+/// use sql_builder::traitobjs::{Set, Float, Value, BValue};
 ///
 /// let mut set = HashSet::<f32>::new();
 /// let f = 3.14;
@@ -101,60 +101,60 @@ pub struct Map(pub HashMap<BValue,BValue>);
 /// s.insert(f_box_3);
 /// assert!(s.contains(&f_box_2));
 /// ```
-pub trait Value2: Debug + CloneValue2 {
+pub trait Value: Debug + CloneValue {
     fn hash_id(&self) -> u64;
     fn as_any(&self) -> &dyn Any;
-    fn eq_test(&self, other: &dyn Value2) -> bool;
+    fn eq_test(&self, other: &dyn Value) -> bool;
 }
 
 
-impl Hash for dyn Value2 {
+impl Hash for dyn Value {
     fn hash<H>(&self, state: &mut H) where H: Hasher {
         self.hash_id().hash(state)
     }
 }
 
-impl PartialEq for dyn Value2 {
+impl PartialEq for dyn Value {
     fn eq(&self, other: &Self) -> bool {
         self.eq_test(other)
     }
 }
 
-impl Eq for dyn Value2 {}
+impl Eq for dyn Value {}
 
 
 // TODO: we should investigate whether it is better to implement Copy instead
-// of Clone, and which to be more choosy in implementing for the Value2 trait
+// of Clone, and which to be more choosy in implementing for the Value trait
 
 // TODO: See if we can do something similar for replacing hash_id() with a helper
 // trait like here, and move our existing implementations for types that don't
 // have a hashing function to custom impls of Hash, but allow ourselves to not have to
 // re-implement existing default impls of Hash
 
-pub trait CloneValue2 {
-    fn clone_value<'a>(&self) -> Box<dyn Value2>;
+pub trait CloneValue {
+    fn clone_value<'a>(&self) -> Box<dyn Value>;
 }
 
-impl<T> CloneValue2 for T
+impl<T> CloneValue for T
     where
-        T: Value2 + Clone + 'static,
+        T: Value + Clone + 'static,
 {
-    fn clone_value(&self) -> Box<dyn Value2> {
+    fn clone_value(&self) -> Box<dyn Value> {
         Box::new(self.clone())
     }
 }
 
-impl Clone for Box<dyn Value2> {
+impl Clone for Box<dyn Value> {
     fn clone(&self) -> Self {
         self.clone_value()
     }
 }
 
 //
-// implementing Value2 for our custom-defined type wrapper structs
+// implementing Value for our custom-defined type wrapper structs
 //
 
-impl Value2 for Double {
+impl Value for Double {
     fn hash_id(&self) -> u64
     {
         self.0.to_bits()
@@ -164,7 +164,7 @@ impl Value2 for Double {
         self
     }
 
-    fn eq_test(&self, other: &dyn Value2) -> bool {
+    fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<Double>() {
             Some(dbl) => {
                 &self.0 == &dbl.0
@@ -174,7 +174,7 @@ impl Value2 for Double {
     }
 }
 
-impl Value2 for Float {
+impl Value for Float {
     fn hash_id(&self) -> u64
     {
         self.0.to_bits() as u64
@@ -184,7 +184,7 @@ impl Value2 for Float {
         self
     }
 
-    fn eq_test(&self, other: &dyn Value2) -> bool {
+    fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<Float>() {
             Some(dbl) => {
                 &self.0 == &dbl.0
@@ -194,7 +194,7 @@ impl Value2 for Float {
     }
 }
 
-impl Value2 for Set {
+impl Value for Set {
     fn hash_id(&self) -> u64
     {
         // TODO: find a more efficient way to create a deterministic contents/value-based hash for a Set (or any collection)
@@ -215,7 +215,7 @@ impl Value2 for Set {
         self
     }
 
-    fn eq_test(&self, other: &dyn Value2) -> bool {
+    fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<Set>() {
             Some(set) => {
                 &self.0 == &set.0
@@ -225,7 +225,7 @@ impl Value2 for Set {
     }
 }
 
-impl Value2 for HashSet<i32> {
+impl Value for HashSet<i32> {
     fn hash_id(&self) -> u64 {
         let elem_hashes: BinaryHeap<u64> = self.iter().map(|e| (*e) as u64).collect();
         let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
@@ -242,7 +242,7 @@ impl Value2 for HashSet<i32> {
         self
     }
 
-    fn eq_test(&self, other: &dyn Value2) -> bool {
+    fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<HashSet<i32>>() {
             Some(set) => {
                 self == set
@@ -252,7 +252,7 @@ impl Value2 for HashSet<i32> {
     }
 }
 
-impl Value2 for HashMap<String, f32> {
+impl Value for HashMap<String, f32> {
     fn hash_id(&self) -> u64 {
         let elem_hashes: BinaryHeap<u64> =
             self.iter()
@@ -277,7 +277,7 @@ impl Value2 for HashMap<String, f32> {
         self
     }
 
-    fn eq_test(&self, other: &dyn Value2) -> bool {
+    fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::< HashMap<String, f32> >() {
             Some(set) => {
                 self == set
@@ -287,7 +287,7 @@ impl Value2 for HashMap<String, f32> {
     }
 }
 
-impl Value2 for Map {
+impl Value for Map {
     fn hash_id(&self) -> u64
     {
         // TODO: find a more efficient way to create a deterministic contents/value-based hash for a Set (or any collection)
@@ -316,7 +316,7 @@ impl Value2 for Map {
         self
     }
 
-    fn eq_test(&self, other: &dyn Value2) -> bool {
+    fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<Map>() {
             Some(map) => {
                 &self.0 == &map.0
@@ -326,7 +326,7 @@ impl Value2 for Map {
     }
 }
 
-impl Value2 for String {
+impl Value for String {
     fn hash_id(&self) -> u64
     {
         let mut hasher = DefaultHasher::new();
@@ -338,7 +338,7 @@ impl Value2 for String {
         self
     }
 
-    fn eq_test(&self, other: &dyn Value2) -> bool {
+    fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<String>() {
             Some(s) => {
                 self == s
@@ -508,13 +508,15 @@ impl Default for Set {
 
 impl Set {
     pub fn contains_f32(&self, x: f32) -> bool {
-        self.0.contains(&BValue::from(x))
+        self.contains(&BValue::from(x))
     }
 
     pub fn insert_f32(&mut self, x: f32) -> bool {
-        self.0.insert(BValue::from(x))
+        self.insert(BValue::from(x))
     }
+}
 
+impl Set {
     pub fn contains(&self, x: &BValue) -> bool {
         self.0.contains(x)
     }
@@ -539,14 +541,16 @@ impl Default for Map {
 
 impl Map {
     pub fn get_string_f32(&self, k: String) -> Option<f32> {
-        let v = self.0.get(&BValue::from(k));
+        let v = self.get(&BValue::from(k));
         v.map(|bval| f32::from(bval))
     }
 
     pub fn insert_string_f32(&mut self, k: String, v: f32) -> Option<BValue> {
-        self.0.insert(BValue::from(k), BValue::from(v))
+        self.insert(BValue::from(k), BValue::from(v))
     }
+}
 
+impl Map {
     pub fn insert(&mut self, k: BValue, v: BValue) -> Option<BValue> {
         self.0.insert(k, v)
     }
@@ -562,7 +566,7 @@ mod tests {
     use super::{Nil, Float, Double};
 
     use super::{Set, Map};
-    use super::Value2;
+    use super::Value;
 
     use std::collections::{HashMap, HashSet};
     use std::collections::hash_map::DefaultHasher;
@@ -616,7 +620,7 @@ mod tests {
     }
 
     #[test]
-    fn test_value2_trait() {
+    fn test_value_trait() {
         let f = Float(3.14);
         let d = Double(1.414);
         let mut my_map = HashMap::<BValue, i32>::new();
@@ -628,18 +632,18 @@ mod tests {
         println!("{:?}", my_map.get(&(Box::new(Double(2.828)) as BValue)));
         println!("{:?}", my_map.get(&(Box::new(Double(5.656)) as BValue)));
 
-        println!("size of HashMap<Box<Value2,i32>> is {:?}", my_map.len());
+        println!("size of HashMap<Box<Value,i32>> is {:?}", my_map.len());
         assert_eq!(2, my_map.len());
     }
 
     #[test]
-    fn test_float_structs_with_value2_trait() {
+    fn test_float_structs_with_value_trait() {
         let f = Float(3.14);
         println!("{:?}", f);
 
         let d = Double(1.414);
 
-        let v: &dyn Value2 = &d;
+        let v: &dyn Value = &d;
 
         let mut set: HashSet<BValue> = HashSet::new();
         &set.insert(Box::new(f));
@@ -658,13 +662,13 @@ mod tests {
 
         // test PartialEq for Float struct
         assert_eq!(Box::new(Float(3.456)), Box::new(Float(3.456)));
-        let f1: &dyn Value2 = &Float(3.456);
-        let f2: &dyn Value2 = &Float(3.456);
+        let f1: &dyn Value = &Float(3.456);
+        let f2: &dyn Value = &Float(3.456);
         assert!(f1 == f2);
     }
 
     #[test]
-    fn test_set_struct_with_value2_trait() {
+    fn test_set_struct_with_value_trait() {
         let mut set12: HashSet<BValue> = HashSet::new();
         &set12.insert(Box::new(Float(1.0)));
         &set12.insert(Box::new(Double(2.0)));
@@ -693,8 +697,8 @@ mod tests {
         println!("inserting set12 into set_34_12");
         &set_34_12.insert(Box::new(Set(set12b)));
 
-        let sv12_34: &dyn Value2 = &Set(set_12_34); // #{#{1 2} #{3 4}}
-        let sv34_12: &dyn Value2 = &Set(set_34_12); // #{#{3 4} #{1 2}}
+        let sv12_34: &dyn Value = &Set(set_12_34); // #{#{1 2} #{3 4}}
+        let sv34_12: &dyn Value = &Set(set_34_12); // #{#{3 4} #{1 2}}
         println!("comparing equality of Set(set_12_34) == Set(set_34_12)");
         assert!(sv12_34 == sv34_12);
         // assert!(Box::new(Set(set_1_2)) == Box::new(Set(set_2_1)));
