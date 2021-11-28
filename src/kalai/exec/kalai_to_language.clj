@@ -4,6 +4,7 @@
             [kalai.pass.kalai.pipeline :as kalai-pipeline]
             [kalai.pass.java.pipeline :as java-pipeline]
             [kalai.pass.rust.pipeline :as rust-pipeline]
+            [kalai.pass.rust.e-string :as e-string]
             [clojure.tools.analyzer.jvm :as az]
             [clojure.tools.analyzer.jvm.utils :as azu]
             [clojure.string :as str]
@@ -91,14 +92,27 @@
                        (sort)
                        (map #(str "pub mod " % ";\n"))))))
 
-(defn f []
-  (let [set-helper-fn
-        '((ns BValue)
-          (defn from [x])
-          (defn contains-f32 ^{:t :bool} [^{:ref true} self, ^{:t :float} x]
-            (.contains self ^:ref (BValue/from x))))
+(defn helper-fn-impl-strs []
+  (let [types [:bool :byte :char :int :long :float :double :string]
+        helper-contains-fns (for [t types]
+                              (let [t-str (e-string/kalai-type->rust t)]
+                                (list 'defn (symbol (str "contains-" t-str))
+                                      ^{:t :bool} [(with-meta 'self {:ref true}),
+                                                   (with-meta 'x {:t t})]
+                                      '(.contains self ^:ref (kalai.BValue/from x)))))
+        helper-insert-fns (for [t types]
+                              (let [t-str (e-string/kalai-type->rust t)]
+                                (list 'defn (symbol (str "insert-" t-str))
+                                      ^{:t :bool} [(with-meta 'self {:ref true
+                                                                     :mut true}),
+                                                   (with-meta 'x {:t t})]
+                                      '(.insert self (kalai.BValue/from x)))))
+        set-helper-fn-front-matter '((ns kalai.BValue)
+                                     (defn from [x]))
         set-helper-fn-str
-        (->> set-helper-fn
+        (->> (concat set-helper-fn-front-matter
+                     helper-contains-fns
+                     helper-insert-fns)
              (analyze-forms)
              (kalai-pipeline/asts->kalai)
              (rust-pipeline/kalai->rust)
@@ -120,12 +134,11 @@
           dest-file-path (io/file transpile-dir "rust" "src" "kalai.rs")
           k-str (slurp k)
           dest-file-str (str k-str
-                             ;; TODO: Decide if we want to append the contents to kalai.rs or have a different file
-                             ;; TODO: Fill out all helper methods for all wrapper types that we need, not just 1 example for Set
-                             ;; TODO: Replace current kalai.rs (Value enum) with traitobjs.rs (Value trait) <-> updating Clojure Rust pipeline code (ex: around collections)
-                             ;; \newline \newline
-                             ;;(f)
-                             ;;\newline
+                             ;; TODO: Fill out all helper methods for all wrapper types that we need (Map, Vector?), not just 1 example for Set
+                             ;; TODO: updating Clojure Rust pipeline code (ex: around collections) (following the change to trait objs from enums for Value)
+                              \newline \newline
+                             (helper-fn-impl-strs)
+                             \newline
                              )]
       (assert k "kalai.rs")
       (spit dest-file-path dest-file-str))))

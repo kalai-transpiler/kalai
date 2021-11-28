@@ -6,7 +6,8 @@
             [puget.printer :as puget]
             [clojure.java.io :as io]
             [kalai.types :as types]
-            [kalai.util :as u])
+            [kalai.util :as u]
+            [clojure.string :as string])
   (:import (clojure.lang IMeta Keyword)
            (java.util Map Set Vector)))
 
@@ -40,7 +41,10 @@
 (defn statement [s]
   (str s ";"))
 
-(defn identifier [s]
+(defn identifier
+  "For Rust, do a lowercase snake-case, unless it is already uppercased
+  (ex: struct or type name), in which case, just return as-is."
+  [s]
   (let [s-str (str s)
         id-first-char (first s-str)]
     (if (Character/isUpperCase ^char id-first-char)
@@ -168,10 +172,16 @@
 (defn invoke-str [function-name & args]
   (let [varmeta (some-> function-name meta :var meta)]
     (if (and (str/includes? (str function-name) "/") varmeta)
-      (str "crate::"
-           (identifier (str/replace (str (:ns varmeta)) "." "::"))
-           "::" (identifier (:name varmeta))
-           (args-list args))
+      ;; For now, we interpret the "/" to indicate that the function being transpiled is
+      ;; either from Kalai or the user, and therefore, it has a namespace. We need to
+      ;; handle the Rust snake-casing segment-by-segment when applying `identifier`.
+      (let [clojure-ns-by-dot (string/split (str (:ns varmeta)) #"\.")
+            rustified-ns-by-dot (map identifier clojure-ns-by-dot)
+            rustified-ns (string/join "." rustified-ns-by-dot)]
+        (str "crate::"
+             (str/replace rustified-ns "." "::") ;; we use varmeta because we want the full ns, not an alias
+             "::" (identifier (:name varmeta))
+             (args-list args)))
       (str (identifier function-name)
            (args-list args)))))
 

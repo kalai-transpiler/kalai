@@ -1,8 +1,8 @@
 use crate::kalai;
 lazy_static::lazy_static! {
 static ref x: std::collections::HashMap<i64,String> = {
-let mut tmp_1: std::collections::HashMap<i64,String> = std::collections::HashMap::new();
-tmp_1
+let mut tmp1: std::collections::HashMap<i64,String> = std::collections::HashMap::new();
+tmp1
 };
 }
 pub fn f(y: std::collections::HashMap<i64, String>) -> std::collections::HashMap<i64, String> {
