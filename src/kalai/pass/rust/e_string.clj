@@ -26,11 +26,14 @@
 (defn- params-list [params]
   (parens (comma-separated params)))
 
-(defn stringify-arg [arg]
-  (let [{:keys [mut ref]} (meta arg)]))
+(defn- stringify-arg [arg]
+  (let [{:keys [mut ref]} (meta arg)]
+    (str (when ref "&")
+         (when mut "mut ")
+         (stringify arg))))
 
 (defn- args-list [args]
-  (parens (comma-separated (map stringify args))))
+  (parens (comma-separated (map stringify-arg args))))
 
 (defn- space-separated [& xs]
   (str/join " " xs))
@@ -85,7 +88,8 @@
    :double  "f64"
    :string  "String"
    :void    "()"
-   :any     "kalai::Value"})
+   :any     "kalai::Value"
+   :option  "Option"})
 
 ;; Forward declaration of `t-str` to break cycle of references.
 ;; We expect this not to create an infinite loop in practice, otherwise

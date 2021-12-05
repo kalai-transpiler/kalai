@@ -92,37 +92,56 @@
                        (sort)
                        (map #(str "pub mod " % ";\n"))))))
 
+(defn stringify-rust-coll-helper-fns [forms]
+  (->> forms
+       (analyze-forms)
+       (kalai-pipeline/asts->kalai)
+       (rust-pipeline/kalai->rust)
+       ;; remove the first line, which is "use crate::kalai;"
+       (str/split-lines)
+       (drop 4)
+       (str/join \newline)))
+
 (defn helper-fn-impl-strs []
-  (let [types [:bool :byte :char :int :long :float :double :string]
-        helper-contains-fns (for [t types]
-                              (let [t-str (e-string/kalai-type->rust t)]
-                                (list 'defn (symbol (str "contains-" t-str))
-                                      ^{:t :bool} [(with-meta 'self {:ref true}),
-                                                   (with-meta 'x {:t t})]
-                                      '(.contains self ^:ref (kalai.BValue/from x)))))
-        helper-insert-fns (for [t types]
-                              (let [t-str (e-string/kalai-type->rust t)]
-                                (list 'defn (symbol (str "insert-" t-str))
-                                      ^{:t :bool} [(with-meta 'self {:ref true
-                                                                     :mut true}),
-                                                   (with-meta 'x {:t t})]
-                                      '(.insert self (kalai.BValue/from x)))))
-        set-helper-fn-front-matter '((ns kalai.BValue)
-                                     (defn from [x]))
-        set-helper-fn-str
-        (->> (concat set-helper-fn-front-matter
-                     helper-contains-fns
-                     helper-insert-fns)
-             (analyze-forms)
-             (kalai-pipeline/asts->kalai)
-             (rust-pipeline/kalai->rust)
-             ;; remove the first line, which is "use crate::kalai;"
-             (str/split-lines)
-             (drop 4)
-             (str/join \newline))]
-    (str/join \newline ["impl Set {"
-                        set-helper-fn-str
-                        "}"])))
+  (let [
+        primitives [:bool :byte :char :int :long :float :double :string]
+        set-contains-fns (for [t primitives]
+                           (let [t-str (e-string/kalai-type->rust t)]
+                             (list 'defn (symbol (str "contains-" t-str))
+                                   ^{:t :bool} [(with-meta 'self {:ref true}),
+                                                (with-meta 'x {:t t})]
+                                   '(.contains self ^:ref (kalai.BValue/from x)))))
+        set-insert-fns (for [t primitives]
+                         (let [t-str (e-string/kalai-type->rust t)]
+                           (list 'defn (symbol (str "insert-" t-str))
+                                 ^{:t :bool} [(with-meta 'self {:ref true
+                                                                :mut true}),
+                                              (with-meta 'x {:t t})]
+                                 (list '.insert 'self '(kalai.BValue/from x)))))
+        map-insert-fns (for [k-t primitives
+                             v-t primitives]
+                         (let [k-t-str (e-string/kalai-type->rust k-t)
+                               v-t-str (e-string/kalai-type->rust v-t)]
+                           (list 'defn (symbol (str "insert-" k-t-str "-" v-t-str))
+                                 ^{:t {:option [v-t]}} [(with-meta 'self {:ref true
+                                                                          :mut true}),
+                                                        (with-meta 'k {:t k-t})
+                                                        (with-meta 'v {:t v-t})]
+                                 (list '.map '(.insert self (kalai.BValue/from k) (kalai.BValue/from v))
+                                       (str "REPLACEME-" v-t-str)))))
+        helper-fn-front-matter '((ns kalai.BValue)
+                                 (defn from [x]))
+        result-str (str/join \newline ["impl Set {"
+                            (stringify-rust-coll-helper-fns (concat helper-fn-front-matter
+                                                                    set-contains-fns
+                                                                    set-insert-fns))
+                            "}"
+                            "impl Map {"
+                            (stringify-rust-coll-helper-fns (concat helper-fn-front-matter
+                                                                    map-insert-fns))
+                            "}"])
+        result-str-post-edits (str/replace result-str #"String::from\(\"REPLACEME-(\w+)\"\)" "$1::from")]
+    result-str-post-edits))
 
 
 ;; Note: if reosurce files are stored in a depth below the root directory, then
@@ -135,7 +154,7 @@
           k-str (slurp k)
           dest-file-str (str k-str
                              ;; TODO: Fill out all helper methods for all wrapper types that we need (Map, Vector?), not just 1 example for Set
-                             ;; TODO: updating Clojure Rust pipeline code (ex: around collections) (following the change to trait objs from enums for Value)
+                             ;; TODO: updating Clojure Rust pipeline code (ex: around collections) (following the change to trait objs from enums for Value) -> this occurs in sql_builder transpiling of core.clj -> core.rs
                               \newline \newline
                              (helper-fn-impl-strs)
                              \newline

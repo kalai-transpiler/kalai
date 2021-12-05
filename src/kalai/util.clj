@@ -72,7 +72,6 @@
 ;;  when a letter is followed by a number. Ex: `get_f32` should not be `get_f_32`.
 ;;
 
-
 (defn generic-split [ss]
   (let [cs (mapv csk-ss/classify-char ss)
         ss-length (.length ^String ss)]
@@ -94,6 +93,8 @@
                 ;; This expression is not pretty,
                 ;; but it compiles down to sane JavaScript.
                 (or (and (not= a :upper)  (= b :upper))
+                    ;; We changed the following line from the original to support not
+                    ;; putting underscores inside something like "u64" or "tmp1".
                     (and (= a :number) (not= b :number))
                     (and (= a :upper) (= b :upper) (= c :lower))))
               (recur (result+new next) next next)

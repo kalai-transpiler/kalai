@@ -148,8 +148,8 @@ pub fn format(query_map: std::collections::HashMap<String, kalai::Value>) -> Str
                 String::from(")\n"),
                 String::from("VALUES\n"),
                 {
-                    let v_2: std::vec::Vec<kalai::Value> = kalai::to_mvector(values.clone());
-                    v_2.clone()
+                    let v2: std::vec::Vec<kalai::Value> = kalai::to_mvector(values.clone());
+                    v2.clone()
                         .into_iter()
                         .clone()
                         .map(|kalai_elem| row_str(kalai_elem.clone()))

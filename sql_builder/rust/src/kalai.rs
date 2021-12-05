@@ -1,14 +1,14 @@
 use std::any::Any;
-use std::collections::hash_map::DefaultHasher;
-use std::collections::{HashMap, BinaryHeap};
-use std::collections::HashSet;
-use std::convert::TryInto;
-use std::{fmt, ops};
-use std::fmt::{Debug};
-use std::hash::{Hash, Hasher};
-use std::vec::Vec;
-use std::ops::{Deref, Add};
 use std::borrow::Borrow;
+use std::collections::hash_map::DefaultHasher;
+use std::collections::HashSet;
+use std::collections::{BinaryHeap, HashMap};
+use std::convert::TryInto;
+use std::fmt::Debug;
+use std::hash::{Hash, Hasher};
+use std::ops::{Add, Deref};
+use std::vec::Vec;
+use std::{fmt, ops};
 
 /// Because we want to insert values that implement the Value trait (in order to
 /// be added to collection types in an extensible way that is accessible to users),
@@ -23,7 +23,6 @@ use std::borrow::Borrow;
 /// `Value` (ex: `let f: Box<dyn Value = Box::new(Float(3.14));`) before being
 /// able to use that concrete-typed value).
 pub type BValue = Box<dyn Value>;
-
 
 // Trait objects provide dynamic dispatch in Rust. But they don't allow / need OOP inheritance
 // for the dispatch.
@@ -56,10 +55,7 @@ pub struct Double(pub f64);
 pub struct Set(pub HashSet<BValue>);
 
 #[derive(Debug, Clone)]
-pub struct Map(pub HashMap<BValue,BValue>);
-
-
-
+pub struct Map(pub HashMap<BValue, BValue>);
 
 // implementing Value trait based on SO answer at:
 // https://stackoverflow.com/a/49779676
@@ -107,9 +103,11 @@ pub trait Value: Debug + CloneValue {
     fn eq_test(&self, other: &dyn Value) -> bool;
 }
 
-
 impl Hash for dyn Value {
-    fn hash<H>(&self, state: &mut H) where H: Hasher {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
         self.hash_id().hash(state)
     }
 }
@@ -121,7 +119,6 @@ impl PartialEq for dyn Value {
 }
 
 impl Eq for dyn Value {}
-
 
 // TODO: we should investigate whether it is better to implement Copy instead
 // of Clone, and which to be more choosy in implementing for the Value trait
@@ -136,8 +133,8 @@ pub trait CloneValue {
 }
 
 impl<T> CloneValue for T
-    where
-        T: Value + Clone + 'static,
+where
+    T: Value + Clone + 'static,
 {
     fn clone_value(&self) -> Box<dyn Value> {
         Box::new(self.clone())
@@ -155,8 +152,7 @@ impl Clone for Box<dyn Value> {
 //
 
 impl Value for Double {
-    fn hash_id(&self) -> u64
-    {
+    fn hash_id(&self) -> u64 {
         self.0.to_bits()
     }
 
@@ -166,17 +162,14 @@ impl Value for Double {
 
     fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<Double>() {
-            Some(dbl) => {
-                &self.0 == &dbl.0
-            }
+            Some(dbl) => &self.0 == &dbl.0,
             None => false,
         }
     }
 }
 
 impl Value for Float {
-    fn hash_id(&self) -> u64
-    {
+    fn hash_id(&self) -> u64 {
         self.0.to_bits() as u64
     }
 
@@ -186,17 +179,14 @@ impl Value for Float {
 
     fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<Float>() {
-            Some(dbl) => {
-                &self.0 == &dbl.0
-            }
+            Some(dbl) => &self.0 == &dbl.0,
             None => false,
         }
     }
 }
 
 impl Value for Set {
-    fn hash_id(&self) -> u64
-    {
+    fn hash_id(&self) -> u64 {
         // TODO: find a more efficient way to create a deterministic contents/value-based hash for a Set (or any collection)
         // TODO: look into how Clojure hashes collections (ex: map, set)
         // Note: we use BinaryHeap to order the hash values because hashing is stateful, and therefore, order-dependent.
@@ -217,18 +207,14 @@ impl Value for Set {
 
     fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<Set>() {
-            Some(set) => {
-                &self.0 == &set.0
-            }
+            Some(set) => &self.0 == &set.0,
             None => false,
         }
     }
 }
 
-
 impl Value for bool {
-    fn hash_id(&self) -> u64
-    {
+    fn hash_id(&self) -> u64 {
         *self as u64
     }
 
@@ -238,17 +224,14 @@ impl Value for bool {
 
     fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<bool>() {
-            Some(x) => {
-                &self == &x
-            }
+            Some(x) => &self == &x,
             None => false,
         }
     }
 }
 
 impl Value for i8 {
-    fn hash_id(&self) -> u64
-    {
+    fn hash_id(&self) -> u64 {
         *self as u64
     }
 
@@ -258,17 +241,14 @@ impl Value for i8 {
 
     fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<i8>() {
-            Some(x) => {
-                &self == &x
-            }
+            Some(x) => &self == &x,
             None => false,
         }
     }
 }
 
 impl Value for char {
-    fn hash_id(&self) -> u64
-    {
+    fn hash_id(&self) -> u64 {
         *self as u64
     }
 
@@ -278,17 +258,14 @@ impl Value for char {
 
     fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<char>() {
-            Some(x) => {
-                &self == &x
-            }
+            Some(x) => &self == &x,
             None => false,
         }
     }
 }
 
 impl Value for i32 {
-    fn hash_id(&self) -> u64
-    {
+    fn hash_id(&self) -> u64 {
         *self as u64
     }
 
@@ -298,18 +275,14 @@ impl Value for i32 {
 
     fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<i32>() {
-            Some(x) => {
-                &self == &x
-            }
+            Some(x) => &self == &x,
             None => false,
         }
     }
 }
 
-
 impl Value for i64 {
-    fn hash_id(&self) -> u64
-    {
+    fn hash_id(&self) -> u64 {
         *self as u64
     }
 
@@ -319,9 +292,7 @@ impl Value for i64 {
 
     fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<i64>() {
-            Some(x) => {
-                &self == &x
-            }
+            Some(x) => &self == &x,
             None => false,
         }
     }
@@ -346,9 +317,7 @@ impl Value for HashSet<i32> {
 
     fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<HashSet<i32>>() {
-            Some(set) => {
-                self == set
-            }
+            Some(set) => self == set,
             None => false,
         }
     }
@@ -356,15 +325,15 @@ impl Value for HashSet<i32> {
 
 impl Value for HashMap<String, f32> {
     fn hash_id(&self) -> u64 {
-        let elem_hashes: BinaryHeap<u64> =
-            self.iter()
-                .flat_map(
-                    |(k,v)|
-                        [(*k).hash_id(), Float(*v).hash_id()]
-                            .iter()
-                            .cloned()
-                            .collect::<Vec<u64>>())
-                .collect();
+        let elem_hashes: BinaryHeap<u64> = self
+            .iter()
+            .flat_map(|(k, v)| {
+                [(*k).hash_id(), Float(*v).hash_id()]
+                    .iter()
+                    .cloned()
+                    .collect::<Vec<u64>>()
+            })
+            .collect();
         let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
 
         let mut hasher = DefaultHasher::new();
@@ -380,30 +349,28 @@ impl Value for HashMap<String, f32> {
     }
 
     fn eq_test(&self, other: &dyn Value) -> bool {
-        match other.as_any().downcast_ref::< HashMap<String, f32> >() {
-            Some(set) => {
-                self == set
-            }
+        match other.as_any().downcast_ref::<HashMap<String, f32>>() {
+            Some(set) => self == set,
             None => false,
         }
     }
 }
 
 impl Value for Map {
-    fn hash_id(&self) -> u64
-    {
+    fn hash_id(&self) -> u64 {
         // TODO: find a more efficient way to create a deterministic contents/value-based hash for a Set (or any collection)
         // TODO: look into how Clojure hashes collections (ex: map, set)
         // Note: we use BinaryHeap to order the hash values because hashing is stateful, and therefore, order-dependent.
-        let elem_hashes: BinaryHeap<u64> =
-            self.0.iter()
-                .flat_map(
-                    |(k,v)|
-                        [k.deref().hash_id(), v.deref().hash_id()]
-                            .iter()
-                            .cloned()
-                            .collect::<Vec<u64>>())
-                .collect();
+        let elem_hashes: BinaryHeap<u64> = self
+            .0
+            .iter()
+            .flat_map(|(k, v)| {
+                [k.deref().hash_id(), v.deref().hash_id()]
+                    .iter()
+                    .cloned()
+                    .collect::<Vec<u64>>()
+            })
+            .collect();
         let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
 
         let mut hasher = DefaultHasher::new();
@@ -420,17 +387,14 @@ impl Value for Map {
 
     fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<Map>() {
-            Some(map) => {
-                &self.0 == &map.0
-            }
+            Some(map) => &self.0 == &map.0,
             None => false,
         }
     }
 }
 
 impl Value for String {
-    fn hash_id(&self) -> u64
-    {
+    fn hash_id(&self) -> u64 {
         let mut hasher = DefaultHasher::new();
         self.to_string().hash(&mut hasher);
         hasher.finish()
@@ -442,14 +406,11 @@ impl Value for String {
 
     fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<String>() {
-            Some(s) => {
-                self == s
-            }
+            Some(s) => self == s,
             None => false,
         }
     }
 }
-
 
 //
 // BValue to/from impls
@@ -473,7 +434,6 @@ impl From<BValue> for f32 {
         }
     }
 }
-
 
 impl From<&BValue> for f32 {
     fn from(v: &BValue) -> f32 {
@@ -523,7 +483,6 @@ impl From<String> for BValue {
     }
 }
 
-
 impl From<BValue> for String {
     fn from(v: BValue) -> String {
         if let Some(s) = v.as_any().downcast_ref::<String>() {
@@ -552,7 +511,6 @@ impl From<bool> for BValue {
         b
     }
 }
-
 
 impl From<BValue> for bool {
     fn from(v: BValue) -> bool {
@@ -583,7 +541,6 @@ impl From<i8> for BValue {
     }
 }
 
-
 impl From<BValue> for i8 {
     fn from(v: BValue) -> i8 {
         if let Some(x) = v.as_any().downcast_ref::<i8>() {
@@ -612,7 +569,6 @@ impl From<char> for BValue {
         b
     }
 }
-
 
 impl From<BValue> for char {
     fn from(v: BValue) -> char {
@@ -643,7 +599,6 @@ impl From<i32> for BValue {
     }
 }
 
-
 impl From<BValue> for i32 {
     fn from(v: BValue) -> i32 {
         if let Some(x) = v.as_any().downcast_ref::<i32>() {
@@ -672,7 +627,6 @@ impl From<i64> for BValue {
         b
     }
 }
-
 
 impl From<BValue> for i64 {
     fn from(v: BValue) -> i64 {
@@ -725,7 +679,6 @@ impl From<BValue> for HashMap<String, f32> {
     }
 }
 
-
 // impl From<HashSet<BValue>> for BValue {
 //     fn from(x: HashSet<BValue>) -> Self {
 //         let b: BValue = Box::new(Set(x));
@@ -744,7 +697,6 @@ impl From<BValue> for HashMap<String, f32> {
 //     }
 // }
 
-
 impl From<BValue> for Map {
     fn from(v: BValue) -> Map {
         if let Some(map) = v.as_any().downcast_ref::<Map>() {
@@ -754,7 +706,6 @@ impl From<BValue> for Map {
         }
     }
 }
-
 
 //
 // Float impls
@@ -782,17 +733,13 @@ impl ops::Add<Float> for Float {
 // When calling .get and the return is a Value, we need to be able to know the concrete type is
 // Double/Float and do the conversion back to f64/f32
 
-
-
 //
 // Set impls
 //
 
 impl Default for Set {
     fn default() -> Set {
-        Set(
-            HashSet::<BValue>::new()
-        )
+        Set(HashSet::<BValue>::new())
     }
 }
 
@@ -823,25 +770,22 @@ impl Set {
 // Map impls
 //
 
-
 impl Default for Map {
     fn default() -> Map {
-        Map(
-            HashMap::<BValue, BValue>::new()
-        )
+        Map(HashMap::<BValue, BValue>::new())
     }
 }
 
-impl Map {
-    pub fn get_string_f32(&self, k: String) -> Option<f32> {
-        let v = self.get(&BValue::from(k));
-        v.map(|bval| f32::from(bval))
-    }
-
-    pub fn insert_string_f32(&mut self, k: String, v: f32) -> Option<BValue> {
-        self.insert(BValue::from(k), BValue::from(v))
-    }
-}
+// impl Map {
+//     pub fn get_string_f32(&self, k: String) -> Option<f32> {
+//         let v = self.get(&BValue::from(k));
+//         v.map(|bval| f32::from(bval))
+//     }
+//
+//     pub fn insert_string_f32(&mut self, k: String, v: f32) -> Option<BValue> {
+//         self.insert(BValue::from(k), BValue::from(v))
+//     }
+// }
 
 impl Map {
     pub fn insert(&mut self, k: BValue, v: BValue) -> Option<BValue> {
@@ -853,18 +797,17 @@ impl Map {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use super::{Nil, Float, Double};
+    use super::{Double, Float, Nil};
 
-    use super::{Set, Map};
     use super::Value;
+    use super::{Map, Set};
 
-    use std::collections::{HashMap, HashSet};
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
     use crate::kalai::BValue;
+    use std::collections::hash_map::DefaultHasher;
+    use std::collections::{HashMap, HashSet};
+    use std::hash::{Hash, Hasher};
     use std::ops::Deref;
 
     #[test]
@@ -879,7 +822,6 @@ mod tests {
         let nil2 = Nil {};
         assert_eq!(nil1, nil2);
 
-
         let mut hasher = DefaultHasher::new();
         nil1.hash(&mut hasher);
         let nil1_hash = hasher.finish();
@@ -891,7 +833,6 @@ mod tests {
         println!("nil2 hash = {}", nil2_hash);
 
         assert_eq!(nil1_hash, nil2_hash);
-
     }
 
     #[test]
@@ -950,7 +891,10 @@ mod tests {
         &inner_set2.insert(Box::new(Float(37.0)));
         let set2: Set = Set(inner_set2);
 
-        println!("size of Set (unnamed arg of type HashSet<BValue>) is {:?}", set2.0.len());
+        println!(
+            "size of Set (unnamed arg of type HashSet<BValue>) is {:?}",
+            set2.0.len()
+        );
         assert_eq!(2, set2.0.len());
 
         // test PartialEq for Float struct
@@ -1045,7 +989,7 @@ mod tests {
         let f1 = Float(1.0);
         let f2 = Float(2.0);
 
-        assert_eq!(f1+f2, Float(3.0));
+        assert_eq!(f1 + f2, Float(3.0));
     }
 
     #[test]
@@ -1113,5 +1057,378 @@ mod tests {
 
         let map_child = Map::from(map_child_deref);
         assert_eq!(map_child.get_string_f32("two".to_string()), Some(2.0f32));
+    }
+}
+
+impl Set {
+    pub fn contains_bool(&self, x: bool) -> bool {
+        return self.contains(&crate::kalai::BValue::from(x));
+    }
+    pub fn contains_i8(&self, x: i8) -> bool {
+        return self.contains(&crate::kalai::BValue::from(x));
+    }
+    pub fn contains_char(&self, x: char) -> bool {
+        return self.contains(&crate::kalai::BValue::from(x));
+    }
+    pub fn contains_i32(&self, x: i32) -> bool {
+        return self.contains(&crate::kalai::BValue::from(x));
+    }
+    pub fn contains_i64(&self, x: i64) -> bool {
+        return self.contains(&crate::kalai::BValue::from(x));
+    }
+    pub fn contains_f32(&self, x: f32) -> bool {
+        return self.contains(&crate::kalai::BValue::from(x));
+    }
+    pub fn contains_f64(&self, x: f64) -> bool {
+        return self.contains(&crate::kalai::BValue::from(x));
+    }
+    pub fn contains_string(&self, x: String) -> bool {
+        return self.contains(&crate::kalai::BValue::from(x));
+    }
+    pub fn insert_bool(&mut self, x: bool) -> bool {
+        return self.insert(crate::kalai::BValue::from(x));
+    }
+    pub fn insert_i8(&mut self, x: i8) -> bool {
+        return self.insert(crate::kalai::BValue::from(x));
+    }
+    pub fn insert_char(&mut self, x: char) -> bool {
+        return self.insert(crate::kalai::BValue::from(x));
+    }
+    pub fn insert_i32(&mut self, x: i32) -> bool {
+        return self.insert(crate::kalai::BValue::from(x));
+    }
+    pub fn insert_i64(&mut self, x: i64) -> bool {
+        return self.insert(crate::kalai::BValue::from(x));
+    }
+    pub fn insert_f32(&mut self, x: f32) -> bool {
+        return self.insert(crate::kalai::BValue::from(x));
+    }
+    pub fn insert_f64(&mut self, x: f64) -> bool {
+        return self.insert(crate::kalai::BValue::from(x));
+    }
+    pub fn insert_string(&mut self, x: String) -> bool {
+        return self.insert(crate::kalai::BValue::from(x));
+    }
+}
+impl Map {
+    pub fn insert_bool_bool(&mut self, k: bool, v: bool) -> Option<bool> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(bool::from);
+    }
+    pub fn insert_bool_i8(&mut self, k: bool, v: i8) -> Option<i8> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i8::from);
+    }
+    pub fn insert_bool_char(&mut self, k: bool, v: char) -> Option<char> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(char::from);
+    }
+    pub fn insert_bool_i32(&mut self, k: bool, v: i32) -> Option<i32> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i32::from);
+    }
+    pub fn insert_bool_i64(&mut self, k: bool, v: i64) -> Option<i64> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i64::from);
+    }
+    pub fn insert_bool_f32(&mut self, k: bool, v: f32) -> Option<f32> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(f32::from);
+    }
+    pub fn insert_bool_f64(&mut self, k: bool, v: f64) -> Option<f64> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(f64::from);
+    }
+    pub fn insert_bool_string(&mut self, k: bool, v: String) -> Option<String> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(String::from);
+    }
+    pub fn insert_i8_bool(&mut self, k: i8, v: bool) -> Option<bool> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(bool::from);
+    }
+    pub fn insert_i8_i8(&mut self, k: i8, v: i8) -> Option<i8> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i8::from);
+    }
+    pub fn insert_i8_char(&mut self, k: i8, v: char) -> Option<char> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(char::from);
+    }
+    pub fn insert_i8_i32(&mut self, k: i8, v: i32) -> Option<i32> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i32::from);
+    }
+    pub fn insert_i8_i64(&mut self, k: i8, v: i64) -> Option<i64> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i64::from);
+    }
+    pub fn insert_i8_f32(&mut self, k: i8, v: f32) -> Option<f32> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(f32::from);
+    }
+    pub fn insert_i8_f64(&mut self, k: i8, v: f64) -> Option<f64> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(f64::from);
+    }
+    pub fn insert_i8_string(&mut self, k: i8, v: String) -> Option<String> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(String::from);
+    }
+    pub fn insert_char_bool(&mut self, k: char, v: bool) -> Option<bool> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(bool::from);
+    }
+    pub fn insert_char_i8(&mut self, k: char, v: i8) -> Option<i8> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i8::from);
+    }
+    pub fn insert_char_char(&mut self, k: char, v: char) -> Option<char> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(char::from);
+    }
+    pub fn insert_char_i32(&mut self, k: char, v: i32) -> Option<i32> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i32::from);
+    }
+    pub fn insert_char_i64(&mut self, k: char, v: i64) -> Option<i64> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i64::from);
+    }
+    pub fn insert_char_f32(&mut self, k: char, v: f32) -> Option<f32> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(f32::from);
+    }
+    pub fn insert_char_f64(&mut self, k: char, v: f64) -> Option<f64> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(f64::from);
+    }
+    pub fn insert_char_string(&mut self, k: char, v: String) -> Option<String> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(String::from);
+    }
+    pub fn insert_i32_bool(&mut self, k: i32, v: bool) -> Option<bool> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(bool::from);
+    }
+    pub fn insert_i32_i8(&mut self, k: i32, v: i8) -> Option<i8> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i8::from);
+    }
+    pub fn insert_i32_char(&mut self, k: i32, v: char) -> Option<char> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(char::from);
+    }
+    pub fn insert_i32_i32(&mut self, k: i32, v: i32) -> Option<i32> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i32::from);
+    }
+    pub fn insert_i32_i64(&mut self, k: i32, v: i64) -> Option<i64> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i64::from);
+    }
+    pub fn insert_i32_f32(&mut self, k: i32, v: f32) -> Option<f32> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(f32::from);
+    }
+    pub fn insert_i32_f64(&mut self, k: i32, v: f64) -> Option<f64> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(f64::from);
+    }
+    pub fn insert_i32_string(&mut self, k: i32, v: String) -> Option<String> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(String::from);
+    }
+    pub fn insert_i64_bool(&mut self, k: i64, v: bool) -> Option<bool> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(bool::from);
+    }
+    pub fn insert_i64_i8(&mut self, k: i64, v: i8) -> Option<i8> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i8::from);
+    }
+    pub fn insert_i64_char(&mut self, k: i64, v: char) -> Option<char> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(char::from);
+    }
+    pub fn insert_i64_i32(&mut self, k: i64, v: i32) -> Option<i32> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i32::from);
+    }
+    pub fn insert_i64_i64(&mut self, k: i64, v: i64) -> Option<i64> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i64::from);
+    }
+    pub fn insert_i64_f32(&mut self, k: i64, v: f32) -> Option<f32> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(f32::from);
+    }
+    pub fn insert_i64_f64(&mut self, k: i64, v: f64) -> Option<f64> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(f64::from);
+    }
+    pub fn insert_i64_string(&mut self, k: i64, v: String) -> Option<String> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(String::from);
+    }
+    pub fn insert_f32_bool(&mut self, k: f32, v: bool) -> Option<bool> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(bool::from);
+    }
+    pub fn insert_f32_i8(&mut self, k: f32, v: i8) -> Option<i8> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i8::from);
+    }
+    pub fn insert_f32_char(&mut self, k: f32, v: char) -> Option<char> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(char::from);
+    }
+    pub fn insert_f32_i32(&mut self, k: f32, v: i32) -> Option<i32> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i32::from);
+    }
+    pub fn insert_f32_i64(&mut self, k: f32, v: i64) -> Option<i64> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i64::from);
+    }
+    pub fn insert_f32_f32(&mut self, k: f32, v: f32) -> Option<f32> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(f32::from);
+    }
+    pub fn insert_f32_f64(&mut self, k: f32, v: f64) -> Option<f64> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(f64::from);
+    }
+    pub fn insert_f32_string(&mut self, k: f32, v: String) -> Option<String> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(String::from);
+    }
+    pub fn insert_f64_bool(&mut self, k: f64, v: bool) -> Option<bool> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(bool::from);
+    }
+    pub fn insert_f64_i8(&mut self, k: f64, v: i8) -> Option<i8> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i8::from);
+    }
+    pub fn insert_f64_char(&mut self, k: f64, v: char) -> Option<char> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(char::from);
+    }
+    pub fn insert_f64_i32(&mut self, k: f64, v: i32) -> Option<i32> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i32::from);
+    }
+    pub fn insert_f64_i64(&mut self, k: f64, v: i64) -> Option<i64> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i64::from);
+    }
+    pub fn insert_f64_f32(&mut self, k: f64, v: f32) -> Option<f32> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(f32::from);
+    }
+    pub fn insert_f64_f64(&mut self, k: f64, v: f64) -> Option<f64> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(f64::from);
+    }
+    pub fn insert_f64_string(&mut self, k: f64, v: String) -> Option<String> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(String::from);
+    }
+    pub fn insert_string_bool(&mut self, k: String, v: bool) -> Option<bool> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(bool::from);
+    }
+    pub fn insert_string_i8(&mut self, k: String, v: i8) -> Option<i8> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i8::from);
+    }
+    pub fn insert_string_char(&mut self, k: String, v: char) -> Option<char> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(char::from);
+    }
+    pub fn insert_string_i32(&mut self, k: String, v: i32) -> Option<i32> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i32::from);
+    }
+    pub fn insert_string_i64(&mut self, k: String, v: i64) -> Option<i64> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(i64::from);
+    }
+    pub fn insert_string_f32(&mut self, k: String, v: f32) -> Option<f32> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(f32::from);
+    }
+    pub fn insert_string_f64(&mut self, k: String, v: f64) -> Option<f64> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(f64::from);
+    }
+    pub fn insert_string_string(&mut self, k: String, v: String) -> Option<String> {
+        return self
+            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .map(String::from);
     }
 }

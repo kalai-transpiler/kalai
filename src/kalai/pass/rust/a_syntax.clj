@@ -68,8 +68,11 @@
     (r/operator ?op . (m/app expression !args) ...)
 
     ;; function invocation
-    (invoke ?f . !args ...)
-    (r/invoke ?f . (m/app expression !args) ...)
+    (m/and (invoke ?f . !args ...)
+           (m/app meta ?meta))
+    (m/app with-meta
+           (r/invoke ?f . (m/app expression !args) ...)
+           ?meta)
 
     (method ?method ?object . !args ...)
     (r/method ?method (m/app expression ?object) . (m/app expression !args) ...)

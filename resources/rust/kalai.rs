@@ -832,16 +832,16 @@ impl Default for Map {
     }
 }
 
-impl Map {
-    pub fn get_string_f32(&self, k: String) -> Option<f32> {
-        let v = self.get(&BValue::from(k));
-        v.map(|bval| f32::from(bval))
-    }
-
-    pub fn insert_string_f32(&mut self, k: String, v: f32) -> Option<BValue> {
-        self.insert(BValue::from(k), BValue::from(v))
-    }
-}
+// impl Map {
+//     pub fn get_string_f32(&self, k: String) -> Option<f32> {
+//         let v = self.get(&BValue::from(k));
+//         v.map(|bval| f32::from(bval))
+//     }
+//
+//     pub fn insert_string_f32(&mut self, k: String, v: f32) -> Option<BValue> {
+//         self.insert(BValue::from(k), BValue::from(v))
+//     }
+// }
 
 impl Map {
     pub fn insert(&mut self, k: BValue, v: BValue) -> Option<BValue> {
