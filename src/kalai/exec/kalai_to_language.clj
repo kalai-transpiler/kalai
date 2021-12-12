@@ -153,8 +153,6 @@
           dest-file-path (io/file transpile-dir "rust" "src" "kalai.rs")
           k-str (slurp k)
           dest-file-str (str k-str
-                             ;; TODO: Fill out all helper methods for all wrapper types that we need (Map, Vector?), not just 1 example for Set
-                             ;; TODO: updating Clojure Rust pipeline code (ex: around collections) (following the change to trait objs from enums for Value) -> this occurs in sql_builder transpiling of core.clj -> core.rs
                               \newline \newline
                              (helper-fn-impl-strs)
                              \newline

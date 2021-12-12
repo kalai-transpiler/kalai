@@ -149,37 +149,37 @@
 
       ;; TODO: do we really need to clone here???
       (r/invoke (u/var ~#'vector?) ?x)
-      (r/invoke "kalai::is_vector" (r/method clone ?x))
+      (r/method is_type ?x (r/literal "Vector"))
 
       (r/invoke (u/var ~#'set?) ?x)
-      (r/invoke "kalai::is_set" (r/method clone ?x))
+      (r/method is_type ?x (r/literal "Set"))
 
       (r/invoke (u/var ~#'map?) ?x)
-      (r/invoke "kalai::is_map" (r/method clone ?x))
+      (r/method is_type ?x (r/literal "Map"))
 
       (r/invoke (u/var ~#'string?) ?x)
-      (r/invoke "kalai::is_string" (r/method clone ?x))
+      (r/method is_type ?x (r/literal "String"))
 
       (r/invoke clojure.core/instance? ~Integer ?x)
-      (r/invoke "kalai::is_int" (r/method clone ?x))
+      (r/method is_type ?x (r/literal "i32"))
 
       (r/invoke clojure.core/instance? ~Long ?x)
-      (r/invoke "kalai::is_long" (r/method clone ?x))
+      (r/method is_type ?x (r/literal "i64"))
 
       (r/invoke clojure.core/instance? ~Byte ?x)
-      (r/invoke "kalai::is_byte" (r/method clone ?x))
+      (r/method is_type ?x (r/literal "u8"))
 
       (r/invoke (u/var ~#'boolean?) ?x)
-      (r/invoke "kalai::is_bool" (r/method clone ?x))
+      (r/method is_type ?x (r/literal "bool"))
 
       (r/invoke (u/var ~#'double) ?x)
-      (r/invoke "kalai::is_double" (r/method clone ?x))
+      (r/method is_type ?x (r/literal "Double"))
 
       (r/invoke (u/var ~#'float) ?x)
-      (r/invoke "kalai::is_float" (r/method clone ?x))
+      (r/method is_type ?x (r/literal "Float"))
 
       (r/invoke clojure.lang.Util/identical ?x nil)
-      (r/invoke "kalai::is_null" (r/method clone ?x))
+      (r/method is_type ?x (r/literal "Nil"))
 
       ?else
       ?else)))

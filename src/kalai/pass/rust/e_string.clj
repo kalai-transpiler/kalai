@@ -7,6 +7,7 @@
             [clojure.java.io :as io]
             [kalai.types :as types]
             [kalai.util :as u]
+            [kalai.pass.rust.util :as ru]
             [clojure.string :as string])
   (:import (clojure.lang IMeta Keyword)
            (java.util Map Set Vector)))
@@ -44,19 +45,6 @@
 (defn statement [s]
   (str s ";"))
 
-(defn identifier
-  "For Rust, do a lowercase snake-case, unless it is already uppercased
-  (ex: struct or type name), in which case, just return as-is."
-  [s]
-  (let [s-str (str s)
-        id-first-char (first s-str)]
-    (if (Character/isUpperCase ^char id-first-char)
-      s-str
-      (let [snake-case (u/->snake_case s-str)]
-        (if (= \_ (first s-str))
-          (str \_ snake-case)
-          snake-case)))))
-
 ;;;; These are what our symbols should resolve to
 
 (defn expression-statement-str [x]
@@ -78,7 +66,7 @@
    :set     "PSet"
    :mset    "std::collections::HashSet"
    :vector  "PVector"
-   :mvector "std::vec::Vec"
+   :mvector "std::vec::Vec" ;; TODO: does this depend on whether it's a {:t {:vector [:some-primitive]}} vs. {:t {:vector [:any]}} ? How is this being used instead of t-str?
    :bool    "bool"
    :byte    "i8"
    :char    "char"
@@ -88,8 +76,13 @@
    :double  "f64"
    :string  "String"
    :void    "()"
-   :any     "kalai::Value"
+   :any     "kalai::BValue"
    :option  "Option"})
+
+(defn kalai-primitive-type->rust
+  [t]
+  (or (kalai-type->rust t)
+      types/BAD-TYPE_CAST-STR))
 
 ;; Forward declaration of `t-str` to break cycle of references.
 ;; We expect this not to create an infinite loop in practice, otherwise
@@ -118,6 +111,17 @@
   a data structure, just as we might find in `:t ` of the metadata
   map upstream in the S-exprs."
   (s/rewrite
+    {:mvector [:any]}
+    "crate::kalai::Vector"
+
+    {:mset [:any]}
+    "crate::kalai::Set"
+
+    ;; TODO: Do we want to support {:map [ (not :any) :any]) and vice versa {:map [:any (not :any)]} ?
+    {:mmap [_ _]}
+    "crate::kalai::Map"
+
+
     {?t [& ?ts]}
     ~(str (rust-type ?t)
           \< (str/join \, (for [t ?ts]
@@ -147,7 +151,7 @@
     ;; let mut char_vec: &Vec<char> = ;
     ;; let char_vec: &Vec<char> = ;
     ;; let mut char_vec: std::vec::Vec<char> = ;
-    (str (when mut "mut ") (identifier variable-name)
+    (str (when mut "mut ") (ru/identifier variable-name)
          ;; Rust has type inference, so we can leave temp variable types off
          (when t
            (str ": " (when ref "&") (type-str variable-name))))))
@@ -174,20 +178,8 @@
                     (stringify value)))))))
 
 (defn invoke-str [function-name & args]
-  (let [varmeta (some-> function-name meta :var meta)]
-    (if (and (str/includes? (str function-name) "/") varmeta)
-      ;; For now, we interpret the "/" to indicate that the function being transpiled is
-      ;; either from Kalai or the user, and therefore, it has a namespace. We need to
-      ;; handle the Rust snake-casing segment-by-segment when applying `identifier`.
-      (let [clojure-ns-by-dot (string/split (str (:ns varmeta)) #"\.")
-            rustified-ns-by-dot (map identifier clojure-ns-by-dot)
-            rustified-ns (string/join "." rustified-ns-by-dot)]
-        (str "crate::"
-             (str/replace rustified-ns "." "::") ;; we use varmeta because we want the full ns, not an alias
-             "::" (identifier (:name varmeta))
-             (args-list args)))
-      (str (identifier function-name)
-           (args-list args)))))
+  (str (ru/fully-qualified-function-identifier-str function-name)
+       (args-list args)))
 
 (defn param-str [param]
   ;; fn f(char_vec: &mut std::vec::Vec<char>) {...
@@ -198,7 +190,7 @@
       (str (when ref "&")
            (when mut "mut ")
            "self")
-      (space-separated (str (identifier param) ":")
+      (space-separated (str (ru/identifier param) ":")
                        (str (when ref "&")
                             (when mut "mut ")
                             (type-str param))))))
@@ -210,12 +202,12 @@
       (str
         (space-separated 'pub 'fn 'main (params-list [])
                          (line-separated "{"
-                                         (str "let " (identifier (second params)) ": std::vec::Vec<String> = std::env::args().collect();")
+                                         (str "let " (ru/identifier (second params)) ": std::vec::Vec<String> = std::env::args().collect();")
                                          (stringify body)
                                          "}"))))
     (str
       (space-separated "pub" "fn"
-                       (identifier name))
+                       (ru/identifier name))
       (space-separated (params-list (for [param params]
                                       (param-str param)))
                        "->"
@@ -294,7 +286,7 @@
   (pr-str s))
 
 (defn lambda-str [args body]
-  (str "|" (comma-separated (map identifier args)) "|"
+  (str "|" (comma-separated (map ru/identifier args)) "|"
        (stringify body)))
 
 (defn ref-str [s]
@@ -354,7 +346,7 @@
   "Specifically for the Value enum for heterogeneous collections"
   [x]
   (if-let [t (value-type x)]
-    (str "kalai::Value::" t (parens (stringify x)))
+    (str "crate::kalai::BValue::from" (parens (stringify x)))
     (stringify x)))
 
 ;;;; This is the main entry point
@@ -411,7 +403,7 @@
 
     ;; identifier
     (m/pred symbol? ?s)
-    (identifier ?s)
+    (ru/identifier ?s)
 
     ?else
     (pr-str ?else)))

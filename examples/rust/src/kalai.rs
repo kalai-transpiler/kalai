@@ -57,6 +57,9 @@ pub struct Set(pub HashSet<BValue>);
 #[derive(Debug, Clone)]
 pub struct Map(pub HashMap<BValue, BValue>);
 
+#[derive(Debug, Clone)]
+pub struct Vector(pub Vec<BValue>);
+
 // implementing Value trait based on SO answer at:
 // https://stackoverflow.com/a/49779676
 
@@ -213,6 +216,34 @@ impl Value for Set {
     }
 }
 
+impl Value for Vector {
+    fn hash_id(&self) -> u64 {
+        // TODO: find a more efficient way to create a deterministic contents/value-based hash for a Set (or any collection)
+        // TODO: look into how Clojure hashes collections (ex: map, set)
+        // Note: we use BinaryHeap to order the hash values because hashing is stateful, and therefore, order-dependent.
+        let elem_hashes: BinaryHeap<u64> = self.0.iter().map(|e| e.deref().hash_id()).collect();
+        let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
+
+        let mut hasher = DefaultHasher::new();
+        for eh in sorted_hashes.iter() {
+            eh.hash(&mut hasher);
+        }
+        let result = hasher.finish();
+        result
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn eq_test(&self, other: &dyn Value) -> bool {
+        match other.as_any().downcast_ref::<Vector>() {
+            Some(vector) => &self.0 == &vector.0,
+            None => false,
+        }
+    }
+}
+
 impl Value for bool {
     fn hash_id(&self) -> u64 {
         *self as u64
@@ -317,6 +348,31 @@ impl Value for HashSet<i32> {
 
     fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<HashSet<i32>>() {
+            Some(set) => self == set,
+            None => false,
+        }
+    }
+}
+
+impl Value for HashSet<BValue> {
+    fn hash_id(&self) -> u64 {
+        let elem_hashes: BinaryHeap<u64> = self.iter().map(|e| e.hash_id()).collect();
+        let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
+
+        let mut hasher = DefaultHasher::new();
+        for eh in sorted_hashes.iter() {
+            eh.hash(&mut hasher);
+        }
+        let result = hasher.finish();
+        result
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn eq_test(&self, other: &dyn Value) -> bool {
+        match other.as_any().downcast_ref::<HashSet<BValue>>() {
             Some(set) => self == set,
             None => false,
         }
@@ -702,7 +758,27 @@ impl From<BValue> for Map {
         if let Some(map) = v.as_any().downcast_ref::<Map>() {
             map.clone()
         } else {
-            panic!("Could not downcast Value into Float!");
+            panic!("Could not downcast Value into Map!");
+        }
+    }
+}
+
+impl From<BValue> for Set {
+    fn from(v: BValue) -> Set {
+        if let Some(set) = v.as_any().downcast_ref::<Set>() {
+            set.clone()
+        } else {
+            panic!("Could not downcast Value into Set!");
+        }
+    }
+}
+
+impl From<BValue> for Vector {
+    fn from(v: BValue) -> Vector {
+        if let Some(vector) = v.as_any().downcast_ref::<Vector>() {
+            vector.clone()
+        } else {
+            panic!("Could not downcast Value into Vector!");
         }
     }
 }

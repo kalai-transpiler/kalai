@@ -1,5 +1,13 @@
 # TODO
 
+* Replacing Value enum with Value trait objects
+  - Understand Rust output of `^{:t {:mvector [:any]}} v ^{:cast :mvector} x` in core.clj -> core.rs.  Why is kalai-type->rust being called instead of t-str in rust e-string?
+    * Also investigate occurrences of Value::Null
+  - Fill out all helper methods for all wrapper types that we need (Map, Vector?), not just 1 example for Set
+  - updating Clojure Rust pipeline code (ex: around collections) (following the change to trait objs from enums for Value) -> this occurs in sql_builder transpiling of core.clj -> core.rs
+  - Refactor {Rust,Java} identifier stringifying code in java util.clj / rust util.clj
+  - We don't need "crate::kalai:...", instead only "kalai::..." - just be consistent
+
 * In Java, nth index can only be an int, we should do that on behalf of the user and document that constraint.
 * SQL builder application
   - Fix stringification of WHERE clause and fix the "op" interpolation in the WHERE clause of example f1

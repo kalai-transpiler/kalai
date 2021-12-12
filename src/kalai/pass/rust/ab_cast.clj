@@ -1,16 +1,17 @@
 (ns kalai.pass.rust.ab-cast
   (:require [meander.strategy.epsilon :as s]
-            [meander.epsilon :as m]))
+            [meander.epsilon :as m]
+            [kalai.pass.rust.e-string :as e-string]))
 
 (def rewrite
   (s/bottom-up
     (s/rewrite
+      ;; Support type cast to any via helper method from kalai.rs. Ex:
+      ;; bool::from(x) which gives a bool from an x of type BValue
       (m/and ?x
              (m/app meta {:t :any
                           :cast (m/pred some? ?t)}))
-      (r/invoke ~(str "kalai::to_" (name ?t))
-                ;; TODO: probably don't need to clone??
-                (r/method clone ?x))
+      (r/invoke ~(str (e-string/kalai-primitive-type->rust ?t) "::from") ?x)
 
       (m/and ?x
              (m/app meta {:cast (m/pred some? ?t)}))
