@@ -22,12 +22,12 @@ static ref x: i32 = 3;
 ;; TODO: this test doesn't make sense in Rust because top-level bindings can't be empty
 (deftest init2-test
   (top-level-form
-    '(def ^Integer x)
+    '(def ^{:t :any} x)
     ;;->
     '(init x)
     ;;->
     "lazy_static::lazy_static! {
-static ref x: i32 = kalai::Value::Null;
+static ref x: kalai::BValue = kalai::BValue::NIL;
 }"))
 
 (deftest init3-test
@@ -731,7 +731,7 @@ println!(\"{}\", x);"))
     '(do
        (init x 1)
        (invoke println x))
-    "let x: kalai::Value = kalai::Value::Long(1);
+    "let x: kalai::BValue = kalai::BValue::from(1);
 println!(\"{}\", x);"))
 
 (deftest data-literals8-1-3-test
@@ -753,11 +753,11 @@ println!(\"{}\", x);"))
     "let a: i64 = 1;
 let b: i64 = 2;
 let c: i64 = 3;
-let x: std::vec::Vec<kalai::Value> = {
-let mut tmp1: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
-tmp1.push(kalai::Value::Long(a.clone()));
-tmp1.push(kalai::Value::Long(b.clone()));
-tmp1.push(kalai::Value::Long(c.clone()));
+let x: kalai::Vector = {
+let mut tmp1: kalai::Vector = kalai::Vector::new();
+tmp1.push(kalai::BValue::from(a.clone()));
+tmp1.push(kalai::BValue::from(b.clone()));
+tmp1.push(kalai::BValue::from(c.clone()));
 tmp1
 };
 println!(\"{}\", x);"))
@@ -777,13 +777,13 @@ println!(\"{}\", x);"))
          (invoke conj result i)
          (assign i (operator - i 3))))
     ;;->
-    "let mut result: std::vec::Vec<kalai::Value> = {
-let mut tmp1: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
+    "let mut result: kalai::Vector = {
+let mut tmp1: kalai::Vector = kalai::Vector::new();
 tmp1
 };
 let mut i: i32 = 10;
 while (0 < i) {
-result.push(kalai::Value::Int(i.clone()));
+result.push(kalai::BValue::from(i.clone()));
 i = (i - 3);
 }"))
 
@@ -797,11 +797,29 @@ i = (i - 3);
        (init x [1 2 3])
        (invoke println x))
     ;;->
-    "let x: std::vec::Vec<kalai::Value> = {
-let mut tmp1: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
-tmp1.push(kalai::Value::Long(1));
-tmp1.push(kalai::Value::Long(2));
-tmp1.push(kalai::Value::Long(3));
+    "let x: kalai::Vector = {
+let mut tmp1: kalai::Vector = std::vec::Vec::new();
+tmp1.push(kalai::BValue::from(1));
+tmp1.push(kalai::BValue::from(2));
+tmp1.push(kalai::BValue::from(3));
+tmp1
+};
+println!(\"{}\", x);"))
+
+(deftest data-literals8-1-test
+  (inner-form
+    '(let [x ^{:t :any} [1 "2" 3]]
+       (println x))
+    ;;->
+    '(do
+       (init x [1 "2" 3])
+       (invoke println x))
+    ;;->
+    "let x: kalai::BValue = {
+let mut tmp1: kalai::BValue = kalai::BValue::new();
+tmp1.push(kalai::BValue::from(1));
+tmp1.push(kalai::BValue::from(String::from(\"2\")));
+tmp1.push(kalai::BValue::from(3));
 tmp1
 };
 println!(\"{}\", x);"))

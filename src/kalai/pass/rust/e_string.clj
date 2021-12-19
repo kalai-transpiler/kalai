@@ -66,7 +66,8 @@
    :set     "PSet"
    :mset    "std::collections::HashSet"
    :vector  "PVector"
-   :mvector "std::vec::Vec" ;; TODO: does this depend on whether it's a {:t {:vector [:some-primitive]}} vs. {:t {:vector [:any]}} ? How is this being used instead of t-str?
+   ;; TODO: does this depend on whether it's a {:t {:vector [:some-primitive]}} vs. {:t {:vector [:any]}} ? How is this being used instead of t-str?
+   :mvector "std::vec::Vec"
    :bool    "bool"
    :byte    "i8"
    :char    "char"
@@ -112,15 +113,14 @@
   map upstream in the S-exprs."
   (s/rewrite
     {:mvector [:any]}
-    "crate::kalai::Vector"
+    "kalai::Vector"
 
     {:mset [:any]}
-    "crate::kalai::Set"
+    "kalai::Set"
 
     ;; TODO: Do we want to support {:map [ (not :any) :any]) and vice versa {:map [:any (not :any)]} ?
-    {:mmap [_ _]}
-    "crate::kalai::Map"
-
+    {:mmap [:any :any]}
+    "kalai::Map"
 
     {?t [& ?ts]}
     ~(str (rust-type ?t)
@@ -129,7 +129,29 @@
           \>)
 
     ?t
-    ~(str (rust-type ?t))))
+    ~(rust-type ?t)))
+
+(def init-rhs-t-str
+  "?t may be a symbol, but could also be a
+  a data structure, just as we might find in `:t ` of the metadata
+  map upstream in the S-exprs."
+  (s/rewrite
+    {:mvector [:any]}
+    "kalai::Vector"
+
+    {:mset [:any]}
+    "kalai::Set"
+
+    ;; TODO: Do we want to support {:map [ (not :any) :any]) and vice versa {:map [:any (not :any)]} ?
+    {:mmap [:any :any]}
+    "kalai::Map"
+
+    {?t [& ?ts]}
+    ~(rust-type ?t)
+
+    ?t
+    ~(rust-type ?t)))
+
 
 (defn where [{:keys [file line column]}]
   (when file
@@ -277,7 +299,7 @@
 (defn new-str [t & args]
   (str (if (symbol? t)
          t
-         (doto (-> t (keys) (first) (rust-type))
+         (doto (init-rhs-t-str t)
            (maybe-warn-type-missing t)))
        "::new"
        (args-list args)))
@@ -346,7 +368,7 @@
   "Specifically for the Value enum for heterogeneous collections"
   [x]
   (if-let [t (value-type x)]
-    (str "crate::kalai::BValue::from" (parens (stringify x)))
+    (str "kalai::BValue::from" (parens (stringify x)))
     (stringify x)))
 
 ;;;; This is the main entry point
@@ -399,7 +421,7 @@
     (str "String::from(" (pr-str ?s) ")")
 
     nil
-    "kalai::Value::Null"
+    "kalai::BValue::NIL"
 
     ;; identifier
     (m/pred symbol? ?s)

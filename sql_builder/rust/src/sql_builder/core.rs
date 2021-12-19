@@ -1,7 +1,7 @@
 use crate::kalai;
 pub fn cast_to_str(x: kalai::BValue) -> String {
     if x.is_type("Vector") {
-        let v: crate::kalai::Vector = std::vec::Vec::from(x);
+        let v: kalai::Vector = std::vec::Vec::from(x);
         let v_first: kalai::BValue = v.get(0 as usize).unwrap().clone();
         let table_name: String = String::from(v_first);
         let v_second: kalai::BValue = v.get(1 as usize).unwrap().clone();
@@ -23,7 +23,7 @@ pub fn cast_to_str(x: kalai::BValue) -> String {
         }
     }
 }
-pub fn select_str(select: crate::kalai::Vector) -> String {
+pub fn select_str(select: kalai::Vector) -> String {
     return select
         .clone()
         .into_iter()
@@ -32,7 +32,7 @@ pub fn select_str(select: crate::kalai::Vector) -> String {
         .collect::<Vec<String>>()
         .join(&String::from(", "));
 }
-pub fn from_str(from: crate::kalai::Vector) -> String {
+pub fn from_str(from: kalai::Vector) -> String {
     return from
         .clone()
         .into_iter()
@@ -41,7 +41,7 @@ pub fn from_str(from: crate::kalai::Vector) -> String {
         .collect::<Vec<String>>()
         .join(&String::from(", "));
 }
-pub fn join_str(join: crate::kalai::Vector) -> String {
+pub fn join_str(join: kalai::Vector) -> String {
     return join
         .clone()
         .into_iter()
@@ -52,7 +52,7 @@ pub fn join_str(join: crate::kalai::Vector) -> String {
 }
 pub fn where_str(clause: kalai::BValue) -> String {
     if clause.is_type("Vector") {
-        let v: crate::kalai::Vector = std::vec::Vec::from(clause);
+        let v: kalai::Vector = std::vec::Vec::from(clause);
         let v_first: kalai::BValue = v.clone().into_iter().next().unwrap();
         let op: String = String::from(v_first);
         return format!(
@@ -71,7 +71,7 @@ pub fn where_str(clause: kalai::BValue) -> String {
         return cast_to_str(clause);
     }
 }
-pub fn group_by_str(join: crate::kalai::Vector) -> String {
+pub fn group_by_str(join: kalai::Vector) -> String {
     return join
         .clone()
         .into_iter()
@@ -84,7 +84,7 @@ pub fn having_str(having: kalai::BValue) -> String {
     return where_str(having);
 }
 pub fn row_str(row: kalai::BValue) -> String {
-    let mrow: crate::kalai::Vector = std::vec::Vec::from(row);
+    let mrow: kalai::Vector = std::vec::Vec::from(row);
     return format!(
         "{}{}{}",
         String::from("("),
@@ -97,42 +97,42 @@ pub fn row_str(row: kalai::BValue) -> String {
         String::from(")")
     );
 }
-pub fn format(query_map: crate::kalai::Map) -> String {
+pub fn format(query_map: std::collections::HashMap<String, kalai::BValue>) -> String {
     let select: kalai::BValue = query_map
         .get(&String::from(":select"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::NIL)
         .clone();
     let from: kalai::BValue = query_map
         .get(&String::from(":from"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::NIL)
         .clone();
     let join: kalai::BValue = query_map
         .get(&String::from(":join"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::NIL)
         .clone();
     let where_clause: kalai::BValue = query_map
         .get(&String::from(":where"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::NIL)
         .clone();
     let group_by: kalai::BValue = query_map
         .get(&String::from(":group-by"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::NIL)
         .clone();
     let having: kalai::BValue = query_map
         .get(&String::from(":having"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::NIL)
         .clone();
     let insert_into: kalai::BValue = query_map
         .get(&String::from(":insert-into"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::NIL)
         .clone();
     let columns: kalai::BValue = query_map
         .get(&String::from(":columns"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::NIL)
         .clone();
     let values: kalai::BValue = query_map
         .get(&String::from(":values"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::NIL)
         .clone();
     return format!(
         "{}{}{}{}{}{}{}",
@@ -148,7 +148,7 @@ pub fn format(query_map: crate::kalai::Map) -> String {
                 String::from(")\n"),
                 String::from("VALUES\n"),
                 {
-                    let v2: crate::kalai::Vector = std::vec::Vec::from(values);
+                    let v2: kalai::Vector = std::vec::Vec::from(values);
                     v2.clone()
                         .into_iter()
                         .clone()

@@ -1,4 +1,3 @@
-use std::any::Any;
 use std::borrow::Borrow;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashSet;
@@ -8,6 +7,7 @@ use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::ops::{Add, Deref};
 use std::vec::Vec;
+use std::{any, any::Any};
 use std::{fmt, ops};
 
 /// Because we want to insert values that implement the Value trait (in order to
@@ -43,7 +43,9 @@ pub type BValue = Box<dyn Value>;
 // custom implementations that allow them to be put into keys of sets and maps, etc.
 
 #[derive(PartialEq, Hash, Debug, Clone)]
-pub struct Nil {}
+pub struct Nil(i32);
+
+const NIL: Nil = Nil(0);
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Float(pub f32);
@@ -101,9 +103,15 @@ pub struct Vector(pub Vec<BValue>);
 /// assert!(s.contains(&f_box_2));
 /// ```
 pub trait Value: Debug + CloneValue {
+    fn type_name(&self) -> &'static str;
+
     fn hash_id(&self) -> u64;
     fn as_any(&self) -> &dyn Any;
     fn eq_test(&self, other: &dyn Value) -> bool;
+
+    fn is_type(&self, type_str: &str) -> bool {
+        type_str == self.type_name()
+    }
 }
 
 impl Hash for dyn Value {
@@ -155,6 +163,10 @@ impl Clone for Box<dyn Value> {
 //
 
 impl Value for Double {
+    fn type_name(&self) -> &'static str {
+        "Double"
+    }
+
     fn hash_id(&self) -> u64 {
         self.0.to_bits()
     }
@@ -172,6 +184,10 @@ impl Value for Double {
 }
 
 impl Value for Float {
+    fn type_name(&self) -> &'static str {
+        "Float"
+    }
+
     fn hash_id(&self) -> u64 {
         self.0.to_bits() as u64
     }
@@ -189,6 +205,10 @@ impl Value for Float {
 }
 
 impl Value for Set {
+    fn type_name(&self) -> &'static str {
+        "Set"
+    }
+
     fn hash_id(&self) -> u64 {
         // TODO: find a more efficient way to create a deterministic contents/value-based hash for a Set (or any collection)
         // TODO: look into how Clojure hashes collections (ex: map, set)
@@ -216,7 +236,48 @@ impl Value for Set {
     }
 }
 
+impl<T> Value for Vec<T>
+where
+    T: PartialEq + Value + Clone + 'static,
+{
+    fn type_name(&self) -> &'static str {
+        // TODO: think about this...
+        // This isn't as important as it sounds... it's just to check if `vector?` should return true
+        "Vector"
+    }
+
+    fn hash_id(&self) -> u64 {
+        // TODO: find a more efficient way to create a deterministic contents/value-based hash for a Set (or any collection)
+        // TODO: look into how Clojure hashes collections (ex: map, set)
+        // Note: we use BinaryHeap to order the hash values because hashing is stateful, and therefore, order-dependent.
+        let elem_hashes: BinaryHeap<u64> = self.iter().map(|e| e.deref().hash_id()).collect();
+        let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
+
+        let mut hasher = DefaultHasher::new();
+        for eh in sorted_hashes.iter() {
+            eh.hash(&mut hasher);
+        }
+        let result = hasher.finish();
+        result
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn eq_test(&self, other: &dyn Value) -> bool {
+        match other.as_any().downcast_ref::<Vec<T>>() {
+            Some(vector) => *self == *vector,
+            None => false,
+        }
+    }
+}
+
 impl Value for Vector {
+    fn type_name(&self) -> &'static str {
+        "Vector"
+    }
+
     fn hash_id(&self) -> u64 {
         // TODO: find a more efficient way to create a deterministic contents/value-based hash for a Set (or any collection)
         // TODO: look into how Clojure hashes collections (ex: map, set)
@@ -245,6 +306,10 @@ impl Value for Vector {
 }
 
 impl Value for bool {
+    fn type_name(&self) -> &'static str {
+        "bool"
+    }
+
     fn hash_id(&self) -> u64 {
         *self as u64
     }
@@ -262,6 +327,10 @@ impl Value for bool {
 }
 
 impl Value for i8 {
+    fn type_name(&self) -> &'static str {
+        "i8"
+    }
+
     fn hash_id(&self) -> u64 {
         *self as u64
     }
@@ -279,6 +348,10 @@ impl Value for i8 {
 }
 
 impl Value for char {
+    fn type_name(&self) -> &'static str {
+        "char"
+    }
+
     fn hash_id(&self) -> u64 {
         *self as u64
     }
@@ -296,6 +369,10 @@ impl Value for char {
 }
 
 impl Value for i32 {
+    fn type_name(&self) -> &'static str {
+        "i32"
+    }
+
     fn hash_id(&self) -> u64 {
         *self as u64
     }
@@ -313,6 +390,10 @@ impl Value for i32 {
 }
 
 impl Value for i64 {
+    fn type_name(&self) -> &'static str {
+        "i64"
+    }
+
     fn hash_id(&self) -> u64 {
         *self as u64
     }
@@ -329,17 +410,13 @@ impl Value for i64 {
     }
 }
 
-impl Value for HashSet<i32> {
-    fn hash_id(&self) -> u64 {
-        let elem_hashes: BinaryHeap<u64> = self.iter().map(|e| (*e) as u64).collect();
-        let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
+impl Value for Nil {
+    fn type_name(&self) -> &'static str {
+        "Nil"
+    }
 
-        let mut hasher = DefaultHasher::new();
-        for eh in sorted_hashes.iter() {
-            eh.hash(&mut hasher);
-        }
-        let result = hasher.finish();
-        result
+    fn hash_id(&self) -> u64 {
+        0
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -347,72 +424,111 @@ impl Value for HashSet<i32> {
     }
 
     fn eq_test(&self, other: &dyn Value) -> bool {
-        match other.as_any().downcast_ref::<HashSet<i32>>() {
-            Some(set) => self == set,
-            None => false,
-        }
+        // should be the same as: as_any().downcast_ref::<Nil>().is_some()
+        other.is_type("Nil")
     }
 }
 
-impl Value for HashSet<BValue> {
-    fn hash_id(&self) -> u64 {
-        let elem_hashes: BinaryHeap<u64> = self.iter().map(|e| e.hash_id()).collect();
-        let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
+// impl Value for HashSet<i32> {
+//     const TYPE_NAME: &'static str = "HashSet<i32>";
+//
+//     fn hash_id(&self) -> u64 {
+//         let elem_hashes: BinaryHeap<u64> = self.iter().map(|e| (*e) as u64).collect();
+//         let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
+//
+//         let mut hasher = DefaultHasher::new();
+//         for eh in sorted_hashes.iter() {
+//             eh.hash(&mut hasher);
+//         }
+//         let result = hasher.finish();
+//         result
+//     }
+//
+//     fn as_any(&self) -> &dyn Any {
+//         self
+//     }
+//
+//     fn eq_test(&self, other: &dyn Value) -> bool {
+//         match other.as_any().downcast_ref::<HashSet<i32>>() {
+//             Some(set) => {
+//                 self == set
+//             }
+//             None => false,
+//         }
+//     }
+// }
 
-        let mut hasher = DefaultHasher::new();
-        for eh in sorted_hashes.iter() {
-            eh.hash(&mut hasher);
-        }
-        let result = hasher.finish();
-        result
-    }
+// impl Value for HashSet<BValue> {
+//     const TYPE_NAME: &'static str = "HashSet<BValue>";
+//
+//     fn hash_id(&self) -> u64 {
+//         let elem_hashes: BinaryHeap<u64> = self.iter().map(|e| e.hash_id()).collect();
+//         let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
+//
+//         let mut hasher = DefaultHasher::new();
+//         for eh in sorted_hashes.iter() {
+//             eh.hash(&mut hasher);
+//         }
+//         let result = hasher.finish();
+//         result
+//     }
+//
+//     fn as_any(&self) -> &dyn Any {
+//         self
+//     }
+//
+//     fn eq_test(&self, other: &dyn Value) -> bool {
+//         match other.as_any().downcast_ref::<HashSet<BValue>>() {
+//             Some(set) => {
+//                 self == set
+//             }
+//             None => false,
+//         }
+//     }
+// }
 
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn eq_test(&self, other: &dyn Value) -> bool {
-        match other.as_any().downcast_ref::<HashSet<BValue>>() {
-            Some(set) => self == set,
-            None => false,
-        }
-    }
-}
-
-impl Value for HashMap<String, f32> {
-    fn hash_id(&self) -> u64 {
-        let elem_hashes: BinaryHeap<u64> = self
-            .iter()
-            .flat_map(|(k, v)| {
-                [(*k).hash_id(), Float(*v).hash_id()]
-                    .iter()
-                    .cloned()
-                    .collect::<Vec<u64>>()
-            })
-            .collect();
-        let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
-
-        let mut hasher = DefaultHasher::new();
-        for eh in sorted_hashes.iter() {
-            eh.hash(&mut hasher);
-        }
-        let result = hasher.finish();
-        result
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn eq_test(&self, other: &dyn Value) -> bool {
-        match other.as_any().downcast_ref::<HashMap<String, f32>>() {
-            Some(set) => self == set,
-            None => false,
-        }
-    }
-}
+// impl Value for HashMap<String, f32> {
+//     const TYPE_NAME: &'static str = "HashMap<String, f32>";
+//
+//     fn hash_id(&self) -> u64 {
+//         let elem_hashes: BinaryHeap<u64> =
+//             self.iter()
+//                 .flat_map(
+//                     |(k,v)|
+//                         [(*k).hash_id(), Float(*v).hash_id()]
+//                             .iter()
+//                             .cloned()
+//                             .collect::<Vec<u64>>())
+//                 .collect();
+//         let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
+//
+//         let mut hasher = DefaultHasher::new();
+//         for eh in sorted_hashes.iter() {
+//             eh.hash(&mut hasher);
+//         }
+//         let result = hasher.finish();
+//         result
+//     }
+//
+//     fn as_any(&self) -> &dyn Any {
+//         self
+//     }
+//
+//     fn eq_test(&self, other: &dyn Value) -> bool {
+//         match other.as_any().downcast_ref::< HashMap<String, f32> >() {
+//             Some(set) => {
+//                 self == set
+//             }
+//             None => false,
+//         }
+//     }
+// }
 
 impl Value for Map {
+    fn type_name(&self) -> &'static str {
+        "Map"
+    }
+
     fn hash_id(&self) -> u64 {
         // TODO: find a more efficient way to create a deterministic contents/value-based hash for a Set (or any collection)
         // TODO: look into how Clojure hashes collections (ex: map, set)
@@ -450,6 +566,10 @@ impl Value for Map {
 }
 
 impl Value for String {
+    fn type_name(&self) -> &'static str {
+        "String"
+    }
+
     fn hash_id(&self) -> u64 {
         let mut hasher = DefaultHasher::new();
         self.to_string().hash(&mut hasher);
@@ -704,36 +824,65 @@ impl From<&BValue> for i64 {
     }
 }
 
-// HashSet<i32>
+// Nil
 
-impl From<HashSet<i32>> for BValue {
-    fn from(x: HashSet<i32>) -> Self {
+impl From<Nil> for BValue {
+    fn from(x: Nil) -> Self {
         let b: BValue = Box::new(x);
         b
     }
 }
 
-impl From<BValue> for HashSet<i32> {
-    fn from(v: BValue) -> HashSet<i32> {
-        if let Some(set) = v.as_any().downcast_ref::<HashSet<i32>>() {
-            set.clone()
+impl From<BValue> for Nil {
+    fn from(v: BValue) -> Nil {
+        if let Some(x) = v.as_any().downcast_ref::<Nil>() {
+            NIL
         } else {
-            panic!("Could not downcast Value into HashSet<i32>!");
+            panic!("Could not downcast Value into Nil!");
         }
     }
 }
 
-// HashMap<String,f32>
-
-impl From<BValue> for HashMap<String, f32> {
-    fn from(v: BValue) -> HashMap<String, f32> {
-        if let Some(set) = v.as_any().downcast_ref::<HashMap<String, f32>>() {
-            set.clone()
+impl From<&BValue> for Nil {
+    fn from(v: &BValue) -> Nil {
+        if let Some(x) = v.as_any().downcast_ref::<Nil>() {
+            NIL
         } else {
-            panic!("Could not downcast Value into HashMap<String, f32>!");
+            panic!("Could not downcast Value into Nil!");
         }
     }
 }
+
+// // HashSet<i32>
+//
+// impl From<HashSet<i32>> for BValue {
+//     fn from(x: HashSet<i32>) -> Self {
+//         let b: BValue = Box::new(x);
+//         b
+//     }
+// }
+//
+// impl From<BValue> for HashSet<i32> {
+//     fn from(v: BValue) -> HashSet<i32> {
+//         if let Some(set) = v.as_any().downcast_ref::<HashSet<i32>>() {
+//             set.clone()
+//         } else {
+//             panic!("Could not downcast Value into HashSet<i32>!");
+//         }
+//     }
+// }
+//
+// // HashMap<String,f32>
+//
+// impl From<BValue> for HashMap<String, f32> {
+//     fn from(v: BValue) -> HashMap<String, f32> {
+//         if let Some(set) = v.as_any().downcast_ref::<HashMap<String, f32>>() {
+//             set.clone()
+//         } else {
+//             panic!("Could not downcast Value into HashMap<String, f32>!");
+//         }
+//     }
+// }
 
 // impl From<HashSet<BValue>> for BValue {
 //     fn from(x: HashSet<BValue>) -> Self {
@@ -840,6 +989,38 @@ impl Set {
     pub fn insert(&mut self, x: BValue) -> bool {
         self.0.insert(x)
     }
+
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+//
+// Vector impls
+//
+
+impl Default for Vector {
+    fn default() -> Vector {
+        Vector(Vec::<BValue>::new())
+    }
+}
+
+impl Vector {
+    pub fn contains(&self, x: &BValue) -> bool {
+        self.0.contains(x)
+    }
+
+    pub fn push(&mut self, x: BValue) -> () {
+        self.0.push(x)
+    }
+
+    pub fn insert(&mut self, idx: usize, x: BValue) -> () {
+        self.0.insert(idx, x)
+    }
+
+    pub fn new() -> Self {
+        Self::default()
+    }
 }
 
 //
@@ -870,6 +1051,10 @@ impl Map {
 
     pub fn get(&self, k: &BValue) -> Option<&BValue> {
         self.0.get(k)
+    }
+
+    pub fn new() -> Map {
+        Self::default()
     }
 }
 

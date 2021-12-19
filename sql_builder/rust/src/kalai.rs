@@ -43,7 +43,9 @@ pub type BValue = Box<dyn Value>;
 // custom implementations that allow them to be put into keys of sets and maps, etc.
 
 #[derive(PartialEq, Hash, Debug, Clone)]
-pub struct Nil {}
+pub struct Nil(i32);
+
+const NIL: Nil = Nil(0);
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Float(pub f32);
@@ -229,6 +231,43 @@ impl Value for Set {
     fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<Set>() {
             Some(set) => &self.0 == &set.0,
+            None => false,
+        }
+    }
+}
+
+impl<T> Value for Vec<T>
+where
+    T: PartialEq + Value + Clone + 'static,
+{
+    fn type_name(&self) -> &'static str {
+        // TODO: think about this...
+        // This isn't as important as it sounds... it's just to check if `vector?` should return true
+        "Vector"
+    }
+
+    fn hash_id(&self) -> u64 {
+        // TODO: find a more efficient way to create a deterministic contents/value-based hash for a Set (or any collection)
+        // TODO: look into how Clojure hashes collections (ex: map, set)
+        // Note: we use BinaryHeap to order the hash values because hashing is stateful, and therefore, order-dependent.
+        let elem_hashes: BinaryHeap<u64> = self.iter().map(|e| e.deref().hash_id()).collect();
+        let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
+
+        let mut hasher = DefaultHasher::new();
+        for eh in sorted_hashes.iter() {
+            eh.hash(&mut hasher);
+        }
+        let result = hasher.finish();
+        result
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn eq_test(&self, other: &dyn Value) -> bool {
+        match other.as_any().downcast_ref::<Vec<T>>() {
+            Some(vector) => *self == *vector,
             None => false,
         }
     }
@@ -797,7 +836,7 @@ impl From<Nil> for BValue {
 impl From<BValue> for Nil {
     fn from(v: BValue) -> Nil {
         if let Some(x) = v.as_any().downcast_ref::<Nil>() {
-            *x.deref()
+            NIL
         } else {
             panic!("Could not downcast Value into Nil!");
         }
@@ -807,7 +846,7 @@ impl From<BValue> for Nil {
 impl From<&BValue> for Nil {
     fn from(v: &BValue) -> Nil {
         if let Some(x) = v.as_any().downcast_ref::<Nil>() {
-            *x.deref()
+            NIL
         } else {
             panic!("Could not downcast Value into Nil!");
         }
@@ -950,6 +989,38 @@ impl Set {
     pub fn insert(&mut self, x: BValue) -> bool {
         self.0.insert(x)
     }
+
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+//
+// Vector impls
+//
+
+impl Default for Vector {
+    fn default() -> Vector {
+        Vector(Vec::<BValue>::new())
+    }
+}
+
+impl Vector {
+    pub fn contains(&self, x: &BValue) -> bool {
+        self.0.contains(x)
+    }
+
+    pub fn push(&mut self, x: BValue) -> () {
+        self.0.push(x)
+    }
+
+    pub fn insert(&mut self, idx: usize, x: BValue) -> () {
+        self.0.insert(idx, x)
+    }
+
+    pub fn new() -> Self {
+        Self::default()
+    }
 }
 
 //
@@ -980,6 +1051,10 @@ impl Map {
 
     pub fn get(&self, k: &BValue) -> Option<&BValue> {
         self.0.get(k)
+    }
+
+    pub fn new() -> Map {
+        Self::default()
     }
 }
 
