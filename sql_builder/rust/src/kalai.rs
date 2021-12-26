@@ -934,31 +934,19 @@ impl From<BValue> for Vector {
 
 impl From<Map> for BValue {
     fn from(m: Map) -> BValue {
-        if let Some(value) = m.as_any().downcast_ref::<BValue>() {
-            value.clone()
-        } else {
-            panic!("Could not downcast Map into BValue!");
-        }
+        Box::new(m)
     }
 }
 
 impl From<Set> for BValue {
     fn from(s: Set) -> BValue {
-        if let Some(value) = s.as_any().downcast_ref::<BValue>() {
-            value.clone()
-        } else {
-            panic!("Could not downcast Set into BValue!");
-        }
+        Box::new(s)
     }
 }
 
 impl From<Vector> for BValue {
     fn from(v: Vector) -> BValue {
-        if let Some(value) = v.as_any().downcast_ref::<BValue>() {
-            value.clone()
-        } else {
-            panic!("Could not downcast Vector into BValue!");
-        }
+        Box::new(v)
     }
 }
 
