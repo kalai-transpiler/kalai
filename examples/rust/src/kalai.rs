@@ -20,7 +20,7 @@ use std::{fmt, ops};
 /// the object / trait object.) Therefore, when dealing with collections and our
 /// `Value` trait, we have to deal with the `BValue` representation of
 /// our value. (And in fact, we must upcast(?) a concrete type like `Float` into
-/// `Value` (ex: `let f: Box<dyn Value = Box::new(Float(3.14));`) before being
+/// `Value` (ex: `let f: Box<dyn Value> = Box::new(Float(3.14));`) before being
 /// able to use that concrete-typed value).
 pub type BValue = Box<dyn Value>;
 
@@ -934,31 +934,19 @@ impl From<BValue> for Vector {
 
 impl From<Map> for BValue {
     fn from(m: Map) -> BValue {
-        if let Some(value) = m.as_any().downcast_ref::<BValue>() {
-            value.clone()
-        } else {
-            panic!("Could not downcast Map into BValue!");
-        }
+        Box::new(m)
     }
 }
 
 impl From<Set> for BValue {
     fn from(s: Set) -> BValue {
-        if let Some(value) = s.as_any().downcast_ref::<BValue>() {
-            value.clone()
-        } else {
-            panic!("Could not downcast Set into BValue!");
-        }
+        Box::new(s)
     }
 }
 
 impl From<Vector> for BValue {
     fn from(v: Vector) -> BValue {
-        if let Some(value) = v.as_any().downcast_ref::<BValue>() {
-            value.clone()
-        } else {
-            panic!("Could not downcast Vector into BValue!");
-        }
+        Box::new(v)
     }
 }
 
