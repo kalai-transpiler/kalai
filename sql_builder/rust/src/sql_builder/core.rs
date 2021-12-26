@@ -100,39 +100,39 @@ pub fn row_str(row: kalai::BValue) -> String {
 pub fn format(query_map: std::collections::HashMap<String, kalai::BValue>) -> String {
     let select: kalai::BValue = query_map
         .get(&String::from(":select"))
-        .unwrap_or(&kalai::BValue::NIL)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
     let from: kalai::BValue = query_map
         .get(&String::from(":from"))
-        .unwrap_or(&kalai::BValue::NIL)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
     let join: kalai::BValue = query_map
         .get(&String::from(":join"))
-        .unwrap_or(&kalai::BValue::NIL)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
     let where_clause: kalai::BValue = query_map
         .get(&String::from(":where"))
-        .unwrap_or(&kalai::BValue::NIL)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
     let group_by: kalai::BValue = query_map
         .get(&String::from(":group-by"))
-        .unwrap_or(&kalai::BValue::NIL)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
     let having: kalai::BValue = query_map
         .get(&String::from(":having"))
-        .unwrap_or(&kalai::BValue::NIL)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
     let insert_into: kalai::BValue = query_map
         .get(&String::from(":insert-into"))
-        .unwrap_or(&kalai::BValue::NIL)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
     let columns: kalai::BValue = query_map
         .get(&String::from(":columns"))
-        .unwrap_or(&kalai::BValue::NIL)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
     let values: kalai::BValue = query_map
         .get(&String::from(":values"))
-        .unwrap_or(&kalai::BValue::NIL)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
     return format!(
         "{}{}{}{}{}{}{}",

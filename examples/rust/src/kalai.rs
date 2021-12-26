@@ -45,7 +45,7 @@ pub type BValue = Box<dyn Value>;
 #[derive(PartialEq, Hash, Debug, Clone)]
 pub struct Nil(i32);
 
-const NIL: Nil = Nil(0);
+pub const NIL: Nil = Nil(0);
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Float(pub f32);
@@ -1036,6 +1036,14 @@ impl Default for Vector {
 }
 
 impl Vector {
+    pub fn get(&self, idx: usize) -> Option<&BValue> {
+        self.0.get(idx)
+    }
+
+    pub fn into_iter(&self) -> std::vec::IntoIter<BValue> {
+        self.0.clone().into_iter()
+    }
+
     pub fn contains(&self, x: &BValue) -> bool {
         self.0.contains(x)
     }
@@ -1721,5 +1729,31 @@ impl Map {
         return self
             .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
             .map(String::from);
+    }
+}
+impl Vector {
+    pub fn contains_bool(&self, x: bool) -> bool {
+        return self.contains(&crate::kalai::BValue::from(x));
+    }
+    pub fn contains_i8(&self, x: i8) -> bool {
+        return self.contains(&crate::kalai::BValue::from(x));
+    }
+    pub fn contains_char(&self, x: char) -> bool {
+        return self.contains(&crate::kalai::BValue::from(x));
+    }
+    pub fn contains_i32(&self, x: i32) -> bool {
+        return self.contains(&crate::kalai::BValue::from(x));
+    }
+    pub fn contains_i64(&self, x: i64) -> bool {
+        return self.contains(&crate::kalai::BValue::from(x));
+    }
+    pub fn contains_f32(&self, x: f32) -> bool {
+        return self.contains(&crate::kalai::BValue::from(x));
+    }
+    pub fn contains_f64(&self, x: f64) -> bool {
+        return self.contains(&crate::kalai::BValue::from(x));
+    }
+    pub fn contains_string(&self, x: String) -> bool {
+        return self.contains(&crate::kalai::BValue::from(x));
     }
 }

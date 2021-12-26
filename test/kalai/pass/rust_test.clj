@@ -27,7 +27,7 @@ static ref x: i32 = 3;
     '(init x)
     ;;->
     "lazy_static::lazy_static! {
-static ref x: kalai::BValue = kalai::BValue::NIL;
+static ref x: kalai::BValue = kalai::BValue::from(kalai::NIL);
 }"))
 
 (deftest init3-test

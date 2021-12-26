@@ -424,7 +424,7 @@
     (str "String::from(" (pr-str ?s) ")")
 
     nil
-    "kalai::BValue::NIL"
+    "kalai::BValue::from(kalai::NIL)"
 
     ;; identifier
     (m/pred symbol? ?s)

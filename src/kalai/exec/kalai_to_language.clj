@@ -105,6 +105,12 @@
 (defn helper-fn-impl-strs []
   (let [
         primitives [:bool :byte :char :int :long :float :double :string]
+        vector-contains-fns (for [t primitives]
+                           (let [t-str (e-string/kalai-type->rust t)]
+                             (list 'defn (symbol (str "contains-" t-str))
+                                   ^{:t :bool} [(with-meta 'self {:ref true}),
+                                                (with-meta 'x {:t t})]
+                                   '(.contains self ^:ref (kalai.BValue/from x)))))
         set-contains-fns (for [t primitives]
                            (let [t-str (e-string/kalai-type->rust t)]
                              (list 'defn (symbol (str "contains-" t-str))
@@ -131,15 +137,20 @@
                                        (str "REPLACEME-" v-t-str)))))
         helper-fn-front-matter '((ns kalai.BValue)
                                  (defn from [x]))
-        result-str (str/join \newline ["impl Set {"
-                            (stringify-rust-coll-helper-fns (concat helper-fn-front-matter
-                                                                    set-contains-fns
-                                                                    set-insert-fns))
-                            "}"
-                            "impl Map {"
-                            (stringify-rust-coll-helper-fns (concat helper-fn-front-matter
-                                                                    map-insert-fns))
-                            "}"])
+        result-str (str/join \newline
+                             ["impl Set {"
+                              (stringify-rust-coll-helper-fns (concat helper-fn-front-matter
+                                                                      set-contains-fns
+                                                                      set-insert-fns))
+                              "}"
+                              "impl Map {"
+                              (stringify-rust-coll-helper-fns (concat helper-fn-front-matter
+                                                                      map-insert-fns))
+                              "}"
+                              "impl Vector {"
+                              (stringify-rust-coll-helper-fns (concat helper-fn-front-matter
+                                                                      vector-contains-fns))
+                              "}"])
         result-str-post-edits (str/replace result-str #"String::from\(\"REPLACEME-(\w+)\"\)" "$1::from")]
     result-str-post-edits))
 
