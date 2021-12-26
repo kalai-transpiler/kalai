@@ -82,7 +82,10 @@
 
 (defn kalai-primitive-type->rust
   [t]
-  (or (kalai-type->rust t)
+  (or ({:mvector "kalai::Vector"
+        :mset    "kalai::Set"
+        :mmap    "kalai::Map"} t)
+      (kalai-type->rust t)
       types/BAD-TYPE_CAST-STR))
 
 ;; Forward declaration of `t-str` to break cycle of references.
