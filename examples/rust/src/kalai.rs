@@ -1028,6 +1028,7 @@ impl Vector {
         self.0.get(idx)
     }
 
+    // TODO: Can we avoid the `.clone()` by making the return type be a reference somehow?
     pub fn into_iter(&self) -> std::vec::IntoIter<BValue> {
         self.0.clone().into_iter()
     }
