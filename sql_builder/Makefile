@@ -29,4 +29,4 @@ run_rust:
 	cd rust && cargo run sql_builder_run_examples
 
 run_java:
-	cd java/build/classes/java/main/ && java sqlbuilder.Examples
+	java -cp java/build/classes/java/main sqlbuilder.Examples
