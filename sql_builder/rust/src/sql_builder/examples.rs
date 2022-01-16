@@ -265,6 +265,51 @@ pub fn f4() -> String {
     };
     return crate::sql_builder::core::format(query_map);
 }
+pub fn f5() -> String {
+    let query_map: std::collections::HashMap<String, kalai::BValue> = {
+        let mut tmp27: std::collections::HashMap<String, kalai::BValue> =
+            std::collections::HashMap::new();
+        tmp27.insert(
+            String::from(":from"),
+            kalai::BValue::from(
+                {
+                    let mut tmp28: kalai::Vector = kalai::Vector::new();
+                    tmp28.push(kalai::BValue::from(String::from("foo")));
+                    tmp28
+                }
+                .clone(),
+            ),
+        );
+        tmp27.insert(
+            String::from(":select"),
+            kalai::BValue::from(
+                {
+                    let mut tmp29: kalai::Vector = kalai::Vector::new();
+                    tmp29.push(kalai::BValue::from(String::from("a")));
+                    tmp29.push(kalai::BValue::from(String::from("b")));
+                    tmp29.push(kalai::BValue::from(String::from("c")));
+                    tmp29
+                }
+                .clone(),
+            ),
+        );
+        tmp27.insert(
+            String::from(":where"),
+            kalai::BValue::from(
+                {
+                    let mut tmp30: kalai::Vector = kalai::Vector::new();
+                    tmp30.push(kalai::BValue::from(String::from("=")));
+                    tmp30.push(kalai::BValue::from(String::from("f.a")));
+                    tmp30.push(kalai::BValue::from(String::from("?")));
+                    tmp30
+                }
+                .clone(),
+            ),
+        );
+        tmp27
+    };
+    return crate::sql_builder::core::format(query_map);
+}
 pub fn main() {
     let _args: std::vec::Vec<String> = std::env::args().collect();
     {
@@ -274,9 +319,9 @@ pub fn main() {
                 "{}",
                 format!(
                     "{}{}{}",
-                    String::from("example 1 query string: ["),
+                    String::from("example 1 query string:\n---\n"),
                     query_str,
-                    String::from("]")
+                    String::from("\n---\n\n")
                 )
             );
         }
@@ -286,9 +331,9 @@ pub fn main() {
                 "{}",
                 format!(
                     "{}{}{}",
-                    String::from("example 2 query string: ["),
+                    String::from("example 2 query string:\n---\n"),
                     query_str,
-                    String::from("]")
+                    String::from("\n---\n\n")
                 )
             );
         }
@@ -298,9 +343,9 @@ pub fn main() {
                 "{}",
                 format!(
                     "{}{}{}",
-                    String::from("example 3 query string: ["),
+                    String::from("example 3 query string:\n---\n"),
                     query_str,
-                    String::from("]")
+                    String::from("\n---\n\n")
                 )
             );
         }
@@ -310,9 +355,21 @@ pub fn main() {
                 "{}",
                 format!(
                     "{}{}{}",
-                    String::from("example 4 query string: ["),
+                    String::from("example 4 query string:\n---\n"),
                     query_str,
-                    String::from("]")
+                    String::from("\n---\n\n")
+                )
+            );
+        }
+        {
+            let query_str: String = f5();
+            println!(
+                "{}",
+                format!(
+                    "{}{}{}",
+                    String::from("example 5 query string:\n---\n"),
+                    query_str,
+                    String::from("\n---\n\n")
                 )
             );
         }

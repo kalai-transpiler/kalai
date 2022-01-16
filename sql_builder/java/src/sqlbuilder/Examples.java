@@ -116,22 +116,45 @@ public class Examples {
     return sqlbuilder.Core.format(queryMap);
   }
 
+  public static final String f5() {
+    HashMap<String, Object> tmp27 = new HashMap<String, Object>();
+    ArrayList<Object> tmp28 = new ArrayList<Object>();
+    tmp28.add("foo");
+    tmp27.put(":from", tmp28);
+    ArrayList<Object> tmp29 = new ArrayList<Object>();
+    tmp29.add("a");
+    tmp29.add("b");
+    tmp29.add("c");
+    tmp27.put(":select", tmp29);
+    ArrayList<Object> tmp30 = new ArrayList<Object>();
+    tmp30.add("=");
+    tmp30.add("f.a");
+    tmp30.add("?");
+    tmp27.put(":where", tmp30);
+    final HashMap<String, Object> queryMap = tmp27;
+    return sqlbuilder.Core.format(queryMap);
+  }
+
   public static final void main(String[] args) {
     {
       final String queryStr = sqlbuilder.Examples.f1();
-      System.out.println(("" + "example 1 query string: [" + queryStr + "]"));
+      System.out.println(("" + "example 1 query string:\n---\n" + queryStr + "\n---\n\n"));
     }
     {
       final String queryStr = sqlbuilder.Examples.f2();
-      System.out.println(("" + "example 2 query string: [" + queryStr + "]"));
+      System.out.println(("" + "example 2 query string:\n---\n" + queryStr + "\n---\n\n"));
     }
     {
       final String queryStr = sqlbuilder.Examples.f3();
-      System.out.println(("" + "example 3 query string: [" + queryStr + "]"));
+      System.out.println(("" + "example 3 query string:\n---\n" + queryStr + "\n---\n\n"));
     }
     {
       final String queryStr = sqlbuilder.Examples.f4();
-      System.out.println(("" + "example 4 query string: [" + queryStr + "]"));
+      System.out.println(("" + "example 4 query string:\n---\n" + queryStr + "\n---\n\n"));
+    }
+    {
+      final String queryStr = sqlbuilder.Examples.f5();
+      System.out.println(("" + "example 5 query string:\n---\n" + queryStr + "\n---\n\n"));
     }
   }
 }
