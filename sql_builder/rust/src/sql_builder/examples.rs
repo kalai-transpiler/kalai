@@ -33,7 +33,7 @@ pub fn f1() -> String {
                 {
                     let mut tmp4: kalai::Vector = kalai::Vector::new();
                     tmp4.push(kalai::BValue::from(String::from("=")));
-                    tmp4.push(kalai::BValue::from(String::from("f.a")));
+                    tmp4.push(kalai::BValue::from(String::from("foo.a")));
                     tmp4.push(kalai::BValue::from(String::from("'baz'")));
                     tmp4
                 }
@@ -299,7 +299,7 @@ pub fn f5() -> String {
                 {
                     let mut tmp30: kalai::Vector = kalai::Vector::new();
                     tmp30.push(kalai::BValue::from(String::from("=")));
-                    tmp30.push(kalai::BValue::from(String::from("f.a")));
+                    tmp30.push(kalai::BValue::from(String::from("foo.a")));
                     tmp30.push(kalai::BValue::from(String::from("?")));
                     tmp30
                 }

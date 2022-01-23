@@ -16,7 +16,7 @@ public class Examples {
     tmp1.put(":select", tmp3);
     ArrayList<Object> tmp4 = new ArrayList<Object>();
     tmp4.add("=");
-    tmp4.add("f.a");
+    tmp4.add("foo.a");
     tmp4.add("'baz'");
     tmp1.put(":where", tmp4);
     final HashMap<String, Object> queryMap = tmp1;
@@ -128,7 +128,7 @@ public class Examples {
     tmp27.put(":select", tmp29);
     ArrayList<Object> tmp30 = new ArrayList<Object>();
     tmp30.add("=");
-    tmp30.add("f.a");
+    tmp30.add("foo.a");
     tmp30.add("?");
     tmp27.put(":where", tmp30);
     final HashMap<String, Object> queryMap = tmp27;

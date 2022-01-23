@@ -1,6 +1,5 @@
 # TODO
 
-* Use associated constant in conjunction with type_name() in Value trait
 * Replacing Value enum with Value trait objects
   - Understand Rust output of `^{:t {:mvector [:any]}} v ^{:cast :mvector} x` in core.clj -> core.rs.  Why is kalai-type->rust being called instead of t-str in rust e-string?
     * Also investigate occurrences of Value::Null

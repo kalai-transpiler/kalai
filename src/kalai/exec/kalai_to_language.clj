@@ -134,7 +134,17 @@
                                                         (with-meta 'k {:t k-t})
                                                         (with-meta 'v {:t v-t})]
                                  (list '.map '(.insert self (kalai.BValue/from k) (kalai.BValue/from v))
-                                       (str "REPLACEME-" v-t-str)))))
+                                       (str "RUST-FROM-FN-" v-t-str)))))
+        map-get-fns (for [k-t primitives
+                          v-t primitives]
+                      (let [k-t-str (e-string/kalai-type->rust k-t)
+                            v-t-str (e-string/kalai-type->rust v-t)]
+                        (list 'defn (symbol (str "get-" k-t-str "-" v-t-str))
+                              ^{:t {:option [^:ref v-t]}} [(with-meta 'self {:ref true}),
+                                                           (with-meta 'k {:t k-t
+                                                                          :ref true})]
+                              (list '.map '(.get self ^:ref (kalai.BValue/from k))
+                                    (str "RUST-FROM-FN-" v-t-str)))))
         helper-fn-front-matter '((ns kalai.BValue)
                                  (defn from [x]))
         result-str (str/join \newline
@@ -145,13 +155,16 @@
                               "}"
                               "impl Map {"
                               (stringify-rust-coll-helper-fns (concat helper-fn-front-matter
-                                                                      map-insert-fns))
+                                                                      map-insert-fns
+                                                                      map-get-fns))
                               "}"
                               "impl Vector {"
                               (stringify-rust-coll-helper-fns (concat helper-fn-front-matter
                                                                       vector-contains-fns))
                               "}"])
-        result-str-post-edits (str/replace result-str #"String::from\(\"REPLACEME-(\w+)\"\)" "$1::from")]
+        ;; Note: because we cannot generate `::from` in Clojure, at least not easily, we use a placeholder string
+        ;; in our above auto-generated methods as a workaround, and here is the other part of the workaround.
+        result-str-post-edits (str/replace result-str #"String::from\(\"RUST-FROM-FN-(\w+)\"\)" "$1::from")]
     result-str-post-edits))
 
 

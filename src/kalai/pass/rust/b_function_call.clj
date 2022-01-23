@@ -28,7 +28,7 @@
       ;; TODO: put a predicate to ensure ?coll is not a seq because Rust .iter()
       ;; is not allowed/available on a Rust Iterator
       (r/invoke (u/var ~#'seq) ?coll)
-      (r/method into_iter (r/method clone ?coll))
+      (r/method iter (r/method clone ?coll))
 
       (r/invoke (u/var ~#'first) ?seq)
       (r/method unwrap (r/method next ?seq))
@@ -149,7 +149,9 @@
 
       ;; TODO: do we really need to clone here???
       (r/invoke (u/var ~#'vector?) ?x)
-      (r/method is_type ?x (r/literal "Vector"))
+      (r/operator ||
+        (r/method is_type ?x (r/literal "Vector"))
+        (r/method is_type ?x (r/literal "Vec")))
 
       (r/invoke (u/var ~#'set?) ?x)
       (r/method is_type ?x (r/literal "Set"))

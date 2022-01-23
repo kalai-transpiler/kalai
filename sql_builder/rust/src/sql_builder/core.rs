@@ -1,6 +1,6 @@
 use crate::kalai;
 pub fn cast_to_str(x: kalai::BValue) -> String {
-    if x.is_type("Vector") {
+    if (x.is_type("Vector") || x.is_type("Vec")) {
         let v: kalai::Vector = kalai::Vector::from(x);
         let v_first: kalai::BValue = v.get(0 as usize).unwrap().clone();
         let table_name: String = String::from(v_first);
@@ -26,7 +26,7 @@ pub fn cast_to_str(x: kalai::BValue) -> String {
 pub fn select_str(select: kalai::Vector) -> String {
     return select
         .clone()
-        .into_iter()
+        .iter()
         .clone()
         .map(|kalai_elem| cast_to_str(kalai_elem.clone()))
         .collect::<Vec<String>>()
@@ -35,7 +35,7 @@ pub fn select_str(select: kalai::Vector) -> String {
 pub fn from_str(from: kalai::Vector) -> String {
     return from
         .clone()
-        .into_iter()
+        .iter()
         .clone()
         .map(|kalai_elem| cast_to_str(kalai_elem.clone()))
         .collect::<Vec<String>>()
@@ -44,22 +44,22 @@ pub fn from_str(from: kalai::Vector) -> String {
 pub fn join_str(join: kalai::Vector) -> String {
     return join
         .clone()
-        .into_iter()
+        .iter()
         .clone()
         .map(|kalai_elem| cast_to_str(kalai_elem.clone()))
         .collect::<Vec<String>>()
         .join(&String::from(", "));
 }
 pub fn where_str(clause: kalai::BValue) -> String {
-    if clause.is_type("Vector") {
+    if (clause.is_type("Vector") || clause.is_type("Vec")) {
         let v: kalai::Vector = kalai::Vector::from(clause);
-        let v_first: kalai::BValue = v.clone().into_iter().next().unwrap();
+        let v_first: kalai::BValue = v.clone().iter().next().unwrap();
         let op: String = String::from(v_first);
         return format!(
             "{}{}{}",
             String::from("("),
             v.clone()
-                .into_iter()
+                .iter()
                 .skip(1)
                 .clone()
                 .map(|kalai_elem| where_str(kalai_elem.clone()))
@@ -74,7 +74,7 @@ pub fn where_str(clause: kalai::BValue) -> String {
 pub fn group_by_str(join: kalai::Vector) -> String {
     return join
         .clone()
-        .into_iter()
+        .iter()
         .clone()
         .map(|kalai_elem| cast_to_str(kalai_elem.clone()))
         .collect::<Vec<String>>()
@@ -89,7 +89,7 @@ pub fn row_str(row: kalai::BValue) -> String {
         "{}{}{}",
         String::from("("),
         mrow.clone()
-            .into_iter()
+            .iter()
             .clone()
             .map(|kalai_elem| cast_to_str(kalai_elem.clone()))
             .collect::<Vec<String>>()
@@ -150,7 +150,7 @@ pub fn format(query_map: std::collections::HashMap<String, kalai::BValue>) -> St
                 {
                     let v2: kalai::Vector = kalai::Vector::from(values);
                     v2.clone()
-                        .into_iter()
+                        .iter()
                         .clone()
                         .map(|kalai_elem| row_str(kalai_elem.clone()))
                 }

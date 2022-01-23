@@ -26,7 +26,7 @@ java:
 	cd java && gradle build
 
 run_rust:
-	cd rust && cargo run run_examples
+	cd rust && cargo test && cargo run run_examples
 
 run_java:
 	java -cp java/build/classes/java/main a.Demo01
