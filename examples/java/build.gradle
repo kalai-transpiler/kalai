@@ -4,7 +4,7 @@ plugins {
 }
 
 googleJavaFormat {
-  toolVersion = '1.7'
+  toolVersion = '1.8'
 }
 
 tasks.verifyGoogleJavaFormat.ignoreFailures = true

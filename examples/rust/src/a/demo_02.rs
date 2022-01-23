@@ -1,38 +1,38 @@
 use crate::kalai;
 pub fn get_digits_map() -> std::collections::HashMap<char, i32> {
     return {
-        let mut tmp_1: std::collections::HashMap<char, i32> = std::collections::HashMap::new();
-        tmp_1.insert('0'.clone(), 0);
-        tmp_1.insert('1'.clone(), 1);
-        tmp_1.insert('2'.clone(), 2);
-        tmp_1.insert('3'.clone(), 3);
-        tmp_1.insert('4'.clone(), 4);
-        tmp_1.insert('5'.clone(), 5);
-        tmp_1.insert('6'.clone(), 6);
-        tmp_1.insert('7'.clone(), 7);
-        tmp_1.insert('8'.clone(), 8);
-        tmp_1.insert('9'.clone(), 9);
-        tmp_1.insert('٠'.clone(), 0);
-        tmp_1.insert('١'.clone(), 1);
-        tmp_1.insert('٢'.clone(), 2);
-        tmp_1.insert('٣'.clone(), 3);
-        tmp_1.insert('٤'.clone(), 4);
-        tmp_1.insert('٥'.clone(), 5);
-        tmp_1.insert('٦'.clone(), 6);
-        tmp_1.insert('٧'.clone(), 7);
-        tmp_1.insert('٨'.clone(), 8);
-        tmp_1.insert('٩'.clone(), 9);
-        tmp_1.insert('০'.clone(), 0);
-        tmp_1.insert('১'.clone(), 1);
-        tmp_1.insert('২'.clone(), 2);
-        tmp_1.insert('৩'.clone(), 3);
-        tmp_1.insert('৪'.clone(), 4);
-        tmp_1.insert('৫'.clone(), 5);
-        tmp_1.insert('৬'.clone(), 6);
-        tmp_1.insert('৭'.clone(), 7);
-        tmp_1.insert('৮'.clone(), 8);
-        tmp_1.insert('৯'.clone(), 9);
-        tmp_1
+        let mut tmp1: std::collections::HashMap<char, i32> = std::collections::HashMap::new();
+        tmp1.insert('0'.clone(), 0);
+        tmp1.insert('1'.clone(), 1);
+        tmp1.insert('2'.clone(), 2);
+        tmp1.insert('3'.clone(), 3);
+        tmp1.insert('4'.clone(), 4);
+        tmp1.insert('5'.clone(), 5);
+        tmp1.insert('6'.clone(), 6);
+        tmp1.insert('7'.clone(), 7);
+        tmp1.insert('8'.clone(), 8);
+        tmp1.insert('9'.clone(), 9);
+        tmp1.insert('٠'.clone(), 0);
+        tmp1.insert('١'.clone(), 1);
+        tmp1.insert('٢'.clone(), 2);
+        tmp1.insert('٣'.clone(), 3);
+        tmp1.insert('٤'.clone(), 4);
+        tmp1.insert('٥'.clone(), 5);
+        tmp1.insert('٦'.clone(), 6);
+        tmp1.insert('٧'.clone(), 7);
+        tmp1.insert('٨'.clone(), 8);
+        tmp1.insert('٩'.clone(), 9);
+        tmp1.insert('০'.clone(), 0);
+        tmp1.insert('১'.clone(), 1);
+        tmp1.insert('২'.clone(), 2);
+        tmp1.insert('৩'.clone(), 3);
+        tmp1.insert('৪'.clone(), 4);
+        tmp1.insert('৫'.clone(), 5);
+        tmp1.insert('৬'.clone(), 6);
+        tmp1.insert('৭'.clone(), 7);
+        tmp1.insert('৮'.clone(), 8);
+        tmp1.insert('৯'.clone(), 9);
+        tmp1
     };
 }
 lazy_static::lazy_static! {
@@ -58,63 +58,63 @@ pub fn parse(s: String) -> i32 {
 }
 pub fn get_number_systems_map() -> std::collections::HashMap<String, std::vec::Vec<char>> {
     let m: std::collections::HashMap<String, std::vec::Vec<char>> = {
-        let mut tmp_2: std::collections::HashMap<String, std::vec::Vec<char>> =
+        let mut tmp2: std::collections::HashMap<String, std::vec::Vec<char>> =
             std::collections::HashMap::new();
-        tmp_2.insert(
+        tmp2.insert(
             String::from("ARABIC"),
             {
-                let mut tmp_3: std::vec::Vec<char> = std::vec::Vec::new();
-                tmp_3.push('٠'.clone());
-                tmp_3.push('١'.clone());
-                tmp_3.push('٢'.clone());
-                tmp_3.push('٣'.clone());
-                tmp_3.push('٤'.clone());
-                tmp_3.push('٥'.clone());
-                tmp_3.push('٦'.clone());
-                tmp_3.push('٧'.clone());
-                tmp_3.push('٨'.clone());
-                tmp_3.push('٩'.clone());
-                tmp_3
+                let mut tmp3: std::vec::Vec<char> = std::vec::Vec::new();
+                tmp3.push('٠'.clone());
+                tmp3.push('١'.clone());
+                tmp3.push('٢'.clone());
+                tmp3.push('٣'.clone());
+                tmp3.push('٤'.clone());
+                tmp3.push('٥'.clone());
+                tmp3.push('٦'.clone());
+                tmp3.push('٧'.clone());
+                tmp3.push('٨'.clone());
+                tmp3.push('٩'.clone());
+                tmp3
             }
             .clone(),
         );
-        tmp_2.insert(
+        tmp2.insert(
             String::from("BENGALI"),
             {
-                let mut tmp_4: std::vec::Vec<char> = std::vec::Vec::new();
-                tmp_4.push('০'.clone());
-                tmp_4.push('১'.clone());
-                tmp_4.push('২'.clone());
-                tmp_4.push('৩'.clone());
-                tmp_4.push('৪'.clone());
-                tmp_4.push('৫'.clone());
-                tmp_4.push('৬'.clone());
-                tmp_4.push('৭'.clone());
-                tmp_4.push('৮'.clone());
-                tmp_4.push('৯'.clone());
-                tmp_4
+                let mut tmp4: std::vec::Vec<char> = std::vec::Vec::new();
+                tmp4.push('০'.clone());
+                tmp4.push('১'.clone());
+                tmp4.push('২'.clone());
+                tmp4.push('৩'.clone());
+                tmp4.push('৪'.clone());
+                tmp4.push('৫'.clone());
+                tmp4.push('৬'.clone());
+                tmp4.push('৭'.clone());
+                tmp4.push('৮'.clone());
+                tmp4.push('৯'.clone());
+                tmp4
             }
             .clone(),
         );
-        tmp_2.insert(
+        tmp2.insert(
             String::from("LATIN"),
             {
-                let mut tmp_5: std::vec::Vec<char> = std::vec::Vec::new();
-                tmp_5.push('0'.clone());
-                tmp_5.push('1'.clone());
-                tmp_5.push('2'.clone());
-                tmp_5.push('3'.clone());
-                tmp_5.push('4'.clone());
-                tmp_5.push('5'.clone());
-                tmp_5.push('6'.clone());
-                tmp_5.push('7'.clone());
-                tmp_5.push('8'.clone());
-                tmp_5.push('9'.clone());
-                tmp_5
+                let mut tmp5: std::vec::Vec<char> = std::vec::Vec::new();
+                tmp5.push('0'.clone());
+                tmp5.push('1'.clone());
+                tmp5.push('2'.clone());
+                tmp5.push('3'.clone());
+                tmp5.push('4'.clone());
+                tmp5.push('5'.clone());
+                tmp5.push('6'.clone());
+                tmp5.push('7'.clone());
+                tmp5.push('8'.clone());
+                tmp5.push('9'.clone());
+                tmp5
             }
             .clone(),
         );
-        tmp_2
+        tmp2
     };
     return m;
 }
@@ -123,11 +123,11 @@ static ref number_systems_map: std::collections::HashMap<String,std::vec::Vec<ch
 }
 pub fn get_grouping_separators_map() -> std::collections::HashMap<String, char> {
     return {
-        let mut tmp_6: std::collections::HashMap<String, char> = std::collections::HashMap::new();
-        tmp_6.insert(String::from("ARABIC"), '٬'.clone());
-        tmp_6.insert(String::from("BENGALI"), ','.clone());
-        tmp_6.insert(String::from("LATIN"), ','.clone());
-        tmp_6
+        let mut tmp6: std::collections::HashMap<String, char> = std::collections::HashMap::new();
+        tmp6.insert(String::from("ARABIC"), '٬'.clone());
+        tmp6.insert(String::from("BENGALI"), ','.clone());
+        tmp6.insert(String::from("LATIN"), ','.clone());
+        tmp6
     };
 }
 lazy_static::lazy_static! {
@@ -135,8 +135,8 @@ static ref grouping_separators_map: std::collections::HashMap<String,char> = get
 }
 pub fn get_separator_positions(num_length: i32, grouping_strategy: String) -> std::vec::Vec<i32> {
     let mut result: std::vec::Vec<i32> = {
-        let mut tmp_7: std::vec::Vec<i32> = std::vec::Vec::new();
-        tmp_7
+        let mut tmp7: std::vec::Vec<i32> = std::vec::Vec::new();
+        tmp7
     };
     if (grouping_strategy == String::from("NONE")) {
         return result;

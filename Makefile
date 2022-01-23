@@ -1,5 +1,9 @@
-.PHONY: build
+.PHONY: all build clean
 all: build
+
+clean:
+	cd examples && make clean
+	cd sql_builder && make clean
 
 build:
 	# Install dependencies

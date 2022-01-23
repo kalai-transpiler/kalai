@@ -8,11 +8,11 @@ pub fn main() {
             i = (i + 1);
         }
         for ii in {
-            let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
-            tmp_1.push(1);
-            tmp_1.push(2);
-            tmp_1.push(3);
-            tmp_1
+            let mut tmp1: std::vec::Vec<i64> = std::vec::Vec::new();
+            tmp1.push(1);
+            tmp1.push(2);
+            tmp1.push(3);
+            tmp1
         } {
             println!("{}", ii);
         }

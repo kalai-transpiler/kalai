@@ -3,7 +3,9 @@
             [meander.syntax.epsilon :as syntax]
             [meander.match.syntax.epsilon :as match]
             [puget.printer :as puget]
-            [kalai.types :as types]))
+            [kalai.types :as types]
+            [camel-snake-kebab.core :as csk]
+            [camel-snake-kebab.internals.string-separator :as csk-ss]))
 
 (def c (atom 0))
 
@@ -63,3 +65,46 @@
       (concat (sort-by key numbers) (sort-by (comp str key) non-numbers)))
     (let [{numbers true non-numbers false} (group-by number? coll)]
       (concat (sort numbers) (sort-by str non-numbers)))))
+
+
+;;
+;; modify camel-snake-kebab behavior to prevent segmenting identifier strings
+;;  when a letter is followed by a number. Ex: `get_f32` should not be `get_f_32`.
+;;
+
+(defn generic-split [ss]
+  (let [cs (mapv csk-ss/classify-char ss)
+        ss-length (.length ^String ss)]
+    (loop [result (transient []), start 0, current 0]
+      (let [next (inc current)
+            result+new (fn [end]
+                         (if (> end start)
+                           (conj! result (.substring ^String ss start end))
+                           result))]
+        (cond (>= current ss-length)
+              (or (seq (persistent! (result+new current)))
+                  ;; Return this instead of an empty seq:
+                  [""])
+
+              (= (nth cs current) :whitespace)
+              (recur (result+new current) next next)
+
+              (let [[a b c] (subvec cs current)]
+                ;; This expression is not pretty,
+                ;; but it compiles down to sane JavaScript.
+                (or (and (not= a :upper)  (= b :upper))
+                    ;; We changed the following line from the original to support not
+                    ;; putting underscores inside something like "u64" or "tmp1".
+                    (and (= a :number) (not= b :number))
+                    (and (= a :upper) (= b :upper) (= c :lower))))
+              (recur (result+new next) next next)
+
+              :else
+              (recur result start next))))))
+
+;; TODO: should use this in Java string emitters wherever csk/->snake-case is used
+;; so that we are consistent with identifiers across Java and rust
+
+(defn ->snake_case [s]
+  (with-redefs [csk-ss/generic-split generic-split]
+    (csk/->snake_case s)))

@@ -1,21 +1,21 @@
 use crate::kalai;
-pub fn cast_to_str(x: kalai::Value) -> String {
-    if kalai::is_vector(x.clone()) {
-        let v: std::vec::Vec<kalai::Value> = kalai::to_mvector(x.clone());
-        let v_first: kalai::Value = v.get(0 as usize).unwrap().clone();
-        let table_name: String = kalai::to_string(v_first.clone());
-        let v_second: kalai::Value = v.get(1 as usize).unwrap().clone();
-        let table_alias: String = kalai::to_string(v_second.clone());
+pub fn cast_to_str(x: kalai::BValue) -> String {
+    if (x.is_type("Vector") || x.is_type("Vec")) {
+        let v: kalai::Vector = kalai::Vector::from(x);
+        let v_first: kalai::BValue = v.get(0 as usize).unwrap().clone();
+        let table_name: String = String::from(v_first);
+        let v_second: kalai::BValue = v.get(1 as usize).unwrap().clone();
+        let table_alias: String = String::from(v_second);
         return format!("{}{}{}", table_name, String::from(" AS "), table_alias);
     } else {
-        if kalai::is_string(x.clone()) {
-            return format!("{}", kalai::to_string(x.clone()));
+        if x.is_type("String") {
+            return format!("{}", String::from(x));
         } else {
-            if kalai::is_int(x.clone()) {
-                return format!("{}", kalai::to_int(x.clone()));
+            if x.is_type("i32") {
+                return format!("{}", i32::from(x));
             } else {
-                if kalai::is_long(x.clone()) {
-                    return format!("{}", kalai::to_long(x.clone()));
+                if x.is_type("i64") {
+                    return format!("{}", i64::from(x));
                 } else {
                     return String::from("");
                 }
@@ -23,43 +23,43 @@ pub fn cast_to_str(x: kalai::Value) -> String {
         }
     }
 }
-pub fn select_str(select: std::vec::Vec<kalai::Value>) -> String {
+pub fn select_str(select: kalai::Vector) -> String {
     return select
         .clone()
-        .into_iter()
+        .iter()
         .clone()
         .map(|kalai_elem| cast_to_str(kalai_elem.clone()))
         .collect::<Vec<String>>()
         .join(&String::from(", "));
 }
-pub fn from_str(from: std::vec::Vec<kalai::Value>) -> String {
+pub fn from_str(from: kalai::Vector) -> String {
     return from
         .clone()
-        .into_iter()
+        .iter()
         .clone()
         .map(|kalai_elem| cast_to_str(kalai_elem.clone()))
         .collect::<Vec<String>>()
         .join(&String::from(", "));
 }
-pub fn join_str(join: std::vec::Vec<kalai::Value>) -> String {
+pub fn join_str(join: kalai::Vector) -> String {
     return join
         .clone()
-        .into_iter()
+        .iter()
         .clone()
         .map(|kalai_elem| cast_to_str(kalai_elem.clone()))
         .collect::<Vec<String>>()
         .join(&String::from(", "));
 }
-pub fn where_str(clause: kalai::Value) -> String {
-    if kalai::is_vector(clause.clone()) {
-        let v: std::vec::Vec<kalai::Value> = kalai::to_mvector(clause.clone());
-        let v_first: kalai::Value = v.clone().into_iter().next().unwrap();
-        let op: String = kalai::to_string(v_first.clone());
+pub fn where_str(clause: kalai::BValue) -> String {
+    if (clause.is_type("Vector") || clause.is_type("Vec")) {
+        let v: kalai::Vector = kalai::Vector::from(clause);
+        let v_first: kalai::BValue = v.clone().iter().next().unwrap();
+        let op: String = String::from(v_first);
         return format!(
             "{}{}{}",
             String::from("("),
             v.clone()
-                .into_iter()
+                .iter()
                 .skip(1)
                 .clone()
                 .map(|kalai_elem| where_str(kalai_elem.clone()))
@@ -71,25 +71,25 @@ pub fn where_str(clause: kalai::Value) -> String {
         return cast_to_str(clause);
     }
 }
-pub fn group_by_str(join: std::vec::Vec<kalai::Value>) -> String {
+pub fn group_by_str(join: kalai::Vector) -> String {
     return join
         .clone()
-        .into_iter()
+        .iter()
         .clone()
         .map(|kalai_elem| cast_to_str(kalai_elem.clone()))
         .collect::<Vec<String>>()
         .join(&String::from(", "));
 }
-pub fn having_str(having: kalai::Value) -> String {
+pub fn having_str(having: kalai::BValue) -> String {
     return where_str(having);
 }
-pub fn row_str(row: kalai::Value) -> String {
-    let mrow: std::vec::Vec<kalai::Value> = kalai::to_mvector(row.clone());
+pub fn row_str(row: kalai::BValue) -> String {
+    let mrow: kalai::Vector = kalai::Vector::from(row);
     return format!(
         "{}{}{}",
         String::from("("),
         mrow.clone()
-            .into_iter()
+            .iter()
             .clone()
             .map(|kalai_elem| cast_to_str(kalai_elem.clone()))
             .collect::<Vec<String>>()
@@ -97,60 +97,60 @@ pub fn row_str(row: kalai::Value) -> String {
         String::from(")")
     );
 }
-pub fn format(query_map: std::collections::HashMap<String, kalai::Value>) -> String {
-    let select: kalai::Value = query_map
+pub fn format(query_map: std::collections::HashMap<String, kalai::BValue>) -> String {
+    let select: kalai::BValue = query_map
         .get(&String::from(":select"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
-    let from: kalai::Value = query_map
+    let from: kalai::BValue = query_map
         .get(&String::from(":from"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
-    let join: kalai::Value = query_map
+    let join: kalai::BValue = query_map
         .get(&String::from(":join"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
-    let where_clause: kalai::Value = query_map
+    let where_clause: kalai::BValue = query_map
         .get(&String::from(":where"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
-    let group_by: kalai::Value = query_map
+    let group_by: kalai::BValue = query_map
         .get(&String::from(":group-by"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
-    let having: kalai::Value = query_map
+    let having: kalai::BValue = query_map
         .get(&String::from(":having"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
-    let insert_into: kalai::Value = query_map
+    let insert_into: kalai::BValue = query_map
         .get(&String::from(":insert-into"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
-    let columns: kalai::Value = query_map
+    let columns: kalai::BValue = query_map
         .get(&String::from(":columns"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
-    let values: kalai::Value = query_map
+    let values: kalai::BValue = query_map
         .get(&String::from(":values"))
-        .unwrap_or(&kalai::Value::Null)
+        .unwrap_or(&kalai::BValue::from(kalai::NIL))
         .clone();
     return format!(
         "{}{}{}{}{}{}{}",
-        if kalai::is_null(insert_into.clone()) {
+        if insert_into.is_type("Nil") {
             String::from("")
         } else {
             format!(
                 "{}{}{}{}{}{}{}",
                 String::from("INSERT INTO "),
-                from_str(kalai::to_mvector(insert_into.clone())),
+                from_str(kalai::Vector::from(insert_into)),
                 String::from("("),
-                select_str(kalai::to_mvector(columns.clone())),
+                select_str(kalai::Vector::from(columns)),
                 String::from(")\n"),
                 String::from("VALUES\n"),
                 {
-                    let v_2: std::vec::Vec<kalai::Value> = kalai::to_mvector(values.clone());
-                    v_2.clone()
-                        .into_iter()
+                    let v2: kalai::Vector = kalai::Vector::from(values);
+                    v2.clone()
+                        .iter()
                         .clone()
                         .map(|kalai_elem| row_str(kalai_elem.clone()))
                 }
@@ -158,48 +158,48 @@ pub fn format(query_map: std::collections::HashMap<String, kalai::Value>) -> Str
                 .join(&String::from(",\n"))
             )
         },
-        if kalai::is_null(select.clone()) {
+        if select.is_type("Nil") {
             String::from("")
         } else {
             format!(
                 "{}{}",
                 String::from("SELECT "),
-                select_str(kalai::to_mvector(select.clone()))
+                select_str(kalai::Vector::from(select))
             )
         },
-        if kalai::is_null(from.clone()) {
+        if from.is_type("Nil") {
             String::from("")
         } else {
             format!(
                 "{}{}",
                 String::from(" FROM "),
-                from_str(kalai::to_mvector(from.clone()))
+                from_str(kalai::Vector::from(from))
             )
         },
-        if kalai::is_null(join.clone()) {
+        if join.is_type("Nil") {
             String::from("")
         } else {
             format!(
                 "{}{}",
                 String::from(" JOIN "),
-                join_str(kalai::to_mvector(join.clone()))
+                join_str(kalai::Vector::from(join))
             )
         },
-        if kalai::is_null(where_clause.clone()) {
+        if where_clause.is_type("Nil") {
             String::from("")
         } else {
             format!("{}{}", String::from(" WHERE "), where_str(where_clause))
         },
-        if kalai::is_null(group_by.clone()) {
+        if group_by.is_type("Nil") {
             String::from("")
         } else {
             format!(
                 "{}{}",
                 String::from(" GROUP BY "),
-                group_by_str(kalai::to_mvector(group_by.clone()))
+                group_by_str(kalai::Vector::from(group_by))
             )
         },
-        if kalai::is_null(having.clone()) {
+        if having.is_type("Nil") {
             String::from("")
         } else {
             format!("{}{}", String::from(" HAVING "), having_str(having))

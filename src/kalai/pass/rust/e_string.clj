@@ -6,9 +6,13 @@
             [puget.printer :as puget]
             [clojure.java.io :as io]
             [kalai.types :as types]
-            [kalai.util :as u])
+            [kalai.util :as u]
+            [kalai.pass.rust.util :as ru]
+            [clojure.string :as string])
   (:import (clojure.lang IMeta Keyword)
            (java.util Map Set Vector)))
+
+;; forward declare stringfy to satisfy mutual recursion of `stringfy` and its helpers
 
 (declare stringify)
 
@@ -23,8 +27,14 @@
 (defn- params-list [params]
   (parens (comma-separated params)))
 
+(defn- stringify-arg [arg]
+  (let [{:keys [mut ref]} (meta arg)]
+    (str (when ref "&")
+         (when mut "mut ")
+         (stringify arg))))
+
 (defn- args-list [args]
-  (parens (comma-separated (map stringify args))))
+  (parens (comma-separated (map stringify-arg args))))
 
 (defn- space-separated [& xs]
   (str/join " " xs))
@@ -34,13 +44,6 @@
 
 (defn statement [s]
   (str s ";"))
-
-(defn identifier [s]
-  (let [s-str (str s)
-        snake-case (csk/->snake_case s-str)]
-    (if (= \_ (first s-str))
-      (str \_ snake-case)
-      snake-case)))
 
 ;;;; These are what our symbols should resolve to
 
@@ -63,6 +66,7 @@
    :set     "PSet"
    :mset    "std::collections::HashSet"
    :vector  "PVector"
+   ;; TODO: does this depend on whether it's a {:t {:vector [:some-primitive]}} vs. {:t {:vector [:any]}} ? How is this being used instead of t-str?
    :mvector "std::vec::Vec"
    :bool    "bool"
    :byte    "i8"
@@ -73,7 +77,16 @@
    :double  "f64"
    :string  "String"
    :void    "()"
-   :any     "kalai::Value"})
+   :any     "kalai::BValue"
+   :option  "Option"})
+
+(defn kalai-primitive-type->rust
+  [t]
+  (or ({:mvector "kalai::Vector"
+        :mset    "kalai::Set"
+        :mmap    "kalai::Map"} t)
+      (kalai-type->rust t)
+      types/BAD-TYPE_CAST-STR))
 
 ;; Forward declaration of `t-str` to break cycle of references.
 ;; We expect this not to create an infinite loop in practice, otherwise
@@ -102,6 +115,16 @@
   a data structure, just as we might find in `:t ` of the metadata
   map upstream in the S-exprs."
   (s/rewrite
+    {:mvector [:any]}
+    "kalai::Vector"
+
+    {:mset [:any]}
+    "kalai::Set"
+
+    ;; TODO: Do we want to support {:map [ (not :any) :any]) and vice versa {:map [:any (not :any)]} ?
+    {:mmap [:any :any]}
+    "kalai::Map"
+
     {?t [& ?ts]}
     ~(str (rust-type ?t)
           \< (str/join \, (for [t ?ts]
@@ -109,7 +132,29 @@
           \>)
 
     ?t
-    ~(str (rust-type ?t))))
+    ~(rust-type ?t)))
+
+(def init-rhs-t-str
+  "?t may be a symbol, but could also be a
+  a data structure, just as we might find in `:t ` of the metadata
+  map upstream in the S-exprs."
+  (s/rewrite
+    {:mvector [:any]}
+    "kalai::Vector"
+
+    {:mset [:any]}
+    "kalai::Set"
+
+    ;; TODO: Do we want to support {:map [ (not :any) :any]) and vice versa {:map [:any (not :any)]} ?
+    {:mmap [:any :any]}
+    "kalai::Map"
+
+    {?t [& ?ts]}
+    ~(rust-type ?t)
+
+    ?t
+    ~(rust-type ?t)))
+
 
 (defn where [{:keys [file line column]}]
   (when file
@@ -131,14 +176,9 @@
     ;; let mut char_vec: &Vec<char> = ;
     ;; let char_vec: &Vec<char> = ;
     ;; let mut char_vec: std::vec::Vec<char> = ;
-    ;;
-    ;; fn f(char_vec: &mut std::vec::Vec<char>) {...
-    ;; fn f(char_vec: &Vec<char>) {...
-    ;; NOT POSSIBLE? (or doesn't make sense?): fn f(char_vec: mut std::vec::Vec<char>) {...
-    (str (when mut "mut ") (identifier variable-name)
+    (str (when mut "mut ") (ru/identifier variable-name)
          ;; Rust has type inference, so we can leave temp variable types off
-         ;; TODO: probably don't want to use "MISSING_TYPE" though
-         (when (not= t types/TYPE-MISSING-STR)
+         (when t
            (str ": " (when ref "&") (type-str variable-name))))))
 
 (defn cast-str [identifier t]
@@ -163,14 +203,22 @@
                     (stringify value)))))))
 
 (defn invoke-str [function-name & args]
-  (let [varmeta (some-> function-name meta :var meta)]
-    (if (and (str/includes? (str function-name) "/") varmeta)
-      (str "crate::"
-           (identifier (str/replace (str (:ns varmeta)) "." "::"))
-           "::" (identifier (:name varmeta))
-           (args-list args))
-      (str (identifier function-name)
-           (args-list args)))))
+  (str (ru/fully-qualified-function-identifier-str function-name)
+       (args-list args)))
+
+(defn param-str [param]
+  ;; fn f(char_vec: &mut std::vec::Vec<char>) {...
+  ;; fn f(char_vec: &Vec<char>) {...
+  ;; NOT POSSIBLE? (or doesn't make sense?): fn f(char_vec: mut std::vec::Vec<char>) {...
+  (let [{:keys [mut ref]} (meta param)]
+    (if (= param 'self)
+      (str (when ref "&")
+           (when mut "mut ")
+           "self")
+      (space-separated (str (ru/identifier param) ":")
+                       (str (when ref "&")
+                            (when mut "mut ")
+                            (type-str param))))))
 
 (defn function-str [name params body]
   (if (= '-main name)
@@ -179,15 +227,14 @@
       (str
         (space-separated 'pub 'fn 'main (params-list [])
                          (line-separated "{"
-                                         (str "let " (identifier (second params)) ": std::vec::Vec<String> = std::env::args().collect();")
+                                         (str "let " (ru/identifier (second params)) ": std::vec::Vec<String> = std::env::args().collect();")
                                          (stringify body)
                                          "}"))))
     (str
       (space-separated "pub" "fn"
-                       (identifier name))
+                       (ru/identifier name))
       (space-separated (params-list (for [param params]
-                                      (space-separated (str (identifier param) ":")
-                                                       (type-str param))))
+                                      (param-str param)))
                        "->"
                        (type-str params)
                        (stringify body)))))
@@ -255,7 +302,7 @@
 (defn new-str [t & args]
   (str (if (symbol? t)
          t
-         (doto (-> t (keys) (first) (rust-type))
+         (doto (init-rhs-t-str t)
            (maybe-warn-type-missing t)))
        "::new"
        (args-list args)))
@@ -264,7 +311,7 @@
   (pr-str s))
 
 (defn lambda-str [args body]
-  (str "|" (comma-separated (map identifier args)) "|"
+  (str "|" (comma-separated (map ru/identifier args)) "|"
        (stringify body)))
 
 (defn ref-str [s]
@@ -324,7 +371,7 @@
   "Specifically for the Value enum for heterogeneous collections"
   [x]
   (if-let [t (value-type x)]
-    (str "kalai::Value::" t (parens (stringify x)))
+    (str "kalai::BValue::from" (parens (stringify x)))
     (stringify x)))
 
 ;;;; This is the main entry point
@@ -377,11 +424,11 @@
     (str "String::from(" (pr-str ?s) ")")
 
     nil
-    "kalai::Value::Null"
+    "kalai::BValue::from(kalai::NIL)"
 
     ;; identifier
     (m/pred symbol? ?s)
-    (identifier ?s)
+    (ru/identifier ?s)
 
     ?else
     (pr-str ?else)))

@@ -38,6 +38,8 @@ abstract concepts of size. Specifically, integer size = a Java integer = 32-bit 
   Java integers return integer sizes of collections, strings, etc. A language like Rust uses `usize`
   for a platform dependent size, which must be cast to `i32`, `u32`, `i64`, `u64`, etc. to match the
   type specified by the user's input code.
+* A language like Rust does not allow floating point types in sets or as the keys of maps. 
+  Therefore, when outputting to such languages, instead of having a `^{:t {:set [:float]}}`, we must use a `^{:t {:set [:any]}}`, and then subsequently cast elements that we get (which would be of type `:any`) to the desired primitive type (`:float`). 
   
 ### Keywords
 

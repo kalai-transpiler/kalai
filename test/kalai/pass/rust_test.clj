@@ -22,12 +22,12 @@ static ref x: i32 = 3;
 ;; TODO: this test doesn't make sense in Rust because top-level bindings can't be empty
 (deftest init2-test
   (top-level-form
-    '(def ^Integer x)
+    '(def ^{:t :any} x)
     ;;->
     '(init x)
     ;;->
     "lazy_static::lazy_static! {
-static ref x: i32 = kalai::Value::Null;
+static ref x: kalai::BValue = kalai::BValue::from(kalai::NIL);
 }"))
 
 (deftest init3-test
@@ -287,8 +287,8 @@ let y: i64 = 5;"))
     "use crate::kalai;
 lazy_static::lazy_static! {
 static ref x: std::collections::HashMap<i64,String> = {
-let mut tmp_1: std::collections::HashMap<i64,String> = std::collections::HashMap::new();
-tmp_1
+let mut tmp1: std::collections::HashMap<i64,String> = std::collections::HashMap::new();
+tmp1
 };
 }
 pub fn f(y: std::collections::HashMap<i64,String>) -> std::collections::HashMap<i64,String> {
@@ -326,10 +326,10 @@ static ref x: std::collections::HashMap<i64,String> = ();
        (invoke println x))
     ;;->
     "let x: std::vec::Vec<i64> = {
-let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp_1.push(1);
-tmp_1.push(2);
-tmp_1
+let mut tmp1: std::vec::Vec<i64> = std::vec::Vec::new();
+tmp1.push(1);
+tmp1.push(2);
+tmp1
 };
 println!(\"{}\", x);"))
 
@@ -340,9 +340,9 @@ println!(\"{}\", x);"))
     '(init x {:a "asdf"})
     ;;->
     "let x: std::collections::HashMap<String,String> = {
-let mut tmp_1: std::collections::HashMap<String,String> = std::collections::HashMap::new();
-tmp_1.insert(String::from(\":a\"), String::from(\"asdf\"));
-tmp_1
+let mut tmp1: std::collections::HashMap<String,String> = std::collections::HashMap::new();
+tmp1.insert(String::from(\":a\"), String::from(\"asdf\"));
+tmp1
 };"))
 
 (deftest generic-types5-test
@@ -426,10 +426,10 @@ println!(\"{}\", 2);
     '(init x [1 2])
     ;;->
     "let x: PVector<i64> = {
-let mut tmp_1: PVector<i64> = PVector::new();
-tmp_1.push(1);
-tmp_1.push(2);
-tmp_1
+let mut tmp1: PVector<i64> = PVector::new();
+tmp1.push(1);
+tmp1.push(2);
+tmp1
 };"))
 
 (deftest data-literals2-test
@@ -440,10 +440,10 @@ tmp_1
     ;;->
     "lazy_static::lazy_static! {
 static ref x: std::vec::Vec<i64> = {
-let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp_1.push(1);
-tmp_1.push(2);
-tmp_1
+let mut tmp1: std::vec::Vec<i64> = std::vec::Vec::new();
+tmp1.push(1);
+tmp1.push(2);
+tmp1
 };
 }"))
 
@@ -457,10 +457,10 @@ tmp_1
        x)
     ;;->
     "let x: std::vec::Vec<i64> = {
-let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp_1.push(1);
-tmp_1.push(2);
-tmp_1
+let mut tmp1: std::vec::Vec<i64> = std::vec::Vec::new();
+tmp1.push(1);
+tmp1.push(2);
+tmp1
 };
 x;"))
 
@@ -474,16 +474,16 @@ x;"))
        (assign x [3 4]))
     ;;->
     "let mut x: PVector<i64> = {
-let mut tmp_1: PVector<i64> = PVector::new();
-tmp_1.push(1);
-tmp_1.push(2);
-tmp_1
+let mut tmp1: PVector<i64> = PVector::new();
+tmp1.push(1);
+tmp1.push(2);
+tmp1
 };
 x = {
-let mut tmp_2: PVector<i64> = PVector::new();
-tmp_2.push(3);
-tmp_2.push(4);
-tmp_2
+let mut tmp2: PVector<i64> = PVector::new();
+tmp2.push(3);
+tmp2.push(4);
+tmp2
 };"))
 
 (deftest data-literals5-test
@@ -493,10 +493,10 @@ tmp_2
     '(init x {1 2 3 4})
     ;;->
     "let x: PMap<i64,i64> = {
-let mut tmp_1: PMap<i64,i64> = PMap::new();
-tmp_1.insert(1, 2);
-tmp_1.insert(3, 4);
-tmp_1
+let mut tmp1: PMap<i64,i64> = PMap::new();
+tmp1.insert(1, 2);
+tmp1.insert(3, 4);
+tmp1
 };"))
 
 (deftest data-literals6-test
@@ -506,10 +506,10 @@ tmp_1
     '(init x #{1 2})
     ;;->
     "let x: PSet<i64> = {
-let mut tmp_1: PSet<i64> = PSet::new();
-tmp_1.insert(1);
-tmp_1.insert(2);
-tmp_1
+let mut tmp1: PSet<i64> = PSet::new();
+tmp1.insert(1);
+tmp1.insert(2);
+tmp1
 };"))
 
 (deftest user-cast-test
@@ -584,18 +584,18 @@ println!(\"{}\", z);"))
        (invoke println x))
     ;;->
     "let x: PVector<PVector<i64>> = {
-let mut tmp_1: PVector<PVector<i64>> = PVector::new();
-tmp_1.push({
-let mut tmp_2: PVector<i64> = PVector::new();
-tmp_2.push(1);
-tmp_2
+let mut tmp1: PVector<PVector<i64>> = PVector::new();
+tmp1.push({
+let mut tmp2: PVector<i64> = PVector::new();
+tmp2.push(1);
+tmp2
 }.clone());
-tmp_1.push({
-let mut tmp_3: PVector<i64> = PVector::new();
-tmp_3.push(2);
-tmp_3
+tmp1.push({
+let mut tmp3: PVector<i64> = PVector::new();
+tmp3.push(2);
+tmp3
 }.clone());
-tmp_1
+tmp1
 };
 println!(\"{}\", x);"))
 
@@ -625,19 +625,19 @@ println!(\"{}\", x);"))
        (invoke println x))
     ;;->
     "let x: std::collections::HashMap<i64,std::vec::Vec<String>> = {
-let mut tmp_1: std::collections::HashMap<i64,std::vec::Vec<String>> = std::collections::HashMap::new();
-tmp_1.insert(1, {
-let mut tmp_2: std::vec::Vec<String> = std::vec::Vec::new();
-tmp_2.push(String::from(\"hi\"));
-tmp_2
+let mut tmp1: std::collections::HashMap<i64,std::vec::Vec<String>> = std::collections::HashMap::new();
+tmp1.insert(1, {
+let mut tmp2: std::vec::Vec<String> = std::vec::Vec::new();
+tmp2.push(String::from(\"hi\"));
+tmp2
 }.clone());
-tmp_1.insert(2, {
-let mut tmp_3: std::vec::Vec<String> = std::vec::Vec::new();
-tmp_3.push(String::from(\"hello\"));
-tmp_3.push(String::from(\"there\"));
-tmp_3
+tmp1.insert(2, {
+let mut tmp3: std::vec::Vec<String> = std::vec::Vec::new();
+tmp3.push(String::from(\"hello\"));
+tmp3.push(String::from(\"there\"));
+tmp3
 }.clone());
-tmp_1
+tmp1
 };
 println!(\"{}\", x);"))
 
@@ -654,31 +654,31 @@ println!(\"{}\", x);"))
        (invoke println x))
     ;;->
     "let x: PVector<PMap<PSet<i64>,PVector<String>>> = {
-let mut tmp_1: PVector<PMap<PSet<i64>,PVector<String>>> = PVector::new();
-tmp_1.push({
-let mut tmp_2: PMap<PSet<i64>,PVector<String>> = PMap::new();
-tmp_2.insert({
-let mut tmp_3: PSet<i64> = PSet::new();
-tmp_3.insert(1);
-tmp_3
+let mut tmp1: PVector<PMap<PSet<i64>,PVector<String>>> = PVector::new();
+tmp1.push({
+let mut tmp2: PMap<PSet<i64>,PVector<String>> = PMap::new();
+tmp2.insert({
+let mut tmp3: PSet<i64> = PSet::new();
+tmp3.insert(1);
+tmp3
 }.clone(), {
-let mut tmp_4: PVector<String> = PVector::new();
-tmp_4.push(String::from(\"hi\"));
-tmp_4
+let mut tmp4: PVector<String> = PVector::new();
+tmp4.push(String::from(\"hi\"));
+tmp4
 }.clone());
-tmp_2.insert({
-let mut tmp_5: PSet<i64> = PSet::new();
-tmp_5.insert(2);
-tmp_5
+tmp2.insert({
+let mut tmp5: PSet<i64> = PSet::new();
+tmp5.insert(2);
+tmp5
 }.clone(), {
-let mut tmp_6: PVector<String> = PVector::new();
-tmp_6.push(String::from(\"hello\"));
-tmp_6.push(String::from(\"there\"));
-tmp_6
+let mut tmp6: PVector<String> = PVector::new();
+tmp6.push(String::from(\"hello\"));
+tmp6.push(String::from(\"there\"));
+tmp6
 }.clone());
-tmp_2
+tmp2
 }.clone());
-tmp_1
+tmp1
 };
 println!(\"{}\", x);"))
 
@@ -696,31 +696,31 @@ println!(\"{}\", x);"))
        (invoke println x))
     ;;->
     "let x: PVector<PMap<PSet<i64>,PVector<String>>> = {
-let mut tmp_1: PVector<PMap<PSet<i64>,PVector<String>>> = PVector::new();
-tmp_1.push({
-let mut tmp_2: PMap<PSet<i64>,PVector<String>> = PMap::new();
-tmp_2.insert({
-let mut tmp_3: PSet<i64> = PSet::new();
-tmp_3.insert(1);
-tmp_3
+let mut tmp1: PVector<PMap<PSet<i64>,PVector<String>>> = PVector::new();
+tmp1.push({
+let mut tmp2: PMap<PSet<i64>,PVector<String>> = PMap::new();
+tmp2.insert({
+let mut tmp3: PSet<i64> = PSet::new();
+tmp3.insert(1);
+tmp3
 }.clone(), {
-let mut tmp_4: PVector<String> = PVector::new();
-tmp_4.push(String::from(\"hi\"));
-tmp_4
+let mut tmp4: PVector<String> = PVector::new();
+tmp4.push(String::from(\"hi\"));
+tmp4
 }.clone());
-tmp_2.insert({
-let mut tmp_5: PSet<i64> = PSet::new();
-tmp_5.insert(2);
-tmp_5
+tmp2.insert({
+let mut tmp5: PSet<i64> = PSet::new();
+tmp5.insert(2);
+tmp5
 }.clone(), {
-let mut tmp_6: PVector<String> = PVector::new();
-tmp_6.push(String::from(\"hello\"));
-tmp_6.push(String::from(\"there\"));
-tmp_6
+let mut tmp6: PVector<String> = PVector::new();
+tmp6.push(String::from(\"hello\"));
+tmp6.push(String::from(\"there\"));
+tmp6
 }.clone());
-tmp_2
+tmp2
 }.clone());
-tmp_1
+tmp1
 };
 println!(\"{}\", x);"))
 
@@ -731,7 +731,7 @@ println!(\"{}\", x);"))
     '(do
        (init x 1)
        (invoke println x))
-    "let x: kalai::Value = kalai::Value::Long(1);
+    "let x: kalai::BValue = kalai::BValue::from(1);
 println!(\"{}\", x);"))
 
 (deftest data-literals8-1-3-test
@@ -753,12 +753,12 @@ println!(\"{}\", x);"))
     "let a: i64 = 1;
 let b: i64 = 2;
 let c: i64 = 3;
-let x: std::vec::Vec<kalai::Value> = {
-let mut tmp_1: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
-tmp_1.push(kalai::Value::Long(a.clone()));
-tmp_1.push(kalai::Value::Long(b.clone()));
-tmp_1.push(kalai::Value::Long(c.clone()));
-tmp_1
+let x: kalai::Vector = {
+let mut tmp1: kalai::Vector = kalai::Vector::new();
+tmp1.push(kalai::BValue::from(a.clone()));
+tmp1.push(kalai::BValue::from(b.clone()));
+tmp1.push(kalai::BValue::from(c.clone()));
+tmp1
 };
 println!(\"{}\", x);"))
 
@@ -777,13 +777,13 @@ println!(\"{}\", x);"))
          (invoke conj result i)
          (assign i (operator - i 3))))
     ;;->
-    "let mut result: std::vec::Vec<kalai::Value> = {
-let mut tmp_1: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
-tmp_1
+    "let mut result: kalai::Vector = {
+let mut tmp1: kalai::Vector = kalai::Vector::new();
+tmp1
 };
 let mut i: i32 = 10;
 while (0 < i) {
-result.push(kalai::Value::Int(i.clone()));
+result.push(kalai::BValue::from(i.clone()));
 i = (i - 3);
 }"))
 
@@ -797,12 +797,30 @@ i = (i - 3);
        (init x [1 2 3])
        (invoke println x))
     ;;->
-    "let x: std::vec::Vec<kalai::Value> = {
-let mut tmp_1: std::vec::Vec<kalai::Value> = std::vec::Vec::new();
-tmp_1.push(kalai::Value::Long(1));
-tmp_1.push(kalai::Value::Long(2));
-tmp_1.push(kalai::Value::Long(3));
-tmp_1
+    "let x: kalai::Vector = {
+let mut tmp1: kalai::Vector = std::vec::Vec::new();
+tmp1.push(kalai::BValue::from(1));
+tmp1.push(kalai::BValue::from(2));
+tmp1.push(kalai::BValue::from(3));
+tmp1
+};
+println!(\"{}\", x);"))
+
+(deftest data-literals8-1-test
+  (inner-form
+    '(let [x ^{:t :any} [1 "2" 3]]
+       (println x))
+    ;;->
+    '(do
+       (init x [1 "2" 3])
+       (invoke println x))
+    ;;->
+    "let x: kalai::BValue = {
+let mut tmp1: kalai::BValue = kalai::BValue::new();
+tmp1.push(kalai::BValue::from(1));
+tmp1.push(kalai::BValue::from(String::from(\"2\")));
+tmp1.push(kalai::BValue::from(3));
+tmp1
 };
 println!(\"{}\", x);"))
 
@@ -830,9 +848,9 @@ println!(\"{}\", x);"))
     '(init x {"key" (operator + 1 2)})
     ;;->
     "let x: std::collections::HashMap<String,i64> = {
-let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp_1.insert(String::from(\"key\"), (1 + 2).clone());
-tmp_1
+let mut tmp1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
+tmp1.insert(String::from(\"key\"), (1 + 2).clone());
+tmp1
 };"))
 
 (deftest string-equality-test
@@ -884,12 +902,12 @@ println!(\"{}\", (x == y));"))
               (invoke println x))
     ;;->
     "for x in {
-let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp_1.push(1);
-tmp_1.push(2);
-tmp_1.push(3);
-tmp_1.push(4);
-tmp_1
+let mut tmp1: std::vec::Vec<i64> = std::vec::Vec::new();
+tmp1.push(1);
+tmp1.push(2);
+tmp1.push(3);
+tmp1.push(4);
+tmp1
 } {
 println!(\"{}\", x);
 }"))
@@ -962,9 +980,9 @@ println!(\"{}\", 3);
     '(invoke println (invoke clojure.lang.RT/get {:k 1} :k))
     ;;->
     "println!(\"{}\", {
-let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp_1.insert(String::from(\":k\"), 1);
-tmp_1
+let mut tmp1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
+tmp1.insert(String::from(\":k\"), 1);
+tmp1
 }.get(&String::from(\":k\")).unwrap().clone());"))
 
 (deftest keywords-as-functions2-test
@@ -974,9 +992,9 @@ tmp_1
     '(invoke clojure.lang.RT/get #{:k} :k)
     ;;->
     "{
-let mut tmp_1: std::collections::HashSet<String> = std::collections::HashSet::new();
-tmp_1.insert(String::from(\":k\"));
-tmp_1
+let mut tmp1: std::collections::HashSet<String> = std::collections::HashSet::new();
+tmp1.insert(String::from(\":k\"));
+tmp1
 }.get(&String::from(\":k\")).unwrap().clone();"))
 
 (deftest collection-put-get-test
@@ -994,9 +1012,9 @@ tmp_1
     ;;->
     "let k: String = String::from(\"k\");
 let m: std::collections::HashMap<String,i64> = {
-let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp_1.insert(k.clone(), 1);
-tmp_1
+let mut tmp1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
+tmp1.insert(k.clone(), 1);
+tmp1
 };
 let v: i64 = m.get(&k).unwrap().clone();
 v;"
@@ -1200,9 +1218,9 @@ b.len() as i32;
     '(invoke assoc {:a 1} :b 2)
     ;;->
     "{
-let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp_1.insert(String::from(\":a\"), 1);
-tmp_1
+let mut tmp1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
+tmp1.insert(String::from(\":a\"), 1);
+tmp1
 }.insert(String::from(\":b\"), 2);"))
 
 (deftest interop3-test
@@ -1212,13 +1230,13 @@ tmp_1
     '(invoke update {:a 1} :a inc)
     ;;->
     "{
-let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp_1.insert(String::from(\":a\"), 1);
-tmp_1
+let mut tmp1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
+tmp1.insert(String::from(\":a\"), 1);
+tmp1
 }.insert(String::from(\":a\").clone(), ({
-let mut tmp_1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp_1.insert(String::from(\":a\"), 1);
-tmp_1
+let mut tmp1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
+tmp1.insert(String::from(\":a\"), 1);
+tmp1
 }.get(&String::from(\":a\")).unwrap().clone() + 1));"))
 
 (deftest interop4-test
@@ -1257,11 +1275,11 @@ System.out.println(s.charAt(1));"))
                (invoke clojure.lang.RT/nth v 1)))
     ;;->
     "let v: std::vec::Vec<i32> = {
-let mut tmp_1: std::vec::Vec<i32> = std::vec::Vec::new();
-tmp_1.push(1);
-tmp_1.push(2);
-tmp_1.push(3);
-tmp_1
+let mut tmp1: std::vec::Vec<i32> = std::vec::Vec::new();
+tmp1.push(1);
+tmp1.push(2);
+tmp1.push(3);
+tmp1
 };
 println!(\"{}\", v.get(1 as usize).unwrap().clone());"))
 
@@ -1282,8 +1300,8 @@ println!(\"{}\", v.get(1 as usize).unwrap().clone());"))
          (assign i (operator - i 3))))
     ;;->
     "let mut result: std::vec::Vec<i32> = {
-let mut tmp_1: std::vec::Vec<i32> = std::vec::Vec::new();
-tmp_1
+let mut tmp1: std::vec::Vec<i32> = std::vec::Vec::new();
+tmp1
 };
 let mut i: i32 = 10;
 while (0 < i) {
@@ -1304,8 +1322,8 @@ i = (i - 3);
        (invoke println "hi"))
     ;;->
     "let separator_positions: std::vec::Vec<i32> = {
-let mut tmp_1: std::vec::Vec<i32> = std::vec::Vec::new();
-tmp_1
+let mut tmp1: std::vec::Vec<i32> = std::vec::Vec::new();
+tmp1
 };
 let num_positions: i32 = separator_positions.len() as i32;
 println!(\"{}\", String::from(\"hi\"));"))
@@ -1425,15 +1443,15 @@ println!(\"{}\", x);"))
        (assign x [1 2 3]))
     ;;->
     "let mut x: std::vec::Vec<i64> = {
-let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp_1
+let mut tmp1: std::vec::Vec<i64> = std::vec::Vec::new();
+tmp1
 };
 x = {
-let mut tmp_2: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp_2.push(1);
-tmp_2.push(2);
-tmp_2.push(3);
-tmp_2
+let mut tmp2: std::vec::Vec<i64> = std::vec::Vec::new();
+tmp2.push(1);
+tmp2.push(2);
+tmp2.push(3);
+tmp2
 };"))
 
 (deftest propagated-types5-test
@@ -1447,8 +1465,8 @@ tmp_2
        (invoke conj x 1))
     ;;->
     "let mut x: std::vec::Vec<i64> = {
-let mut tmp_1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp_1
+let mut tmp1: std::vec::Vec<i64> = std::vec::Vec::new();
+tmp1
 };
 x.push(1);"))
 
@@ -1524,8 +1542,8 @@ result;"))
        result)
     ;;->
     "let mut result: std::vec::Vec<i32> = {
-let mut tmp_1: std::vec::Vec<i32> = std::vec::Vec::new();
-tmp_1
+let mut tmp1: std::vec::Vec<i32> = std::vec::Vec::new();
+tmp1
 };
 result;"))
 

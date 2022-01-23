@@ -233,8 +233,11 @@
 
     ;; invoke
     ;; careful, this catches a lot!
-    (?f . !args ...)
-    (invoke ?f . (m/app inner-form !args) ...)))
+    (m/and (?f . !args ...)
+           (m/app meta ?meta))
+    (m/app with-meta
+           (invoke ?f . (m/app inner-form !args) ...)
+           ?meta)))
 
 (def inner-form
   "Ordered from most to least specific."

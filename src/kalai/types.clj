@@ -5,7 +5,9 @@
   (:import (clojure.lang IMeta)))
 
 (def TYPE-MISSING-STR "TYPE_MISSING")
+(def BAD-TYPE_CAST-STR "BAD_TYPE_CAST")
 
+;; Primitive types in Kalai's supported types
 (def primitive-types
   #{:int
     :long
@@ -16,6 +18,7 @@
     :char ;; this is a bad idea for user facing strings, use ICU instead
     :byte})
 
+;; Collection types in Kalai's supported types
 (def collection-types
   #{:map
     :mmap
@@ -24,9 +27,14 @@
     :vector
     :mvector})
 
+;; All of Kalai's supported types
 (def types
   (set/union primitive-types collection-types))
 
+;; Conversion map between Java types (represented as Java classes and the
+;; `TYPE` field of Java "boxed" classes for primitives) to Kalai types. Useful
+;; for mapping/resolving possible type hints in Kalai source to a standard
+;; Kalai type representation.
 (def java-types
   {Integer      :int
    Integer/TYPE :int

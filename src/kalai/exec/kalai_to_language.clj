@@ -4,6 +4,7 @@
             [kalai.pass.kalai.pipeline :as kalai-pipeline]
             [kalai.pass.java.pipeline :as java-pipeline]
             [kalai.pass.rust.pipeline :as rust-pipeline]
+            [kalai.pass.rust.e-string :as e-string]
             [clojure.tools.analyzer.jvm :as az]
             [clojure.tools.analyzer.jvm.utils :as azu]
             [clojure.string :as str]
@@ -91,15 +92,97 @@
                        (sort)
                        (map #(str "pub mod " % ";\n"))))))
 
+(defn stringify-rust-coll-helper-fns [forms]
+  (->> forms
+       (analyze-forms)
+       (kalai-pipeline/asts->kalai)
+       (rust-pipeline/kalai->rust)
+       ;; remove the first line, which is "use crate::kalai;"
+       (str/split-lines)
+       (drop 4)
+       (str/join \newline)))
+
+(defn helper-fn-impl-strs []
+  (let [
+        primitives [:bool :byte :char :int :long :float :double :string]
+        vector-contains-fns (for [t primitives]
+                           (let [t-str (e-string/kalai-type->rust t)]
+                             (list 'defn (symbol (str "contains-" t-str))
+                                   ^{:t :bool} [(with-meta 'self {:ref true}),
+                                                (with-meta 'x {:t t})]
+                                   '(.contains self ^:ref (kalai.BValue/from x)))))
+        set-contains-fns (for [t primitives]
+                           (let [t-str (e-string/kalai-type->rust t)]
+                             (list 'defn (symbol (str "contains-" t-str))
+                                   ^{:t :bool} [(with-meta 'self {:ref true}),
+                                                (with-meta 'x {:t t})]
+                                   '(.contains self ^:ref (kalai.BValue/from x)))))
+        set-insert-fns (for [t primitives]
+                         (let [t-str (e-string/kalai-type->rust t)]
+                           (list 'defn (symbol (str "insert-" t-str))
+                                 ^{:t :bool} [(with-meta 'self {:ref true
+                                                                :mut true}),
+                                              (with-meta 'x {:t t})]
+                                 (list '.insert 'self '(kalai.BValue/from x)))))
+        map-insert-fns (for [k-t primitives
+                             v-t primitives]
+                         (let [k-t-str (e-string/kalai-type->rust k-t)
+                               v-t-str (e-string/kalai-type->rust v-t)]
+                           (list 'defn (symbol (str "insert-" k-t-str "-" v-t-str))
+                                 ^{:t {:option [v-t]}} [(with-meta 'self {:ref true
+                                                                          :mut true}),
+                                                        (with-meta 'k {:t k-t})
+                                                        (with-meta 'v {:t v-t})]
+                                 (list '.map '(.insert self (kalai.BValue/from k) (kalai.BValue/from v))
+                                       (str "RUST-FROM-FN-" v-t-str)))))
+        map-get-fns (for [k-t primitives
+                          v-t primitives]
+                      (let [k-t-str (e-string/kalai-type->rust k-t)
+                            v-t-str (e-string/kalai-type->rust v-t)]
+                        (list 'defn (symbol (str "get-" k-t-str "-" v-t-str))
+                              ^{:t {:option [^:ref v-t]}} [(with-meta 'self {:ref true}),
+                                                           (with-meta 'k {:t k-t
+                                                                          :ref true})]
+                              (list '.map '(.get self ^:ref (kalai.BValue/from k))
+                                    (str "RUST-FROM-FN-" v-t-str)))))
+        helper-fn-front-matter '((ns kalai.BValue)
+                                 (defn from [x]))
+        result-str (str/join \newline
+                             ["impl Set {"
+                              (stringify-rust-coll-helper-fns (concat helper-fn-front-matter
+                                                                      set-contains-fns
+                                                                      set-insert-fns))
+                              "}"
+                              "impl Map {"
+                              (stringify-rust-coll-helper-fns (concat helper-fn-front-matter
+                                                                      map-insert-fns
+                                                                      map-get-fns))
+                              "}"
+                              "impl Vector {"
+                              (stringify-rust-coll-helper-fns (concat helper-fn-front-matter
+                                                                      vector-contains-fns))
+                              "}"])
+        ;; Note: because we cannot generate `::from` in Clojure, at least not easily, we use a placeholder string
+        ;; in our above auto-generated methods as a workaround, and here is the other part of the workaround.
+        result-str-post-edits (str/replace result-str #"String::from\(\"RUST-FROM-FN-(\w+)\"\)" "$1::from")]
+    result-str-post-edits))
+
+
 ;; Note: if reosurce files are stored in a depth below the root directory, then
 ;; a deeper copy using recursion would be necessary, which would be better handled using the fs library
 ;; https://github.com/clj-commons/fs
 (defn inject-kalai-helper-files [{:keys [transpile-dir languages]}]
   (when (contains? languages ::l/rust)
     (let [k (io/resource "rust/kalai.rs")
-          dest-file-path (io/file transpile-dir "rust" "src" "kalai.rs")]
+          dest-file-path (io/file transpile-dir "rust" "src" "kalai.rs")
+          k-str (slurp k)
+          dest-file-str (str k-str
+                              \newline \newline
+                             (helper-fn-impl-strs)
+                             \newline
+                             )]
       (assert k "kalai.rs")
-      (spit dest-file-path (slurp k)))))
+      (spit dest-file-path dest-file-str))))
 
 (defn write-module-definitions [{:keys [transpile-dir languages]}]
   (when (contains? languages ::l/rust)

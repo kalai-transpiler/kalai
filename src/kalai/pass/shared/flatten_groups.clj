@@ -5,7 +5,9 @@
 (def rewrite
   (s/bottom-up
     (s/rewrite
-      ((m/or (group . !stuff ...) !stuff) ...)
-      (!stuff ...)
+      (m/and
+        ((m/or (group . !stuff ...) !stuff) ...)
+        (m/app meta ?meta))
+      (m/app with-meta (!stuff ...) ?meta)
 
       ?else ?else)))
