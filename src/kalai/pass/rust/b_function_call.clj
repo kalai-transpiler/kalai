@@ -150,14 +150,16 @@
       ;; TODO: do we really need to clone here???
       (r/invoke (u/var ~#'vector?) ?x)
       (r/operator ||
-        (r/method is_type ?x (r/literal "Vector"))
-        (r/method is_type ?x (r/literal "Vec")))
+                  (r/method is_type ?x (r/literal "Vector"))
+                  (r/method is_type ?x (r/literal "Vec")))
 
       (r/invoke (u/var ~#'set?) ?x)
       (r/method is_type ?x (r/literal "Set"))
 
       (r/invoke (u/var ~#'map?) ?x)
-      (r/method is_type ?x (r/literal "Map"))
+      (r/operator ||
+                  (r/method is_type ?x (r/literal "Map"))
+                  (r/method is_type ?x (r/literal "PMap")))
 
       (r/invoke (u/var ~#'string?) ?x)
       (r/method is_type ?x (r/literal "String"))

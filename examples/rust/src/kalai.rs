@@ -9,6 +9,7 @@ use std::ops::{Add, Deref};
 use std::vec::Vec;
 use std::{any, any::Any};
 use std::{fmt, ops};
+use rpds::HashTrieMap;
 
 /// Because we want to insert values that implement the Value trait (in order to
 /// be added to collection types in an extensible way that is accessible to users),
@@ -58,6 +59,9 @@ pub struct Set(pub HashSet<BValue>);
 
 #[derive(Debug, Clone)]
 pub struct Map(pub HashMap<BValue, BValue>);
+
+#[derive(Debug, Clone)]
+pub struct PMap(pub HashTrieMap<BValue, BValue>);
 
 #[derive(Debug, Clone)]
 pub struct Vector(pub Vec<BValue>);
@@ -447,6 +451,47 @@ impl Value for Map {
     }
 }
 
+impl Value for PMap {
+    fn type_name(&self) -> &'static str {
+        "PMap"
+    }
+
+    fn hash_id(&self) -> u64 {
+        // TODO: find a more efficient way to create a deterministic contents/value-based hash for a Set (or any collection)
+        // TODO: look into how Clojure hashes collections (ex: map, set)
+        // Note: we use BinaryHeap to order the hash values because hashing is stateful, and therefore, order-dependent.
+        let elem_hashes: BinaryHeap<u64> = self
+            .0
+            .iter()
+            .flat_map(|(k, v)| {
+                [k.deref().hash_id(), v.deref().hash_id()]
+                    .iter()
+                    .cloned()
+                    .collect::<Vec<u64>>()
+            })
+            .collect();
+        let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
+
+        let mut hasher = DefaultHasher::new();
+        for eh in sorted_hashes.iter() {
+            eh.hash(&mut hasher);
+        }
+        let result = hasher.finish();
+        result
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn eq_test(&self, other: &dyn Value) -> bool {
+        match other.as_any().downcast_ref::<PMap>() {
+            Some(map) => &self.0 == &map.0,
+            None => false,
+        }
+    }
+}
+
 impl Value for String {
     fn type_name(&self) -> &'static str {
         "String"
@@ -579,6 +624,15 @@ impl From<&BValue> for String {
         } else {
             panic!("Could not downcast Value into String!");
         }
+    }
+}
+
+// &str
+
+impl From<&str> for BValue {
+    fn from(x: &str) -> Self {
+        let b: BValue = Box::new(x.to_string());
+        b
     }
 }
 
@@ -798,6 +852,8 @@ impl From<&BValue> for Nil {
     }
 }
 
+// mutable collection types - Map, Set, Vector
+
 impl From<BValue> for Map {
     fn from(v: BValue) -> Map {
         if let Some(map) = v.as_any().downcast_ref::<Map>() {
@@ -843,6 +899,34 @@ impl From<Set> for BValue {
 impl From<Vector> for BValue {
     fn from(v: Vector) -> BValue {
         Box::new(v)
+    }
+}
+
+// immutable collection types - PMap
+
+impl From<BValue> for PMap {
+    fn from(v: BValue) -> PMap {
+        if let Some(map) = v.as_any().downcast_ref::<PMap>() {
+            map.clone()
+        } else {
+            panic!("Could not downcast Value into PMap!");
+        }
+    }
+}
+
+impl From<&BValue> for PMap {
+    fn from(v: &BValue) -> PMap {
+        if let Some(map) = v.as_any().downcast_ref::<PMap>() {
+            map.clone()
+        } else {
+            panic!("Could not downcast Value into PMap!");
+        }
+    }
+}
+
+impl From<PMap> for BValue {
+    fn from(m: PMap) -> BValue {
+        Box::new(m)
     }
 }
 
@@ -957,14 +1041,40 @@ impl Map {
     }
 }
 
+//
+// PMap impls
+//
+
+impl Default for PMap {
+    fn default() -> PMap {
+        PMap(HashTrieMap::<BValue, BValue>::new())
+    }
+}
+
+impl PMap {
+    pub fn insert(&mut self, k: BValue, v: BValue) -> PMap {
+        PMap(self.0.insert(k, v))
+    }
+
+    pub fn get(&self, k: &BValue) -> Option<&BValue> {
+        self.0.get(k)
+    }
+
+    pub fn new() -> PMap {
+        Self::default()
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{BValue, Double, Float, Map, Nil, Set, Value, NIL};
+    use super::*;
 
     use std::collections::hash_map::DefaultHasher;
     use std::collections::{HashMap, HashSet};
     use std::hash::{Hash, Hasher};
     use std::ops::Deref;
+
+    use rpds::HashTrieMap;
 
     #[test]
     fn debug_print() {
@@ -1242,6 +1352,45 @@ mod tests {
 
         let map_child = Map::from(map_child_deref);
         assert_eq!(map_child.get_string_f32(&"two".to_string()), Some(2.0f32));
+    }
+
+    #[test]
+    fn test_persistent_map() {
+        let m: HashTrieMap<String, i64> =
+            HashTrieMap::new()
+                .insert(String::from(":x"), 11)
+                .insert(String::from(":y"), 13);
+        let x: i64 = *(m.get(":x").unwrap());
+
+        let m2: HashTrieMap<String, BValue> =
+            HashTrieMap::new()
+                .insert(String::from(":x"), BValue::from(11.0f64))
+                .insert(String::from(":y"), BValue::from(13i64));
+        let x: f64 = f64::from(m2.get(":x").unwrap());
+
+        let pm2: PMap =
+            PMap::new()
+                .insert(BValue::from(":x"), BValue::from(11i64))
+                .insert(BValue::from(":y"), BValue::from(13i32));
+        let x: i64 = i64::from(pm2.get(&BValue::from(":x")).unwrap());
+
+        let pm3: PMap =
+            PMap::new()
+                .insert(BValue::from(":xy"), BValue::from(pm2))
+                .insert(BValue::from(":a"), BValue::from(17i32));
+
+        /*
+        {:a 17
+         :xy {:x 11
+              :y 13}}
+         */
+
+        let a: i32 = i32::from(pm3.get(&BValue::from(":a")).unwrap());
+        let xy = kalai::PMap::from(pm3.get(&BValue::from(":xy")).unwrap());
+        let y: i32 = i32::from(xy.get(&BValue::from(":y")).unwrap());
+        let x = (a+y) as i64;
+
+        assert_eq!(x, 30);
     }
 }
 

@@ -8,4 +8,5 @@ pub fn main() {
     examples::b::simple::main();
     examples::b::type_alias::main();
     examples::b::variable::main();
+    examples::c::persistent::main();
 }
