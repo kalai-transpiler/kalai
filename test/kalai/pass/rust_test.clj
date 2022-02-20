@@ -62,9 +62,9 @@ x;"))
       ;;->
       '(init x [1 2 3])
       ;;->
-      "static final PVector<Object> x;
+      "static final rpds::Vector<Object> x;
   static {
-  final PVector<Object> tmp1 = new PVector<Object>();
+  final rpds::Vector<Object> tmp1 = new rpds::Vector<Object>();
   tmp1.add(1);
   tmp1.add(2);
   tmp1.add(3);
@@ -285,6 +285,7 @@ let y: i64 = 5;"))
                             (return z))))
     ;;->
     "use crate::kalai;
+use crate::kalai::PMap;
 lazy_static::lazy_static! {
 static ref x: std::collections::HashMap<i64,String> = {
 let mut tmp1: std::collections::HashMap<i64,String> = std::collections::HashMap::new();
@@ -425,8 +426,8 @@ println!(\"{}\", 2);
     ;;->
     '(init x [1 2])
     ;;->
-    "let x: PVector<i64> = {
-let mut tmp1: PVector<i64> = PVector::new();
+    "let x: rpds::Vector<i64> = {
+let mut tmp1: rpds::Vector<i64> = rpds::Vector::new();
 tmp1.push(1);
 tmp1.push(2);
 tmp1
@@ -473,14 +474,14 @@ x;"))
        (init x [1 2])
        (assign x [3 4]))
     ;;->
-    "let mut x: PVector<i64> = {
-let mut tmp1: PVector<i64> = PVector::new();
+    "let mut x: rpds::Vector<i64> = {
+let mut tmp1: rpds::Vector<i64> = rpds::Vector::new();
 tmp1.push(1);
 tmp1.push(2);
 tmp1
 };
 x = {
-let mut tmp2: PVector<i64> = PVector::new();
+let mut tmp2: rpds::Vector<i64> = rpds::Vector::new();
 tmp2.push(3);
 tmp2.push(4);
 tmp2
@@ -492,8 +493,8 @@ tmp2
     ;;->
     '(init x {1 2 3 4})
     ;;->
-    "let x: PMap<i64,i64> = {
-let mut tmp1: PMap<i64,i64> = PMap::new();
+    "let x: rpds::HashTrieMap<i64,i64> = {
+let mut tmp1: rpds::HashTrieMap<i64,i64> = rpds::HashTrieMap::new();
 tmp1.insert(1, 2);
 tmp1.insert(3, 4);
 tmp1
@@ -505,8 +506,8 @@ tmp1
     ;;->
     '(init x #{1 2})
     ;;->
-    "let x: PSet<i64> = {
-let mut tmp1: PSet<i64> = PSet::new();
+    "let x: rpds::HashTrieSet<i64> = {
+let mut tmp1: rpds::HashTrieSet<i64> = rpds::HashTrieSet::new();
 tmp1.insert(1);
 tmp1.insert(2);
 tmp1
@@ -583,15 +584,15 @@ println!(\"{}\", z);"))
        (init x [[1] [2]])
        (invoke println x))
     ;;->
-    "let x: PVector<PVector<i64>> = {
-let mut tmp1: PVector<PVector<i64>> = PVector::new();
+    "let x: rpds::Vector<rpds::Vector<i64>> = {
+let mut tmp1: rpds::Vector<rpds::Vector<i64>> = rpds::Vector::new();
 tmp1.push({
-let mut tmp2: PVector<i64> = PVector::new();
+let mut tmp2: rpds::Vector<i64> = rpds::Vector::new();
 tmp2.push(1);
 tmp2
 }.clone());
 tmp1.push({
-let mut tmp3: PVector<i64> = PVector::new();
+let mut tmp3: rpds::Vector<i64> = rpds::Vector::new();
 tmp3.push(2);
 tmp3
 }.clone());
@@ -653,25 +654,25 @@ println!(\"{}\", x);"))
                  #{2} ["hello" "there"]}])
        (invoke println x))
     ;;->
-    "let x: PVector<PMap<PSet<i64>,PVector<String>>> = {
-let mut tmp1: PVector<PMap<PSet<i64>,PVector<String>>> = PVector::new();
+    "let x: rpds::Vector<rpds::HashTrieMap<rpds::HashTrieSet<i64>,rpds::Vector<String>>> = {
+let mut tmp1: rpds::Vector<rpds::HashTrieMap<rpds::HashTrieSet<i64>,rpds::Vector<String>>> = rpds::Vector::new();
 tmp1.push({
-let mut tmp2: PMap<PSet<i64>,PVector<String>> = PMap::new();
+let mut tmp2: rpds::HashTrieMap<rpds::HashTrieSet<i64>,rpds::Vector<String>> = rpds::HashTrieMap::new();
 tmp2.insert({
-let mut tmp3: PSet<i64> = PSet::new();
+let mut tmp3: rpds::HashTrieSet<i64> = rpds::HashTrieSet::new();
 tmp3.insert(1);
 tmp3
 }.clone(), {
-let mut tmp4: PVector<String> = PVector::new();
+let mut tmp4: rpds::Vector<String> = rpds::Vector::new();
 tmp4.push(String::from(\"hi\"));
 tmp4
 }.clone());
 tmp2.insert({
-let mut tmp5: PSet<i64> = PSet::new();
+let mut tmp5: rpds::HashTrieSet<i64> = rpds::HashTrieSet::new();
 tmp5.insert(2);
 tmp5
 }.clone(), {
-let mut tmp6: PVector<String> = PVector::new();
+let mut tmp6: rpds::Vector<String> = rpds::Vector::new();
 tmp6.push(String::from(\"hello\"));
 tmp6.push(String::from(\"there\"));
 tmp6
@@ -695,25 +696,25 @@ println!(\"{}\", x);"))
                  #{2} ["hello" "there"]}])
        (invoke println x))
     ;;->
-    "let x: PVector<PMap<PSet<i64>,PVector<String>>> = {
-let mut tmp1: PVector<PMap<PSet<i64>,PVector<String>>> = PVector::new();
+    "let x: rpds::Vector<rpds::HashTrieMap<rpds::HashTrieSet<i64>,rpds::Vector<String>>> = {
+let mut tmp1: rpds::Vector<rpds::HashTrieMap<rpds::HashTrieSet<i64>,rpds::Vector<String>>> = rpds::Vector::new();
 tmp1.push({
-let mut tmp2: PMap<PSet<i64>,PVector<String>> = PMap::new();
+let mut tmp2: rpds::HashTrieMap<rpds::HashTrieSet<i64>,rpds::Vector<String>> = rpds::HashTrieMap::new();
 tmp2.insert({
-let mut tmp3: PSet<i64> = PSet::new();
+let mut tmp3: rpds::HashTrieSet<i64> = rpds::HashTrieSet::new();
 tmp3.insert(1);
 tmp3
 }.clone(), {
-let mut tmp4: PVector<String> = PVector::new();
+let mut tmp4: rpds::Vector<String> = rpds::Vector::new();
 tmp4.push(String::from(\"hi\"));
 tmp4
 }.clone());
 tmp2.insert({
-let mut tmp5: PSet<i64> = PSet::new();
+let mut tmp5: rpds::HashTrieSet<i64> = rpds::HashTrieSet::new();
 tmp5.insert(2);
 tmp5
 }.clone(), {
-let mut tmp6: PVector<String> = PVector::new();
+let mut tmp6: rpds::Vector<String> = rpds::Vector::new();
 tmp6.push(String::from(\"hello\"));
 tmp6.push(String::from(\"there\"));
 tmp6

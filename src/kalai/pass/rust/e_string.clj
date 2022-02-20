@@ -61,11 +61,11 @@
 
 ;; TODO: do we need an :object type?
 (def kalai-type->rust
-  {:map     "PMap"
+  {:map     "rpds::HashTrieMap"
    :mmap    "std::collections::HashMap"
-   :set     "PSet"
+   :set     "rpds::HashTrieSet"
    :mset    "std::collections::HashSet"
-   :vector  "PVector"
+   :vector  "rpds::Vector"
    ;; TODO: does this depend on whether it's a {:t {:vector [:some-primitive]}} vs. {:t {:vector [:any]}} ? How is this being used instead of t-str?
    :mvector "std::vec::Vec"
    :bool    "bool"

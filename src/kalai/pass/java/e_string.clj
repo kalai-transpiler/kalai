@@ -49,11 +49,11 @@
 
 ;; TODO: do we need an :object type?
 (def kalai-type->java
-  {:map     "PMap"
+  {:map     "io.lacuna.bifurcan.Map"
    :mmap    "HashMap"
-   :set     "PSet"
+   :set     "io.lacuna.bifurcan.Set"
    :mset    "HashSet"
-   :vector  "PVector"
+   :vector  "io.lacuna.bifurcan.List"
    :mvector "ArrayList"
    :bool    "boolean"
    :byte    "byte"
@@ -75,9 +75,14 @@
 (defn box [s]
   (case s
     "int" "Integer"
+    "long" "Long"
     "char" "Character"
     "bool" "Boolean"
-    (apply str (str/upper-case (first s)) (rest s))))
+    "float" "Float"
+    "double" "Double"
+    "byte" "Byte"
+    "short" "Short"
+    s))
 
 (def t-str
   (s/rewrite

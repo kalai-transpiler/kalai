@@ -29,4 +29,4 @@ run_rust:
 	cd rust && cargo test && cargo run sql_builder_run_examples
 
 run_java:
-	java -cp java/build/classes/java/main sqlbuilder.Examples
+	cd java && gradle -PmainClass=sqlbuilder.Examples run

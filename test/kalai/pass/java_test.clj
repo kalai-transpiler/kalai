@@ -49,9 +49,9 @@
       ;;->
       '(init x [1 2 3])
       ;;->
-      "static final PVector<Object> x;
+      "static final io.lacuna.bifurcan.List<Object> x;
   static {
-  final PVector<Object> tmp1 = new PVector<Object>();
+  final io.lacuna.bifurcan.List<Object> tmp1 = new io.lacuna.bifurcan.List<Object>();
   tmp1.add(1);
   tmp1.add(2);
   tmp1.add(3);
@@ -403,12 +403,12 @@ System.out.println(2L);
     ;;->
     '(init x [1 2])
     ;;->
-    "PVector<Long> tmp1 = new PVector<Long>();
+    "io.lacuna.bifurcan.List<Long> tmp1 = new io.lacuna.bifurcan.List<Long>();
 tmp1.add(1L);
 tmp1.add(2L);
-final PVector<Long> x = tmp1;"))
+final io.lacuna.bifurcan.List<Long> x = tmp1;"))
 
-;; selecting between Vector and PVector<Object>
+;; selecting between Vector and io.lacuna.bifurcan.List<Object>
 (deftest data-literals2-test
   ;; TODO: inner form is not usually where def x would appear,
   ;; more likely as a top level form, but we haven't implemented static initializers yet
@@ -445,11 +445,11 @@ final ArrayList<Long> x = tmp1;"))
        (init x [1 2])
        (assign x [3 4]))
     ;;->
-    "PVector<Long> tmp1 = new PVector<Long>();
+    "io.lacuna.bifurcan.List<Long> tmp1 = new io.lacuna.bifurcan.List<Long>();
 tmp1.add(1L);
 tmp1.add(2L);
-PVector<Long> x = tmp1;
-PVector<Long> tmp2 = new PVector<Long>();
+io.lacuna.bifurcan.List<Long> x = tmp1;
+io.lacuna.bifurcan.List<Long> tmp2 = new io.lacuna.bifurcan.List<Long>();
 tmp2.add(3L);
 tmp2.add(4L);
 x = tmp2;"))
@@ -460,10 +460,10 @@ x = tmp2;"))
     ;;->
     '(init x {1 2 3 4})
     ;;->
-    "PMap<Long,Long> tmp1 = new PMap<Long,Long>();
+    "io.lacuna.bifurcan.Map<Long,Long> tmp1 = new io.lacuna.bifurcan.Map<Long,Long>();
 tmp1.put(1L, 2L);
 tmp1.put(3L, 4L);
-final PMap<Long,Long> x = tmp1;"))
+final io.lacuna.bifurcan.Map<Long,Long> x = tmp1;"))
 
 (deftest data-literals6-test
   (inner-form
@@ -471,10 +471,10 @@ final PMap<Long,Long> x = tmp1;"))
     ;;->
     '(init x #{1 2})
     ;;->
-    "PSet<Long> tmp1 = new PSet<Long>();
+    "io.lacuna.bifurcan.Set<Long> tmp1 = new io.lacuna.bifurcan.Set<Long>();
 tmp1.add(1L);
 tmp1.add(2L);
-final PSet<Long> x = tmp1;"))
+final io.lacuna.bifurcan.Set<Long> x = tmp1;"))
 
 ;; TODO: What about heterogeneous collections,
 ;; do we want to allow them? [1 [2]] if so what is the type?
@@ -489,14 +489,14 @@ final PSet<Long> x = tmp1;"))
        (init x [[1] [2]])
        (invoke println x))
     ;;->
-    "PVector<PVector<Long>> tmp1 = new PVector<PVector<Long>>();
-PVector<Long> tmp2 = new PVector<Long>();
+    "io.lacuna.bifurcan.List<io.lacuna.bifurcan.List<Long>> tmp1 = new io.lacuna.bifurcan.List<io.lacuna.bifurcan.List<Long>>();
+io.lacuna.bifurcan.List<Long> tmp2 = new io.lacuna.bifurcan.List<Long>();
 tmp2.add(1L);
 tmp1.add(tmp2);
-PVector<Long> tmp3 = new PVector<Long>();
+io.lacuna.bifurcan.List<Long> tmp3 = new io.lacuna.bifurcan.List<Long>();
 tmp3.add(2L);
 tmp1.add(tmp3);
-final PVector<PVector<Long>> x = tmp1;
+final io.lacuna.bifurcan.List<io.lacuna.bifurcan.List<Long>> x = tmp1;
 System.out.println(x);"))
 
 (deftest data-literals7-0-test
@@ -510,14 +510,14 @@ System.out.println(x);"))
       ;;->
       '(function f [] (return [[1] [2]]))
       ;;->
-      "final PVector<PVector<Long>> tmp1 = new PVector<PVector<Long>>();
-  final PVector<Long> tmp2 = new PVector<Long>();
+      "final io.lacuna.bifurcan.List<io.lacuna.bifurcan.List<Long>> tmp1 = new io.lacuna.bifurcan.List<io.lacuna.bifurcan.List<Long>>();
+  final io.lacuna.bifurcan.List<Long> tmp2 = new io.lacuna.bifurcan.List<Long>();
   tmp2.add(1);
   tmp1.add(tmp2);
-  final PVector<Long> tmp3 = new PVector<Long>();
+  final io.lacuna.bifurcan.List<Long> tmp3 = new io.lacuna.bifurcan.List<Long>();
   tmp3.add(2);
   tmp1.add(tmp3);
-  final PVector<PVector<Long>> x = tmp1;
+  final io.lacuna.bifurcan.List<io.lacuna.bifurcan.List<Long>> x = tmp1;
   System.out.println(x);"))
 
 (deftest data-literals7-1-test
@@ -555,21 +555,21 @@ System.out.println(x);"))
                  #{2} ["hello" "there"]}])
        (invoke println x))
     ;;->
-    "PVector<PMap<PSet<Long>,PVector<String>>> tmp1 = new PVector<PMap<PSet<Long>,PVector<String>>>();
-PMap<PSet<Long>,PVector<String>> tmp2 = new PMap<PSet<Long>,PVector<String>>();
-PSet<Long> tmp3 = new PSet<Long>();
+    "io.lacuna.bifurcan.List<io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>> tmp1 = new io.lacuna.bifurcan.List<io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>>();
+io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>> tmp2 = new io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>();
+io.lacuna.bifurcan.Set<Long> tmp3 = new io.lacuna.bifurcan.Set<Long>();
 tmp3.add(1L);
-PVector<String> tmp4 = new PVector<String>();
+io.lacuna.bifurcan.List<String> tmp4 = new io.lacuna.bifurcan.List<String>();
 tmp4.add(\"hi\");
 tmp2.put(tmp3, tmp4);
-PSet<Long> tmp5 = new PSet<Long>();
+io.lacuna.bifurcan.Set<Long> tmp5 = new io.lacuna.bifurcan.Set<Long>();
 tmp5.add(2L);
-PVector<String> tmp6 = new PVector<String>();
+io.lacuna.bifurcan.List<String> tmp6 = new io.lacuna.bifurcan.List<String>();
 tmp6.add(\"hello\");
 tmp6.add(\"there\");
 tmp2.put(tmp5, tmp6);
 tmp1.add(tmp2);
-final PVector<PMap<PSet<Long>,PVector<String>>> x = tmp1;
+final io.lacuna.bifurcan.List<io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>> x = tmp1;
 System.out.println(x);"))
 
 (deftest data-literals7-3-test
@@ -585,21 +585,21 @@ System.out.println(x);"))
                  #{2} ["hello" "there"]}])
        (invoke println x))
     ;;->
-    "PVector<PMap<PSet<Long>,PVector<String>>> tmp1 = new PVector<PMap<PSet<Long>,PVector<String>>>();
-PMap<PSet<Long>,PVector<String>> tmp2 = new PMap<PSet<Long>,PVector<String>>();
-PSet<Long> tmp3 = new PSet<Long>();
+    "io.lacuna.bifurcan.List<io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>> tmp1 = new io.lacuna.bifurcan.List<io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>>();
+io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>> tmp2 = new io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>();
+io.lacuna.bifurcan.Set<Long> tmp3 = new io.lacuna.bifurcan.Set<Long>();
 tmp3.add(1L);
-PVector<String> tmp4 = new PVector<String>();
+io.lacuna.bifurcan.List<String> tmp4 = new io.lacuna.bifurcan.List<String>();
 tmp4.add(\"hi\");
 tmp2.put(tmp3, tmp4);
-PSet<Long> tmp5 = new PSet<Long>();
+io.lacuna.bifurcan.Set<Long> tmp5 = new io.lacuna.bifurcan.Set<Long>();
 tmp5.add(2L);
-PVector<String> tmp6 = new PVector<String>();
+io.lacuna.bifurcan.List<String> tmp6 = new io.lacuna.bifurcan.List<String>();
 tmp6.add(\"hello\");
 tmp6.add(\"there\");
 tmp2.put(tmp5, tmp6);
 tmp1.add(tmp2);
-final PVector<PMap<PSet<Long>,PVector<String>>> x = tmp1;
+final io.lacuna.bifurcan.List<io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>> x = tmp1;
 System.out.println(x);"))
 
 (deftest t

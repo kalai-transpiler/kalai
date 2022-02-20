@@ -99,7 +99,7 @@
        (rust-pipeline/kalai->rust)
        ;; remove the first line, which is "use crate::kalai;"
        (str/split-lines)
-       (drop 4)
+       (drop 5)
        (str/join \newline)))
 
 (defn helper-fn-impl-strs []

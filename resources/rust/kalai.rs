@@ -9,7 +9,7 @@ use std::ops::{Add, Deref};
 use std::vec::Vec;
 use std::{any, any::Any};
 use std::{fmt, ops};
-use rpds::HashTrieMap;
+use rpds;
 
 /// Because we want to insert values that implement the Value trait (in order to
 /// be added to collection types in an extensible way that is accessible to users),
@@ -57,14 +57,20 @@ pub struct Double(pub f64);
 #[derive(Debug, Clone)]
 pub struct Set(pub HashSet<BValue>);
 
+//#[derive(Debug, Clone)]
+//pub struct PSet(pub rpds::HashTrieSet<BValue>);
+
 #[derive(Debug, Clone)]
 pub struct Map(pub HashMap<BValue, BValue>);
 
 #[derive(Debug, Clone)]
-pub struct PMap(pub HashTrieMap<BValue, BValue>);
+pub struct PMap(pub rpds::HashTrieMap<BValue, BValue>);
 
 #[derive(Debug, Clone)]
 pub struct Vector(pub Vec<BValue>);
+
+//#[derive(Debug, Clone)]
+//pub struct PVector(pub rpds::Vector<BValue>);
 
 // implementing Value trait based on SO answer at:
 // https://stackoverflow.com/a/49779676
@@ -1047,7 +1053,7 @@ impl Map {
 
 impl Default for PMap {
     fn default() -> PMap {
-        PMap(HashTrieMap::<BValue, BValue>::new())
+        PMap(rpds::HashTrieMap::<BValue, BValue>::new())
     }
 }
 
@@ -1356,14 +1362,14 @@ mod tests {
 
     #[test]
     fn test_persistent_map() {
-        let m: HashTrieMap<String, i64> =
-            HashTrieMap::new()
+        let m: rpds::HashTrieMap<String, i64> =
+            rpds::HashTrieMap::new()
                 .insert(String::from(":x"), 11)
                 .insert(String::from(":y"), 13);
         let x: i64 = *(m.get(":x").unwrap());
 
-        let m2: HashTrieMap<String, BValue> =
-            HashTrieMap::new()
+        let m2: rpds::HashTrieMap<String, BValue> =
+            rpds::HashTrieMap::new()
                 .insert(String::from(":x"), BValue::from(11.0f64))
                 .insert(String::from(":y"), BValue::from(13i64));
         let x: f64 = f64::from(m2.get(":x").unwrap());
@@ -1386,7 +1392,7 @@ mod tests {
          */
 
         let a: i32 = i32::from(pm3.get(&BValue::from(":a")).unwrap());
-        let xy = kalai::PMap::from(pm3.get(&BValue::from(":xy")).unwrap());
+        let xy = PMap::from(pm3.get(&BValue::from(":xy")).unwrap());
         let y: i32 = i32::from(xy.get(&BValue::from(":y")).unwrap());
         let x = (a+y) as i64;
 
