@@ -57,8 +57,8 @@ pub struct Double(pub f64);
 #[derive(Debug, Clone)]
 pub struct Set(pub HashSet<BValue>);
 
-//#[derive(Debug, Clone)]
-//pub struct PSet(pub rpds::HashTrieSet<BValue>);
+#[derive(Debug, Clone)]
+pub struct PSet(pub rpds::HashTrieSet<BValue>);
 
 #[derive(Debug, Clone)]
 pub struct Map(pub HashMap<BValue, BValue>);
@@ -69,8 +69,8 @@ pub struct PMap(pub rpds::HashTrieMap<BValue, BValue>);
 #[derive(Debug, Clone)]
 pub struct Vector(pub Vec<BValue>);
 
-//#[derive(Debug, Clone)]
-//pub struct PVector(pub rpds::Vector<BValue>);
+#[derive(Debug, Clone)]
+pub struct PVector(pub rpds::Vector<BValue>);
 
 // implementing Value trait based on SO answer at:
 // https://stackoverflow.com/a/49779676
@@ -1058,7 +1058,7 @@ impl Default for PMap {
 }
 
 impl PMap {
-    pub fn insert(&mut self, k: BValue, v: BValue) -> PMap {
+    pub fn insert(&self, k: BValue, v: BValue) -> PMap {
         PMap(self.0.insert(k, v))
     }
 
@@ -1067,6 +1067,69 @@ impl PMap {
     }
 
     pub fn new() -> PMap {
+        Self::default()
+    }
+}
+
+//
+// PSet impls
+//
+
+impl Default for PSet {
+    fn default() -> PSet {
+        PSet(rpds::HashTrieSet::<BValue>::new())
+    }
+}
+
+impl PSet {
+    pub fn insert(&self, x: BValue) -> PSet {
+        PSet(self.0.insert(x))
+    }
+
+    pub fn contains(&self, x: &BValue) -> bool {
+        self.0.contains(x)
+    }
+
+    pub fn new() -> PSet {
+        Self::default()
+    }
+}
+
+//
+// PVector impls
+//
+
+impl Default for PVector {
+    fn default() -> PVector {
+        PVector(rpds::Vector::<BValue>::new())
+    }
+}
+
+impl PVector {
+    pub fn get(&self, idx: usize) -> Option<&BValue> {
+        self.0.get(idx)
+    }
+
+    /*
+    // TODO: Can we avoid the `.clone()` by making the return type be a reference somehow?
+    pub fn iter(&self) -> impl std::iter::Iterator + 'static {
+        self.0.clone().iter()
+    }
+
+    pub fn contains(&self, x: &BValue) -> bool {
+        self.0.contains(x)
+    }
+
+    pub fn push(&self, x: BValue) -> () {
+        self.0.push(x)
+    }
+
+    pub fn insert(&self, idx: usize, x: BValue) -> () {
+        self.0.insert(idx, x)
+    }
+    */
+
+    pub fn new() -> Self {
         Self::default()
     }
 }
