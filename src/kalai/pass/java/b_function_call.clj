@@ -58,6 +58,13 @@
       (j/invoke clojure.lang.RT/nth ?x ?n)
       (j/method (m/app nth-for ?x) ?x ?n)
 
+      ;; special case how persistent maps (via Bifurcan) do .get(key) so that we _don't_ return an Optional<value>
+      (j/invoke clojure.lang.RT/get
+                (m/and ?x (m/pred (comp :map :t meta)))
+                ?k)
+      (j/method get ?x ?k nil)
+
+      ;; default case for .get(key) with no default value
       (j/invoke clojure.lang.RT/get ?x ?k)
       (j/method get ?x ?k)
 

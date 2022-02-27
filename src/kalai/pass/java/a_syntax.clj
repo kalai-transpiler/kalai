@@ -43,6 +43,30 @@
 ;; statements can contain expressions
 ;; block must contain statements (not expressions)
 
+;;
+;; Helper functions
+;;
+
+(defn thread-second
+  [x & forms]
+  "Returns forms (when given forms) like the 'thread-first' macro -> except that it puts each
+  previous expression into the 3rd position of the new form/S-expression, not the second position
+  like -> does."
+  (loop [x x, forms forms]
+    (if forms
+      (let [form (first forms)
+            threaded (if (seq? form)
+                       (with-meta `(~(first form) ~(second form) ~x ~@(next (next form))) (meta form))
+                       (list form x))]
+        (recur threaded (next forms)))
+      x)))
+
+
+;;
+;; Rules
+;;
+
+
 (declare statement)
 
 ;; half Clojure half Java
@@ -58,9 +82,12 @@
     (j/new ?t)
 
     ;;;; vector []
+
+    ;; mutable vector ^{:t {:mvector [_]}} []
     (m/and [!x ...]
            ?expr
-           (m/app (comp :t meta) ?t)
+           (m/app (comp :t meta) (m/and ?t
+                                        (m/pred :mvector)))
            (m/let [?tmp (u/tmp ?t ?expr)]))
     ;;->
     (group
@@ -68,11 +95,25 @@
       . (j/expression-statement (j/method add ?tmp (m/app expression !x))) ...
       ?tmp)
 
+    ;; persistent vector ^{:t {:vector [_]}} []
+    (m/and [!x ...]
+           ?expr
+           (m/app (comp :t meta) (m/and ?t
+                                        (m/pred :vector))))
+    ;;->
+    (m/app thread-second
+           (j/new ?t)
+           . (j/method addLast
+                       (m/app expression !x)) ...)
+
     ;;;; map {}
+
+    ;; mutable map ^{:t {:mmap [_]}} {}
     (m/and {}
            ?expr
            (m/app u/sort-any-type ([!k !v] ...))
-           (m/app (comp :t meta) ?t)
+           (m/app (comp :t meta) (m/and ?t
+                                        (m/pred :mmap)))
            (m/let [?tmp (u/tmp ?t ?expr)]))
     ;;->
     (group
@@ -82,17 +123,48 @@
                                           (m/app expression !v))) ...
       ?tmp)
 
+    ;; persistent map ^{:t {:map [_]}} {}
+    (m/and {}
+           ?expr
+           (m/app u/sort-any-type ([!k !v] ...))
+           (m/app (comp :t meta) (m/and ?t
+                                        (m/pred :map))))
+    ;;->
+    (m/app thread-second
+           (j/new ?t)
+           . (j/method put
+                       (m/app expression !k)
+                       (m/app expression !v)
+                       io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS) ...)
+
+
     ;;;; set #{}
+
+    ;; mutable set ^{:t {:mset [_]}} #{}
     (m/and #{}
            ?expr
            (m/app u/sort-any-type (!k ...))
-           (m/app (comp :t meta) ?t)
+           (m/app (comp :t meta) (m/and ?t
+                                        (m/pred :mset)))
            (m/let [?tmp (u/tmp ?t ?expr)]))
     ;;->
     (group
       (j/init ?tmp (j/new ?t))
       . (j/expression-statement (j/method add ?tmp (m/app expression !k))) ...
       ?tmp)
+
+    ;; persistent set ^{:t {:set [_]}} #{}
+    (m/and #{}
+           ?expr
+           (m/app u/sort-any-type (!k ...))
+           (m/app (comp :t meta) (m/and ?t
+                                        (m/pred :set))))
+    ;;->
+    (m/app thread-second
+           (j/new ?t)
+           . (j/method add
+                       (m/app expression !k)) ...)
+
 
     ;; Interop
     (new ?c . !args ...)
