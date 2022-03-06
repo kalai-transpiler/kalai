@@ -44,25 +44,6 @@
 ;; block must contain statements (not expressions)
 
 ;;
-;; Helper functions
-;;
-
-(defn thread-second
-  [x & forms]
-  "Returns forms (when given forms) like the 'thread-first' macro -> except that it puts each
-  previous expression into the 3rd position of the new form/S-expression, not the second position
-  like -> does."
-  (loop [x x, forms forms]
-    (if forms
-      (let [form (first forms)
-            threaded (if (seq? form)
-                       (with-meta `(~(first form) ~(second form) ~x ~@(next (next form))) (meta form))
-                       (list form x))]
-        (recur threaded (next forms)))
-      x)))
-
-
-;;
 ;; Rules
 ;;
 
@@ -74,7 +55,7 @@
   (s/rewrite
     ;; Data Literals
 
-    ;;;; empty collections don't need a tmp
+    ;;;; empty collections don't need a tmp variable (with new local block, etc.)
     (m/and (m/or [] {} #{})
            (m/pred empty?)
            (m/app (comp :t meta) ?t))
@@ -101,10 +82,12 @@
            (m/app (comp :t meta) (m/and ?t
                                         (m/pred :vector))))
     ;;->
-    (m/app thread-second
-           (j/new ?t)
-           . (j/method addLast
-                       (m/app expression !x)) ...)
+    (m/app
+      #(u/preserve-type ?expr %)
+      (m/app u/thread-second
+             (j/new ?t)
+             . (j/method addLast
+                         (m/app expression !x)) ...))
 
     ;;;; map {}
 
@@ -130,12 +113,14 @@
            (m/app (comp :t meta) (m/and ?t
                                         (m/pred :map))))
     ;;->
-    (m/app thread-second
-           (j/new ?t)
-           . (j/method put
-                       (m/app expression !k)
-                       (m/app expression !v)
-                       io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS) ...)
+    (m/app
+      #(u/preserve-type ?expr %)
+      (m/app u/thread-second
+             (j/new ?t)
+             . (j/method put
+                         (m/app expression !k)
+                         (m/app expression !v)
+                         io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS) ...))
 
 
     ;;;; set #{}
@@ -160,10 +145,12 @@
            (m/app (comp :t meta) (m/and ?t
                                         (m/pred :set))))
     ;;->
-    (m/app thread-second
-           (j/new ?t)
-           . (j/method add
-                       (m/app expression !k)) ...)
+    (m/app
+      #(u/preserve-type ?expr %)
+      (m/app u/thread-second
+             (j/new ?t)
+             . (j/method add
+                         (m/app expression !k)) ...))
 
 
     ;; Interop
@@ -175,8 +162,11 @@
     (j/operator ?op . (m/app expression !args) ...)
 
     ;; function invocation
-    (invoke ?f . !args ...)
-    (j/invoke ?f . (m/app expression !args) ...)
+    (m/and (invoke ?f . !args ...)
+           (m/app meta ?meta))
+    (m/app with-meta
+           (j/invoke ?f . (m/app expression !args) ...)
+           ?meta)
 
     (method ?method ?object . !args ...)
     (j/method ?method (m/app expression ?object) . (m/app expression !args) ...)

@@ -287,10 +287,7 @@ let y: i64 = 5;"))
     "use crate::kalai;
 use crate::kalai::PMap;
 lazy_static::lazy_static! {
-static ref x: std::collections::HashMap<i64,String> = {
-let mut tmp1: std::collections::HashMap<i64,String> = std::collections::HashMap::new();
-tmp1
-};
+static ref x: std::collections::HashMap<i64,String> = std::collections::HashMap::new();
 }
 pub fn f(y: std::collections::HashMap<i64,String>) -> std::collections::HashMap<i64,String> {
 let z: std::collections::HashMap<i64,String> = y;
@@ -778,10 +775,7 @@ println!(\"{}\", x);"))
          (invoke conj result i)
          (assign i (operator - i 3))))
     ;;->
-    "let mut result: kalai::Vector = {
-let mut tmp1: kalai::Vector = kalai::Vector::new();
-tmp1
-};
+    "let mut result: kalai::Vector = kalai::Vector::new();
 let mut i: i32 = 10;
 while (0 < i) {
 result.push(kalai::BValue::from(i.clone()));
@@ -1300,10 +1294,7 @@ println!(\"{}\", v.get(1 as usize).unwrap().clone());"))
          (invoke conj result i)
          (assign i (operator - i 3))))
     ;;->
-    "let mut result: std::vec::Vec<i32> = {
-let mut tmp1: std::vec::Vec<i32> = std::vec::Vec::new();
-tmp1
-};
+    "let mut result: std::vec::Vec<i32> = std::vec::Vec::new();
 let mut i: i32 = 10;
 while (0 < i) {
 result.push(i.clone());
@@ -1322,10 +1313,7 @@ i = (i - 3);
              (method size separatorPositions))
        (invoke println "hi"))
     ;;->
-    "let separator_positions: std::vec::Vec<i32> = {
-let mut tmp1: std::vec::Vec<i32> = std::vec::Vec::new();
-tmp1
-};
+    "let separator_positions: std::vec::Vec<i32> = std::vec::Vec::new();
 let num_positions: i32 = separator_positions.len() as i32;
 println!(\"{}\", String::from(\"hi\"));"))
 
@@ -1443,16 +1431,13 @@ println!(\"{}\", x);"))
        (init x [])
        (assign x [1 2 3]))
     ;;->
-    "let mut x: std::vec::Vec<i64> = {
-let mut tmp1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp1
-};
+    "let mut x: std::vec::Vec<i64> = std::vec::Vec::new();
 x = {
-let mut tmp2: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp2.push(1);
-tmp2.push(2);
-tmp2.push(3);
-tmp2
+let mut tmp1: std::vec::Vec<i64> = std::vec::Vec::new();
+tmp1.push(1);
+tmp1.push(2);
+tmp1.push(3);
+tmp1
 };"))
 
 (deftest propagated-types5-test
@@ -1465,10 +1450,7 @@ tmp2
        (init x [])
        (invoke conj x 1))
     ;;->
-    "let mut x: std::vec::Vec<i64> = {
-let mut tmp1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp1
-};
+    "let mut x: std::vec::Vec<i64> = std::vec::Vec::new();
 x.push(1);"))
 
 
@@ -1542,10 +1524,7 @@ result;"))
        (init result [])
        result)
     ;;->
-    "let mut result: std::vec::Vec<i32> = {
-let mut tmp1: std::vec::Vec<i32> = std::vec::Vec::new();
-tmp1
-};
+    "let mut result: std::vec::Vec<i32> = std::vec::Vec::new();
 result;"))
 
 (deftest str-test

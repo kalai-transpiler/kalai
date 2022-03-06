@@ -1,7 +1,7 @@
 (ns b.loops)
 
 (defn -main ^{:t :void} [& _args]
-  (dotimes [i 10]
+  (dotimes [^{:t :long} i 10]
     (println i))
   (doseq [^long ii ^:mut ^{:t {:mvector [:long]}} [1 2 3]]
     (println ii))

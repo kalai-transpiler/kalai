@@ -9,33 +9,63 @@
 (def expression
   (s/rewrite
     ;; Data Literals
+
+    ;;;; empty collections don't need a tmp variable (with new local block, etc.)
+    (m/and (m/or [] {} #{})
+           (m/pred empty?)
+           (m/app (comp :t meta) ?t))
+    ;;->
+    (r/new ?t)
+
     ;;;; vector []
+
+    ;; mutable vector ^{:t {:mvector [_]}} []
     (m/and [!x ...]
            ?expr
-           (m/app (comp :t meta) ?t)
+           (m/app (comp :t meta) (m/and ?t
+                                        (m/pred :mvector)))
            (m/let [(m/or {_ [?value-t]}
                          (m/let [?value-t :any])) ?t
                    ?tmp (u/tmp ?t ?expr)]))
     ;;->
     (m/app
-      #(ru/preserve-type ?expr %)
+      #(u/preserve-type ?expr %)
       (r/block
         (r/init ?tmp (r/new ?t))
         . (r/expression-statement (r/method push ?tmp (m/app #(ru/wrap-value-enum ?value-t %) (m/app expression !x)))) ...
         ?tmp))
 
+    ;; persistent vector ^{:t {:vector [_]}} []
+    (m/and [!x ...]
+           ?expr
+           (m/app (comp :t meta) (m/and ?t
+                                        (m/pred :vector)))
+           (m/let [(m/or {_ [?value-t]}
+                         (m/let [?value-t :any])) ?t]))
+    ;;->
+    (m/app
+      #(u/preserve-type ?expr %)
+      (m/app u/thread-second
+             (r/new ?t)
+             . (r/method push_back
+                         (m/app #(ru/wrap-value-enum ?value-t %)
+                                (m/app expression !x))) ...))
+
     ;;;; map {}
+
+    ;; mutable map ^{:t {:mmap [_]}} {}
     (m/and {}
            ?expr
            (m/app u/sort-any-type ([!k !v] ...))
-           (m/app (comp :t meta) ?t)
+           (m/app (comp :t meta) (m/and ?t
+                                        (m/pred :mmap)))
            (m/let [(m/or {_ [?key-t ?value-t]}
                          (m/let [?key-t :any
                                  ?value-t :any])) ?t
                    ?tmp (u/tmp ?t ?expr)]))
     ;;->
     (m/app
-      #(ru/preserve-type ?expr %)
+      #(u/preserve-type ?expr %)
       (r/block
         (r/init ?tmp (r/new ?t))
         . (r/expression-statement (r/method insert ?tmp
@@ -43,21 +73,58 @@
                                             (m/app #(ru/wrap-value-enum ?value-t %) (m/app expression !v)))) ...
         ?tmp))
 
+    ;; persistent map ^{:t {:map [_]}} {}
+    (m/and {}
+           ?expr
+           (m/app u/sort-any-type ([!k !v] ...))
+           (m/app (comp :t meta) (m/and ?t
+                                        (m/pred :map)))
+           (m/let [(m/or {_ [?key-t ?value-t]}
+                         (m/let [?key-t :any
+                                 ?value-t :any])) ?t]))
+    ;;->
+    (m/app
+      #(u/preserve-type ?expr %)
+      (m/app u/thread-second
+             (r/new ?t)
+             . (r/method insert
+                         (m/app #(ru/wrap-value-enum ?key-t %) (m/app expression !k))
+                         (m/app #(ru/wrap-value-enum ?value-t %) (m/app expression !v))) ...))
+
     ;;;; set #{}
+
+    ;; mutable set ^{:t {:mset [_]}} #{}
     (m/and #{}
            ?expr
            (m/app u/sort-any-type (!k ...))
-           (m/app (comp :t meta) ?t)
+           (m/app (comp :t meta) (m/and ?t
+                                        (m/pred :mset)))
            (m/let [(m/or {_ [?key-t]}
                          (m/let [?key-t :any])) ?t
                    ?tmp (u/tmp ?t ?expr)]))
     ;;->
     (m/app
-      #(ru/preserve-type ?expr %)
+      #(u/preserve-type ?expr %)
       (r/block
         (r/init ?tmp (r/new ?t))
         . (r/expression-statement (r/method insert ?tmp (m/app #(ru/wrap-value-enum ?key-t %) (m/app expression !k)))) ...
         ?tmp))
+
+    ;; persistent set ^{:t {:set [_]}} #{}
+    (m/and #{}
+           ?expr
+           (m/app u/sort-any-type (!k ...))
+           (m/app (comp :t meta) (m/and ?t
+                                        (m/pred :set)))
+           (m/let [(m/or {_ [?key-t]}
+                         (m/let [?key-t :any])) ?t]))
+    ;;->
+    (m/app
+      #(u/preserve-type ?expr %)
+      (m/app u/thread-second
+             (r/new ?t)
+             . (r/method insert
+                         (m/app #(ru/wrap-value-enum ?key-t %) (m/app expression !k))) ...))
 
     ;; Interop
     (new ?c . !args ...)

@@ -326,7 +326,10 @@
   (str "*" (stringify s)))
 
 (defn range-str [start-idx end-idx]
-  (str (stringify start-idx) ".." (stringify end-idx)))
+  ;; do not call `stringify` on the values for start-idx, end-idx
+  ;; because they are literals and we do not want to interfere with the
+  ;; Rust compiler's implicit conversion to type `usize`.
+  (str start-idx ".." end-idx))
 
 (defn value-type
   "This is specifically for our custom rust Value enum for heterogeneous collections"
@@ -419,6 +422,19 @@
 
     (m/pred char? ?c)
     (str \' ?c \')
+
+
+    (m/pred #(instance? Long %) ?x)
+    (str ?x "i64")
+
+    (m/pred #(instance? Integer %) ?x)
+    (str ?x "i32")
+
+    (m/pred #(instance? Double %) ?x)
+    (str ?x "f64")
+
+    (m/pred #(instance? Float %) ?x)
+    (str ?x "f32")
 
     (m/pred string? ?s)
     (str "String::from(" (pr-str ?s) ")")

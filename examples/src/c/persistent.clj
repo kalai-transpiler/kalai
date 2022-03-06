@@ -11,9 +11,13 @@
                                     :y 13}]
 
     (println (str "key :y in mutable map a returns " (get a :y)))
-    (println (str "key :y in mutable map b returns " (get b :y)))
+    (let [^{:t :any} any-y :y
+          ^{:t :long} get-b-any-y ^{:cast :long :t :any} (get b any-y)]
+      (println (str "key :y in mutable map b returns " get-b-any-y)))
     (println (str "key :y in persistent map c returns " (get c :y)))
-    (println (str "key :y in persistent map d returns " (get d :y)))
+    (let [^{:t :any} any-y :y
+          ^{:t :long} get-d-any-y ^{:cast :long :t :any} (get d any-y)]
+      (println (str "key :y in persistent map d returns " get-d-any-y)))
 
     3))
 

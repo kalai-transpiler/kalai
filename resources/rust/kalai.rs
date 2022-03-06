@@ -984,6 +984,8 @@ impl Set {
     pub fn new() -> Self {
         Self::default()
     }
+
+    pub fn len(&self) -> usize { self.0.len() }
 }
 
 //
@@ -1021,6 +1023,8 @@ impl Vector {
     pub fn new() -> Self {
         Self::default()
     }
+
+    pub fn len(&self) -> usize { self.0.len() }
 }
 
 //
@@ -1045,6 +1049,8 @@ impl Map {
     pub fn new() -> Map {
         Self::default()
     }
+
+    pub fn len(&self) -> usize { self.0.len() }
 }
 
 //
@@ -1069,6 +1075,8 @@ impl PMap {
     pub fn new() -> PMap {
         Self::default()
     }
+
+    pub fn len(&self) -> usize { self.0.size() }
 }
 
 //
@@ -1093,6 +1101,8 @@ impl PSet {
     pub fn new() -> PSet {
         Self::default()
     }
+
+    pub fn len(&self) -> usize { self.0.size() }
 }
 
 //
@@ -1132,6 +1142,8 @@ impl PVector {
     pub fn new() -> Self {
         Self::default()
     }
+
+    pub fn len(&self) -> usize { self.0.len() }
 }
 
 

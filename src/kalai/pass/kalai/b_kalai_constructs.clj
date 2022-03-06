@@ -67,17 +67,18 @@
 
     ;; dotimes -> (let [...] (while ...))
     (let* [?auto (clojure.lang.RT/longCast ?n)]
-      (loop* [?sym 0]
+      (loop* [(m/and ?sym
+                     (m/let [?t (or (:t (meta ?sym)) :int)])) 0]
         (if (clojure.lang.Numbers/lt ?sym ?auto)
           (do . !body ... (recur (clojure.lang.Numbers/unchecked_inc ?sym))))))
     (group
       (init ~(with-meta ?sym (merge (meta ?sym)
-                                    {:t   (or (:t (meta ?sym)) :int)
+                                    {:t   ?t
                                      :mut true}))
-            ~(int 0))
+            ~(if (= :int ?t) (int 0) 0))
       (while (operator < ?sym ?n)
         . (m/app inner-form !body) ...
-        (assign ?sym (operator + ?sym ~(int 1)))))
+        (assign ?sym (operator + ?sym ~(if (= :int ?t) (int 1) 1)))))
 
     ;; TODO: test with
     ;;;; (doseq [x [1 2]] (println x) (println x))

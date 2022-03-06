@@ -79,6 +79,13 @@
       (r/invoke clojure.lang.RT/count (u/of-t :string ?x))
       (r/cast (r/method count (r/method chars ?x)) :int)
 
+      (r/invoke clojure.lang.RT/count
+                (m/and ?x
+                       (m/app (comp :t meta) (m/and ?t
+                                                    (m/or (m/pred :set)
+                                                          (m/pred :map))))))
+      (r/cast (r/method size ?x) :int)
+
       (r/invoke clojure.lang.RT/count ?x)
       (r/cast (r/method len ?x) :int)
 

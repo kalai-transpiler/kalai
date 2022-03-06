@@ -4,9 +4,9 @@ pub fn format(num: i32) -> String {
     let mut i: i32 = num;
     let mut result: std::vec::Vec<char> = std::vec::Vec::new();
     {
-        while !(i == 0) {
-            let quotient: i32 = (i / 10);
-            let remainder: i32 = (i % 10);
+        while !(i == 0i32) {
+            let quotient: i32 = (i / 10i32);
+            let remainder: i32 = (i % 10i32);
             {
                 result.splice(
                     0..0,
@@ -24,7 +24,7 @@ pub fn format(num: i32) -> String {
 pub fn main() {
     let _args: std::vec::Vec<String> = std::env::args().collect();
     {
-        format(2345);
-        println!("{}", format(2345));
+        format(2345i32);
+        println!("{}", format(2345i32));
     }
 }
