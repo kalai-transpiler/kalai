@@ -403,10 +403,7 @@ System.out.println(2L);
     ;;->
     '(init x [1 2])
     ;;->
-    "io.lacuna.bifurcan.List<Long> tmp1 = new io.lacuna.bifurcan.List<Long>();
-tmp1.add(1L);
-tmp1.add(2L);
-final io.lacuna.bifurcan.List<Long> x = tmp1;"))
+    "final io.lacuna.bifurcan.List<Long> x = new io.lacuna.bifurcan.List<Long>().addLast(1L).addLast(2L);"))
 
 ;; selecting between Vector and io.lacuna.bifurcan.List<Object>
 (deftest data-literals2-test
@@ -445,14 +442,8 @@ final ArrayList<Long> x = tmp1;"))
        (init x [1 2])
        (assign x [3 4]))
     ;;->
-    "io.lacuna.bifurcan.List<Long> tmp1 = new io.lacuna.bifurcan.List<Long>();
-tmp1.add(1L);
-tmp1.add(2L);
-io.lacuna.bifurcan.List<Long> x = tmp1;
-io.lacuna.bifurcan.List<Long> tmp2 = new io.lacuna.bifurcan.List<Long>();
-tmp2.add(3L);
-tmp2.add(4L);
-x = tmp2;"))
+    "io.lacuna.bifurcan.List<Long> x = new io.lacuna.bifurcan.List<Long>().addLast(1L).addLast(2L);
+x = new io.lacuna.bifurcan.List<Long>().addLast(3L).addLast(4L);"))
 
 (deftest data-literals5-test
   (inner-form
@@ -460,10 +451,7 @@ x = tmp2;"))
     ;;->
     '(init x {1 2 3 4})
     ;;->
-    "io.lacuna.bifurcan.Map<Long,Long> tmp1 = new io.lacuna.bifurcan.Map<Long,Long>();
-tmp1.put(1L, 2L);
-tmp1.put(3L, 4L);
-final io.lacuna.bifurcan.Map<Long,Long> x = tmp1;"))
+    "final io.lacuna.bifurcan.Map<Long,Long> x = new io.lacuna.bifurcan.Map<Long,Long>().put(1L, 2L, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS).put(3L, 4L, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS);"))
 
 (deftest data-literals6-test
   (inner-form
@@ -471,10 +459,7 @@ final io.lacuna.bifurcan.Map<Long,Long> x = tmp1;"))
     ;;->
     '(init x #{1 2})
     ;;->
-    "io.lacuna.bifurcan.Set<Long> tmp1 = new io.lacuna.bifurcan.Set<Long>();
-tmp1.add(1L);
-tmp1.add(2L);
-final io.lacuna.bifurcan.Set<Long> x = tmp1;"))
+    "final io.lacuna.bifurcan.Set<Long> x = new io.lacuna.bifurcan.Set<Long>().add(1L).add(2L);"))
 
 ;; TODO: What about heterogeneous collections,
 ;; do we want to allow them? [1 [2]] if so what is the type?
@@ -489,14 +474,7 @@ final io.lacuna.bifurcan.Set<Long> x = tmp1;"))
        (init x [[1] [2]])
        (invoke println x))
     ;;->
-    "io.lacuna.bifurcan.List<io.lacuna.bifurcan.List<Long>> tmp1 = new io.lacuna.bifurcan.List<io.lacuna.bifurcan.List<Long>>();
-io.lacuna.bifurcan.List<Long> tmp2 = new io.lacuna.bifurcan.List<Long>();
-tmp2.add(1L);
-tmp1.add(tmp2);
-io.lacuna.bifurcan.List<Long> tmp3 = new io.lacuna.bifurcan.List<Long>();
-tmp3.add(2L);
-tmp1.add(tmp3);
-final io.lacuna.bifurcan.List<io.lacuna.bifurcan.List<Long>> x = tmp1;
+    "final io.lacuna.bifurcan.List<io.lacuna.bifurcan.List<Long>> x = new io.lacuna.bifurcan.List<io.lacuna.bifurcan.List<Long>>().addLast(new io.lacuna.bifurcan.List<Long>().addLast(1L)).addLast(new io.lacuna.bifurcan.List<Long>().addLast(2L));
 System.out.println(x);"))
 
 (deftest data-literals7-0-test
@@ -555,21 +533,7 @@ System.out.println(x);"))
                  #{2} ["hello" "there"]}])
        (invoke println x))
     ;;->
-    "io.lacuna.bifurcan.List<io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>> tmp1 = new io.lacuna.bifurcan.List<io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>>();
-io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>> tmp2 = new io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>();
-io.lacuna.bifurcan.Set<Long> tmp3 = new io.lacuna.bifurcan.Set<Long>();
-tmp3.add(1L);
-io.lacuna.bifurcan.List<String> tmp4 = new io.lacuna.bifurcan.List<String>();
-tmp4.add(\"hi\");
-tmp2.put(tmp3, tmp4);
-io.lacuna.bifurcan.Set<Long> tmp5 = new io.lacuna.bifurcan.Set<Long>();
-tmp5.add(2L);
-io.lacuna.bifurcan.List<String> tmp6 = new io.lacuna.bifurcan.List<String>();
-tmp6.add(\"hello\");
-tmp6.add(\"there\");
-tmp2.put(tmp5, tmp6);
-tmp1.add(tmp2);
-final io.lacuna.bifurcan.List<io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>> x = tmp1;
+    "final io.lacuna.bifurcan.List<io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>> x = new io.lacuna.bifurcan.List<io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>>().addLast(new io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>().put(new io.lacuna.bifurcan.Set<Long>().add(1L), new io.lacuna.bifurcan.List<String>().addLast(\"hi\"), io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS).put(new io.lacuna.bifurcan.Set<Long>().add(2L), new io.lacuna.bifurcan.List<String>().addLast(\"hello\").addLast(\"there\"), io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS));
 System.out.println(x);"))
 
 (deftest data-literals7-3-test
@@ -585,21 +549,7 @@ System.out.println(x);"))
                  #{2} ["hello" "there"]}])
        (invoke println x))
     ;;->
-    "io.lacuna.bifurcan.List<io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>> tmp1 = new io.lacuna.bifurcan.List<io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>>();
-io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>> tmp2 = new io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>();
-io.lacuna.bifurcan.Set<Long> tmp3 = new io.lacuna.bifurcan.Set<Long>();
-tmp3.add(1L);
-io.lacuna.bifurcan.List<String> tmp4 = new io.lacuna.bifurcan.List<String>();
-tmp4.add(\"hi\");
-tmp2.put(tmp3, tmp4);
-io.lacuna.bifurcan.Set<Long> tmp5 = new io.lacuna.bifurcan.Set<Long>();
-tmp5.add(2L);
-io.lacuna.bifurcan.List<String> tmp6 = new io.lacuna.bifurcan.List<String>();
-tmp6.add(\"hello\");
-tmp6.add(\"there\");
-tmp2.put(tmp5, tmp6);
-tmp1.add(tmp2);
-final io.lacuna.bifurcan.List<io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>> x = tmp1;
+    "final io.lacuna.bifurcan.List<io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>> x = new io.lacuna.bifurcan.List<io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>>().addLast(new io.lacuna.bifurcan.Map<io.lacuna.bifurcan.Set<Long>,io.lacuna.bifurcan.List<String>>().put(new io.lacuna.bifurcan.Set<Long>().add(1L), new io.lacuna.bifurcan.List<String>().addLast(\"hi\"), io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS).put(new io.lacuna.bifurcan.Set<Long>().add(2L), new io.lacuna.bifurcan.List<String>().addLast(\"hello\").addLast(\"there\"), io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS));
 System.out.println(x);"))
 
 (deftest t
