@@ -11,12 +11,12 @@
 ;; TODO: this should be a static (top level "def")
 (deftest init1-test
   (top-level-form
-    '(def ^{:t :int} x 3)
+    '(def ^{:t :int} x (int 3))
     ;;->
     '(init x 3)
     ;;->
     "lazy_static::lazy_static! {
-static ref x: i32 = 3;
+static ref x: i32 = 3i32;
 }"))
 
 ;; TODO: this test doesn't make sense in Rust because top-level bindings can't be empty
@@ -32,14 +32,14 @@ static ref x: kalai::BValue = kalai::BValue::from(kalai::NIL);
 
 (deftest init3-test
   (inner-form
-    '(let [^{:t :int} x 1]
+    '(let [^{:t :int} x (int 1)]
        x)
     ;;->
     '(do
        (init x 1)
        x)
     ;;->
-    "let x: i32 = 1;
+    "let x: i32 = 1i32;
 x;"))
 
 ;; TODO: do we even need to support this for Rust?
@@ -85,7 +85,7 @@ x;"))
                  (return (operator + x 1)))
       ;;->
       "pub fn f(x: i32) -> i32 {
-return (x + 1);
+return (x + 1i32);
 }")))
 
 ;; TODO: differentiate between mutable swap and not
@@ -161,14 +161,14 @@ println!(\"{} {}\", x, x);
 (deftest local-variables-test
   (inner-form
     '(let [x (atom (int 0))]
-       (reset! x (+ @x 2)))
+       (reset! x (+ @x (int 2))))
     ;;->
     '(do
        (init x 0)
        (assign x (operator + x 2)))
     ;;->
-    "let mut x: i32 = 0;
-x = (x + 2);"))
+    "let mut x: i32 = 0i32;
+x = (x + 2i32);"))
 
 (deftest local-variables2-test
   (inner-form
@@ -186,26 +186,26 @@ x = (x + 2);"))
          (assign x 3)
          (invoke println (operator + x y))))
     ;;->
-    "let mut x: i32 = 1;
-let mut y: i32 = 2;
-let z: i32 = 1;
+    "let mut x: i32 = 1i32;
+let mut y: i32 = 2i32;
+let z: i32 = 1i32;
 {
-x = 3;
+x = 3i32;
 println!(\"{}\", (x + y));
 }"))
 
 (deftest local-variables3-test
   (inner-form
-    '(with-local-vars [^int x 1
-                       ^int y 2]
+    '(with-local-vars [^int x (int 1)
+                       ^int y (int 2)]
        (println (+ (var-get x) (var-get y))))
     ;;->
     '(do (init x 1)
          (init y 2)
          (invoke println (operator + x y)))
     ;;->
-    "let mut x: i32 = 1;
-let mut y: i32 = 2;
+    "let mut x: i32 = 1i32;
+let mut y: i32 = 2i32;
 println!(\"{}\", (x + y));"))
 
 ;; TODO: mutable swap
@@ -237,8 +237,8 @@ println!(\"{}\", (x + y));"))
          (assign y (operator + y 4))
          y))
     ;;->
-    "let mut y: i64 = (2 - 4);
-y = (y + 4);
+    "let mut y: i64 = (2i64 - 4i64);
+y = (y + 4i64);
 y;"))
 
 ;; # Types
@@ -266,7 +266,7 @@ let x: bool = true;
 let z: bool = true;
 z;
 }
-let y: i64 = 5;"))
+let y: i64 = 5i64;"))
 
 (deftest type-aliasing-test
   (ns-form
@@ -325,8 +325,8 @@ static ref x: std::collections::HashMap<i64,String> = ();
     ;;->
     "let x: std::vec::Vec<i64> = {
 let mut tmp1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp1.push(1);
-tmp1.push(2);
+tmp1.push(1i64);
+tmp1.push(2i64);
 tmp1
 };
 println!(\"{}\", x);"))
@@ -367,7 +367,7 @@ tmp1
     "pub fn main () {
 let my_args: std::vec::Vec<String> = std::env::args().collect();
 {
-println!(\"{}\", 1);
+println!(\"{}\", 1i64);
 }
 }"))
 
@@ -376,7 +376,7 @@ println!(\"{}\", 1);
     '(def my-var 1)
     '(init my-var 1)
     "lazy_static::lazy_static! {
-static ref my_var: i64 = 1;
+static ref my_var: i64 = 1i64;
 }"))
 
 (deftest hyphen-test2
@@ -389,7 +389,7 @@ static ref my_var: i64 = 1;
                  (init my-binding 2)
                  (return my-binding)))
     "pub fn my_function(my_arg: i64) -> i64 {
-let my_binding: i64 = 2;
+let my_binding: i64 = 2i64;
 return my_binding;
 }"))
 
@@ -407,11 +407,11 @@ return my_binding;
     ;;->
     "if true
 {
-println!(\"{}\", 1);
+println!(\"{}\", 1i64);
 }
 else
 {
-println!(\"{}\", 2);
+println!(\"{}\", 2i64);
 }"))
 
 ;; # Data Literals
@@ -423,12 +423,7 @@ println!(\"{}\", 2);
     ;;->
     '(init x [1 2])
     ;;->
-    "let x: rpds::Vector<i64> = {
-let mut tmp1: rpds::Vector<i64> = rpds::Vector::new();
-tmp1.push(1);
-tmp1.push(2);
-tmp1
-};"))
+    "let x: rpds::Vector<i64> = rpds::Vector::new().push_back(1i64).push_back(2i64);"))
 
 (deftest data-literals2-test
   (top-level-form
@@ -439,8 +434,8 @@ tmp1
     "lazy_static::lazy_static! {
 static ref x: std::vec::Vec<i64> = {
 let mut tmp1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp1.push(1);
-tmp1.push(2);
+tmp1.push(1i64);
+tmp1.push(2i64);
 tmp1
 };
 }"))
@@ -456,8 +451,8 @@ tmp1
     ;;->
     "let x: std::vec::Vec<i64> = {
 let mut tmp1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp1.push(1);
-tmp1.push(2);
+tmp1.push(1i64);
+tmp1.push(2i64);
 tmp1
 };
 x;"))
@@ -471,18 +466,8 @@ x;"))
        (init x [1 2])
        (assign x [3 4]))
     ;;->
-    "let mut x: rpds::Vector<i64> = {
-let mut tmp1: rpds::Vector<i64> = rpds::Vector::new();
-tmp1.push(1);
-tmp1.push(2);
-tmp1
-};
-x = {
-let mut tmp2: rpds::Vector<i64> = rpds::Vector::new();
-tmp2.push(3);
-tmp2.push(4);
-tmp2
-};"))
+    "let mut x: rpds::Vector<i64> = rpds::Vector::new().push_back(1i64).push_back(2i64);
+x = rpds::Vector::new().push_back(3i64).push_back(4i64);"))
 
 (deftest data-literals5-test
   (inner-form
@@ -490,12 +475,7 @@ tmp2
     ;;->
     '(init x {1 2 3 4})
     ;;->
-    "let x: rpds::HashTrieMap<i64,i64> = {
-let mut tmp1: rpds::HashTrieMap<i64,i64> = rpds::HashTrieMap::new();
-tmp1.insert(1, 2);
-tmp1.insert(3, 4);
-tmp1
-};"))
+    "let x: rpds::HashTrieMap<i64,i64> = rpds::HashTrieMap::new().insert(1i64, 2i64).insert(3i64, 4i64);"))
 
 (deftest data-literals6-test
   (inner-form
@@ -503,12 +483,7 @@ tmp1
     ;;->
     '(init x #{1 2})
     ;;->
-    "let x: rpds::HashTrieSet<i64> = {
-let mut tmp1: rpds::HashTrieSet<i64> = rpds::HashTrieSet::new();
-tmp1.insert(1);
-tmp1.insert(2);
-tmp1
-};"))
+    "let x: rpds::HashTrieSet<i64> = rpds::HashTrieSet::new().insert(1i64).insert(2i64);"))
 
 (deftest user-cast-test
   (inner-form
@@ -532,7 +507,7 @@ println!(\"{}\", y);"))
        (init x 1)
        (init y x)
        (invoke println y))
-    "let x: i32 = 1;
+    "let x: i32 = 1i32;
 let y: i64 = x as i64;
 println!(\"{}\", y);"))
 
@@ -581,20 +556,7 @@ println!(\"{}\", z);"))
        (init x [[1] [2]])
        (invoke println x))
     ;;->
-    "let x: rpds::Vector<rpds::Vector<i64>> = {
-let mut tmp1: rpds::Vector<rpds::Vector<i64>> = rpds::Vector::new();
-tmp1.push({
-let mut tmp2: rpds::Vector<i64> = rpds::Vector::new();
-tmp2.push(1);
-tmp2
-}.clone());
-tmp1.push({
-let mut tmp3: rpds::Vector<i64> = rpds::Vector::new();
-tmp3.push(2);
-tmp3
-}.clone());
-tmp1
-};
+    "let x: rpds::Vector<rpds::Vector<i64>> = rpds::Vector::new().push_back(rpds::Vector::new().push_back(1i64).clone()).push_back(rpds::Vector::new().push_back(2i64).clone());
 println!(\"{}\", x);"))
 
 (deftest data-literals7-0-test
@@ -624,12 +586,12 @@ println!(\"{}\", x);"))
     ;;->
     "let x: std::collections::HashMap<i64,std::vec::Vec<String>> = {
 let mut tmp1: std::collections::HashMap<i64,std::vec::Vec<String>> = std::collections::HashMap::new();
-tmp1.insert(1, {
+tmp1.insert(1i64, {
 let mut tmp2: std::vec::Vec<String> = std::vec::Vec::new();
 tmp2.push(String::from(\"hi\"));
 tmp2
 }.clone());
-tmp1.insert(2, {
+tmp1.insert(2i64, {
 let mut tmp3: std::vec::Vec<String> = std::vec::Vec::new();
 tmp3.push(String::from(\"hello\"));
 tmp3.push(String::from(\"there\"));
@@ -651,33 +613,7 @@ println!(\"{}\", x);"))
                  #{2} ["hello" "there"]}])
        (invoke println x))
     ;;->
-    "let x: rpds::Vector<rpds::HashTrieMap<rpds::HashTrieSet<i64>,rpds::Vector<String>>> = {
-let mut tmp1: rpds::Vector<rpds::HashTrieMap<rpds::HashTrieSet<i64>,rpds::Vector<String>>> = rpds::Vector::new();
-tmp1.push({
-let mut tmp2: rpds::HashTrieMap<rpds::HashTrieSet<i64>,rpds::Vector<String>> = rpds::HashTrieMap::new();
-tmp2.insert({
-let mut tmp3: rpds::HashTrieSet<i64> = rpds::HashTrieSet::new();
-tmp3.insert(1);
-tmp3
-}.clone(), {
-let mut tmp4: rpds::Vector<String> = rpds::Vector::new();
-tmp4.push(String::from(\"hi\"));
-tmp4
-}.clone());
-tmp2.insert({
-let mut tmp5: rpds::HashTrieSet<i64> = rpds::HashTrieSet::new();
-tmp5.insert(2);
-tmp5
-}.clone(), {
-let mut tmp6: rpds::Vector<String> = rpds::Vector::new();
-tmp6.push(String::from(\"hello\"));
-tmp6.push(String::from(\"there\"));
-tmp6
-}.clone());
-tmp2
-}.clone());
-tmp1
-};
+    "let x: rpds::Vector<rpds::HashTrieMap<rpds::HashTrieSet<i64>,rpds::Vector<String>>> = rpds::Vector::new().push_back(rpds::HashTrieMap::new().insert(rpds::HashTrieSet::new().insert(1i64).clone(), rpds::Vector::new().push_back(String::from(\"hi\")).clone()).insert(rpds::HashTrieSet::new().insert(2i64).clone(), rpds::Vector::new().push_back(String::from(\"hello\")).push_back(String::from(\"there\")).clone()).clone());
 println!(\"{}\", x);"))
 
 (deftest data-literals7-3-test
@@ -693,33 +629,7 @@ println!(\"{}\", x);"))
                  #{2} ["hello" "there"]}])
        (invoke println x))
     ;;->
-    "let x: rpds::Vector<rpds::HashTrieMap<rpds::HashTrieSet<i64>,rpds::Vector<String>>> = {
-let mut tmp1: rpds::Vector<rpds::HashTrieMap<rpds::HashTrieSet<i64>,rpds::Vector<String>>> = rpds::Vector::new();
-tmp1.push({
-let mut tmp2: rpds::HashTrieMap<rpds::HashTrieSet<i64>,rpds::Vector<String>> = rpds::HashTrieMap::new();
-tmp2.insert({
-let mut tmp3: rpds::HashTrieSet<i64> = rpds::HashTrieSet::new();
-tmp3.insert(1);
-tmp3
-}.clone(), {
-let mut tmp4: rpds::Vector<String> = rpds::Vector::new();
-tmp4.push(String::from(\"hi\"));
-tmp4
-}.clone());
-tmp2.insert({
-let mut tmp5: rpds::HashTrieSet<i64> = rpds::HashTrieSet::new();
-tmp5.insert(2);
-tmp5
-}.clone(), {
-let mut tmp6: rpds::Vector<String> = rpds::Vector::new();
-tmp6.push(String::from(\"hello\"));
-tmp6.push(String::from(\"there\"));
-tmp6
-}.clone());
-tmp2
-}.clone());
-tmp1
-};
+    "let x: rpds::Vector<rpds::HashTrieMap<rpds::HashTrieSet<i64>,rpds::Vector<String>>> = rpds::Vector::new().push_back(rpds::HashTrieMap::new().insert(rpds::HashTrieSet::new().insert(1i64).clone(), rpds::Vector::new().push_back(String::from(\"hi\")).clone()).insert(rpds::HashTrieSet::new().insert(2i64).clone(), rpds::Vector::new().push_back(String::from(\"hello\")).push_back(String::from(\"there\")).clone()).clone());
 println!(\"{}\", x);"))
 
 (deftest dataliterals8-1-2-test
@@ -729,7 +639,7 @@ println!(\"{}\", x);"))
     '(do
        (init x 1)
        (invoke println x))
-    "let x: kalai::BValue = kalai::BValue::from(1);
+    "let x: kalai::BValue = kalai::BValue::from(1i64);
 println!(\"{}\", x);"))
 
 (deftest data-literals8-1-3-test
@@ -748,9 +658,9 @@ println!(\"{}\", x);"))
        (init x [a b c])
        (invoke println x))
     ;;->
-    "let a: i64 = 1;
-let b: i64 = 2;
-let c: i64 = 3;
+    "let a: i64 = 1i64;
+let b: i64 = 2i64;
+let c: i64 = 3i64;
 let x: kalai::Vector = {
 let mut tmp1: kalai::Vector = kalai::Vector::new();
 tmp1.push(kalai::BValue::from(a.clone()));
@@ -764,9 +674,9 @@ println!(\"{}\", x);"))
   (inner-form
     '(let [result (atom ^{:t {:mvector [:any]}} [])
            ^{:t :int} i (atom (int 10))]
-       (while (< 0 @i)
+       (while (< (int 0) @i)
          (swap! result conj @i)
-         (reset! i (- @i 3))))
+         (reset! i (- @i (int 3)))))
     ;;->
     '(do
        (init result [])
@@ -776,10 +686,10 @@ println!(\"{}\", x);"))
          (assign i (operator - i 3))))
     ;;->
     "let mut result: kalai::Vector = kalai::Vector::new();
-let mut i: i32 = 10;
-while (0 < i) {
+let mut i: i32 = 10i32;
+while (0i32 < i) {
 result.push(kalai::BValue::from(i.clone()));
-i = (i - 3);
+i = (i - 3i32);
 }"))
 
 (deftest data-literals8-1-test
@@ -812,9 +722,9 @@ println!(\"{}\", x);"))
     ;;->
     "let x: kalai::BValue = {
 let mut tmp1: kalai::BValue = kalai::BValue::new();
-tmp1.push(kalai::BValue::from(1));
+tmp1.push(kalai::BValue::from(1i64));
 tmp1.push(kalai::BValue::from(String::from(\"2\")));
-tmp1.push(kalai::BValue::from(3));
+tmp1.push(kalai::BValue::from(3i64));
 tmp1
 };
 println!(\"{}\", x);"))
@@ -844,7 +754,7 @@ println!(\"{}\", x);"))
     ;;->
     "let x: std::collections::HashMap<String,i64> = {
 let mut tmp1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp1.insert(String::from(\"key\"), (1 + 2).clone());
+tmp1.insert(String::from(\"key\"), (1i64 + 2i64).clone());
 tmp1
 };"))
 
@@ -898,10 +808,10 @@ println!(\"{}\", (x == y));"))
     ;;->
     "for x in {
 let mut tmp1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp1.push(1);
-tmp1.push(2);
-tmp1.push(3);
-tmp1.push(4);
+tmp1.push(1i64);
+tmp1.push(2i64);
+tmp1.push(3i64);
+tmp1.push(4i64);
 tmp1
 } {
 println!(\"{}\", x);
@@ -909,7 +819,7 @@ println!(\"{}\", x);
 
 (deftest for-loop-test
   (inner-form
-    '(dotimes [^{:t :int} x 5]
+    '(dotimes [^{:t :int} x (int 5)]
        (println x))
     ;;->
     '(group
@@ -918,10 +828,10 @@ println!(\"{}\", x);
          (invoke println x)
          (assign x (operator + x 1))))
     ;;->
-    "let mut x: i32 = 0;
-while (x < 5) {
+    "let mut x: i32 = 0i32;
+while (x < 5i32) {
 println!(\"{}\", x);
-x = (x + 1);
+x = (x + 1i32);
 }"))
 
 (deftest while-loop-test
@@ -951,19 +861,19 @@ println!(\"{}\", String::from(\"hi\"));
     ;;->
     "if true
 {
-println!(\"{}\", 1);
+println!(\"{}\", 1i64);
 }
 else
 {
 if false
 {
-println!(\"{}\", 2);
+println!(\"{}\", 2i64);
 }
 else
 {
 if true
 {
-println!(\"{}\", 3);
+println!(\"{}\", 3i64);
 }
 }
 }"))
@@ -976,7 +886,7 @@ println!(\"{}\", 3);
     ;;->
     "println!(\"{}\", {
 let mut tmp1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp1.insert(String::from(\":k\"), 1);
+tmp1.insert(String::from(\":k\"), 1i64);
 tmp1
 }.get(&String::from(\":k\")).unwrap().clone());"))
 
@@ -1008,7 +918,7 @@ tmp1
     "let k: String = String::from(\"k\");
 let m: std::collections::HashMap<String,i64> = {
 let mut tmp1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp1.insert(k.clone(), 1);
+tmp1.insert(k.clone(), 1i64);
 tmp1
 };
 let v: i64 = m.get(&k).unwrap().clone();
@@ -1070,25 +980,25 @@ _ => String::from(\":c\"),
     ;;->
     "println!(\"{}\", (if true
 {
-1
+1i64
 }
 else
 {
-2
+2i64
 } + if true
 {
 if true
 {
-3
+3i64
 }
 else
 {
-4
+4i64
 }
 }
 else
 {
-5
+5i64
 }));"))
 
 ;; Note: Rust will not compile when conditionals as expressions don't have
@@ -1113,13 +1023,13 @@ else
     ;;->
     "println!(\"{}\", (if true
 {
-println!(\"{}\", 1);
-2
+println!(\"{}\", 1i64);
+2i64
 }
 else
 {
-3
-} + 4));"))
+3i64
+} + 4i64));"))
 
 (deftest conditional-expression3-test
   (inner-form
@@ -1133,19 +1043,19 @@ else
     ;;->
     "println!(\"{}\", (if true
 {
-1
+1i64
 }
 else
 {
 if false
 {
-2
+2i64
 }
 else
 {
-3
+3i64
 }
-} + 4));"))
+} + 4i64));"))
 
 (deftest operator-test
   (inner-form
@@ -1155,7 +1065,7 @@ else
     '(invoke println
              (operator ! (operator == 1 (operator + 1 1))))
     ;;->
-    "println!(\"{}\", !(1 == (1 + 1)));"))
+    "println!(\"{}\", !(1i64 == (1i64 + 1i64)));"))
 
 
 (deftest interop-test
@@ -1214,9 +1124,9 @@ b.len() as i32;
     ;;->
     "{
 let mut tmp1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp1.insert(String::from(\":a\"), 1);
+tmp1.insert(String::from(\":a\"), 1i64);
 tmp1
-}.insert(String::from(\":b\"), 2);"))
+}.insert(String::from(\":b\"), 2i64);"))
 
 (deftest interop3-test
   (inner-form
@@ -1226,13 +1136,13 @@ tmp1
     ;;->
     "{
 let mut tmp1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp1.insert(String::from(\":a\"), 1);
+tmp1.insert(String::from(\":a\"), 1i64);
 tmp1
 }.insert(String::from(\":a\").clone(), ({
 let mut tmp1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
-tmp1.insert(String::from(\":a\"), 1);
+tmp1.insert(String::from(\":a\"), 1i64);
 tmp1
-}.get(&String::from(\":a\")).unwrap().clone() + 1));"))
+}.get(&String::from(\":a\")).unwrap().clone() + 1i64));"))
 
 (deftest interop4-test
   (inner-form
@@ -1261,7 +1171,7 @@ System.out.println(s.charAt(1));"))
 
 (deftest interop6-test
   (inner-form
-    '(let [^{:t {:mvector [:int]}} v [1 2 3]]
+    '(let [^{:t {:mvector [:int]}} v [(int 1) (int 2) (int 3)]]
        (println (nth v 1)))
     ;;->
     '(do
@@ -1271,21 +1181,21 @@ System.out.println(s.charAt(1));"))
     ;;->
     "let v: std::vec::Vec<i32> = {
 let mut tmp1: std::vec::Vec<i32> = std::vec::Vec::new();
-tmp1.push(1);
-tmp1.push(2);
-tmp1.push(3);
+tmp1.push(1i32);
+tmp1.push(2i32);
+tmp1.push(3i32);
 tmp1
 };
-println!(\"{}\", v.get(1 as usize).unwrap().clone());"))
+println!(\"{}\", v.get(1i64 as usize).unwrap().clone());"))
 
 
 (deftest interop7-test
   (inner-form
     '(let [result (atom ^{:t {:mvector [:int]}} [])
            i (atom (int 10))]
-       (while (< 0 @i)
+       (while (< (int 0) @i)
          (swap! result conj @i)
-         (reset! i (- @i 3))))
+         (reset! i (- @i (int 3)))))
     ;;->
     '(do
        (init result [])
@@ -1295,10 +1205,10 @@ println!(\"{}\", v.get(1 as usize).unwrap().clone());"))
          (assign i (operator - i 3))))
     ;;->
     "let mut result: std::vec::Vec<i32> = std::vec::Vec::new();
-let mut i: i32 = 10;
-while (0 < i) {
+let mut i: i32 = 10i32;
+while (0i32 < i) {
 result.push(i.clone());
-i = (i - 3);
+i = (i - 3i32);
 }"))
 
 (deftest interop8-test
@@ -1339,11 +1249,11 @@ println!(\"{}\", String::from(\"hi\"));"))
     "pub fn f() -> i64 {
 if true
 {
-return 1;
+return 1i64;
 }
 else
 {
-let x: i64 = 2;
+let x: i64 = 2i64;
 {
 println!(\"{}\", String::from(\"hi\"));
 return x;
@@ -1362,14 +1272,14 @@ return x;
        (init y x)
        (invoke println y))
     ;;->
-    "let x: i64 = 1;
+    "let x: i64 = 1i64;
 let y: i64 = x;
 println!(\"{}\", y);"))
 
 
 (deftest propagated-types2-test
   (inner-form
-    '(let [^{:t :int} x 1
+    '(let [^{:t :int} x (int 1)
            y x]
        (println y))
     ;;->
@@ -1378,7 +1288,7 @@ println!(\"{}\", y);"))
        (init y x)
        (invoke println y))
     ;;->
-    "let x: i32 = 1;
+    "let x: i32 = 1i32;
 let y: i32 = x;
 println!(\"{}\", y);"))
 
@@ -1402,7 +1312,7 @@ println!(\"{}\", y);"))
                    a)))
        (invoke println x))
     ;;->
-    "let mut a: i64 = 1;
+    "let mut a: i64 = 1i64;
 let x: i64 = if true
 {
 a
@@ -1434,9 +1344,9 @@ println!(\"{}\", x);"))
     "let mut x: std::vec::Vec<i64> = std::vec::Vec::new();
 x = {
 let mut tmp1: std::vec::Vec<i64> = std::vec::Vec::new();
-tmp1.push(1);
-tmp1.push(2);
-tmp1.push(3);
+tmp1.push(1i64);
+tmp1.push(2i64);
+tmp1.push(3i64);
 tmp1
 };"))
 
@@ -1451,7 +1361,7 @@ tmp1
        (invoke conj x 1))
     ;;->
     "let mut x: std::vec::Vec<i64> = std::vec::Vec::new();
-x.push(1);"))
+x.push(1i64);"))
 
 
 (deftest propagated-types6-test

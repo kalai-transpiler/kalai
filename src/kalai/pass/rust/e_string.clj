@@ -423,7 +423,6 @@
     (m/pred char? ?c)
     (str \' ?c \')
 
-
     (m/pred #(instance? Long %) ?x)
     (str ?x "i64")
 

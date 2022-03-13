@@ -82,7 +82,7 @@ pub fn f2() -> String {
                             let mut tmp9: kalai::Vector = kalai::Vector::new();
                             tmp9.push(kalai::BValue::from(String::from("=")));
                             tmp9.push(kalai::BValue::from(String::from("a")));
-                            tmp9.push(kalai::BValue::from(1));
+                            tmp9.push(kalai::BValue::from(1i64));
                             tmp9
                         }
                         .clone(),
@@ -92,7 +92,7 @@ pub fn f2() -> String {
                             let mut tmp10: kalai::Vector = kalai::Vector::new();
                             tmp10.push(kalai::BValue::from(String::from("<")));
                             tmp10.push(kalai::BValue::from(String::from("b")));
-                            tmp10.push(kalai::BValue::from(100));
+                            tmp10.push(kalai::BValue::from(100i64));
                             tmp10
                         }
                         .clone(),
@@ -170,7 +170,7 @@ pub fn f3() -> String {
                             let mut tmp18: kalai::Vector = kalai::Vector::new();
                             tmp18.push(kalai::BValue::from(String::from("=")));
                             tmp18.push(kalai::BValue::from(String::from("quux.a")));
-                            tmp18.push(kalai::BValue::from(1));
+                            tmp18.push(kalai::BValue::from(1i64));
                             tmp18
                         }
                         .clone(),
@@ -180,7 +180,7 @@ pub fn f3() -> String {
                             let mut tmp19: kalai::Vector = kalai::Vector::new();
                             tmp19.push(kalai::BValue::from(String::from("<")));
                             tmp19.push(kalai::BValue::from(String::from("bar")));
-                            tmp19.push(kalai::BValue::from(100));
+                            tmp19.push(kalai::BValue::from(100i64));
                             tmp19
                         }
                         .clone(),
@@ -232,7 +232,7 @@ pub fn f4() -> String {
                             let mut tmp24: kalai::Vector = kalai::Vector::new();
                             tmp24.push(kalai::BValue::from(String::from("'Jon'")));
                             tmp24.push(kalai::BValue::from(String::from("'Smith'")));
-                            tmp24.push(kalai::BValue::from(34));
+                            tmp24.push(kalai::BValue::from(34i64));
                             tmp24
                         }
                         .clone(),
@@ -242,7 +242,7 @@ pub fn f4() -> String {
                             let mut tmp25: kalai::Vector = kalai::Vector::new();
                             tmp25.push(kalai::BValue::from(String::from("'Andrew'")));
                             tmp25.push(kalai::BValue::from(String::from("'Cooper'")));
-                            tmp25.push(kalai::BValue::from(12));
+                            tmp25.push(kalai::BValue::from(12i64));
                             tmp25
                         }
                         .clone(),
@@ -252,7 +252,7 @@ pub fn f4() -> String {
                             let mut tmp26: kalai::Vector = kalai::Vector::new();
                             tmp26.push(kalai::BValue::from(String::from("'Jane'")));
                             tmp26.push(kalai::BValue::from(String::from("'Daniels'")));
-                            tmp26.push(kalai::BValue::from(56));
+                            tmp26.push(kalai::BValue::from(56i64));
                             tmp26
                         }
                         .clone(),

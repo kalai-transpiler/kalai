@@ -34,7 +34,7 @@
       (r/method unwrap (r/method next ?seq))
 
       (r/invoke (u/var ~#'next) ?seq)
-      (r/method skip ?seq 1)
+      (r/method skip ?seq (r/literal 1))
 
       ;; Remember that ^{:t java.lang.String} gets converted to ^{:t :string} upstream
       ;; (AST rewriting), whereas other Java class/types are left as-is in the metadata
@@ -127,6 +127,8 @@
                 . !arg ...)
       (r/method push ?coll . (m/app #(ru/wrap-value-enum ?value-t %) !arg) ...)
 
+      ;; When inc is used as a function value for example (update m :x inc)
+      ;; See kalai/operators for when direcly called
       (r/invoke (u/var ~#'inc) ?x)
       (r/operator + ?x 1)
 

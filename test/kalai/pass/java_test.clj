@@ -603,7 +603,7 @@ tmp4.add(4L);
 tmp3.add(tmp4);
 tmp1.add(tmp3);
 final ArrayList<Object> x = tmp1;
-final long a = x.get(0);
+final long a = (long)x.get(0);
 {
 System.out.println(x);
 System.out.println((7L + a));
@@ -707,8 +707,8 @@ System.out.println(x);
 
 (deftest for-loop-test
   (inner-form
-    (list 'dotimes [^{:t :int} 'x (int 5)]
-       '(println x))
+    '(dotimes [^{:t :int} x (int 5)]
+       (println x))
     ;;->
     '(group
        (init x 0)
@@ -716,7 +716,7 @@ System.out.println(x);
          (invoke println x)
          (assign x (operator + x 1))))
     ;;->
-    "long x = 0;
+    "int x = 0;
 while ((x < 5)) {
 System.out.println(x);
 x = (x + 1);

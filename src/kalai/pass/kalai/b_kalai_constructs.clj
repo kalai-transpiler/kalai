@@ -76,7 +76,7 @@
                                     {:t   ?t
                                      :mut true}))
             ~(if (= :int ?t) (int 0) 0))
-      (while (operator < ?sym ?n)
+      (while (operator < ?sym (m/app inner-form ?n))
         . (m/app inner-form !body) ...
         (assign ?sym (operator + ?sym ~(if (= :int ?t) (int 1) 1)))))
 
