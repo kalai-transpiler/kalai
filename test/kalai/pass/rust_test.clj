@@ -720,13 +720,7 @@ println!(\"{}\", x);"))
        (init x [1 "2" 3])
        (invoke println x))
     ;;->
-    "let x: kalai::BValue = {
-let mut tmp1: kalai::BValue = kalai::BValue::new();
-tmp1.push(kalai::BValue::from(1i64));
-tmp1.push(kalai::BValue::from(String::from(\"2\")));
-tmp1.push(kalai::BValue::from(3i64));
-tmp1
-};
+    "let x: kalai::BValue = kalai::BValue::from(rpds::Vector::new()).push_back(kalai::BValue::from(1i64)).push_back(kalai::BValue::from(String::from(\"2\"))).push_back(kalai::BValue::from(3i64));
 println!(\"{}\", x);"))
 
 (deftest data-literals8-test

@@ -23,3 +23,4 @@ build
 **/.nrepl-port
 /sql_builder/java/build
 /sql_builder/rust/target
+/.clj-kondo

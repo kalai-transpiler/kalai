@@ -287,11 +287,15 @@
 
 (defn match-str
   [x clauses]
-  (space-separated 'match (stringify x)
+  ;; numbers are not explicitly typed for matches, the match value should generally be an expression
+  (space-separated 'match (if (number? x) x (stringify x))
                    (stringify clauses)))
 
 (defn arm-str [x then]
-  (str (space-separated (stringify x) "=>" (str (stringify then) ","))))
+  ;; Clojure does not allow number literals of a specific type in case statements (it forces longs to ints).
+  ;; Therefore numbers cannot be explicitly typed for match arms
+  ;; and we prevent the default behavior of emitting specify type literals
+  (str (space-separated (if (number? x) x (stringify x)) "=>" (str (stringify then) ","))))
 
 (defn method-str [method object & args]
   (str (stringify object) "." method
@@ -331,31 +335,36 @@
   ;; Rust compiler's implicit conversion to type `usize`.
   (str start-idx ".." end-idx))
 
+(defn kalai-value-types [t]
+  (if (map? t)
+    (case (-> t keys first)
+      :map "PMap"
+      :mmap "MMap"
+      :set "PSet"
+      :mset "MSet"
+      :vector "PVector"
+      :mvector "MVector"
+      nil)
+    (case t
+      :bool "Bool"
+      :byte "Byte"
+      :int "Int"
+      :long "Long"
+      :float "Float"
+      :double "Double"
+      :string "String"
+      nil)))
+
 (defn value-type
-  "This is specifically for our custom rust Value enum for heterogeneous collections"
+  "This is specifically for our custom rust Value enum for heterogeneous collections
+  x is a value that may have meta data on it inticating a type.
+  x may be a primitive value or may need to be wrapped in the special rust Value enum."
   [x]
   (if (nil? x)
     "Null"
     (if (instance? IMeta x)
       (let [{:keys [t]} (meta x)]
-        (if (map? t)
-          (case (-> t keys first)
-            :map "PMap"
-            :mmap "MMap"
-            :set "PSet"
-            :mset "MSet"
-            :vector "PVector"
-            :mvector "MVector"
-            nil)
-          (case t
-            :bool "Bool"
-            :byte "Byte"
-            :int "Int"
-            :long "Long"
-            :float "Float"
-            :double "Double"
-            :string "String"
-            nil)))
+        (kalai-value-types t))
       (condp instance? x
         Byte "Byte"
         Boolean "Bool"
@@ -371,9 +380,11 @@
         nil))))
 
 (defn value-str
-  "Specifically for the Value enum for heterogeneous collections"
+  "Specifically for the Value enum for heterogeneous collections.
+  x is a value that may have meta data on it inticating a type.
+  x may be a primitive value or may need to be wrapped in the special rust Value enum."
   [x]
-  (if-let [t (value-type x)]
+  (if (value-type x)
     (str "kalai::BValue::from" (parens (stringify x)))
     (stringify x)))
 

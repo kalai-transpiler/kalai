@@ -35,18 +35,19 @@
         . (r/expression-statement (r/method push ?tmp (m/app #(ru/wrap-value-enum ?value-t %) (m/app expression !x)))) ...
         ?tmp))
 
-    ;; persistent vector ^{:t {:vector [_]}} []
+    ;; persistent vector ^{:t {:vector [_]}} [] or `any` vector
     (m/and [!x ...]
            ?expr
-           (m/app (comp :t meta) (m/and ?t
-                                        (m/pred :vector)))
+           (m/app (comp :t meta) ?t)
            (m/let [(m/or {_ [?value-t]}
                          (m/let [?value-t :any])) ?t]))
     ;;->
     (m/app
       #(u/preserve-type ?expr %)
       (m/app u/thread-second
-             (r/new ?t)
+             ~(if (= ?t :any)
+                (list 'r/invoke "kalai::BValue::from" (list 'r/new {:vector [?value-t]}))
+                (list 'r/new ?t))
              . (r/method push_back
                          (m/app #(ru/wrap-value-enum ?value-t %)
                                 (m/app expression !x))) ...))
@@ -77,8 +78,7 @@
     (m/and {}
            ?expr
            (m/app u/sort-any-type ([!k !v] ...))
-           (m/app (comp :t meta) (m/and ?t
-                                        (m/pred :map)))
+           (m/app (comp :t meta) ?t)
            (m/let [(m/or {_ [?key-t ?value-t]}
                          (m/let [?key-t :any
                                  ?value-t :any])) ?t]))
@@ -86,7 +86,9 @@
     (m/app
       #(u/preserve-type ?expr %)
       (m/app u/thread-second
-             (r/new ?t)
+             ~(if (= ?t :any)
+                (list 'r/invoke "kalai::BValue::from" (list 'r/new {:map [?key-t ?value-t]}))
+                (list 'r/new ?t))
              . (r/method insert
                          (m/app #(ru/wrap-value-enum ?key-t %) (m/app expression !k))
                          (m/app #(ru/wrap-value-enum ?value-t %) (m/app expression !v))) ...))
@@ -114,15 +116,16 @@
     (m/and #{}
            ?expr
            (m/app u/sort-any-type (!k ...))
-           (m/app (comp :t meta) (m/and ?t
-                                        (m/pred :set)))
+           (m/app (comp :t meta) ?t)
            (m/let [(m/or {_ [?key-t]}
                          (m/let [?key-t :any])) ?t]))
     ;;->
     (m/app
       #(u/preserve-type ?expr %)
       (m/app u/thread-second
-             (r/new ?t)
+             ~(if (= ?t :any)
+                (list 'r/invoke "kalai::BValue::from" (list 'r/new {:set [?key-t]}))
+                (list 'r/new ?t))
              . (r/method insert
                          (m/app #(ru/wrap-value-enum ?key-t %) (m/app expression !k))) ...))
 
