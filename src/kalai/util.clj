@@ -129,7 +129,9 @@ Maps are ordered by their keys. Numbers come before strings, and numbers and str
       (let [form (first forms)
             threaded (if (seq? form)
                        (with-meta `(~(first form) ~(second form) ~x ~@(next (next form))) (meta form))
-                       (list form x))]
+                       (if form
+                         (list form x)
+                         x))]
         (recur threaded (next forms)))
       x)))
 

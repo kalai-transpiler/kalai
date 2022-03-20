@@ -858,6 +858,115 @@ impl From<&BValue> for Nil {
     }
 }
 
+// make persistent.rs work
+
+impl From<BValue> for rpds::HashTrieMap<BValue,BValue> {
+    fn from(v: BValue) -> rpds::HashTrieMap<BValue,BValue> {
+        if let Some(x) = v.as_any().downcast_ref::<PMap>() {
+            x.clone().0
+        } else {
+            panic!("Could not downcast Value into HashTrieMap<BValue,BValue>!");
+        }
+    }
+}
+
+/* TODO: do we need these? if so make them work... (first one is above)
+// mutable collection types - HashMapTrie, HashSetTrie, Vec
+
+impl From<BValue> for HashMapTrie<BValue,BValue> {
+    fn from(v: BValue) -> HashMapTrie<BValue,BValue> {
+        if let Some(map) = v.as_any().downcast_ref::<HashMapTrie<BValue,BValue>>() {
+            map.clone()
+        } else {
+            panic!("Could not downcast Value into HashMapTrie!");
+        }
+    }
+}
+
+impl From<BValue> for HashSetTrie {
+    fn from(v: BValue) -> HashSetTrie<BValue> {
+        if let Some(set) = v.as_any().downcast_ref::<HashSetTrie<BValue>>() {
+            set.clone()
+        } else {
+            panic!("Could not downcast Value into HashSetTrie!");
+        }
+    }
+}
+
+impl From<BValue> for Vec<BValue> {
+    fn from(v: BValue) -> Vec<BValue> {
+        if let Some(vector) = v.as_any().downcast_ref::<Vec>() {
+            vector.clone()
+        } else {
+            panic!("Could not downcast Value into Vec!");
+        }
+    }
+}
+
+impl From<HashMapTrie> for BValue {
+    fn from(m: HashMapTrie) -> BValue {
+        Box::new(Map:from(m))
+    }
+}
+
+impl From<HashSetTrie> for BValue {
+    fn from(s: HashSetTrie) -> BValue {
+        Box::new(Set::from(s))
+    }
+}
+
+impl From<Vec<BValue>> for BValue {
+    fn from(v: Vec<BValue>) -> BValue {
+        Box::new(Vec::from(v))
+    }
+}
+
+// immutable collection types - rpds::HashTrieMap
+
+impl From<BValue> for rpds::HashTrieMap<BValue, BValue> {
+    fn from(v: BValue) -> rpds::HashTrieMap<BValue, BValue> {
+        if let Some(map) = v.as_any().downcast_ref::<rdps::HashTrieMap<BValue, BValue>>() {
+            map.clone()
+        } else {
+            panic!("Could not downcast Value into HashMapTrie!");
+        }
+    }
+}
+
+impl From<rpds::HashTrieMap<BValue,BValue>> for BValue {
+    fn from(m: rpds::HashTrieMap<BValue,BValue>) -> BValue {
+        Box::new(PMap::from(m))
+    }
+}
+
+impl From<BValue> for rpds::HashTrieSet<BValue> {
+    fn from(v: BValue) -> rpds::HashTrieSet<BValue> {
+        if let Some(map) = v.as_any().downcast_ref::<rpds::HashTrieSet<BValue>>() {
+            map.clone()
+        } else {
+            panic!("Could not downcast Value into HashMapTrie!");
+        }
+    }
+}
+
+impl From<BValue> for rpds::Vector<BValue> {
+    fn from(v: BValue) -> rpds::Vector<BValue> {
+        if let Some(map) = v.as_any().downcast_ref::<rpds::Vector<BValue>>() {
+            map.clone()
+        } else {
+            panic!("Could not downcast Value into HashMapTrie!");
+        }
+    }
+}
+
+impl From<rpds::Vector<BValue>> for BValue {
+    fn from(m: rpds::Vector<BValue>) -> BValue {
+        Box::new(PVector::from(m))
+    }
+}
+*/
+
+
 // mutable collection types - Map, Set, Vector
 
 impl From<BValue> for Map {

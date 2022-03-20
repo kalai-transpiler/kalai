@@ -8,7 +8,9 @@
         ^{:t {:map [:string :long]}} c {:x 11
                                         :y 13}
         ^{:t {:map [:any :any]}} d {:x 11
-                                    :y 13}]
+                                    :y 13}
+        ^{:t :any} e ^{:t :any} {:x 11
+                                 :y 13}]
 
     (println (str "key :y in mutable map a returns " (get a :y)))
     (let [^{:t :any} any-y :y
@@ -18,6 +20,10 @@
     (let [^{:t :any} any-y :y
           ^{:t :long} get-d-any-y ^{:cast :long :t :any} (get d any-y)]
       (println (str "key :y in persistent map d returns " get-d-any-y)))
+    (let [^{:t :any} any-y :y
+          ^{:t {:map [:any :any]}} e-map ^{:cast {:map [:any :any]}} e
+          ^{:t :long} get-e-any-y ^{:cast :long :t :any} (get e-map any-y)]
+      (println (str "key :y in persistent map e returns " get-e-any-y)))
 
     3))
 

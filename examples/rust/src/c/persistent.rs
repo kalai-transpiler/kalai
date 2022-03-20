@@ -7,8 +7,9 @@ pub fn test_map() -> i64 {
         tmp1.insert(String::from(":y"), 13i64);
         tmp1
     };
-    let b: kalai::Map = {
-        let mut tmp2: kalai::Map = kalai::Map::new();
+    let b: std::collections::HashMap<kalai::BValue, kalai::BValue> = {
+        let mut tmp2: std::collections::HashMap<kalai::BValue, kalai::BValue> =
+            std::collections::HashMap::new();
         tmp2.insert(
             kalai::BValue::from(String::from(":x")),
             kalai::BValue::from(11i64),
@@ -31,6 +32,17 @@ pub fn test_map() -> i64 {
             kalai::BValue::from(String::from(":y")),
             kalai::BValue::from(13i64),
         );
+    let e: kalai::BValue = kalai::BValue::from(
+        kalai::PMap::new()
+            .insert(
+                kalai::BValue::from(String::from(":x")),
+                kalai::BValue::from(11i64),
+            )
+            .insert(
+                kalai::BValue::from(String::from(":y")),
+                kalai::BValue::from(13i64),
+            ),
+    );
     {
         println!(
             "{}",
@@ -72,6 +84,19 @@ pub fn test_map() -> i64 {
                 )
             );
         }
+        {
+            let any_y: kalai::BValue = kalai::BValue::from(String::from(":y"));
+            let e_map: rpds::HashTrieMap<kalai::BValue, kalai::BValue> = rpds::HashTrieMap::from(e);
+            let get_e_any_y: i64 = i64::from(e_map.get(&any_y).unwrap().clone());
+            println!(
+                "{}",
+                format!(
+                    "{}{}",
+                    String::from("key :y in persistent map e returns "),
+                    get_e_any_y
+                )
+            );
+        }
         return 3i64;
     }
 }
@@ -82,8 +107,8 @@ pub fn test_vector() -> i64 {
         tmp3.push(13i64);
         tmp3
     };
-    let b: kalai::Vector = {
-        let mut tmp4: kalai::Vector = kalai::Vector::new();
+    let b: std::vec::Vec<kalai::BValue> = {
+        let mut tmp4: std::vec::Vec<kalai::BValue> = std::vec::Vec::new();
         tmp4.push(kalai::BValue::from(11i64));
         tmp4.push(kalai::BValue::from(13i64));
         tmp4
@@ -136,8 +161,8 @@ pub fn test_set() -> i64 {
         tmp5.insert(15i64);
         tmp5
     };
-    let b: kalai::Set = {
-        let mut tmp6: kalai::Set = kalai::Set::new();
+    let b: std::collections::HashSet<kalai::BValue> = {
+        let mut tmp6: std::collections::HashSet<kalai::BValue> = std::collections::HashSet::new();
         tmp6.insert(kalai::BValue::from(11i64));
         tmp6.insert(kalai::BValue::from(13i64));
         tmp6.insert(kalai::BValue::from(15i64));

@@ -46,11 +46,13 @@
       #(u/preserve-type ?expr %)
       (m/app u/thread-second
              ~(if (= ?t :any)
-                (list 'r/invoke "kalai::BValue::from" (list 'r/new {:vector [?value-t]}))
+                (list 'r/invoke "kalai::PVector::new")
                 (list 'r/new ?t))
              . (r/method push_back
                          (m/app #(ru/wrap-value-enum ?value-t %)
-                                (m/app expression !x))) ...))
+                                (m/app expression !x))) ...
+             ~(when (= ?t :any)
+                '(r/invoke "kalai::BValue::from"))))
 
     ;;;; map {}
 
@@ -87,11 +89,13 @@
       #(u/preserve-type ?expr %)
       (m/app u/thread-second
              ~(if (= ?t :any)
-                (list 'r/invoke "kalai::BValue::from" (list 'r/new {:map [?key-t ?value-t]}))
+                (list 'r/invoke "kalai::PMap::new")
                 (list 'r/new ?t))
              . (r/method insert
                          (m/app #(ru/wrap-value-enum ?key-t %) (m/app expression !k))
-                         (m/app #(ru/wrap-value-enum ?value-t %) (m/app expression !v))) ...))
+                         (m/app #(ru/wrap-value-enum ?value-t %) (m/app expression !v))) ...
+             ~(when (= ?t :any)
+                '(r/invoke "kalai::BValue::from"))))
 
     ;;;; set #{}
 
@@ -124,10 +128,12 @@
       #(u/preserve-type ?expr %)
       (m/app u/thread-second
              ~(if (= ?t :any)
-                (list 'r/invoke "kalai::BValue::from" (list 'r/new {:set [?key-t]}))
+                (list 'r/invoke "kalai::PSet::new")
                 (list 'r/new ?t))
              . (r/method insert
-                         (m/app #(ru/wrap-value-enum ?key-t %) (m/app expression !k))) ...))
+                         (m/app #(ru/wrap-value-enum ?key-t %) (m/app expression !k))) ...
+             ~(when (= ?t :any)
+                '(r/invoke "kalai::BValue::from"))))
 
     ;; Interop
     (new ?c . !args ...)

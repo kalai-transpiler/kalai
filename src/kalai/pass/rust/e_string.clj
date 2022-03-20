@@ -82,9 +82,13 @@
 
 (defn kalai-primitive-type->rust
   [t]
-  (or ({:mvector "kalai::Vector"
+  (or (and (map? t) (kalai-type->rust (key (first t))))
+      ({:mvector "kalai::Vector"
         :mset    "kalai::Set"
-        :mmap    "kalai::Map"} t)
+        :mmap    "kalai::Map"
+        :vector  "kalai::PVector"
+        :set     "kalai::PSet"
+        :map     "kalai::PMap"} t)
       (kalai-type->rust t)
       types/BAD-TYPE_CAST-STR))
 
@@ -115,16 +119,6 @@
   a data structure, just as we might find in `:t ` of the metadata
   map upstream in the S-exprs."
   (s/rewrite
-    {:mvector [:any]}
-    "kalai::Vector"
-
-    {:mset [:any]}
-    "kalai::Set"
-
-    ;; TODO: Do we want to support {:map [ (not :any) :any]) and vice versa {:map [:any (not :any)]} ?
-    {:mmap [:any :any]}
-    "kalai::Map"
-
     {?t [& ?ts]}
     ~(str (rust-type ?t)
           \< (str/join \, (for [t ?ts]
@@ -139,16 +133,6 @@
   a data structure, just as we might find in `:t ` of the metadata
   map upstream in the S-exprs."
   (s/rewrite
-    {:mvector [:any]}
-    "kalai::Vector"
-
-    {:mset [:any]}
-    "kalai::Set"
-
-    ;; TODO: Do we want to support {:map [ (not :any) :any]) and vice versa {:map [:any (not :any)]} ?
-    {:mmap [:any :any]}
-    "kalai::Map"
-
     {?t [& ?ts]}
     ~(rust-type ?t)
 
