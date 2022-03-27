@@ -11,7 +11,7 @@
       (m/and ?x
              (m/app meta {:t :any
                           :cast (m/pred some? ?t)}))
-      (r/invoke ~(str (e-string/kalai-primitive-type->rust ?t) "::from") ?x)
+      (r/invoke ~(str (e-string/init-rhs-t-str ?t) "::from") ?x)
 
       (m/and ?x
              (m/app meta {:cast (m/pred some? ?t)}))

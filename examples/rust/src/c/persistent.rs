@@ -33,7 +33,7 @@ pub fn test_map() -> i64 {
             kalai::BValue::from(13i64),
         );
     let e: kalai::BValue = kalai::BValue::from(
-        kalai::PMap::new()
+        rpds::HashTrieMap::new()
             .insert(
                 kalai::BValue::from(String::from(":x")),
                 kalai::BValue::from(11i64),

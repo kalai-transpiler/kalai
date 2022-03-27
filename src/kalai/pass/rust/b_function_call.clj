@@ -31,7 +31,7 @@
       (r/method iter (r/method clone ?coll))
 
       (r/invoke (u/var ~#'first) ?seq)
-      (r/method unwrap (r/method next ?seq))
+      (r/method clone (r/method unwrap (r/method next ?seq)))
 
       (r/invoke (u/var ~#'next) ?seq)
       (r/method skip ?seq (r/literal 1))

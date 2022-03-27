@@ -102,6 +102,8 @@
        (drop 5)
        (str/join \newline)))
 
+;; TODO: can we remove this?  becuase we are using concrete types instead of the wrappers
+;; (ex: std::vec::Vec<BValue> instead of Vector for {:t {:mvector [:any]}} )
 (defn helper-fn-impl-strs []
   (let [
         primitives [:bool :byte :char :int :long :float :double :string]
@@ -178,7 +180,7 @@
           k-str (slurp k)
           dest-file-str (str k-str
                               \newline \newline
-                             (helper-fn-impl-strs)
+                             (helper-fn-impl-strs) ;; TODO: can we remove this?
                              \newline
                              )]
       (assert k "kalai.rs")

@@ -225,6 +225,38 @@ impl Value for Set {
     }
 }
 
+impl Value for PSet {
+    fn type_name(&self) -> &'static str {
+        "PSet"
+    }
+
+    fn hash_id(&self) -> u64 {
+        // TODO: find a more efficient way to create a deterministic contents/value-based hash for a PSet (or any collection)
+        // TODO: look into how Clojure hashes collections (ex: map, set)
+        // Note: we use BinaryHeap to order the hash values because hashing is stateful, and therefore, order-dependent.
+        let elem_hashes: BinaryHeap<u64> = self.0.iter().map(|e| e.deref().hash_id()).collect();
+        let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
+
+        let mut hasher = DefaultHasher::new();
+        for eh in sorted_hashes.iter() {
+            eh.hash(&mut hasher);
+        }
+        let result = hasher.finish();
+        result
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn eq_test(&self, other: &dyn Value) -> bool {
+        match other.as_any().downcast_ref::<PSet>() {
+            Some(set) => &self.0 == &set.0,
+            None => false,
+        }
+    }
+}
+
 impl<T> Value for Vec<T>
 where
     T: PartialEq + Value + Clone + 'static,
@@ -286,6 +318,38 @@ impl Value for Vector {
 
     fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<Vector>() {
+            Some(vector) => &self.0 == &vector.0,
+            None => false,
+        }
+    }
+}
+
+impl Value for PVector {
+    fn type_name(&self) -> &'static str {
+        "PVector"
+    }
+
+    fn hash_id(&self) -> u64 {
+        // TODO: find a more efficient way to create a deterministic contents/value-based hash for a Set (or any collection)
+        // TODO: look into how Clojure hashes collections (ex: map, set)
+        // Note: we use BinaryHeap to order the hash values because hashing is stateful, and therefore, order-dependent.
+        let elem_hashes: BinaryHeap<u64> = self.0.iter().map(|e| e.deref().hash_id()).collect();
+        let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
+
+        let mut hasher = DefaultHasher::new();
+        for eh in sorted_hashes.iter() {
+            eh.hash(&mut hasher);
+        }
+        let result = hasher.finish();
+        result
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn eq_test(&self, other: &dyn Value) -> bool {
+        match other.as_any().downcast_ref::<PVector>() {
             Some(vector) => &self.0 == &vector.0,
             None => false,
         }
@@ -858,7 +922,117 @@ impl From<&BValue> for Nil {
     }
 }
 
+// underlying immutable types - HashTrieMap, HashTrieSet, Vector(?)
+
+// HashTrieMap (persistent map)
+
+impl From<rpds::HashTrieMap<BValue, BValue>> for BValue {
+    fn from(x: rpds::HashTrieMap<BValue, BValue>) -> Self {
+        let b: BValue = Box::new(PMap(x));
+        b
+    }
+}
+
+impl From<BValue> for rpds::HashTrieMap<BValue, BValue> {
+    fn from(v: BValue) -> rpds::HashTrieMap<BValue, BValue> {
+        if let Some(x) = v.as_any().downcast_ref::<PMap>() {
+            x.clone().0
+        } else {
+            panic!("Could not downcast Value into HashTrieMap<BValue,BValue>!");
+        }
+    }
+}
+
+// HashTrieSet (persistent set)
+
+impl From<rpds::HashTrieSet<BValue>> for BValue {
+    fn from(x: rpds::HashTrieSet<BValue>) -> Self {
+        let b: BValue = Box::new(PSet(x));
+        b
+    }
+}
+
+impl From<BValue> for rpds::HashTrieSet<BValue> {
+    fn from(v: BValue) -> rpds::HashTrieSet<BValue> {
+        if let Some(x) = v.as_any().downcast_ref::<PSet>() {
+            x.clone().0
+        } else {
+            panic!("Could not downcast Value into HashTrieSet<BValue>!");
+        }
+    }
+}
+
+// Vector (persistent vetor)
+
+impl From<rpds::Vector<BValue>> for BValue {
+    fn from(x: rpds::Vector<BValue>) -> Self {
+        let b: BValue = Box::new(PVector(x));
+        b
+    }
+}
+
+impl From<BValue> for rpds::Vector<BValue> {
+    fn from(v: BValue) -> rpds::Vector<BValue> {
+        if let Some(x) = v.as_any().downcast_ref::<PVector>() {
+            x.clone().0
+        } else {
+            panic!("Could not downcast Value into Vector<BValue>!");
+        }
+    }
+}
+
 // mutable collection types - Map, Set, Vector
+
+impl From<Vec<BValue>> for BValue {
+    fn from(x: Vec<BValue>) -> Self {
+        let b: BValue = Box::new(Vector(x));
+        b
+    }
+}
+
+impl From<BValue> for Vec<BValue> {
+    fn from(v: BValue) -> Vec<BValue> {
+        if let Some(x) = v.as_any().downcast_ref::<Vector>() {
+            x.clone().0
+        } else {
+            panic!("Could not downcast Value into Vec<BValue>!");
+        }
+    }
+}
+
+impl From<HashMap<BValue, BValue>> for BValue {
+    fn from(x: HashMap<BValue, BValue>) -> Self {
+        let b: BValue = Box::new(Map(x));
+        b
+    }
+}
+
+impl From<BValue> for HashMap<BValue, BValue> {
+    fn from(v: BValue) -> HashMap<BValue, BValue> {
+        if let Some(x) = v.as_any().downcast_ref::<Map>() {
+            x.clone().0
+        } else {
+            panic!("Could not downcast Value into HashMap<BValue,BValue>!");
+        }
+    }
+}
+
+impl From<HashSet<BValue>> for BValue {
+    fn from(x: HashSet<BValue>) -> Self {
+        let b: BValue = Box::new(Set(x));
+        b
+    }
+}
+
+impl From<BValue> for HashSet<BValue> {
+    fn from(v: BValue) -> HashSet<BValue> {
+        if let Some(x) = v.as_any().downcast_ref::<Set>() {
+            x.clone().0
+        } else {
+            panic!("Could not downcast Value into HashSet<BValue>!");
+        }
+    }
+}
 
 impl From<BValue> for Map {
     fn from(v: BValue) -> Map {

@@ -77,15 +77,17 @@
       ?tmp)
 
     ;; persistent vector ^{:t {:vector [_]}} []
+    ;; or any other type on a vector literal
     (m/and [!x ...]
            ?expr
-           (m/app (comp :t meta) (m/and ?t
-                                        (m/pred :vector))))
+           (m/app (comp :t meta) (m/and ?t)))
     ;;->
     (m/app
       #(u/preserve-type ?expr %)
       (m/app u/thread-second
-             (j/new ?t)
+             (j/new ~(if (= ?t :any)
+                       {:vector [:any]}
+                       ?t))
              . (j/method addLast
                          (m/app expression !x)) ...))
 
@@ -107,16 +109,18 @@
       ?tmp)
 
     ;; persistent map ^{:t {:map [_]}} {}
+    ;; or any other type on a map literal
     (m/and {}
            ?expr
            (m/app u/sort-any-type ([!k !v] ...))
-           (m/app (comp :t meta) (m/and ?t
-                                        (m/pred :map))))
+           (m/app (comp :t meta) (m/and ?t)))
     ;;->
     (m/app
       #(u/preserve-type ?expr %)
       (m/app u/thread-second
-             (j/new ?t)
+             (j/new ~(if (= ?t :any)
+                       {:map [:any :any]}
+                       ?t))
              . (j/method put
                          (m/app expression !k)
                          (m/app expression !v)
@@ -139,16 +143,18 @@
       ?tmp)
 
     ;; persistent set ^{:t {:set [_]}} #{}
+    ;; or any other type on a set literal
     (m/and #{}
            ?expr
            (m/app u/sort-any-type (!k ...))
-           (m/app (comp :t meta) (m/and ?t
-                                        (m/pred :set))))
+           (m/app (comp :t meta) (m/and ?t)))
     ;;->
     (m/app
       #(u/preserve-type ?expr %)
       (m/app u/thread-second
-             (j/new ?t)
+             (j/new ~(if (= ?t :any)
+                       {:set [:any]}
+                       ?t))
              . (j/method add
                          (m/app expression !k)) ...))
 

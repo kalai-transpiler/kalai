@@ -35,7 +35,8 @@
         . (r/expression-statement (r/method push ?tmp (m/app #(ru/wrap-value-enum ?value-t %) (m/app expression !x)))) ...
         ?tmp))
 
-    ;; persistent vector ^{:t {:vector [_]}} [] or `any` vector
+    ;; persistent vector ^{:t {:vector [_]}} []
+    ;; or any other type on a vector literal
     (m/and [!x ...]
            ?expr
            (m/app (comp :t meta) ?t)
@@ -45,9 +46,9 @@
     (m/app
       #(u/preserve-type ?expr %)
       (m/app u/thread-second
-             ~(if (= ?t :any)
-                (list 'r/invoke "kalai::PVector::new")
-                (list 'r/new ?t))
+             (r/new ~(if (= ?t :any)
+                       {:vector [:any]}
+                       ?t))
              . (r/method push_back
                          (m/app #(ru/wrap-value-enum ?value-t %)
                                 (m/app expression !x))) ...
@@ -77,6 +78,7 @@
         ?tmp))
 
     ;; persistent map ^{:t {:map [_]}} {}
+    ;; or any other type on a map literal
     (m/and {}
            ?expr
            (m/app u/sort-any-type ([!k !v] ...))
@@ -88,9 +90,9 @@
     (m/app
       #(u/preserve-type ?expr %)
       (m/app u/thread-second
-             ~(if (= ?t :any)
-                (list 'r/invoke "kalai::PMap::new")
-                (list 'r/new ?t))
+             (r/new ~(if (= ?t :any)
+                       {:map [:any :any]}
+                       ?t))
              . (r/method insert
                          (m/app #(ru/wrap-value-enum ?key-t %) (m/app expression !k))
                          (m/app #(ru/wrap-value-enum ?value-t %) (m/app expression !v))) ...
@@ -117,6 +119,7 @@
         ?tmp))
 
     ;; persistent set ^{:t {:set [_]}} #{}
+    ;; or any other type on a set literal
     (m/and #{}
            ?expr
            (m/app u/sort-any-type (!k ...))
@@ -127,9 +130,9 @@
     (m/app
       #(u/preserve-type ?expr %)
       (m/app u/thread-second
-             ~(if (= ?t :any)
-                (list 'r/invoke "kalai::PSet::new")
-                (list 'r/new ?t))
+             (r/new ~(if (= ?t :any)
+                       {:set [:any]}
+                       ?t))
              . (r/method insert
                          (m/app #(ru/wrap-value-enum ?key-t %) (m/app expression !k))) ...
              ~(when (= ?t :any)

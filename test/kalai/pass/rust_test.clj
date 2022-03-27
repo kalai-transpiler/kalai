@@ -661,8 +661,8 @@ println!(\"{}\", x);"))
     "let a: i64 = 1i64;
 let b: i64 = 2i64;
 let c: i64 = 3i64;
-let x: kalai::Vector = {
-let mut tmp1: kalai::Vector = kalai::Vector::new();
+let x: std::vec::Vec<kalai::BValue> = {
+let mut tmp1: std::vec::Vec<kalai::BValue> = std::vec::Vec::new();
 tmp1.push(kalai::BValue::from(a.clone()));
 tmp1.push(kalai::BValue::from(b.clone()));
 tmp1.push(kalai::BValue::from(c.clone()));
@@ -685,7 +685,7 @@ println!(\"{}\", x);"))
          (invoke conj result i)
          (assign i (operator - i 3))))
     ;;->
-    "let mut result: kalai::Vector = kalai::Vector::new();
+    "let mut result: std::vec::Vec<kalai::BValue> = std::vec::Vec::new();
 let mut i: i32 = 10i32;
 while (0i32 < i) {
 result.push(kalai::BValue::from(i.clone()));
@@ -720,7 +720,7 @@ println!(\"{}\", x);"))
        (init x [1 "2" 3])
        (invoke println x))
     ;;->
-    "let x: kalai::BValue = kalai::BValue::from(rpds::Vector::new()).push_back(kalai::BValue::from(1i64)).push_back(kalai::BValue::from(String::from(\"2\"))).push_back(kalai::BValue::from(3i64));
+    "let x: kalai::BValue = kalai::BValue::from(rpds::Vector::new().push_back(kalai::BValue::from(1i64)).push_back(kalai::BValue::from(String::from(\"2\"))).push_back(kalai::BValue::from(3i64)));
 println!(\"{}\", x);"))
 
 (deftest data-literals8-test

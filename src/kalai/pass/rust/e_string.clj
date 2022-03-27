@@ -80,18 +80,6 @@
    :any     "kalai::BValue"
    :option  "Option"})
 
-(defn kalai-primitive-type->rust
-  [t]
-  (or (and (map? t) (kalai-type->rust (key (first t))))
-      ({:mvector "kalai::Vector"
-        :mset    "kalai::Set"
-        :mmap    "kalai::Map"
-        :vector  "kalai::PVector"
-        :set     "kalai::PSet"
-        :map     "kalai::PMap"} t)
-      (kalai-type->rust t)
-      types/BAD-TYPE_CAST-STR))
-
 ;; Forward declaration of `t-str` to break cycle of references.
 ;; We expect this not to create an infinite loop in practice, otherwise
 ;; the types specified in types/lang-types-mapping is not configured correctly.
