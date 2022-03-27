@@ -29,11 +29,12 @@ run_rust:
 	cd rust && cargo test && cargo run run_examples
 
 run_java:
-	java -cp java/build/classes/java/main a.Demo01
-	java -cp java/build/classes/java/main a.Demo02
-	java -cp java/build/classes/java/main a.Demo03
-	java -cp java/build/classes/java/main b.Loops
-	java -cp java/build/classes/java/main b.Requirer
-	java -cp java/build/classes/java/main b.Simple
-	java -cp java/build/classes/java/main b.TypeAlias
-	java -cp java/build/classes/java/main b.Variable
+	cd java && gradle -PmainClass=a.Demo01 run
+	cd java && gradle -PmainClass=a.Demo02 run
+	cd java && gradle -PmainClass=a.Demo03 run
+	cd java && gradle -PmainClass=b.Loops run
+	cd java && gradle -PmainClass=b.Requirer run
+	cd java && gradle -PmainClass=b.Simple run
+	cd java && gradle -PmainClass=b.TypeAlias run
+	cd java && gradle -PmainClass=b.Variable run
+	cd java && gradle -PmainClass=c.Persistent run

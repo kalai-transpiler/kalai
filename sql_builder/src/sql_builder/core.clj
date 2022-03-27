@@ -4,7 +4,7 @@
 
 (defn cast-to-str ^{:t :string} [^{:t :any} x]
   (if (vector? x)
-    (let [^{:t {:mvector [:any]}} v ^{:cast :mvector} x
+    (let [^{:t {:mvector [:any]}} v ^{:cast {:mvector [:any]}} x
           ^{:t :any} v-first (nth v (int 0))
           ^{:t :string} table-name ^{:cast :string} v-first
           ^{:t :any} v-second (nth v (int 1))
@@ -30,7 +30,7 @@
 ;; TODO: honeySQL supports variadic clauses which are assumed to be `and`
 (defn where-str ^{:t :string} [^{:t :any} clause]
   (if (vector? clause)
-    (let [^{:t {:mvector [:any]}} v ^{:cast :mvector} clause
+    (let [^{:t {:mvector [:any]}} v ^{:cast {:mvector [:any]}} clause
           ^{:t :any} v-first (first (seq v))
           ^{:t :string} op ^{:cast :string} v-first]
       (str "("
@@ -46,7 +46,7 @@
   (where-str having))
 
 (defn row-str ^{:t :string} [^{:t :any} row]
-  (let [^{:t {:mvector [:any]}} mrow ^{:cast :mvector} row]
+  (let [^{:t {:mvector [:any]}} mrow ^{:cast {:mvector [:any]}} row]
     (str "(" (str/join ", " (map cast-to-str (seq mrow))) ")")))
 
 (defn format
@@ -66,26 +66,26 @@
     ;; for this example to work
     (str (if (nil? insert-into)
            ""
-           (str "INSERT INTO " (from-str ^{:cast :mvector} insert-into) "(" (select-str ^{:cast :mvector} columns) ")\n"
+           (str "INSERT INTO " (from-str ^{:cast {:mvector [:any]}} insert-into) "(" (select-str ^{:cast {:mvector [:any]}} columns) ")\n"
                 "VALUES\n"
-                (str/join ",\n" (let [^{:t {:mvector [:any]}} v2 ^{:cast :mvector} values]
+                (str/join ",\n" (let [^{:t {:mvector [:any]}} v2 ^{:cast {:mvector [:any]}} values]
                                   (map row-str (seq v2))))))
 
          (if (nil? select)
            ""
-           (str "SELECT " (select-str ^{:cast :mvector} select)))
+           (str "SELECT " (select-str ^{:cast {:mvector [:any]}} select)))
          (if (nil? from)
            ""
-           (str " FROM " (from-str ^{:cast :mvector} from)))
+           (str " FROM " (from-str ^{:cast {:mvector [:any]}} from)))
          (if (nil? join)
            ""
-           (str " JOIN " (join-str ^{:cast :mvector} join)))
+           (str " JOIN " (join-str ^{:cast {:mvector [:any]}} join)))
          (if (nil? where-clause)
            ""
            (str " WHERE " (where-str where-clause)))
          (if (nil? group-by)
            ""
-           (str " GROUP BY " (group-by-str ^{:cast :mvector} group-by)))
+           (str " GROUP BY " (group-by-str ^{:cast {:mvector [:any]}} group-by)))
          (if (nil? having)
            ""
            (str " HAVING " (having-str having))))))

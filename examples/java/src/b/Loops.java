@@ -4,10 +4,15 @@ import java.util.ArrayList;
 
 public class Loops {
   public static final void main(String[] args) {
-    long i = 0;
-    while ((i < 10L)) {
-      System.out.println(i);
-      i = (i + 1);
+    int i1 = 0;
+    while ((i1 < 10)) {
+      System.out.println(i1);
+      i1 = (i1 + 1);
+    }
+    long i2 = 0L;
+    while ((i2 < 10L)) {
+      System.out.println(i2);
+      i2 = (i2 + 1L);
     }
     ArrayList<Long> tmp1 = new ArrayList<Long>();
     tmp1.add(1L);

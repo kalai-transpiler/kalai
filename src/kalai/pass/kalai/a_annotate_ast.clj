@@ -155,6 +155,9 @@
     symbol-call-site))
 
 (defn set-coll-t [val t]
+  "val is a representation of a data literal from the AST. It may even be nested.
+  This function attaches `t` (our :t type metadata) to the data literal form, and also do so
+  at every level of nesting, not just the top level."
   (m/rewrite t
     {(m/pred #{:mmap :map}) [?kt ?vt]}
     ;;->

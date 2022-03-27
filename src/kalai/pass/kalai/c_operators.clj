@@ -38,17 +38,23 @@
       (invoke not ?x)
       (operator '! ?x)
 
+      ;; Direct calls of inc/dec are treated as operator +1 with the type transfered to the literal 1
+      ;; For when used as a function value see lang/function_call
       (m/or
         (invoke (u/var ~#'inc) ?x)
         (invoke clojure.lang.Numbers/inc ?x)
         (invoke clojure.lang.Numbers/unchecked_inc ?x))
-      (operator + ?x 1)
+      (operator + ?x ~(if (= :int (:t (meta ?x)))
+                        (int 1)
+                        1))
 
       (m/or
         (invoke (u/var ~#'dec) ?x)
         (invoke clojure.lang.Numbers/dec ?x)
         (invoke clojure.lang.Numbers/unchecked_dec ?x))
-      (operator - ?x 1)
+      (operator - ?x ~(if (= :int (:t (meta ?x)))
+                        (int 1)
+                        1))
 
       ;; varity operators
       (invoke + . !args ...)

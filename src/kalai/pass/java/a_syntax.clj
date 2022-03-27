@@ -43,6 +43,11 @@
 ;; statements can contain expressions
 ;; block must contain statements (not expressions)
 
+;;
+;; Rules
+;;
+
+
 (declare statement)
 
 ;; half Clojure half Java
@@ -50,7 +55,7 @@
   (s/rewrite
     ;; Data Literals
 
-    ;;;; empty collections don't need a tmp
+    ;;;; empty collections don't need a tmp variable (with new local block, etc.)
     (m/and (m/or [] {} #{})
            (m/pred empty?)
            (m/app (comp :t meta) ?t))
@@ -58,9 +63,12 @@
     (j/new ?t)
 
     ;;;; vector []
+
+    ;; mutable vector ^{:t {:mvector [_]}} []
     (m/and [!x ...]
            ?expr
-           (m/app (comp :t meta) ?t)
+           (m/app (comp :t meta) (m/and ?t
+                                        (m/pred :mvector)))
            (m/let [?tmp (u/tmp ?t ?expr)]))
     ;;->
     (group
@@ -68,11 +76,29 @@
       . (j/expression-statement (j/method add ?tmp (m/app expression !x))) ...
       ?tmp)
 
+    ;; persistent vector ^{:t {:vector [_]}} []
+    ;; or any other type on a vector literal
+    (m/and [!x ...]
+           ?expr
+           (m/app (comp :t meta) (m/and ?t)))
+    ;;->
+    (m/app
+      #(u/preserve-type ?expr %)
+      (m/app u/thread-second
+             (j/new ~(if (= ?t :any)
+                       {:vector [:any]}
+                       ?t))
+             . (j/method addLast
+                         (m/app expression !x)) ...))
+
     ;;;; map {}
+
+    ;; mutable map ^{:t {:mmap [_]}} {}
     (m/and {}
            ?expr
            (m/app u/sort-any-type ([!k !v] ...))
-           (m/app (comp :t meta) ?t)
+           (m/app (comp :t meta) (m/and ?t
+                                        (m/pred :mmap)))
            (m/let [?tmp (u/tmp ?t ?expr)]))
     ;;->
     (group
@@ -82,17 +108,56 @@
                                           (m/app expression !v))) ...
       ?tmp)
 
+    ;; persistent map ^{:t {:map [_]}} {}
+    ;; or any other type on a map literal
+    (m/and {}
+           ?expr
+           (m/app u/sort-any-type ([!k !v] ...))
+           (m/app (comp :t meta) (m/and ?t)))
+    ;;->
+    (m/app
+      #(u/preserve-type ?expr %)
+      (m/app u/thread-second
+             (j/new ~(if (= ?t :any)
+                       {:map [:any :any]}
+                       ?t))
+             . (j/method put
+                         (m/app expression !k)
+                         (m/app expression !v)
+                         io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS) ...))
+
+
     ;;;; set #{}
+
+    ;; mutable set ^{:t {:mset [_]}} #{}
     (m/and #{}
            ?expr
            (m/app u/sort-any-type (!k ...))
-           (m/app (comp :t meta) ?t)
+           (m/app (comp :t meta) (m/and ?t
+                                        (m/pred :mset)))
            (m/let [?tmp (u/tmp ?t ?expr)]))
     ;;->
     (group
       (j/init ?tmp (j/new ?t))
       . (j/expression-statement (j/method add ?tmp (m/app expression !k))) ...
       ?tmp)
+
+    ;; persistent set ^{:t {:set [_]}} #{}
+    ;; or any other type on a set literal
+    (m/and #{}
+           ?expr
+           (m/app u/sort-any-type (!k ...))
+           (m/app (comp :t meta) (m/and ?t)))
+    ;;->
+    (m/app
+      #(u/preserve-type ?expr %)
+      (m/app u/thread-second
+             (j/new ~(if (= ?t :any)
+                       {:set [:any]}
+                       ?t))
+             . (j/method add
+                         (m/app expression !k)) ...))
+
 
     ;; Interop
     (new ?c . !args ...)
@@ -103,8 +168,11 @@
     (j/operator ?op . (m/app expression !args) ...)
 
     ;; function invocation
-    (invoke ?f . !args ...)
-    (j/invoke ?f . (m/app expression !args) ...)
+    (m/and (invoke ?f . !args ...)
+           (m/app meta ?meta))
+    (m/app with-meta
+           (j/invoke ?f . (m/app expression !args) ...)
+           ?meta)
 
     (method ?method ?object . !args ...)
     (j/method ?method (m/app expression ?object) . (m/app expression !args) ...)

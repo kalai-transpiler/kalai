@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 public class Core {
   public static final String castToStr(final Object x) {
     if ((x instanceof List)) {
-      final ArrayList<Object> v = (ArrayList) x;
+      final ArrayList<Object> v = (ArrayList<Object>) x;
       final Object vFirst = v.get(0);
       final String tableName = (String) vFirst;
       final Object vSecond = v.get(1);
@@ -48,7 +48,7 @@ public class Core {
 
   public static final String whereStr(final Object clause) {
     if ((clause instanceof List)) {
-      final ArrayList<Object> v = (ArrayList) clause;
+      final ArrayList<Object> v = (ArrayList<Object>) clause;
       final Object vFirst = v.stream().findFirst().get();
       final String op = (String) vFirst;
       return (""
@@ -72,7 +72,7 @@ public class Core {
   }
 
   public static final String rowStr(final Object row) {
-    final ArrayList<Object> mrow = (ArrayList) row;
+    final ArrayList<Object> mrow = (ArrayList<Object>) row;
     return (""
         + "("
         + String.join(
@@ -94,14 +94,14 @@ public class Core {
     if ((insertInto == null)) {
       tmp1 = "";
     } else {
-      final ArrayList<Object> v2 = (ArrayList) values;
+      final ArrayList<Object> v2 = (ArrayList<Object>) values;
       {
         tmp1 =
             (""
                 + "INSERT INTO "
-                + sqlbuilder.Core.fromStr((ArrayList) insertInto)
+                + sqlbuilder.Core.fromStr((ArrayList<Object>) insertInto)
                 + "("
-                + sqlbuilder.Core.selectStr((ArrayList) columns)
+                + sqlbuilder.Core.selectStr((ArrayList<Object>) columns)
                 + ")\n"
                 + "VALUES\n"
                 + String.join(
@@ -112,19 +112,19 @@ public class Core {
     if ((select == null)) {
       tmp2 = "";
     } else {
-      tmp2 = ("" + "SELECT " + sqlbuilder.Core.selectStr((ArrayList) select));
+      tmp2 = ("" + "SELECT " + sqlbuilder.Core.selectStr((ArrayList<Object>) select));
     }
     String tmp3;
     if ((from == null)) {
       tmp3 = "";
     } else {
-      tmp3 = ("" + " FROM " + sqlbuilder.Core.fromStr((ArrayList) from));
+      tmp3 = ("" + " FROM " + sqlbuilder.Core.fromStr((ArrayList<Object>) from));
     }
     String tmp4;
     if ((join == null)) {
       tmp4 = "";
     } else {
-      tmp4 = ("" + " JOIN " + sqlbuilder.Core.joinStr((ArrayList) join));
+      tmp4 = ("" + " JOIN " + sqlbuilder.Core.joinStr((ArrayList<Object>) join));
     }
     String tmp5;
     if ((whereClause == null)) {
@@ -136,7 +136,7 @@ public class Core {
     if ((groupBy == null)) {
       tmp6 = "";
     } else {
-      tmp6 = ("" + " GROUP BY " + sqlbuilder.Core.groupByStr((ArrayList) groupBy));
+      tmp6 = ("" + " GROUP BY " + sqlbuilder.Core.groupByStr((ArrayList<Object>) groupBy));
     }
     String tmp7;
     if ((having == null)) {

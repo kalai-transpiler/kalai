@@ -1,9 +1,10 @@
 use crate::kalai;
+use crate::kalai::PMap;
 pub fn side_effect() -> i64 {
-    let mut y: i64 = 2;
+    let mut y: i64 = 2i64;
     {
-        y = 3;
-        (y + 4);
+        y = 3i64;
+        (y + 4i64);
         return y;
     }
 }

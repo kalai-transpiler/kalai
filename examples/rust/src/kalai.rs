@@ -1,3 +1,4 @@
+use rpds;
 use std::borrow::Borrow;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashSet;
@@ -57,10 +58,19 @@ pub struct Double(pub f64);
 pub struct Set(pub HashSet<BValue>);
 
 #[derive(Debug, Clone)]
+pub struct PSet(pub rpds::HashTrieSet<BValue>);
+
+#[derive(Debug, Clone)]
 pub struct Map(pub HashMap<BValue, BValue>);
 
 #[derive(Debug, Clone)]
+pub struct PMap(pub rpds::HashTrieMap<BValue, BValue>);
+
+#[derive(Debug, Clone)]
 pub struct Vector(pub Vec<BValue>);
+
+#[derive(Debug, Clone)]
+pub struct PVector(pub rpds::Vector<BValue>);
 
 // implementing Value trait based on SO answer at:
 // https://stackoverflow.com/a/49779676
@@ -215,6 +225,38 @@ impl Value for Set {
     }
 }
 
+impl Value for PSet {
+    fn type_name(&self) -> &'static str {
+        "PSet"
+    }
+
+    fn hash_id(&self) -> u64 {
+        // TODO: find a more efficient way to create a deterministic contents/value-based hash for a PSet (or any collection)
+        // TODO: look into how Clojure hashes collections (ex: map, set)
+        // Note: we use BinaryHeap to order the hash values because hashing is stateful, and therefore, order-dependent.
+        let elem_hashes: BinaryHeap<u64> = self.0.iter().map(|e| e.deref().hash_id()).collect();
+        let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
+
+        let mut hasher = DefaultHasher::new();
+        for eh in sorted_hashes.iter() {
+            eh.hash(&mut hasher);
+        }
+        let result = hasher.finish();
+        result
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn eq_test(&self, other: &dyn Value) -> bool {
+        match other.as_any().downcast_ref::<PSet>() {
+            Some(set) => &self.0 == &set.0,
+            None => false,
+        }
+    }
+}
+
 impl<T> Value for Vec<T>
 where
     T: PartialEq + Value + Clone + 'static,
@@ -276,6 +318,38 @@ impl Value for Vector {
 
     fn eq_test(&self, other: &dyn Value) -> bool {
         match other.as_any().downcast_ref::<Vector>() {
+            Some(vector) => &self.0 == &vector.0,
+            None => false,
+        }
+    }
+}
+
+impl Value for PVector {
+    fn type_name(&self) -> &'static str {
+        "PVector"
+    }
+
+    fn hash_id(&self) -> u64 {
+        // TODO: find a more efficient way to create a deterministic contents/value-based hash for a Set (or any collection)
+        // TODO: look into how Clojure hashes collections (ex: map, set)
+        // Note: we use BinaryHeap to order the hash values because hashing is stateful, and therefore, order-dependent.
+        let elem_hashes: BinaryHeap<u64> = self.0.iter().map(|e| e.deref().hash_id()).collect();
+        let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
+
+        let mut hasher = DefaultHasher::new();
+        for eh in sorted_hashes.iter() {
+            eh.hash(&mut hasher);
+        }
+        let result = hasher.finish();
+        result
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn eq_test(&self, other: &dyn Value) -> bool {
+        match other.as_any().downcast_ref::<PVector>() {
             Some(vector) => &self.0 == &vector.0,
             None => false,
         }
@@ -447,6 +521,47 @@ impl Value for Map {
     }
 }
 
+impl Value for PMap {
+    fn type_name(&self) -> &'static str {
+        "PMap"
+    }
+
+    fn hash_id(&self) -> u64 {
+        // TODO: find a more efficient way to create a deterministic contents/value-based hash for a Set (or any collection)
+        // TODO: look into how Clojure hashes collections (ex: map, set)
+        // Note: we use BinaryHeap to order the hash values because hashing is stateful, and therefore, order-dependent.
+        let elem_hashes: BinaryHeap<u64> = self
+            .0
+            .iter()
+            .flat_map(|(k, v)| {
+                [k.deref().hash_id(), v.deref().hash_id()]
+                    .iter()
+                    .cloned()
+                    .collect::<Vec<u64>>()
+            })
+            .collect();
+        let sorted_hashes: Vec<u64> = elem_hashes.into_sorted_vec();
+
+        let mut hasher = DefaultHasher::new();
+        for eh in sorted_hashes.iter() {
+            eh.hash(&mut hasher);
+        }
+        let result = hasher.finish();
+        result
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn eq_test(&self, other: &dyn Value) -> bool {
+        match other.as_any().downcast_ref::<PMap>() {
+            Some(map) => &self.0 == &map.0,
+            None => false,
+        }
+    }
+}
+
 impl Value for String {
     fn type_name(&self) -> &'static str {
         "String"
@@ -579,6 +694,15 @@ impl From<&BValue> for String {
         } else {
             panic!("Could not downcast Value into String!");
         }
+    }
+}
+
+// &str
+
+impl From<&str> for BValue {
+    fn from(x: &str) -> Self {
+        let b: BValue = Box::new(x.to_string());
+        b
     }
 }
 
@@ -798,6 +922,118 @@ impl From<&BValue> for Nil {
     }
 }
 
+// underlying immutable types - HashTrieMap, HashTrieSet, Vector(?)
+
+// HashTrieMap (persistent map)
+
+impl From<rpds::HashTrieMap<BValue, BValue>> for BValue {
+    fn from(x: rpds::HashTrieMap<BValue, BValue>) -> Self {
+        let b: BValue = Box::new(PMap(x));
+        b
+    }
+}
+
+impl From<BValue> for rpds::HashTrieMap<BValue, BValue> {
+    fn from(v: BValue) -> rpds::HashTrieMap<BValue, BValue> {
+        if let Some(x) = v.as_any().downcast_ref::<PMap>() {
+            x.clone().0
+        } else {
+            panic!("Could not downcast Value into HashTrieMap<BValue,BValue>!");
+        }
+    }
+}
+
+// HashTrieSet (persistent set)
+
+impl From<rpds::HashTrieSet<BValue>> for BValue {
+    fn from(x: rpds::HashTrieSet<BValue>) -> Self {
+        let b: BValue = Box::new(PSet(x));
+        b
+    }
+}
+
+impl From<BValue> for rpds::HashTrieSet<BValue> {
+    fn from(v: BValue) -> rpds::HashTrieSet<BValue> {
+        if let Some(x) = v.as_any().downcast_ref::<PSet>() {
+            x.clone().0
+        } else {
+            panic!("Could not downcast Value into HashTrieSet<BValue>!");
+        }
+    }
+}
+
+// Vector (persistent vetor)
+
+impl From<rpds::Vector<BValue>> for BValue {
+    fn from(x: rpds::Vector<BValue>) -> Self {
+        let b: BValue = Box::new(PVector(x));
+        b
+    }
+}
+
+impl From<BValue> for rpds::Vector<BValue> {
+    fn from(v: BValue) -> rpds::Vector<BValue> {
+        if let Some(x) = v.as_any().downcast_ref::<PVector>() {
+            x.clone().0
+        } else {
+            panic!("Could not downcast Value into Vector<BValue>!");
+        }
+    }
+}
+
+// mutable collection types - Map, Set, Vector
+
+impl From<Vec<BValue>> for BValue {
+    fn from(x: Vec<BValue>) -> Self {
+        let b: BValue = Box::new(Vector(x));
+        b
+    }
+}
+
+impl From<BValue> for Vec<BValue> {
+    fn from(v: BValue) -> Vec<BValue> {
+        if let Some(x) = v.as_any().downcast_ref::<Vector>() {
+            x.clone().0
+        } else {
+            panic!("Could not downcast Value into Vec<BValue>!");
+        }
+    }
+}
+
+impl From<HashMap<BValue, BValue>> for BValue {
+    fn from(x: HashMap<BValue, BValue>) -> Self {
+        let b: BValue = Box::new(Map(x));
+        b
+    }
+}
+
+impl From<BValue> for HashMap<BValue, BValue> {
+    fn from(v: BValue) -> HashMap<BValue, BValue> {
+        if let Some(x) = v.as_any().downcast_ref::<Map>() {
+            x.clone().0
+        } else {
+            panic!("Could not downcast Value into HashMap<BValue,BValue>!");
+        }
+    }
+}
+
+impl From<HashSet<BValue>> for BValue {
+    fn from(x: HashSet<BValue>) -> Self {
+        let b: BValue = Box::new(Set(x));
+        b
+    }
+}
+
+impl From<BValue> for HashSet<BValue> {
+    fn from(v: BValue) -> HashSet<BValue> {
+        if let Some(x) = v.as_any().downcast_ref::<Set>() {
+            x.clone().0
+        } else {
+            panic!("Could not downcast Value into HashSet<BValue>!");
+        }
+    }
+}
+
 impl From<BValue> for Map {
     fn from(v: BValue) -> Map {
         if let Some(map) = v.as_any().downcast_ref::<Map>() {
@@ -843,6 +1079,34 @@ impl From<Set> for BValue {
 impl From<Vector> for BValue {
     fn from(v: Vector) -> BValue {
         Box::new(v)
+    }
+}
+
+// immutable collection types - PMap
+
+impl From<BValue> for PMap {
+    fn from(v: BValue) -> PMap {
+        if let Some(map) = v.as_any().downcast_ref::<PMap>() {
+            map.clone()
+        } else {
+            panic!("Could not downcast Value into PMap!");
+        }
+    }
+}
+
+impl From<&BValue> for PMap {
+    fn from(v: &BValue) -> PMap {
+        if let Some(map) = v.as_any().downcast_ref::<PMap>() {
+            map.clone()
+        } else {
+            panic!("Could not downcast Value into PMap!");
+        }
+    }
+}
+
+impl From<PMap> for BValue {
+    fn from(m: PMap) -> BValue {
+        Box::new(m)
     }
 }
 
@@ -894,6 +1158,10 @@ impl Set {
     pub fn new() -> Self {
         Self::default()
     }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
 }
 
 //
@@ -931,6 +1199,10 @@ impl Vector {
     pub fn new() -> Self {
         Self::default()
     }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
 }
 
 //
@@ -955,16 +1227,121 @@ impl Map {
     pub fn new() -> Map {
         Self::default()
     }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+
+//
+// PMap impls
+//
+
+impl Default for PMap {
+    fn default() -> PMap {
+        PMap(rpds::HashTrieMap::<BValue, BValue>::new())
+    }
+}
+
+impl PMap {
+    pub fn insert(&self, k: BValue, v: BValue) -> PMap {
+        PMap(self.0.insert(k, v))
+    }
+
+    pub fn get(&self, k: &BValue) -> Option<&BValue> {
+        self.0.get(k)
+    }
+
+    pub fn new() -> PMap {
+        Self::default()
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.size()
+    }
+}
+
+//
+// PSet impls
+//
+
+impl Default for PSet {
+    fn default() -> PSet {
+        PSet(rpds::HashTrieSet::<BValue>::new())
+    }
+}
+
+impl PSet {
+    pub fn insert(&self, x: BValue) -> PSet {
+        PSet(self.0.insert(x))
+    }
+
+    pub fn contains(&self, x: &BValue) -> bool {
+        self.0.contains(x)
+    }
+
+    pub fn new() -> PSet {
+        Self::default()
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.size()
+    }
+}
+
+//
+// PVector impls
+//
+
+impl Default for PVector {
+    fn default() -> PVector {
+        PVector(rpds::Vector::<BValue>::new())
+    }
+}
+
+impl PVector {
+    pub fn get(&self, idx: usize) -> Option<&BValue> {
+        self.0.get(idx)
+    }
+
+    /*
+    // TODO: Can we avoid the `.clone()` by making the return type be a reference somehow?
+    pub fn iter(&self) -> impl std::iter::Iterator + 'static {
+        self.0.clone().iter()
+    }
+
+    pub fn contains(&self, x: &BValue) -> bool {
+        self.0.contains(x)
+    }
+
+    pub fn push(&self, x: BValue) -> () {
+        self.0.push(x)
+    }
+
+    pub fn insert(&self, idx: usize, x: BValue) -> () {
+        self.0.insert(idx, x)
+    }
+    */
+
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{BValue, Double, Float, Map, Nil, Set, Value, NIL};
+    use super::*;
 
     use std::collections::hash_map::DefaultHasher;
     use std::collections::{HashMap, HashSet};
     use std::hash::{Hash, Hasher};
     use std::ops::Deref;
+
+    use rpds::HashTrieMap;
 
     #[test]
     fn debug_print() {
@@ -1242,6 +1619,41 @@ mod tests {
 
         let map_child = Map::from(map_child_deref);
         assert_eq!(map_child.get_string_f32(&"two".to_string()), Some(2.0f32));
+    }
+
+    #[test]
+    fn test_persistent_map() {
+        let m: rpds::HashTrieMap<String, i64> = rpds::HashTrieMap::new()
+            .insert(String::from(":x"), 11)
+            .insert(String::from(":y"), 13);
+        let x: i64 = *(m.get(":x").unwrap());
+
+        let m2: rpds::HashTrieMap<String, BValue> = rpds::HashTrieMap::new()
+            .insert(String::from(":x"), BValue::from(11.0f64))
+            .insert(String::from(":y"), BValue::from(13i64));
+        let x: f64 = f64::from(m2.get(":x").unwrap());
+
+        let pm2: PMap = PMap::new()
+            .insert(BValue::from(":x"), BValue::from(11i64))
+            .insert(BValue::from(":y"), BValue::from(13i32));
+        let x: i64 = i64::from(pm2.get(&BValue::from(":x")).unwrap());
+
+        let pm3: PMap = PMap::new()
+            .insert(BValue::from(":xy"), BValue::from(pm2))
+            .insert(BValue::from(":a"), BValue::from(17i32));
+
+        /*
+        {:a 17
+         :xy {:x 11
+              :y 13}}
+         */
+
+        let a: i32 = i32::from(pm3.get(&BValue::from(":a")).unwrap());
+        let xy = PMap::from(pm3.get(&BValue::from(":xy")).unwrap());
+        let y: i32 = i32::from(xy.get(&BValue::from(":y")).unwrap());
+        let x = (a + y) as i64;
+
+        assert_eq!(x, 30);
     }
 }
 

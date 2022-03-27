@@ -61,11 +61,11 @@
 
 ;; TODO: do we need an :object type?
 (def kalai-type->rust
-  {:map     "PMap"
+  {:map     "rpds::HashTrieMap"
    :mmap    "std::collections::HashMap"
-   :set     "PSet"
+   :set     "rpds::HashTrieSet"
    :mset    "std::collections::HashSet"
-   :vector  "PVector"
+   :vector  "rpds::Vector"
    ;; TODO: does this depend on whether it's a {:t {:vector [:some-primitive]}} vs. {:t {:vector [:any]}} ? How is this being used instead of t-str?
    :mvector "std::vec::Vec"
    :bool    "bool"
@@ -79,14 +79,6 @@
    :void    "()"
    :any     "kalai::BValue"
    :option  "Option"})
-
-(defn kalai-primitive-type->rust
-  [t]
-  (or ({:mvector "kalai::Vector"
-        :mset    "kalai::Set"
-        :mmap    "kalai::Map"} t)
-      (kalai-type->rust t)
-      types/BAD-TYPE_CAST-STR))
 
 ;; Forward declaration of `t-str` to break cycle of references.
 ;; We expect this not to create an infinite loop in practice, otherwise
@@ -115,16 +107,6 @@
   a data structure, just as we might find in `:t ` of the metadata
   map upstream in the S-exprs."
   (s/rewrite
-    {:mvector [:any]}
-    "kalai::Vector"
-
-    {:mset [:any]}
-    "kalai::Set"
-
-    ;; TODO: Do we want to support {:map [ (not :any) :any]) and vice versa {:map [:any (not :any)]} ?
-    {:mmap [:any :any]}
-    "kalai::Map"
-
     {?t [& ?ts]}
     ~(str (rust-type ?t)
           \< (str/join \, (for [t ?ts]
@@ -139,16 +121,6 @@
   a data structure, just as we might find in `:t ` of the metadata
   map upstream in the S-exprs."
   (s/rewrite
-    {:mvector [:any]}
-    "kalai::Vector"
-
-    {:mset [:any]}
-    "kalai::Set"
-
-    ;; TODO: Do we want to support {:map [ (not :any) :any]) and vice versa {:map [:any (not :any)]} ?
-    {:mmap [:any :any]}
-    "kalai::Map"
-
     {?t [& ?ts]}
     ~(rust-type ?t)
 
@@ -247,7 +219,7 @@
      (apply space-separated
             (interpose op (map stringify (cons x xs)))))))
 
-(def std-imports "use crate::kalai;")
+(def std-imports "use crate::kalai;\nuse crate::kalai::PMap;")
 
 (defn module-str [& forms]
   (apply line-separated
@@ -287,11 +259,15 @@
 
 (defn match-str
   [x clauses]
-  (space-separated 'match (stringify x)
+  ;; numbers are not explicitly typed for matches, the match value should generally be an expression
+  (space-separated 'match (if (number? x) x (stringify x))
                    (stringify clauses)))
 
 (defn arm-str [x then]
-  (str (space-separated (stringify x) "=>" (str (stringify then) ","))))
+  ;; Clojure does not allow number literals of a specific type in case statements (it forces longs to ints).
+  ;; Therefore numbers cannot be explicitly typed for match arms
+  ;; and we prevent the default behavior of emitting specify type literals
+  (str (space-separated (if (number? x) x (stringify x)) "=>" (str (stringify then) ","))))
 
 (defn method-str [method object & args]
   (str (stringify object) "." method
@@ -326,33 +302,41 @@
   (str "*" (stringify s)))
 
 (defn range-str [start-idx end-idx]
-  (str (stringify start-idx) ".." (stringify end-idx)))
+  ;; do not call `stringify` on the values for start-idx, end-idx
+  ;; because they are literals and we do not want to interfere with the
+  ;; Rust compiler's implicit conversion to type `usize`.
+  (str start-idx ".." end-idx))
+
+(defn kalai-value-types [t]
+  (if (map? t)
+    (case (-> t keys first)
+      :map "PMap"
+      :mmap "MMap"
+      :set "PSet"
+      :mset "MSet"
+      :vector "PVector"
+      :mvector "MVector"
+      nil)
+    (case t
+      :bool "Bool"
+      :byte "Byte"
+      :int "Int"
+      :long "Long"
+      :float "Float"
+      :double "Double"
+      :string "String"
+      nil)))
 
 (defn value-type
-  "This is specifically for our custom rust Value enum for heterogeneous collections"
+  "This is specifically for our custom rust Value enum for heterogeneous collections
+  x is a value that may have meta data on it inticating a type.
+  x may be a primitive value or may need to be wrapped in the special rust Value enum."
   [x]
   (if (nil? x)
     "Null"
     (if (instance? IMeta x)
       (let [{:keys [t]} (meta x)]
-        (if (map? t)
-          (case (-> t keys first)
-            :map "PMap"
-            :mmap "MMap"
-            :set "PSet"
-            :mset "MSet"
-            :vector "PVector"
-            :mvector "MVector"
-            nil)
-          (case t
-            :bool "Bool"
-            :byte "Byte"
-            :int "Int"
-            :long "Long"
-            :float "Float"
-            :double "Double"
-            :string "String"
-            nil)))
+        (kalai-value-types t))
       (condp instance? x
         Byte "Byte"
         Boolean "Bool"
@@ -368,9 +352,11 @@
         nil))))
 
 (defn value-str
-  "Specifically for the Value enum for heterogeneous collections"
+  "Specifically for the Value enum for heterogeneous collections.
+  x is a value that may have meta data on it inticating a type.
+  x may be a primitive value or may need to be wrapped in the special rust Value enum."
   [x]
-  (if-let [t (value-type x)]
+  (if (value-type x)
     (str "kalai::BValue::from" (parens (stringify x)))
     (stringify x)))
 
@@ -419,6 +405,18 @@
 
     (m/pred char? ?c)
     (str \' ?c \')
+
+    (m/pred #(instance? Long %) ?x)
+    (str ?x "i64")
+
+    (m/pred #(instance? Integer %) ?x)
+    (str ?x "i32")
+
+    (m/pred #(instance? Double %) ?x)
+    (str ?x "f64")
+
+    (m/pred #(instance? Float %) ?x)
+    (str ?x "f32")
 
     (m/pred string? ?s)
     (str "String::from(" (pr-str ?s) ")")

@@ -5,7 +5,7 @@ public class Demo01 {
     int i = num;
     java.lang.StringBuffer result = new StringBuffer();
     {
-      while (!(i == 0L)) {
+      while (!(i == 0)) {
         final int quotient = (i / 10);
         final int remainder = (i % 10);
         {

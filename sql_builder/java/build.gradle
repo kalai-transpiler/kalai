@@ -22,4 +22,9 @@ repositories {
 }
 
 dependencies {
+    implementation 'io.lacuna:bifurcan:0.2.0-alpha4'
+}
+
+application {
+    mainClass.set(project.hasProperty("mainClass") ? project.getProperty("mainClass") : "NULL")
 }

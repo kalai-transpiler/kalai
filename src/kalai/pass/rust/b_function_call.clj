@@ -31,10 +31,10 @@
       (r/method iter (r/method clone ?coll))
 
       (r/invoke (u/var ~#'first) ?seq)
-      (r/method unwrap (r/method next ?seq))
+      (r/method clone (r/method unwrap (r/method next ?seq)))
 
       (r/invoke (u/var ~#'next) ?seq)
-      (r/method skip ?seq 1)
+      (r/method skip ?seq (r/literal 1))
 
       ;; Remember that ^{:t java.lang.String} gets converted to ^{:t :string} upstream
       ;; (AST rewriting), whereas other Java class/types are left as-is in the metadata
@@ -79,6 +79,13 @@
       (r/invoke clojure.lang.RT/count (u/of-t :string ?x))
       (r/cast (r/method count (r/method chars ?x)) :int)
 
+      (r/invoke clojure.lang.RT/count
+                (m/and ?x
+                       (m/app (comp :t meta) (m/and ?t
+                                                    (m/or (m/pred :set)
+                                                          (m/pred :map))))))
+      (r/cast (r/method size ?x) :int)
+
       (r/invoke clojure.lang.RT/count ?x)
       (r/cast (r/method len ?x) :int)
 
@@ -120,6 +127,8 @@
                 . !arg ...)
       (r/method push ?coll . (m/app #(ru/wrap-value-enum ?value-t %) !arg) ...)
 
+      ;; When inc is used as a function value for example (update m :x inc)
+      ;; See kalai/operators for when direcly called
       (r/invoke (u/var ~#'inc) ?x)
       (r/operator + ?x 1)
 
@@ -150,14 +159,16 @@
       ;; TODO: do we really need to clone here???
       (r/invoke (u/var ~#'vector?) ?x)
       (r/operator ||
-        (r/method is_type ?x (r/literal "Vector"))
-        (r/method is_type ?x (r/literal "Vec")))
+                  (r/method is_type ?x (r/literal "Vector"))
+                  (r/method is_type ?x (r/literal "Vec")))
 
       (r/invoke (u/var ~#'set?) ?x)
       (r/method is_type ?x (r/literal "Set"))
 
       (r/invoke (u/var ~#'map?) ?x)
-      (r/method is_type ?x (r/literal "Map"))
+      (r/operator ||
+                  (r/method is_type ?x (r/literal "Map"))
+                  (r/method is_type ?x (r/literal "PMap")))
 
       (r/invoke (u/var ~#'string?) ?x)
       (r/method is_type ?x (r/literal "String"))

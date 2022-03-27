@@ -1,5 +1,21 @@
 # TODO
 
+* Persistent data structures
+  - exploring
+    * choose either examples or sql_builder or a new project to experiment
+    * for Rust, between `im` and `rpds` libs, choose `rpds` for now to try out
+    * for Java, Bifurcan (https://github.com/lacuna/bifurcan) seems likely
+  - depends on import statements being intelligent (not hard-coded)
+  - all languages have a library, but not everyone wants the dependency
+  - performance goals
+  - would like to support both, choose the mutability that you want
+  - need to differentiate (probably by atoms)
+  - consider our own macros
+  - maps/sets/vectors conj/assoc/update etc
+  - import when needed
+  - We might be better of using Collection builder functions instead of temporary variables?
+  - We should check static block semantics
+
 * Replacing Value enum with Value trait objects
   - Understand Rust output of `^{:t {:mvector [:any]}} v ^{:cast :mvector} x` in core.clj -> core.rs.  Why is kalai-type->rust being called instead of t-str in rust e-string?
     * Also investigate occurrences of Value::Null
@@ -128,17 +144,6 @@
   - elseif
   - run the output through the native language compiler
   - pleasant cider testing
-* Persistent data structures
-  - depends on import statements being intelligent (not hard-coded)
-  - all languages have a library, but not everyone wants the dependency
-  - performance goals
-  - would like to support both, choose the mutability that you want
-  - need to differentiate (probably by atoms)
-  - consider our own macros
-  - maps/sets/vectors conj/assoc/update etc
-  - import when needed
-  - We might be better of using Collection builder functions instead of temporary variables?
-  - We should check static block semantics
 * Operator and language specific transformation (e.g. = in Clojure is either .equals java or ==)
 * test helper clean up
   - don't report failures twice
