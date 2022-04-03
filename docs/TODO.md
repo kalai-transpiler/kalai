@@ -1,11 +1,6 @@
 # TODO
 
 * Persistent data structures
-  - exploring
-    * choose either examples or sql_builder or a new project to experiment
-    * for Rust, between `im` and `rpds` libs, choose `rpds` for now to try out
-    * for Java, Bifurcan (https://github.com/lacuna/bifurcan) seems likely
-  - depends on import statements being intelligent (not hard-coded)
   - all languages have a library, but not everyone wants the dependency
   - performance goals
   - would like to support both, choose the mutability that you want
@@ -15,6 +10,16 @@
   - import when needed
   - We might be better of using Collection builder functions instead of temporary variables?
   - We should check static block semantics
+  
+* Typing
+  - for users
+    * users need to specify a lot of typing and casting
+    * would Typed Clojure be able to help?
+    * explore examples (existing or new) using type aliases to abbreviate users' static typing annotation effort
+  - for implementing
+    * spec
+    * Schema
+    * Malli (?) by Metosin (?)
 
 * Replacing Value enum with Value trait objects
   - Understand Rust output of `^{:t {:mvector [:any]}} v ^{:cast :mvector} x` in core.clj -> core.rs.  Why is kalai-type->rust being called instead of t-str in rust e-string?
@@ -61,6 +66,8 @@
   - There should be a make task should run the final compiled binary (b/c invocation is non-trivial)
   - Stretch: make should also run logic unit tests
 * Verify that examples can compile using deployed artifact (namely, if/how to update deps.clj and/or pom.xml)
+* Don't depend on import statements being intelligent (not hard-coded)
+  - instead using fully-qualified identifier names
 * Rust etc
     - swap! doesn't seem to work atm
     - how to deal with multiple overloads of fns in Rust?

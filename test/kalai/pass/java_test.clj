@@ -283,6 +283,53 @@ return z;
 }
 "))
 
+;; copies much of sql_builder.core/cast-to-str
+(deftest type-aliasing-and-casting-test
+  (ns-form
+    '((ns test-package.test-class)
+      (def ^{:kalias {:mvector [:any]}} Clause) ;; Clause represents a part of a larger expression for a SQL keyword
+      (defn f ^{:t :string} [^{:t :any} x]
+        (let [v ^{:cast Clause} x
+              ^{:t :any} v-first (nth v (int 0))
+              ^{:t :string} table-name ^{:cast :string} v-first
+              ^{:t :any} v-second (nth v (int 1))
+              ^{:t :string} table-alias ^{:cast :string} v-second
+              ]
+          (str table-name " AS " table-alias)
+          )
+        ))
+    ;;->
+    '(namespace test-package.test-class
+                (function f [x]
+                          (do
+                            (init v x)
+                            (init v-first (invoke clojure.lang.RT/nth v 0))
+                            (init table-name v-first)
+                            (init v-second (invoke clojure.lang.RT/nth v 1))
+                            (init table-alias v-second)
+                            (return
+                              (invoke str table-name " AS " table-alias))
+                            ;;(return nil)
+                            )))
+    ;;->
+    "package testpackage;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+public class TestClass {
+public static final String f(final Object x) {
+final ArrayList<Object> v = (ArrayList<Object>)x;
+final Object vFirst = v.get(0);
+final String tableName = (String)vFirst;
+final Object vSecond = v.get(1);
+final String tableAlias = (String)vSecond;
+return (\"\" + tableName + \" AS \" + tableAlias);
+}
+}
+"))
+
 (deftest generic-types-test
   (top-level-form
     '(def ^{:t {:mmap [:long :string]}} x)

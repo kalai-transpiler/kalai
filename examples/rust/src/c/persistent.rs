@@ -86,7 +86,8 @@ pub fn test_map() -> i64 {
         }
         {
             let any_y: kalai::BValue = kalai::BValue::from(String::from(":y"));
-            let e_map: rpds::HashTrieMap<kalai::BValue, kalai::BValue> = rpds::HashTrieMap::from(e);
+            let e_map: rpds::HashTrieMap<kalai::BValue, kalai::BValue> =
+                e as rpds::HashTrieMap<kalai::BValue, kalai::BValue>;
             let get_e_any_y: i64 = i64::from(e_map.get(&any_y).unwrap().clone());
             println!(
                 "{}",
