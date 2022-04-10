@@ -302,10 +302,10 @@
     ;; when x has been bound previously and is seen within an expression (wheter or not that expression
     ;; is in another binding, or a fn call, etc.)
     (m/and
-      {:op :local
+      {:op   :local
        :form ?form
-       & ?more
-       :as ?ast}
+       &     ?more
+       :as   ?ast}
       )
     ;; ->
     {:op   :local
@@ -343,6 +343,18 @@
              & ?body)
      &     ?more}
 
+    ;; TODO: this isn't enough to preserve the alias type resolution on a data literal
+    {:op   (m/pred #{:map :vector :set} ?op)
+     :form ?form
+     &     ?more
+     :as   ?ast}
+    {:op   ~(do (u/spy ?op "OP")
+                (u/spy (u/maybe-meta-assoc ?form :t (resolve-t ?form ?ast)) "REP")
+                (u/spy ?ast)
+                ?op)
+     :form ~(u/maybe-meta-assoc ?form :t (resolve-t ?form ?ast))
+     &     ?more}
+
     ;; otherwise leave the ast as is
     ?else
     ?else))
@@ -376,7 +388,9 @@
 
 (def erase-type-aliases
   "Takes a vector of ASTs,
-  matches and removes kalias defs, leaves other ASTs alone."
+  matches and removes kalias defs, leaves other ASTs alone.
+  They remain in the environment of all subsequent AST nodes,
+  and so can still be resolved."
   (s/rewrite
     [(m/or {:op   :def
             :meta {:form {:kalias (m/pred some? !kalias)}}

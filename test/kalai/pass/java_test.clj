@@ -1404,6 +1404,34 @@ return i;
     ;;->
     "ArrayList<Integer> result = new ArrayList<Integer>();"))
 
+(deftest annotate-type-const-test
+  (ns-form
+    '((ns test-package.test-class)
+      (def ^{:kalias {:mmap [:long :string]}} T)
+      (def ^{:t T} x)
+      (defn f ^{:t T} [^{:t T} y]
+        ^{:t T} {1 "hahaha"}))
+    ;;->
+    '(namespace test-package.test-class
+                (init x)
+                (function f [y]
+                          (return
+                            {1 "hahaha"})))
+    ;;->
+    "package testpackage;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+public class TestClass {
+static final HashMap<Long,String> x;
+public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
+return new HashMap().put(1L, \"hahaha\", io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS);
+}
+}
+"))
+
 ;; TODO:
 (deftest destructure-test
   #_(inner-form
