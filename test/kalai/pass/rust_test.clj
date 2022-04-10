@@ -294,6 +294,43 @@ let z: std::collections::HashMap<i64,String> = y;
 return z;
 }"))
 
+;; copies much of sql_builder.core/cast-to-str
+(deftest type-aliasing-and-casting-test
+  (ns-form
+    '((ns test-package.test-class)
+      (def ^{:kalias {:mvector [:any]}} Clause) ;; Clause represents a part of a larger expression for a SQL keyword
+      (defn f ^{:t :string} [^{:t :any} x]
+        (let [v ^{:cast Clause} x
+              ^{:t :any} v-first (nth v (int 0))
+              ^{:t :string} table-name ^{:cast :string} v-first
+              ^{:t :any} v-second (nth v (int 1))
+              ^{:t :string} table-alias ^{:cast :string} v-second]
+          (str table-name " AS " table-alias))))
+    ;;->
+    '(namespace test-package.test-class
+                (function f [x]
+                          (do
+                            (init v x)
+                            (init v-first (invoke clojure.lang.RT/nth v 0))
+                            (init table-name v-first)
+                            (init v-second (invoke clojure.lang.RT/nth v 1))
+                            (init table-alias v-second)
+                            (return
+                              (invoke str table-name " AS " table-alias))
+                            ;;(return nil)
+                            )))
+    ;;->
+    "use crate::kalai;
+use crate::kalai::PMap;
+pub fn f(x: kalai::BValue) -> String {
+let v: std::vec::Vec<kalai::BValue> = std::vec::Vec::from(x);
+let v_first: kalai::BValue = v.get(0i32 as usize).unwrap().clone();
+let table_name: String = String::from(v_first);
+let v_second: kalai::BValue = v.get(1i32 as usize).unwrap().clone();
+let table_alias: String = String::from(v_second);
+return format!(\"{}{}{}\", table_name, String::from(\" AS \"), table_alias);
+}"))
+
 ;; TODO: figure out nil strategy for Rust
 (deftest generic-types-test
   #_(top-level-form

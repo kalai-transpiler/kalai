@@ -86,11 +86,8 @@
      ;; If we see user-provided type metadata on the binding name itself,
      ;; then return a normalized version of the type info data.
      ;; This enables the initial-value-to-binding propagation of type metadata.
-     (m/and
-       {:op   :binding
-        :form (m/app #(resolve-t % root) (m/pred some? ?t))}
-       ?wholething)
-
+     {:op   :binding
+      :form (m/app #(resolve-t % root) (m/pred some? ?t))}
      ?t
 
      ;; Start a recursive search for the type, starting with the initial value.
@@ -106,8 +103,10 @@
      ;; previously in this lexical scope.
      {:op   :local
       :form (m/pred some? ?form)
-      :env  {:locals {?form ?binding}}}
+      :env  {:locals {(m/and ?form ?locals-form) ?binding}}}
      ~(or (resolve-t ?form ast)
+          ;; Meander matches irrespective of metadata, so form and locals-form can differ
+          (resolve-t ?locals-form ast)
           (ast-t ?binding ast))
 
      ;; Users who use any non-Kalai-primitive types or custom types (ex:
@@ -143,8 +142,7 @@
      nil)))
 
 (defn t-from-meta [x]
-  (or (:cast (meta x))
-      (:t (meta x))))
+  (:t (meta x)))
 
 (defn propagate-ast-type
   "If possible, associate the representative type of `symbol-bind-site` or `from-ast` to `symbol-call-site`,

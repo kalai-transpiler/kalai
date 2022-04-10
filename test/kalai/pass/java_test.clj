@@ -283,6 +283,12 @@ return z;
 }
 "))
 
+;; If you are using heterogeneous data structures, the type you specify cannot be a nested type.
+;; If you are casting, only cast heterogeneous.
+;; The only time you don't know the type of the incoming value when casting is when dealing with heterogeneous :any.
+;; So we will not provide a wide array of cast From implementations (as they are not useful).
+;; In order to have (build up) nested heterogeneous data we need to have conversions to and from collection types whose element types are any.
+
 ;; copies much of sql_builder.core/cast-to-str
 (deftest type-aliasing-and-casting-test
   (ns-form
@@ -293,11 +299,8 @@ return z;
               ^{:t :any} v-first (nth v (int 0))
               ^{:t :string} table-name ^{:cast :string} v-first
               ^{:t :any} v-second (nth v (int 1))
-              ^{:t :string} table-alias ^{:cast :string} v-second
-              ]
-          (str table-name " AS " table-alias)
-          )
-        ))
+              ^{:t :string} table-alias ^{:cast :string} v-second]
+          (str table-name " AS " table-alias))))
     ;;->
     '(namespace test-package.test-class
                 (function f [x]
