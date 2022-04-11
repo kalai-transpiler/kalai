@@ -1427,7 +1427,9 @@ import java.util.stream.Collectors;
 public class TestClass {
 static final HashMap<Long,String> x;
 public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
-return new HashMap().put(1L, \"hahaha\", io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS);
+HashMap<Long,String> tmp1 = new HashMap<Long,String>();
+tmp1.put(1L, \"hahaha\");
+return tmp1;
 }
 }
 "))

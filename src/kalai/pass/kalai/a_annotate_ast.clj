@@ -299,14 +299,13 @@
               (set-ast-t ?init (or ?init-t ?t)))
      &     ?more}
 
-    ;; when x has been bound previously and is seen within an expression (wheter or not that expression
-    ;; is in another binding, or a fn call, etc.)
+    ;; when x has been bound previously and is seen within an expression
+    ;; (whether or not that expression is in another binding, or a fn call, etc.)
     (m/and
       {:op   :local
        :form ?form
        &     ?more
-       :as   ?ast}
-      )
+       :as   ?ast})
     ;; ->
     {:op   :local
      :form ~(if-let [?cast (-> ?form meta :cast)]
@@ -343,18 +342,6 @@
              & ?body)
      &     ?more}
 
-    ;; TODO: this isn't enough to preserve the alias type resolution on a data literal
-    {:op   (m/pred #{:map :vector :set} ?op)
-     :form ?form
-     &     ?more
-     :as   ?ast}
-    {:op   ~(do (u/spy ?op "OP")
-                (u/spy (u/maybe-meta-assoc ?form :t (resolve-t ?form ?ast)) "REP")
-                (u/spy ?ast)
-                ?op)
-     :form ~(u/maybe-meta-assoc ?form :t (resolve-t ?form ?ast))
-     &     ?more}
-
     ;; otherwise leave the ast as is
     ?else
     ?else))
@@ -370,7 +357,7 @@
     {:op   :local
      :form ?symbol-call-site
      :env  {:locals {?symbol-call-site {:form ?symbol-bind-site
-                                    :init ?init}}
+                                        :init ?init}}
             :as     ?env}
      &     ?more
      :as   ?ast}
@@ -422,17 +409,17 @@
 (def annotate-news
   (s/rewrite
     ;; annotate vars with their var as metadata so they can be identified later in the pipeline
-    {:op   :new
+    {:op    :new
      :class {:form ?form
-             :val ?type
-             & ?more}
-     &     ?ast}
+             :val  ?type
+             &     ?more}
+     &      ?ast}
     ;;->
-    {:op   :new
+    {:op    :new
      :class {:form ~(u/maybe-meta-assoc ?form :t ?type)
-             :val ?type
-             & ?more}
-     &     ?ast}
+             :val  ?type
+             &     ?more}
+     &      ?ast}
 
     ;; otherwise leave the ast as is
     ?else
