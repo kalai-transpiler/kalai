@@ -283,6 +283,56 @@ return z;
 }
 "))
 
+;; If you are using heterogeneous data structures, the type you specify cannot be a nested type.
+;; If you are casting, only cast heterogeneous.
+;; The only time you don't know the type of the incoming value when casting is when dealing with heterogeneous :any.
+;; So we will not provide a wide array of cast From implementations (as they are not useful).
+;; In order to have (build up) nested heterogeneous data we need to have conversions to and from collection types whose element types are any.
+
+;; copies much of sql_builder.core/cast-to-str
+(deftest type-aliasing-and-casting-test
+  (ns-form
+    '((ns test-package.test-class)
+      (def ^{:kalias {:mvector [:any]}} Clause) ;; Clause represents a part of a larger expression for a SQL keyword
+      (defn f ^{:t :string} [^{:t :any} x]
+        (let [v ^{:cast Clause} x
+              ^{:t :any} v-first (nth v (int 0))
+              ^{:t :string} table-name ^{:cast :string} v-first
+              ^{:t :any} v-second (nth v (int 1))
+              ^{:t :string} table-alias ^{:cast :string} v-second]
+          (str table-name " AS " table-alias))))
+    ;;->
+    '(namespace test-package.test-class
+                (function f [x]
+                          (do
+                            (init v x)
+                            (init v-first (invoke clojure.lang.RT/nth v 0))
+                            (init table-name v-first)
+                            (init v-second (invoke clojure.lang.RT/nth v 1))
+                            (init table-alias v-second)
+                            (return
+                              (invoke str table-name " AS " table-alias))
+                            ;;(return nil)
+                            )))
+    ;;->
+    "package testpackage;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+public class TestClass {
+public static final String f(final Object x) {
+final ArrayList<Object> v = (ArrayList<Object>)x;
+final Object vFirst = v.get(0);
+final String tableName = (String)vFirst;
+final Object vSecond = v.get(1);
+final String tableAlias = (String)vSecond;
+return (\"\" + tableName + \" AS \" + tableAlias);
+}
+}
+"))
+
 (deftest generic-types-test
   (top-level-form
     '(def ^{:t {:mmap [:long :string]}} x)
@@ -1353,6 +1403,36 @@ return i;
        result)
     ;;->
     "ArrayList<Integer> result = new ArrayList<Integer>();"))
+
+(deftest annotate-type-const-test
+  (ns-form
+    '((ns test-package.test-class)
+      (def ^{:kalias {:mmap [:long :string]}} T)
+      (def ^{:t T} x)
+      (defn f ^{:t T} [^{:t T} y]
+        ^{:t T} {1 "hahaha"}))
+    ;;->
+    '(namespace test-package.test-class
+                (init x)
+                (function f [y]
+                          (return
+                            {1 "hahaha"})))
+    ;;->
+    "package testpackage;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+public class TestClass {
+static final HashMap<Long,String> x;
+public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
+HashMap<Long,String> tmp1 = new HashMap<Long,String>();
+tmp1.put(1L, \"hahaha\");
+return tmp1;
+}
+}
+"))
 
 ;; TODO:
 (deftest destructure-test

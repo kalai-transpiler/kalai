@@ -121,6 +121,7 @@
       (r/invoke (u/var ~#'dissoc) & ?more)
       (r/method remove & ?more)
 
+      ;; Note: this particular rule would only support vectors and sets (maps would need to be handled differently)
       (r/invoke (u/var ~#'conj)
                 (m/and ?coll
                        (m/app meta {:t {_ [?value-t]}}))

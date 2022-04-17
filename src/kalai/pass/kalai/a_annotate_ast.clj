@@ -39,9 +39,13 @@
 ;; TODO: what about type aliases in type aliases
 (defn resolve-t
   "Takes a value that might have metadata,
-  and an AST, and resolves the type"
+  and an AST, and resolves the type.
+  We also look at the :cast in metadata, because values can be cast, ex: a local might be cast to another type, in which
+  we're interested in the type that is being casted to. See function `ast-t`, which relies on this behavior for locals.
+  Note: \"local\" refers to symbols that refer to previously bound symbols, which are represented by tools.analyzer by :op :local."
   [x ast]
-  (let [{:keys [t tag]} (meta x)]
+  (let [{:keys [t tag cast]} (meta x)
+        t (or cast t)]
     (if t
       (if (symbol? t)
         (resolve-kalias t ast)
@@ -70,11 +74,12 @@
       :args [?value . _ ...]}
      ~(ast-t ?value ast)
 
-     ;; ^{:t :long, :tag Long} x
+     ;; ^{:t :long, :tag Long, :cast :new-type} x
      {:op   :with-meta
-      :meta {:form {:t ?t :tag ?tag}}
+      :meta {:form {:t ?t :tag ?tag :cast ?cast}}
       :expr ?expr}
-     ~(or ?t
+     ~(or ?cast
+          ?t
           (get types/java-types ?tag)
           (ast-t ?expr ast))
 
@@ -95,11 +100,14 @@
      ~(ast-t ?init ast)
 
      ;; A typical case: an identifier used as an expression that was defined
-     ;; previously in this lexical scope
+     ;; previously in this lexical scope.
      {:op   :local
       :form (m/pred some? ?form)
-      :env  {:locals {?form ?binding}}}
-     ~(ast-t ?binding ast)
+      :env  {:locals {(m/and ?form ?locals-form) ?binding}}}
+     ~(or (resolve-t ?form ast)
+          ;; Meander matches irrespective of metadata, so form and locals-form can differ
+          (resolve-t ?locals-form ast)
+          (ast-t ?binding ast))
 
      ;; Users who use any non-Kalai-primitive types or custom types (ex:
      ;; for interop purposes), which are represented as Java clases/types, will
@@ -147,10 +155,9 @@
   (if (and (instance? IMeta symbol-call-site)
            (not (t-from-meta symbol-call-site)))
     (u/maybe-meta-assoc symbol-call-site
-                        :t (or (:t (meta symbol-bind-site))
+                        :t (or (resolve-t symbol-bind-site ast)
                                (ast-t from-ast)
-                               (resolve-tag (:tag (meta symbol-call-site)) ast)
-                               (resolve-tag (:tag (meta symbol-bind-site)) ast))
+                               (resolve-tag (:tag (meta symbol-call-site)) ast))
                         :mut (:mut (meta symbol-bind-site)))
     symbol-call-site))
 
@@ -265,6 +272,7 @@
 
 (defn normalize-t-in-ast
   "Normalizing t consists of:
+  0.5 If cast exists as a key, prefer using that over t as the type.
   1. If t is a valid Kalai type, it must be used.
   2. If t is a var, look up the kalias, which must be a Kalai type.
   3. If there is a tag, convert it to a Kalai type, and use that as t.
@@ -289,7 +297,23 @@
               (set-ast-t ?init (or ?init-t ?t)))
      &     ?more}
 
-    ;; [x 1]
+    ;; when x has been bound previously and is seen within an expression
+    ;; (whether or not that expression is in another binding, or a fn call, etc.)
+    (m/and
+      {:op   :local
+       :form ?form
+       &     ?more
+       :as   ?ast})
+    ;; ->
+    {:op   :local
+     :form ~(if-let [?cast (-> ?form meta :cast)]
+              (u/maybe-meta-assoc ?form :cast (if (symbol? ?cast)
+                                                (resolve-kalias ?cast ?ast)
+                                                ?cast))
+              ?form)
+     &     ?more}
+
+    ;; [x 1] - could be a binding in a let form
     (m/and
       {:op   :binding
        :form ?form
@@ -305,7 +329,7 @@
      :init ~(set-ast-t ?init (or ?init-t ?t))
      &     ?more}
 
-    ;; ([x y z])
+    ;; ([x y z]) - one of the arities of a potentially overloaded fn
     {:op   :fn-method
      :form (?params & ?body)
      &     ?more
@@ -331,7 +355,7 @@
     {:op   :local
      :form ?symbol-call-site
      :env  {:locals {?symbol-call-site {:form ?symbol-bind-site
-                                    :init ?init}}
+                                        :init ?init}}
             :as     ?env}
      &     ?more
      :as   ?ast}
@@ -349,7 +373,9 @@
 
 (def erase-type-aliases
   "Takes a vector of ASTs,
-  matches and removes kalias defs, leaves other ASTs alone."
+  matches and removes kalias defs, leaves other ASTs alone.
+  They remain in the environment of all subsequent AST nodes,
+  and so can still be resolved."
   (s/rewrite
     [(m/or {:op   :def
             :meta {:form {:kalias (m/pred some? !kalias)}}
@@ -381,17 +407,17 @@
 (def annotate-news
   (s/rewrite
     ;; annotate vars with their var as metadata so they can be identified later in the pipeline
-    {:op   :new
+    {:op    :new
      :class {:form ?form
-             :val ?type
-             & ?more}
-     &     ?ast}
+             :val  ?type
+             &     ?more}
+     &      ?ast}
     ;;->
-    {:op   :new
+    {:op    :new
      :class {:form ~(u/maybe-meta-assoc ?form :t ?type)
-             :val ?type
-             & ?more}
-     &     ?ast}
+             :val  ?type
+             &     ?more}
+     &      ?ast}
 
     ;; otherwise leave the ast as is
     ?else
