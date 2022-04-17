@@ -16,6 +16,8 @@
     * users need to specify a lot of typing and casting
     * would Typed Clojure be able to help?
     * explore examples (existing or new) using type aliases to abbreviate users' static typing annotation effort
+    * simplify :kalias info finding (do it downstream in language pipeline rather than in kalai pipeline annotate_ast)?
+    * nested aliases
   - for implementing
     * spec
     * Schema

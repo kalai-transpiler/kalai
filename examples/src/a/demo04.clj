@@ -2,6 +2,10 @@
   (:refer-clojure :exclude [format]))
 
 (def ^{:kalias {:mmap [:char :int]}} DigitsMap)
+(def ^{:kalias {:mmap [:string {:mvector [:char]}]}} NumberSystemsMap)
+(def ^{:kalias {:mvector [:char]}} NumberSystemDigits)
+(def ^{:kalias {:mmap [:string :char]}} GroupingSeparatorsMap)
+(def ^{:kalias {:mvector [:int]}} SeparatorPositions)
 
 (defn getDigitsMap ^{:t DigitsMap} []
   ^{:t DigitsMap}
@@ -49,29 +53,29 @@
     @result))
 
 (defn getNumberSystemsMap
-  ^{:t {:mmap [:string {:mvector [:char]}]}} []
-  (let [^{:t {:mmap [:string {:mvector [:char]}]}} m
+  ^{:t NumberSystemsMap} []
+  (let [^{:t NumberSystemsMap} m
         {"LATIN"   [\0 \1 \2 \3 \4 \5 \6 \7 \8 \9]
          "ARABIC"  [\u0660 \u0661 \u0662 \u0663 \u0664 \u0665 \u0666 \u0667 \u0668 \u0669]
          "BENGALI" [\u09E6 \u09E7 \u09E8 \u09E9 \u09EA \u09EB \u09EC \u09ED \u09EE \u09EF]}]
     m))
 
-(def ^{:t {:mmap [:string {:mvector [:char]}]}}
+(def ^{:t NumberSystemsMap}
   numberSystemsMap (getNumberSystemsMap))
 
 (defn getGroupingSeparatorsMap
-  ^{:t {:mmap [:string :char]}} []
-  ^{:t {:mmap [:string :char]}}
+  ^{:t GroupingSeparatorsMap} []
+  ^{:t GroupingSeparatorsMap}
   {"LATIN"   \,
    "ARABIC"  \٬
    "BENGALI" \,})
 
-(def ^{:t {:mmap [:string :char]}}
+(def ^{:t GroupingSeparatorsMap}
   groupingSeparatorsMap (getGroupingSeparatorsMap))
 
-(defn getSeparatorPositions ^{:t {:mvector [:int]}}
+(defn getSeparatorPositions ^{:t SeparatorPositions}
   [^Integer numLength ^String groupingStrategy]
-  (let [^{:t {:mvector [:int]}} result (atom [])]
+  (let [^{:t SeparatorPositions} result (atom [])]
     (cond
       (= groupingStrategy "NONE")
       @result
@@ -109,13 +113,13 @@
     (while (not (= @i (int 0)))
       (let [^Integer quotient (quot @i (int 10))
             ^Integer remainder (rem @i (int 10))
-            ^{:t {:mvector [:char]}} numberSystemDigits (get numberSystemsMap numberSystem)
+            ^{:t NumberSystemDigits} numberSystemDigits (get numberSystemsMap numberSystem)
             ^{:t :char} localDigit (nth numberSystemDigits remainder)]
         (.insert result (int 0) localDigit)
         (reset! i quotient)))
     (let [^{:t :char} sep (get groupingSeparatorsMap numberSystem)
           ^{:t :int} numLength (.length result)
-          ^{:t {:mvector [:int]}} separatorPositions (getSeparatorPositions numLength groupingStrategy)
+          ^{:t SeparatorPositions} separatorPositions (getSeparatorPositions numLength groupingStrategy)
           ^{:t :int} numPositions (count separatorPositions)]
       (dotimes [^{:t :int} idx numPositions]
         (let [^int position (nth separatorPositions idx)]

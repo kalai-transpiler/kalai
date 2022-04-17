@@ -331,6 +331,31 @@ let table_alias: String = String::from(v_second);
 return format!(\"{}{}{}\", table_name, String::from(\" AS \"), table_alias);
 }"))
 
+;; copies much of test type-aliasing-and-casting-test
+(deftest type-aliasing-and-conj-test
+  (ns-form
+    '((ns test-package.test-class)
+      (def ^{:kalias {:mvector [:int]}} SeparatorPositions)
+      (defn getSeparatorPositions ^{:t :void}
+        []
+        (let [^{:t SeparatorPositions} result (atom [])]
+          (swap! result conj 3)))
+      )
+    ;;->
+    '(namespace
+       test-package.test-class
+       (function getSeparatorPositions []
+         (do
+           (init result [])
+           (invoke conj result 3))))
+    ;;->
+    "use crate::kalai;
+use crate::kalai::PMap;
+pub fn get_separator_positions() -> () {
+let mut result: std::vec::Vec<i32> = std::vec::Vec::new();
+result.push(3i64);
+}"))
+
 ;; TODO: figure out nil strategy for Rust
 (deftest generic-types-test
   #_(top-level-form

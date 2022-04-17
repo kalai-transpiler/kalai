@@ -155,11 +155,9 @@
   (if (and (instance? IMeta symbol-call-site)
            (not (t-from-meta symbol-call-site)))
     (u/maybe-meta-assoc symbol-call-site
-                        :t (or (:cast (meta symbol-bind-site))
-                               (:t (meta symbol-bind-site))
+                        :t (or (resolve-t symbol-bind-site ast)
                                (ast-t from-ast)
-                               (resolve-tag (:tag (meta symbol-call-site)) ast)
-                               (resolve-tag (:tag (meta symbol-bind-site)) ast))
+                               (resolve-tag (:tag (meta symbol-call-site)) ast))
                         :mut (:mut (meta symbol-bind-site)))
     symbol-call-site))
 
