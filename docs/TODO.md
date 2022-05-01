@@ -1,5 +1,9 @@
 # TODO
 
+* data.diff
+  - implement
+  - port of fipp for pretty-printing
+
 * Persistent data structures
   - all languages have a library, but not everyone wants the dependency
   - performance goals

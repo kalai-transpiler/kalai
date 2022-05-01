@@ -272,11 +272,15 @@
     (s/rewrite ?else ~(throw (ex-info "Top level form" {:else ?else})))))
 
 ;; takes a sequence of forms, returns a single form
+;; Also, detect `(declare foo)` as `(do (def foo))` and swallow (don't return
+;; anything). This assumes all target languages have a multi-pass compiler. If not,
+;; then we need to propagate the `(declare foo)` and handle downstream.
 (def rewrite-namespace
   (s/rewrite
     ;; ns
     ((do (clojure.core/in-ns ('quote ?ns-name)) & _)
-     . !forms ...)
+     . (m/or (do (def _))
+             !forms) ...)
     ;;->
     (namespace ?ns-name .
                (m/app top-level-form !forms)

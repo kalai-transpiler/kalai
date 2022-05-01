@@ -1,0 +1,21 @@
+[package]
+name = "data_diff"
+version = "0.1.0"
+authors = [
+    "Elango Cheran <elango.cheran@gmail.com>",
+    "Timothy Pratley <timothypratley@gmail.com>"]
+edition = "2018"
+
+[[bin]]
+name = "data_diff_run_examples"
+path = "src_bin/main.rs"
+
+[lib]
+name = "data_diff"
+path = "src/lib.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+lazy_static = "1.4.0"
+rpds = "0.11.0"

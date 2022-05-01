@@ -16,7 +16,9 @@
         (list 'defn 'test-function ^{:t :void} [] form)))
 
 (defn remove-kalai-class [s]
-  (nth s 2))
+  (->> s
+       (drop 2)
+       first))
 
 (defn remove-java-class [s]
   (->> s

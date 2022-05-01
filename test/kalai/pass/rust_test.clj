@@ -71,6 +71,16 @@ x;"))
   x = tmp1;
   }"))
 
+;; # Declare
+;; (declarations are erased in kalai pipeline's kalai-constructs)
+
+(deftest declare-test
+  (top-level-form
+    '(declare ^{:t :int} x)
+    ;;->
+    nil
+    ;;->
+    ""))
 
 ;; # Functions
 
