@@ -137,7 +137,8 @@
 
       (j/invoke (u/var ~#'map) ?fn ?xs)
       (j/method collect
-                (j/method map ?xs ~(symbol (ju/fully-qualified-function-identifier-str ?fn "::")))
+                (j/method map ?xs
+                          ~(symbol (ju/fully-qualified-function-identifier-str ?fn "::")))
                 (j/invoke Collectors.toList))
 
       (j/invoke (u/var ~#'str) & ?args)

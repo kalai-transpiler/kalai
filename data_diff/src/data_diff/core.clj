@@ -15,8 +15,7 @@
                       (and (nil? va) (nil? vb))))]
     [(when (and in-a (or (not (nil? a*)) (not same))) {k a*})
      (when (and in-b (or (not (nil? b*)) (not same))) {k b*})
-     (when same {k ab})
-     ]))
+     (when same {k ab})]))
 
 (defn diff-associative
   "Diff associative things a and b, comparing only keys in ks."
@@ -25,9 +24,9 @@
     (fn [diff1 diff2]
       (doall (map merge diff1 diff2)))
     [nil nil nil]
-    (map
-      (partial diff-associative-key a b)
-      ks)))
+    (map (fn [k]
+           (diff-associative-key a b k))
+         ks)))
 
 ;;(defn- diff-sequential
 ;;  [a b]
@@ -45,6 +44,77 @@
     (reduce conj s2 s1)
     (reduce conj s1 s2)))
 
+(defn difference
+  "Return a set that is the first set without elements of the remaining sets"
+  [s1 s2]
+  (if (< (count s1) (count s2))
+    (reduce (fn [result item]
+              (if (contains? s2 item)
+                (disj result item)
+                result))
+            s1 s1)
+    (reduce disj s1 s2)))
+
+(defn intersection
+  "Return a set that is the intersection of the input sets"
+  [s1 s2]
+  (if (< (count s2) (count s1))
+    (recur s2 s1)
+    (reduce (fn [result item]
+              (if (contains? s2 item)
+                result
+                (disj result item)))
+            s1 s1)))
+
+;; any input must be one of: atom set map sequence
+
+(defn- atom-diff
+  "Internal helper for diff."
+  [a b]
+  (if (= a b) [nil nil a] [a b nil]))
+
+(defn equality-partition [x]
+  (cond (set? x) :set
+        (map? x) :map
+        (vector? x) :sequence
+        :else :atom))
+
+(defn map-diff [a b]
+  (let [ab-keys (union (set (keys a)) (set (keys b)))]
+    (diff-associative a b ab-keys)))
+
+(defn set-diff [a b]
+  [(not-empty (difference a b))
+   (not-empty (difference b a))
+   (not-empty (intersection a b))])
+
+(defn- vectorize
+  "Convert an associative-by-numeric-index collection into
+   an equivalent vector, with nil for any missing keys"
+  [m]
+  (when (seq m)
+    (reduce
+      (fn [result [k v]] (assoc result k v))
+      (vec (repeat (apply max (keys m)) nil))
+      m)))
+
+(defn sequence-diff [a b]
+  (vec (map vectorize (diff-associative
+                        (if (vector? a) a (vec a))
+                        (if (vector? b) b (vec b))
+                        (range (max (count a) (count b)))))))
+
+(defn diff-similar [a b]
+  (let [partition-a (equality-partition a)
+        partition-b (equality-partition b)]
+    (if (= partition-a partition-b)
+      (cond
+        (= partition-a :set) (set-diff a b)
+        (= partition-a :map) (map-diff a b)
+        (= partition-a :sequence) (sequence-diff a b)
+        (= partition-a :atom) (atom-diff a b))
+      (atom-diff a b))))
+
 (defn diff
   "Recursively compares a and b, returning a tuple of
   [things-only-in-a things-only-in-b things-in-both].
@@ -58,12 +128,7 @@
   * Everything else (including strings!) is treated as
     an atom and compared for equality."
   {:added "1.3"}
-  [a b]
+  [^{:t :any} a, ^{:t :any} b]
   (if (= a b)
     [nil nil a]
-    (let [ab-keys (union (keys a) (keys b))]
-      (diff-associative a b ab-keys))
-    ;;(if (= (equality-partition a) (equality-partition b))
-    ;;  (diff-similar a b)
-    ;;  (atom-diff a b))
-    ))
+    (diff-similar a b)))

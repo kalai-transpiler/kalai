@@ -19,17 +19,18 @@
     :byte})
 
 ;; Collection types in Kalai's supported types
-(def collection-types
+(def generic-types
   #{:map
     :mmap
     :set
     :mset
     :vector
-    :mvector})
+    :mvector
+    :function})
 
 ;; All of Kalai's supported types
 (def types
-  (set/union primitive-types collection-types))
+  (set/union primitive-types generic-types))
 
 ;; Conversion map between Java types (represented as Java classes and the
 ;; `TYPE` field of Java "boxed" classes for primitives) to Kalai types. Useful
@@ -67,7 +68,7 @@
 (def validate-kalai-type
   (s/rewrite
     (m/and
-      {(m/pred collection-types ?t) [(m/pred validate-kalai-type !ts) ...]}
+      {(m/pred generic-types ?t) [(m/pred validate-kalai-type !ts) ...]}
       ?generic-type)
     ?generic-type
 

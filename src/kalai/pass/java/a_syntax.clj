@@ -177,9 +177,8 @@
     (method ?method ?object . !args ...)
     (j/method ?method (m/app expression ?object) . (m/app expression !args) ...)
 
-    ;; TODO: lambda function
-    (lambda ?name ?docstring ?body)
-    (j/lambda ?name ?docstring ?body)
+    (lambda ?params . !body ...)
+    (j/lambda ?params (j/block . (m/app statement !body) ...))
 
     ;; conditionals as an expression must be ternaries, but ternaries cannot contain bodies
     ;;(if ?condition ?then)

@@ -293,7 +293,7 @@ return z;
 (deftest type-aliasing-and-casting-test
   (ns-form
     '((ns test-package.test-class)
-      (def ^{:kalias {:mvector [:any]}} Clause) ;; Clause represents a part of a larger expression for a SQL keyword
+      (def ^{:kalias {:mvector [:any]}} Clause)             ;; Clause represents a part of a larger expression for a SQL keyword
       (defn f ^{:t :string} [^{:t :any} x]
         (let [v ^{:cast Clause} x
               ^{:t :any} v-first (nth v (int 0))
@@ -857,18 +857,18 @@ final long v = m.get(k);"
     ))
 
 #_(deftest collection-closure-test
-  (inner-form
-    '(let [c [1 2 3]
-           f (fn [] (conj c 4))
-           g (fn [] (conj c 5))
-           d (f)
-           e (g)]
-       c)
-    ;;->
-    '()
-    ;;->
-    ""
-    ))
+    (inner-form
+      '(let [c [1 2 3]
+             f (fn [] (conj c 4))
+             g (fn [] (conj c 5))
+             d (f)
+             e (g)]
+         c)
+      ;;->
+      '()
+      ;;->
+      ""
+      ))
 
 ;; TODO: due to a quirk of Clojure, cases can be ints, I don't think this will compile
 (deftest switch-case-test
@@ -895,20 +895,20 @@ break;
 ;; TODO: support switch as expression
 (deftest switch-case2-test
   #_(inner-form
-    '(println (case 1
-                1 :a
-                2 :b))
-    ;;->
-    '(invoke println
-             (case 1 {1 [1 :a]
-                      2 [2 :b]}))
-    ;;->
-    "switch (1) {
-case 1 : \":a\";
-break;
-case 2 : \":b\";
-break;
-}"))
+      '(println (case 1
+                  1 :a
+                  2 :b))
+      ;;->
+      '(invoke println
+               (case 1 {1 [1 :a]
+                        2 [2 :b]}))
+      ;;->
+      "switch (1) {
+  case 1 : \":a\";
+  break;
+  case 2 : \":b\";
+  break;
+  }"))
 
 (deftest conditional-expression-test
   ;; For simple expressions, a true ternary could be used instead
@@ -1437,9 +1437,29 @@ return tmp1;
 ;; TODO:
 (deftest destructure-test
   #_(inner-form
-    '(let [{:keys [a b]} {:a "a" :b "b"}]
-       a)
-    ;;->
-    '()
-    ;;->
-    ""))
+      '(let [{:keys [a b]} {:a "a" :b "b"}]
+         a)
+      ;;->
+      '()
+      ;;->
+      ""))
+
+(deftest lambda-test
+  (inner-form
+    '(let [f ^{:t {:function [:int :int]}} (fn [x] x)]
+       (f (int 1)))
+    '(do
+       (init f (lambda [^{:t :int} x]
+                       (return x)))
+       (invoke f 1))
+    "final java.util.Function<Integer,Integer> f = (x) -> {
+return x;
+};
+f(1);"))
+;; TODO: rust version, and map with lambda
+
+#_(deftest lambda-test
+    (inner-form
+      '(map (fn [x] x) [1])
+      '(invoke map (lambda [x] x) [1])
+      "z"))

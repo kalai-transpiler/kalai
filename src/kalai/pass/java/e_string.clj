@@ -17,9 +17,6 @@
 (defn- comma-separated [& xs]
   (str/join ", " xs))
 
-(defn- params-list [params]
-  (parens (apply comma-separated params)))
-
 (defn- args-list [args]
   (parens (apply comma-separated (map stringify args))))
 
@@ -49,22 +46,23 @@
 
 ;; TODO: do we need an :object type?
 (def kalai-type->java
-  {:map     "io.lacuna.bifurcan.Map"
-   :mmap    "HashMap"
-   :set     "io.lacuna.bifurcan.Set"
-   :mset    "HashSet"
-   :vector  "io.lacuna.bifurcan.List"
-   :mvector "ArrayList"
-   :bool    "boolean"
-   :byte    "byte"
-   :char    "char"
-   :int     "int"
-   :long    "long"
-   :float   "float"
-   :double  "double"
-   :string  "String"
-   :void    "void"
-   :any     "Object"})
+  {:map      "io.lacuna.bifurcan.Map"
+   :mmap     "HashMap"
+   :set      "io.lacuna.bifurcan.Set"
+   :mset     "HashSet"
+   :vector   "io.lacuna.bifurcan.List"
+   :mvector  "ArrayList"
+   :function "java.util.Function"
+   :bool     "boolean"
+   :byte     "byte"
+   :char     "char"
+   :int      "int"
+   :long     "long"
+   :float    "float"
+   :double   "double"
+   :string   "String"
+   :void     "void"
+   :any      "Object"})
 
 (defn java-type [t]
   (or (get kalai-type->java t)
@@ -116,17 +114,23 @@
         (doto (maybe-warn-type-missing variable-name))
         (type-modifiers mut global))))
 
+(defn typed-param [param]
+  (space-separated (type-str param)
+                   (csk/->camelCase param)))
+
+(defn params-list [params]
+  (parens (apply comma-separated
+                 (for [param params]
+                   (typed-param param)))))
+
 (defn init-str
   ([variable-name]
    ;; TODO: we could default "Objects" to null, otherwise Java won't compile
    ;; See (def ^{:t T} x nil) in type_alias.clj example
-   (statement (space-separated (type-str variable-name)
-                               (csk/->camelCase variable-name))))
+   (statement (typed-param variable-name)))
   ([variable-name value]
-   (statement (space-separated (type-str variable-name)
-                               (csk/->camelCase variable-name)
+   (statement (space-separated (typed-param variable-name)
                                "=" (stringify value)))))
-
 
 (defn invoke-str [function-name & args]
   (str (ju/fully-qualified-function-identifier-str function-name ".")
@@ -138,15 +142,13 @@
       (assert (= '& (first params)) "Main method must have signature (defn -main [& args]...)")
       (str
         (space-separated 'public 'static 'final 'void 'main)
-        (space-separated (params-list [(space-separated "String[]" (csk/->camelCase (second params)))])
+        (space-separated (parens (space-separated "String[]" (second params)))
                          (stringify body))))
     (str
       (space-separated 'public 'static
                        (type-str params)
                        (csk/->camelCase name))
-      (space-separated (params-list (for [param params]
-                                      (space-separated (type-str param)
-                                                       (csk/->camelCase param))))
+      (space-separated (params-list params)
                        (stringify body)))))
 
 (defn operator-str
@@ -234,6 +236,9 @@ import java.util.stream.Collectors;")
 
 ;;;; This is the main entry point
 
+(defn lambda-str [params body]
+  (space-separated (args-list params) "->" (stringify body)))
+
 (def str-fn-map
   {'j/class                class-str
    'j/operator             operator-str
@@ -253,7 +258,8 @@ import java.util.stream.Collectors;")
    'j/default              default-str
    'j/method               method-str
    'j/new                  new-str
-   'j/cast                 cast-str})
+   'j/cast                 cast-str
+   'j/lambda               lambda-str})
 
 (def stringify
   (s/match

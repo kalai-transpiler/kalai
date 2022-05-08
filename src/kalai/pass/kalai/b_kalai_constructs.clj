@@ -58,6 +58,11 @@
                                 (ref-form? ?x)))
         (inner-form ?x)))
 
+(def lambda
+  (s/rewrite
+    (fn* (?params . !body-forms ...))
+    (lambda ?params . (m/app inner-form !body-forms) ...)))
+
 (def loops
   (s/rewrite
     ;; while -> while
@@ -243,6 +248,7 @@
 (def inner-form
   "Ordered from most to least specific."
   (s/choice
+    lambda
     loops
     conditionals
     assignments
@@ -260,7 +266,7 @@
         ..?m))
     ;;->
     (arity-group . (function ?name . !params .
-                             (m/app inner-form !body-forms) ..!n)
+                           (m/app inner-form !body-forms) ..!n)
                  ..?m)))
 
 (def top-level-form
