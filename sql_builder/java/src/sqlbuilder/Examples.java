@@ -135,7 +135,7 @@ public class Examples {
     return sqlbuilder.Core.format(queryMap);
   }
 
-  public static final void main(String[] args) {
+  public static final void main(String[] _args) {
     {
       final String queryStr = sqlbuilder.Examples.f1();
       System.out.println(("" + "example 1 query string:\n---\n" + queryStr + "\n---\n\n"));

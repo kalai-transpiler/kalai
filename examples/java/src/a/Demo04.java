@@ -197,7 +197,7 @@ public class Demo04 {
     }
   }
 
-  public static final void main(String[] args) {
+  public static final void main(String[] _args) {
     System.out.println(a.Demo04.parse("٥٠٣٠١"));
     System.out.println(a.Demo04.parse("৫০৩০১"));
     System.out.println(a.Demo04.parse("7,654,321"));

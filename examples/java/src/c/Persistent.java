@@ -96,7 +96,7 @@ public class Persistent {
     }
   }
 
-  public static final void main(String[] args) {
+  public static final void main(String[] _args) {
     System.out.println(c.Persistent.testMap());
     System.out.println(c.Persistent.testVector());
     System.out.println(c.Persistent.testSet());

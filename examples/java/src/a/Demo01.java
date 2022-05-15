@@ -17,7 +17,7 @@ public class Demo01 {
     }
   }
 
-  public static final void main(String[] args) {
+  public static final void main(String[] _args) {
     a.Demo01.format(2345);
     System.out.println(a.Demo01.format(2345));
   }
