@@ -151,11 +151,12 @@
                 (r/ref ?sep))
 
       (r/invoke (u/var ~#'map) ?fn ?xs)
-      (r/method map
-                (r/method clone ?xs)
-                ;; TODO: maybe gensym the argname
-                (r/lambda [kalai_elem]
-                          (r/invoke ?fn (r/method clone kalai_elem))))
+      (r/method collect
+                (r/method cloned
+                          (r/method map
+                                    (r/method iter (r/method clone ?xs))
+                                    ;; TODO: maybe gensym the argname
+                                    ?fn)))
 
       ;; TODO: do we really need to clone here???
       (r/invoke (u/var ~#'vector?) ?x)

@@ -68,6 +68,7 @@
    :vector  "rpds::Vector"
    ;; TODO: does this depend on whether it's a {:t {:vector [:some-primitive]}} vs. {:t {:vector [:any]}} ? How is this being used instead of t-str?
    :mvector "std::vec::Vec"
+   :function "std::ops::Fn"
    :bool    "bool"
    :byte    "i8"
    :char    "char"
@@ -192,6 +193,11 @@
                             (when mut "mut ")
                             (type-str param))))))
 
+(defn optional-param-str [param]
+  (if (-> param meta :t)
+    (param-str param)
+    (ru/identifier param)))
+
 (defn function-str [name params body]
   (if (= '-main name)
     (do
@@ -286,10 +292,6 @@
 (defn literal-str [s]
   (pr-str s))
 
-(defn lambda-str [args body]
-  (str "|" (comma-separated (map ru/identifier args)) "|"
-       (stringify body)))
-
 (defn ref-str [s]
   (if (and (instance? IMeta s)
            (:ref (meta s)))
@@ -360,6 +362,10 @@
     (str "kalai::BValue::from" (parens (stringify x)))
     (stringify x)))
 
+(defn lambda-str [args body]
+  (str "|" (comma-separated (map optional-param-str args)) "|"
+       (stringify body)))
+
 ;;;; This is the main entry point
 
 (def str-fn-map
@@ -381,12 +387,12 @@
    'r/method               method-str
    'r/new                  new-str
    'r/literal              literal-str
-   'r/lambda               lambda-str
    'r/cast                 cast-str
    'r/ref                  ref-str
    'r/deref                deref-str
    'r/range                range-str
-   'r/value                value-str})
+   'r/value                value-str
+   'r/lambda               lambda-str})
 
 (def stringify
   (s/match

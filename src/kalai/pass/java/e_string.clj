@@ -133,7 +133,9 @@
                                "=" (stringify value)))))
 
 (defn invoke-str [function-name & args]
-  (str (ju/fully-qualified-function-identifier-str function-name ".")
+  (str (if (symbol? function-name)
+         (ju/fully-qualified-function-identifier-str function-name ".")
+         (stringify function-name))
        (args-list args)))
 
 (defn function-str [name params body]
@@ -234,10 +236,10 @@ import java.util.stream.Collectors;")
 (defn cast-str [v t]
   (str (parens (t-str t)) (stringify v)))
 
-;;;; This is the main entry point
-
 (defn lambda-str [params body]
   (space-separated (args-list params) "->" (stringify body)))
+
+;;;; This is the main entry point
 
 (def str-fn-map
   {'j/class                class-str

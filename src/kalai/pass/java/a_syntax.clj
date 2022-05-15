@@ -171,7 +171,7 @@
     (m/and (invoke ?f . !args ...)
            (m/app meta ?meta))
     (m/app with-meta
-           (j/invoke ?f . (m/app expression !args) ...)
+           (j/invoke (m/app expression ?f) . (m/app expression !args) ...)
            ?meta)
 
     (method ?method ?object . !args ...)

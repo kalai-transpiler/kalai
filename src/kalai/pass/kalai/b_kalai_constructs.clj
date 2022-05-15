@@ -165,7 +165,7 @@
     ((u/var (m/pred swap-vars))
      (m/pred #(not (:mut (meta %))) ?ref)
      ?f . !args ...)
-    (invoke ?f ?ref . (m/app inner-form !args) ...)
+    (invoke (m/app inner-form ?f) ?ref . (m/app inner-form !args) ...)
 
     ;; matches (swap! atom fn arg1 arg2)
     ;; and send, send-off, alter, alter-var-root
@@ -173,7 +173,7 @@
     ((u/var (m/pred swap-vars)) ?ref ?f . !args ...)
     (group
       (assign ?ref
-              (invoke ?f
+              (invoke (m/app inner-form ?f)
                       ?ref
                       . (m/app inner-form !args) ...))
       ?ref)
@@ -242,7 +242,7 @@
     (m/and (?f . !args ...)
            (m/app meta ?meta))
     (m/app with-meta
-           (invoke ?f . (m/app inner-form !args) ...)
+           (invoke (m/app inner-form ?f) . (m/app inner-form !args) ...)
            ?meta)))
 
 (def inner-form

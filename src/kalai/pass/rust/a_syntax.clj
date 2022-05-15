@@ -150,15 +150,14 @@
     (m/and (invoke ?f . !args ...)
            (m/app meta ?meta))
     (m/app with-meta
-           (r/invoke ?f . (m/app expression !args) ...)
+           (r/invoke (m/app expression ?f) . (m/app expression !args) ...)
            ?meta)
 
     (method ?method ?object . !args ...)
     (r/method ?method (m/app expression ?object) . (m/app expression !args) ...)
 
-    ;; TODO: lambda function
-    (lambda ?name ?docstring ?body)
-    (r/lambda ?name ?docstring ?body)
+    (lambda ?params . !body ...)
+    (r/lambda ?params (r/block . (m/app statement !body) ...))
 
     ;; Note: Rust will not compile when conditionals as expressions don't have
     ;; an "else" branch (that is, only has a "then" branch).

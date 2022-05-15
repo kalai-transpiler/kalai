@@ -1508,3 +1508,31 @@ result;"))
     '(str "a" "b")
     '(invoke str "a" "b")
     "format!(\"{}{}\", String::from(\"a\"), String::from(\"b\"));"))
+
+;; TODO: broken, must fix: must support Fn type signature when a value
+;; Perhaps as  Box<dyn Fn(_) -> _>   ? -- https://stackoverflow.com/a/65756127
+;; More specifically, we want the Box<dyn Fn> to be a BValue (in other words,
+;; make a Fn trait obj implement the Value somehow so that we get Box<dyn Value>).
+#_(deftest lambda-test
+  (inner-form
+    '(let [f ^{:t {:function [:int :int]}} (fn [x] x)]
+       (f (int 1)))
+    '(do
+       (init f (lambda [^{:t :int} x]
+                       (return x)))
+       (invoke f 1))
+    "let f: std::ops::Fn(i32) -> i32 = |x| {
+return x;
+};
+f(1i32);"))
+
+(deftest lambda-test2
+  (inner-form
+    '(map (fn [x] x) ^{:t {:vector [:long]}} [1 2 3])
+    '(invoke map
+             (lambda [x] (return x))
+             [1 2 3])
+    "rpds::Vector::new().push_back(1i64).push_back(2i64).push_back(3i64).clone().iter().map(|x|{
+return x;
+}).cloned().collect();"))
+

@@ -1456,10 +1456,20 @@ return tmp1;
 return x;
 };
 f(1);"))
-;; TODO: rust version, and map with lambda
 
 #_(deftest lambda-test
     (inner-form
       '(map (fn [x] x) [1])
       '(invoke map (lambda [x] x) [1])
       "z"))
+
+(deftest lambda-test2
+  (inner-form
+    '(map (fn [x] x) ^{:t {:vector [:long]}} [1 2 3])
+    '(invoke map
+             (lambda [x] (return x))
+             [1 2 3])
+    "new io.lacuna.bifurcan.List<Long>().addLast(1L).addLast(2L).addLast(3L).stream().map((x) -> {
+return x;
+}).collect(Collectors.toList());"))
+
