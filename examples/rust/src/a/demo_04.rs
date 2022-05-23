@@ -212,7 +212,7 @@ pub fn format(num: i32, number_system: String, grouping_strategy: String) -> Str
                 idx = (idx + 1i32);
             }
         }
-        return result.iter().collect();
+        return result.into_iter().collect();
     }
 }
 pub fn main() {

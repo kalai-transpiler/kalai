@@ -28,7 +28,7 @@
       ;; TODO: put a predicate to ensure ?coll is not a seq because Rust .iter()
       ;; is not allowed/available on a Rust Iterator
       (r/invoke (u/var ~#'seq) ?coll)
-      (r/method iter (r/method clone ?coll))
+      (r/method into_iter (r/method clone ?coll))
 
       (r/invoke (u/var ~#'first) ?seq)
       (r/method clone (r/method unwrap (r/method next ?seq)))
@@ -61,7 +61,7 @@
       (r/method push_str ?this ?x)
 
       (r/method toString (u/of-t StringBuffer ?this))
-      (r/method collect (r/method iter ?this))
+      (r/method collect (r/method into_iter ?this))
 
       (r/method insert (u/of-t StringBuffer ?this) ?idx (u/of-t :char ?s2))
       (r/method insert ?this (r/cast ?idx :usize)
@@ -151,12 +151,10 @@
                 (r/ref ?sep))
 
       (r/invoke (u/var ~#'map) ?fn ?xs)
-      (r/method collect
-                (r/method cloned
-                          (r/method map
-                                    (r/method iter (r/method clone ?xs))
-                                    ;; TODO: maybe gensym the argname
-                                    ?fn)))
+      (r/method map
+                (r/method into_iter (r/method clone ?xs))
+                ;; TODO: maybe gensym the argname
+                ?fn)
 
       ;; TODO: do we really need to clone here???
       (r/invoke (u/var ~#'vector?) ?x)

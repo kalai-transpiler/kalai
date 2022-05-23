@@ -35,20 +35,22 @@
 (def rewrite
   (s/bottom-up
     (s/rewrite
+      (j/invoke (u/var ~#'println) . !more ..2)
+      (j/invoke System.out.println (j/operator + "" . !more ...))
+
       (j/invoke (u/var ~#'println) & ?more)
       (j/invoke System.out.println & ?more)
 
       ;; TODO: put a predicate to ensure ?coll is not a seq because Rust .iter()
       ;; is not allowed/available on a Rust Iterator
       (j/invoke (u/var ~#'seq) ?coll)
-      (j/method stream ?coll)
+      (m/app #(with-meta % {:seq true}) (j/method stream ?coll))
 
       (j/invoke (u/var ~#'first) ?seq)
       (j/method get (j/method findFirst ?seq))
 
       (j/invoke (u/var ~#'next) ?seq)
-      (j/method skip ?seq 1)
-
+      (m/app #(with-meta % {:seq true}) (j/method skip ?seq 1))
 
       ;; TODO: these should be (u/var)
       (j/invoke clojure.lang.RT/count ?x)
@@ -130,18 +132,20 @@
       (j/operator instanceof ?x Float)
 
       (j/invoke (u/var ~#'str/join) ?col)
-      (j/invoke String.join "" ?col)
+      (j/invoke String.join "" (j/method collect ?col (j/invoke Collectors.toList)))
 
       (j/invoke (u/var ~#'str/join) ?sep ?col)
-      (j/invoke String.join ?sep ?col)
+      (j/invoke String.join ?sep (j/method collect ?col (j/invoke Collectors.toList)))
 
       (j/invoke (u/var ~#'map) ?fn ?xs)
-      (j/method collect
-                (j/method map (j/method stream ?xs)
-                          ~(if (symbol? ?fn)
-                             (symbol (ju/fully-qualified-function-identifier-str ?fn "::"))
-                             ?fn))
-                (j/invoke Collectors.toList))
+      (m/app #(with-meta % {:seq true})
+             ;; TODO: is there a cleaner version
+             (j/method map ~(if (:seq (meta ?xs))
+                              ?xs
+                              (list 'j/method 'stream ?xs))
+                       ~(if (symbol? ?fn)
+                          (symbol (ju/fully-qualified-function-identifier-str ?fn "::"))
+                          ?fn)))
 
       (j/invoke (u/var ~#'str) & ?args)
       (j/operator + "" & ?args)

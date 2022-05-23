@@ -19,13 +19,13 @@
           "")))))
 
 (defn select-str ^{:t :string} [^{:t {:mvector [:any]}} select]
-  (str/join ", " (map cast-to-str (seq select))))
+  (str/join ", " (map cast-to-str select)))
 
 (defn from-str ^{:t :string} [^{:t {:mvector [:any]}} from]
-  (str/join ", " (map cast-to-str (seq from))))
+  (str/join ", " (map cast-to-str from)))
 
 (defn join-str ^{:t :string} [^{:t {:mvector [:any]}} join]
-  (str/join ", " (map cast-to-str (seq join))))
+  (str/join ", " (map cast-to-str join)))
 
 ;; TODO: honeySQL supports variadic clauses which are assumed to be `and`
 (defn where-str ^{:t :string} [^{:t :any} clause]
@@ -40,14 +40,14 @@
     (cast-to-str clause)))
 
 (defn group-by-str ^{:t :string} [^{:t {:mvector [:any]}} join]
-  (str/join ", " (map cast-to-str (seq join))))
+  (str/join ", " (map cast-to-str join)))
 
 (defn having-str ^{:t :string} [^{:t :any} having]
   (where-str having))
 
 (defn row-str ^{:t :string} [^{:t :any} row]
   (let [^{:t {:mvector [:any]}} mrow ^{:cast {:mvector [:any]}} row]
-    (str "(" (str/join ", " (map cast-to-str (seq mrow))) ")")))
+    (str "(" (str/join ", " (map cast-to-str mrow)) ")")))
 
 (defn format
   "Converts query as data into an SQL string"
@@ -69,7 +69,7 @@
            (str "INSERT INTO " (from-str ^{:cast {:mvector [:any]}} insert-into) "(" (select-str ^{:cast {:mvector [:any]}} columns) ")\n"
                 "VALUES\n"
                 (str/join ",\n" (let [^{:t {:mvector [:any]}} v2 ^{:cast {:mvector [:any]}} values]
-                                  (map row-str (seq v2))))))
+                                  (map row-str v2)))))
 
          (if (nil? select)
            ""

@@ -1532,7 +1532,6 @@ f(1i32);"))
     '(invoke map
              (lambda [x] (return x))
              [1 2 3])
-    "rpds::Vector::new().push_back(1i64).push_back(2i64).push_back(3i64).clone().iter().map(|x|{
+    "rpds::Vector::new().push_back(1i64).push_back(2i64).push_back(3i64).clone().into_iter().map(|x|{
 return x;
-}).cloned().collect();"))
-
+});"))

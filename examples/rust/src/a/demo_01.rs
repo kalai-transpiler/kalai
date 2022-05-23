@@ -18,7 +18,7 @@ pub fn format(num: i32) -> String {
                 i = quotient;
             }
         }
-        return result.iter().collect();
+        return result.into_iter().collect();
     }
 }
 pub fn main() {

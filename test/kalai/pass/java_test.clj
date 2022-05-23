@@ -1471,5 +1471,4 @@ f(1);"))
              [1 2 3])
     "new io.lacuna.bifurcan.List<Long>().addLast(1L).addLast(2L).addLast(3L).stream().map((x) -> {
 return x;
-}).collect(Collectors.toList());"))
-
+});"))

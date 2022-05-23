@@ -933,8 +933,8 @@ impl From<rpds::HashTrieMap<BValue, BValue>> for BValue {
     }
 }
 
-impl From<BValue> for rpds::HashTrieMap<BValue,BValue> {
-    fn from(v: BValue) -> rpds::HashTrieMap<BValue,BValue> {
+impl From<BValue> for rpds::HashTrieMap<BValue, BValue> {
+    fn from(v: BValue) -> rpds::HashTrieMap<BValue, BValue> {
         if let Some(x) = v.as_any().downcast_ref::<PMap>() {
             x.clone().0
         } else {
@@ -1002,15 +1002,15 @@ impl From<BValue> for Vec<BValue> {
 }
 
 
-impl From<HashMap<BValue,BValue>> for BValue {
-    fn from(x: HashMap<BValue,BValue>) -> Self {
+impl From<HashMap<BValue, BValue>> for BValue {
+    fn from(x: HashMap<BValue, BValue>) -> Self {
         let b: BValue = Box::new(Map(x));
         b
     }
 }
 
-impl From<BValue> for HashMap<BValue,BValue> {
-    fn from(v: BValue) -> HashMap<BValue,BValue> {
+impl From<BValue> for HashMap<BValue, BValue> {
+    fn from(v: BValue) -> HashMap<BValue, BValue> {
         if let Some(x) = v.as_any().downcast_ref::<Map>() {
             x.clone().0
         } else {
@@ -1647,7 +1647,7 @@ mod tests {
         let a: i32 = i32::from(pm3.get(&BValue::from(":a")).unwrap());
         let xy = PMap::from(pm3.get(&BValue::from(":xy")).unwrap());
         let y: i32 = i32::from(xy.get(&BValue::from(":y")).unwrap());
-        let x = (a+y) as i64;
+        let x = (a + y) as i64;
 
         assert_eq!(x, 30);
     }
