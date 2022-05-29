@@ -41,14 +41,16 @@
       (j/invoke (u/var ~#'println) & ?more)
       (j/invoke System.out.println & ?more)
 
-      ;; TODO: put a predicate to ensure ?coll is not a seq because Rust .iter()
-      ;; is not allowed/available on a Rust Iterator
+      ;; we add `{:seq true}` to metadata to enable checking downstream whether ?coll is a seq because Java .stream()
+      ;; is not allowed/available on a Java Stream
       (j/invoke (u/var ~#'seq) ?coll)
       (m/app #(with-meta % {:seq true}) (j/method stream ?coll))
 
       (j/invoke (u/var ~#'first) ?seq)
       (j/method get (j/method findFirst ?seq))
 
+      ;; we add `{:seq true}` to metadata to enable checking downstream whether ?coll is a seq because Java .stream()
+      ;; is not allowed/available on a Java Stream
       (j/invoke (u/var ~#'next) ?seq)
       (m/app #(with-meta % {:seq true}) (j/method skip ?seq 1))
 

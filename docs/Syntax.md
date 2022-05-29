@@ -92,4 +92,24 @@ Keywords had/have 2 main benefits in Clojure: 1) interning so that only a single
 * Languages like Rust have literal syntax for some but not all collections
   * Rust: vectors -> `vec!`, but not for set and map)
     C++: can support literal values in initialization statement only, for some versions of C++ and later only
-    
+
+### Immutability and persistent data collections
+
+* Clojure makes values immutable by default, uses persistent data collections
+  - Persistent collections implies immutable. Clojure persistent collections are heterogeneous
+  - Heterogenous collections allows easy nesting of data structures
+* Persistent data collections in target languages are supported via 3rd-party libraries
+  - Ex: Bifurcan in Java, rpds in Rust
+* Types
+  - There are separate types for mutable and immutable collections in Kalai (Ex: `:mvector` is a mutable vector, `:vector` is an immutable (persistent) vector).
+  
+#### Sequences
+  
+* Clojure uses the `seq` abstraction/interface for many core library functions, and implements it on all collection types
+  - Clojure seqs are immutable
+* Other languages may have something analogous, but often they are one-use only (perhaps because they are mutable)
+  - Ex: `Stream` in Java, `Iterator` in Rust
+* In Kalai, we may represent internally such seq-like constructs using a type (ex: the type map `{:t :seq}`)
+  - However, we currently are not supporting users of Kalai to create local binding values out of seqs
+    * This is partly due to analogous target langauge constructs being one-use only
+    * If there is a need, we can revisit, with the restriction that it only really makes sense / is useful when computed from persistent collections.

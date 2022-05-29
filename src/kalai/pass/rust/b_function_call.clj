@@ -25,8 +25,7 @@
                                  (str/join " ")))
                 & ?args)
 
-      ;; TODO: put a predicate to ensure ?coll is not a seq because Rust .iter()
-      ;; is not allowed/available on a Rust Iterator
+      ;; In Rust, we don't need to insert `{:seq true}` in metadata because `.into_iter()` is idempotent on Rust Iterators
       (r/invoke (u/var ~#'seq) ?coll)
       (r/method into_iter (r/method clone ?coll))
 
