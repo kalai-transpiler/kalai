@@ -149,6 +149,51 @@
                           (symbol (ju/fully-qualified-function-identifier-str ?fn "::"))
                           ?fn)))
 
+
+
+      (j/invoke (u/var ~#'reduce) ?fn ?xs)
+      (j/method get
+                (j/method reduce
+                          ~(if (:seq (meta ?xs))
+                             ?xs
+                             (list 'j/method 'stream ?xs))
+                          ~(if (symbol? ?fn)
+                             (symbol (ju/fully-qualified-function-identifier-str ?fn "::"))
+                             ?fn)))
+
+
+      ;; Options:
+      ;; 1. https://stackoverflow.com/a/67532404
+      ;; Collectors.collectingAndThen(
+      ;;            Collectors.reducing(Function.<B>identity(), a -> b -> f.apply(b, a), Function::andThen),
+      ;;            endo -> endo.apply(init)
+      ;;    )
+      ;; 2. a lambda that does this https://stackoverflow.com/a/53499752
+      ;; <U, T> U foldLeft(Collection<T> sequence, U identity, BiFunction<U, ? super T, U> accumulator) {
+      ;;    U result = identity;
+      ;;    for (T element : sequence)
+      ;;        result = accumulator.apply(result, element);
+      ;;    return result;
+      ;;}
+      ;; TODO: use gensym
+      (j/invoke (u/var ~#'reduce) ?fn ?initial ?xs)
+      (j/invoke Collectors.collectingAndThen
+                (j/invoke Collectors.reducing
+                          (j/invoke Function.identity)
+                          (j/lambda [a b] (j/invoke ?fn b a))
+                          ~(symbol "Function::andThen"))
+                (j/lambda [f] (j/invoke f ?initial)))
+      #_(j/method reduce
+                ~(if (:seq (meta ?xs))
+                   ?xs
+                   (list 'j/method 'stream ?xs))
+                ?initial
+                ~(if (symbol? ?fn)
+                   (symbol (ju/fully-qualified-function-identifier-str ?fn "::"))
+                   ?fn))
+      
+      
+
       (j/invoke (u/var ~#'str) & ?args)
       (j/operator + "" & ?args)
 
