@@ -155,6 +155,18 @@
                 ;; TODO: maybe gensym the argname
                 ?fn)
 
+      (r/invoke (u/var ~#'reduce) ?fn ?xs)
+      (r/method unwrap
+                (r/method reduce
+                          (r/method into_iter (r/method clone ?xs))
+                          ?fn))
+
+      (r/invoke (u/var ~#'reduce) ?fn ?initial ?xs)
+      (r/method fold
+                (r/method into_iter (r/method clone ?xs))
+                ?initial
+                ?fn)
+
       ;; TODO: do we really need to clone here???
       (r/invoke (u/var ~#'vector?) ?x)
       (r/operator ||
