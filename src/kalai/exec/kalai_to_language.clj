@@ -105,27 +105,26 @@
 ;; TODO: can we remove this?  becuase we are using concrete types instead of the wrappers
 ;; (ex: std::vec::Vec<BValue> instead of Vector for {:t {:mvector [:any]}} )
 (defn helper-fn-impl-strs []
-  (let [
-        primitives [:bool :byte :char :int :long :float :double :string]
+  (let [primitives [:bool :byte :char :int :long :float :double :string]
         vector-contains-fns (for [t primitives]
-                           (let [t-str (e-string/kalai-type->rust t)]
-                             (list 'defn (symbol (str "contains-" t-str))
-                                   ^{:t :bool} [(with-meta 'self {:ref true}),
-                                                (with-meta 'x {:t t})]
-                                   '(.contains self ^:ref (kalai.BValue/from x)))))
+                              (let [t-str (e-string/kalai-type->rust t)]
+                                (list 'defn (symbol (str "contains-" t-str))
+                                      ^{:t :bool} [(with-meta 'self {:ref true}),
+                                                   (with-meta 'x {:t t})]
+                                      '(.contains self ^:ref (kalai.kalai.BValue/from x)))))
         set-contains-fns (for [t primitives]
                            (let [t-str (e-string/kalai-type->rust t)]
                              (list 'defn (symbol (str "contains-" t-str))
                                    ^{:t :bool} [(with-meta 'self {:ref true}),
                                                 (with-meta 'x {:t t})]
-                                   '(.contains self ^:ref (kalai.BValue/from x)))))
+                                   '(.contains self ^:ref (kalai.kalai.BValue/from x)))))
         set-insert-fns (for [t primitives]
                          (let [t-str (e-string/kalai-type->rust t)]
                            (list 'defn (symbol (str "insert-" t-str))
                                  ^{:t :bool} [(with-meta 'self {:ref true
                                                                 :mut true}),
                                               (with-meta 'x {:t t})]
-                                 (list '.insert 'self '(kalai.BValue/from x)))))
+                                 (list '.insert 'self '(kalai.kalai.BValue/from x)))))
         map-insert-fns (for [k-t primitives
                              v-t primitives]
                          (let [k-t-str (e-string/kalai-type->rust k-t)
@@ -135,7 +134,7 @@
                                                                           :mut true}),
                                                         (with-meta 'k {:t k-t})
                                                         (with-meta 'v {:t v-t})]
-                                 (list '.map '(.insert self (kalai.BValue/from k) (kalai.BValue/from v))
+                                 (list '.map '(.insert self (kalai.kalai.BValue/from k) (kalai.kalai.BValue/from v))
                                        (str "RUST-FROM-FN-" v-t-str)))))
         map-get-fns (for [k-t primitives
                           v-t primitives]
@@ -143,11 +142,11 @@
                             v-t-str (e-string/kalai-type->rust v-t)]
                         (list 'defn (symbol (str "get-" k-t-str "-" v-t-str))
                               ^{:t {:option [^:ref v-t]}} [(with-meta 'self {:ref true}),
-                                                           (with-meta 'k {:t k-t
+                                                           (with-meta 'k {:t   k-t
                                                                           :ref true})]
-                              (list '.map '(.get self ^:ref (kalai.BValue/from k))
+                              (list '.map '(.get self ^:ref (kalai.kalai.BValue/from k))
                                     (str "RUST-FROM-FN-" v-t-str)))))
-        helper-fn-front-matter '((ns kalai.BValue)
+        helper-fn-front-matter '((ns kalai.kalai.BValue)
                                  (defn from [x]))
         result-str (str/join \newline
                              ["impl Set {"
@@ -169,22 +168,38 @@
         result-str-post-edits (str/replace result-str #"String::from\(\"RUST-FROM-FN-(\w+)\"\)" "$1::from")]
     result-str-post-edits))
 
+(def core
+  {::l/rust ["kalai.rs"]
+   ::l/java ["Kalai.java"]})
 
 ;; Note: if reosurce files are stored in a depth below the root directory, then
 ;; a deeper copy using recursion would be necessary, which would be better handled using the fs library
 ;; https://github.com/clj-commons/fs
 (defn inject-kalai-helper-files [{:keys [transpile-dir languages]}]
-  (when (contains? languages ::l/rust)
-    (let [k (io/resource "rust/kalai.rs")
-          dest-file-path (io/file transpile-dir "rust" "src" "kalai.rs")
-          k-str (slurp k)
-          dest-file-str (str k-str
-                              \newline \newline
-                             (helper-fn-impl-strs) ;; TODO: can we remove this?
-                             \newline
-                             )]
-      (assert k "kalai.rs")
-      (spit dest-file-path dest-file-str))))
+  (doseq [language languages]
+    (let [#_#_k (io/resource (get core language))
+          #_#_dest-file-path (io/file transpile-dir "rust" "src" "kalai.rs")
+          #_#_fs (file-seq (io/resource (name language)))
+          #_#_dest-file-str (str k-str
+                                 \newline \newline
+                                 (helper-fn-impl-strs)      ;; TODO: can we remove this?
+                                 \newline
+                                 )]
+      (doseq [f (get core language)]
+        ;; Resources cannot be treated as normal files, or handled as directories.
+        ;; So we cant just copy the entire directory using a File based approach.
+        (.mkdirs (io/file transpile-dir (name language) "src" "kalai"))
+        (let [s (slurp (io/resource (str (name language) "/" f)))
+              s (if (= language ::l/rust)
+                  (str s
+                       \newline \newline
+                       (helper-fn-impl-strs)      ;; TODO: can we remove this?
+                       \newline)
+                  s)
+              dest (io/file transpile-dir (name language) "src" "kalai" f)]
+          (spit dest s)))
+      #_(spit dest-file-path dest-file-str)
+      )))
 
 (defn write-module-definitions [{:keys [transpile-dir languages]}]
   (when (contains? languages ::l/rust)
@@ -203,7 +218,7 @@
   ;; TODO: consider adding a spec to this
   [options]
   (doseq [^File source-file (file-seq (io/file (:src-dir options)))
-          :when (not (.isDirectory source-file))]
+          :when (.isFile source-file)]
     (transpile-file source-file options))
   (inject-kalai-helper-files options)
   (write-module-definitions options))

@@ -1,5 +1,5 @@
-use crate::kalai;
-use crate::kalai::PMap;
+use crate::kalai::kalai;
+use crate::kalai::kalai::PMap;
 lazy_static::lazy_static! {
 static ref x: std::collections::HashMap<i64,String> = std::collections::HashMap::new();
 }

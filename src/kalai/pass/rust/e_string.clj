@@ -225,7 +225,7 @@
      (apply space-separated
             (interpose op (map stringify (cons x xs)))))))
 
-(def std-imports "use crate::kalai;\nuse crate::kalai::PMap;")
+(def std-imports "use crate::kalai::kalai;\nuse crate::kalai::kalai::PMap;")
 
 (defn module-str [& forms]
   (apply line-separated

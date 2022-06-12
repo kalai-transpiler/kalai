@@ -294,8 +294,8 @@ let y: i64 = 5i64;"))
                             (init z y)
                             (return z))))
     ;;->
-    "use crate::kalai;
-use crate::kalai::PMap;
+    "use crate::kalai::kalai;
+use crate::kalai::kalai::PMap;
 lazy_static::lazy_static! {
 static ref x: std::collections::HashMap<i64,String> = std::collections::HashMap::new();
 }
@@ -330,8 +330,8 @@ return z;
                             ;;(return nil)
                             )))
     ;;->
-    "use crate::kalai;
-use crate::kalai::PMap;
+    "use crate::kalai::kalai;
+use crate::kalai::kalai::PMap;
 pub fn f(x: kalai::BValue) -> String {
 let v: std::vec::Vec<kalai::BValue> = std::vec::Vec::from(x);
 let v_first: kalai::BValue = v.get(0i32 as usize).unwrap().clone();
@@ -359,8 +359,8 @@ return format!(\"{}{}{}\", table_name, String::from(\" AS \"), table_alias);
            (init result [])
            (invoke conj result 3))))
     ;;->
-    "use crate::kalai;
-use crate::kalai::PMap;
+    "use crate::kalai::kalai;
+use crate::kalai::kalai::PMap;
 pub fn get_separator_positions() -> () {
 let mut result: std::vec::Vec<i32> = std::vec::Vec::new();
 result.push(3i64);

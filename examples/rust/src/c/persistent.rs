@@ -1,5 +1,5 @@
-use crate::kalai;
-use crate::kalai::PMap;
+use crate::kalai::kalai;
+use crate::kalai::kalai::PMap;
 pub fn test_map() -> i64 {
     let a: std::collections::HashMap<String, i64> = {
         let mut tmp1: std::collections::HashMap<String, i64> = std::collections::HashMap::new();

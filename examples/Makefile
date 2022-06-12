@@ -33,6 +33,7 @@ run_java:
 	cd java && gradle -PmainClass=a.Demo02 run
 	cd java && gradle -PmainClass=a.Demo03 run
 	cd java && gradle -PmainClass=a.Demo04 run
+	cd java && gradle -PmainClass=b.HigherOrderFunction run
 	cd java && gradle -PmainClass=b.Loops run
 	cd java && gradle -PmainClass=b.Requirer run
 	cd java && gradle -PmainClass=b.Simple run

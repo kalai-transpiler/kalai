@@ -177,22 +177,7 @@
       ;;}
       ;; TODO: use gensym
       (j/invoke (u/var ~#'reduce) ?fn ?initial ?xs)
-      (j/invoke Collectors.collectingAndThen
-                (j/invoke Collectors.reducing
-                          (j/invoke Function.identity)
-                          (j/lambda [a b] (j/invoke ?fn b a))
-                          ~(symbol "Function::andThen"))
-                (j/lambda [f] (j/invoke f ?initial)))
-      #_(j/method reduce
-                ~(if (:seq (meta ?xs))
-                   ?xs
-                   (list 'j/method 'stream ?xs))
-                ?initial
-                ~(if (symbol? ?fn)
-                   (symbol (ju/fully-qualified-function-identifier-str ?fn "::"))
-                   ?fn))
-      
-      
+      (j/invoke kalai.Kalai.foldLeft ?xs ?initial ?fn)
 
       (j/invoke (u/var ~#'str) & ?args)
       (j/operator + "" & ?args)
