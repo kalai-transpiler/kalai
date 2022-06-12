@@ -3,9 +3,9 @@ use crate::kalai::kalai::PMap;
 pub fn cast_to_str(x: kalai::BValue) -> String {
     if (x.is_type("Vector") || x.is_type("Vec")) {
         let v: std::vec::Vec<kalai::BValue> = std::vec::Vec::from(x);
-        let v_first: kalai::BValue = v.get(0i32 as usize).unwrap().clone();
+        let v_first: kalai::BValue = v.get((0i32 as usize)).unwrap().clone();
         let table_name: String = String::from(v_first);
-        let v_second: kalai::BValue = v.get(1i32 as usize).unwrap().clone();
+        let v_second: kalai::BValue = v.get((1i32 as usize)).unwrap().clone();
         let table_alias: String = String::from(v_second);
         return format!("{}{}{}", table_name, String::from(" AS "), table_alias);
     } else {

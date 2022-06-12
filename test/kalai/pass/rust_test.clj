@@ -103,7 +103,7 @@ return (x + 1i32);
   #_(testing
       "Some Clojure forms expand to multiple statements.
       The way Kalai deals with this is by creating a group.
-      That group is later unrolled as temporary variable assignments."
+      That group is later (unrolled as temporary) variable assignments."
       (top-level-form
         '(defn f ^{:t :int} []
            (let [x (atom (int 0))]
@@ -334,9 +334,9 @@ return z;
 use crate::kalai::kalai::PMap;
 pub fn f(x: kalai::BValue) -> String {
 let v: std::vec::Vec<kalai::BValue> = std::vec::Vec::from(x);
-let v_first: kalai::BValue = v.get(0i32 as usize).unwrap().clone();
+let v_first: kalai::BValue = v.get((0i32 as usize)).unwrap().clone();
 let table_name: String = String::from(v_first);
-let v_second: kalai::BValue = v.get(1i32 as usize).unwrap().clone();
+let v_second: kalai::BValue = v.get((1i32 as usize)).unwrap().clone();
 let table_alias: String = String::from(v_second);
 return format!(\"{}{}{}\", table_name, String::from(\" AS \"), table_alias);
 }"))
@@ -567,7 +567,7 @@ x = rpds::Vector::new().push_back(3i64).push_back(4i64);"))
        (init y x)
        (invoke println y))
     "let x: i32 = 1;
-let y: i64 = x as i64;
+let y: i64 = (x as i64);
 println!(\"{}\", y);"))
 
 (deftest user-cast-test
@@ -580,7 +580,7 @@ println!(\"{}\", y);"))
        (init y x)
        (invoke println y))
     "let x: i32 = 1i32;
-let y: i64 = x as i64;
+let y: i64 = (x as i64);
 println!(\"{}\", y);"))
 
 ;; TODO: revisit if necessary, but for now don't bother
@@ -595,7 +595,7 @@ println!(\"{}\", y);"))
        (init y x)
        (invoke println y))
     "let x: i32 = 1;
-let y: i64 = x as i64;
+let y: i64 = (x as i64);
 println!(\"{}\", y);"))
 
 ;; TODO: for now, you can do this just fine
@@ -615,7 +615,7 @@ println!(\"{}\", y);"))
       "let w: i32 = 1;
 let x: i32 = 3;
 let y: i32 = w + x;
-let z: i64 = y as i64;
+let z: i64 = (y as i64);
 println!(\"{}\", z);"))
 
 (deftest data-literals7-test
@@ -1067,7 +1067,7 @@ else
 5i64
 }));"))
 
-;; Note: Rust will not compile when conditionals as expressions don't have
+;; Note: Rust will not compile when (conditionals as expressions) don't have
 ;; an "else" branch (that is, only has a "then" branch)
 (deftest conditional-expression2-test
   (inner-form
@@ -1156,9 +1156,9 @@ else
 let b: String = String::new();
 let c: String = String::new();
 {
-a.chars().count() as i32;
-b.chars().count() as i32;
-c.chars().count() as i32;
+(a.chars().count() as i32);
+(b.chars().count() as i32);
+(c.chars().count() as i32);
 }"))
 
 (deftest interop1b-test
@@ -1178,8 +1178,8 @@ c.chars().count() as i32;
     "let a: std::vec::Vec<char> = std::vec::Vec::new();
 let b: std::vec::Vec<char> = std::vec::Vec::new();
 {
-a.len() as i32;
-b.len() as i32;
+(a.len() as i32);
+(b.len() as i32);
 }"))
 
 (deftest interop2-test
@@ -1216,11 +1216,11 @@ tmp1
     ;;->
     '(init x (invoke clojure.lang.RT/count "abc"))
     ;;->
-    "let x: i32 = String::from(\"abc\").len() as i32;"))
+    "let x: i32 = (String::from(\"abc\").len() as i32);"))
 
 ;; Because Rust strings semantically differ from Java strings, we're not even
 ;; sure if `nth` on strings even makes sense across languages. If/when we
-;; revisit, we could instead offer an iterator over a string as a construct
+;; revisit, we could instead offer an iterator over a (string as a) construct
 ;; in input Kalai.
 (deftest interop5-test
   #_(inner-form
@@ -1252,7 +1252,7 @@ tmp1.push(2i32);
 tmp1.push(3i32);
 tmp1
 };
-println!(\"{}\", v.get(1i64 as usize).unwrap().clone());"))
+println!(\"{}\", v.get((1i64 as usize)).unwrap().clone());"))
 
 
 (deftest interop7-test
@@ -1290,7 +1290,7 @@ i = (i - 3i32);
        (invoke println "hi"))
     ;;->
     "let separator_positions: std::vec::Vec<i32> = std::vec::Vec::new();
-let num_positions: i32 = separator_positions.len() as i32;
+let num_positions: i32 = (separator_positions.len() as i32);
 println!(\"{}\", String::from(\"hi\"));"))
 
 

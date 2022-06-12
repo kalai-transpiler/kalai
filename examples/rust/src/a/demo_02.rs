@@ -41,12 +41,12 @@ static ref digits_map: std::collections::HashMap<char,i32> = get_digits_map();
 }
 pub fn parse(s: String) -> i32 {
     let mut result: i32 = 0i32;
-    let str_length: i32 = s.chars().count() as i32;
+    let str_length: i32 = (s.chars().count() as i32);
     {
         let mut i: i32 = 0i32;
         while (i < str_length) {
             {
-                let digit: char = s.chars().nth(i as usize).unwrap();
+                let digit: char = s.chars().nth((i as usize)).unwrap();
                 if digits_map.contains_key(&digit) {
                     let digit_val: i32 = digits_map.get(&digit).unwrap().clone();
                     result = ((10i32 * result) + digit_val);
@@ -189,25 +189,25 @@ pub fn format(num: i32, number_system: String, grouping_strategy: String) -> Str
             let number_system_digits: std::vec::Vec<char> =
                 number_systems_map.get(&number_system).unwrap().clone();
             let local_digit: char = number_system_digits
-                .get(remainder as usize)
+                .get((remainder as usize))
                 .unwrap()
                 .clone();
             {
-                result.insert(0i32 as usize, local_digit);
+                result.insert((0i32 as usize), local_digit);
                 i = quotient;
             }
         }
         {
             let sep: char = grouping_separators_map.get(&number_system).unwrap().clone();
-            let num_length: i32 = result.len() as i32;
+            let num_length: i32 = (result.len() as i32);
             let separator_positions: std::vec::Vec<i32> =
                 get_separator_positions(num_length, grouping_strategy);
-            let num_positions: i32 = separator_positions.len() as i32;
+            let num_positions: i32 = (separator_positions.len() as i32);
             let mut idx: i32 = 0i32;
             while (idx < num_positions) {
                 {
-                    let position: i32 = separator_positions.get(idx as usize).unwrap().clone();
-                    result.insert(position as usize, sep);
+                    let position: i32 = separator_positions.get((idx as usize)).unwrap().clone();
+                    result.insert((position as usize), sep);
                 }
                 idx = (idx + 1i32);
             }
