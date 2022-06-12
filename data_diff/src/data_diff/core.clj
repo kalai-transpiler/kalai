@@ -7,14 +7,18 @@
   [a b k]
   (let [va (get a k)
         vb (get b k)
-        [a* b* ab] (diff va vb)
+        [aa bb ab] (diff va vb)
         in-a (contains? a k)
         in-b (contains? b k)
         same (and in-a in-b
                   (or (not (nil? ab))
-                      (and (nil? va) (nil? vb))))]
-    [(when (and in-a (or (not (nil? a*)) (not same))) {k a*})
-     (when (and in-b (or (not (nil? b*)) (not same))) {k b*})
+                      (and (nil? va) (nil? vb))))
+        p (and in-a (or (not (nil? aa)) (not same)))
+        q (and in-b (or (not (nil? bb)) (not same)))]
+    ;; TODO: this produces weird nonsense `if` when p and q are inline
+    ;; TODO: create a simpler test that recreates by having a boolean expression in an if or when block
+    [(when p {k aa})
+     (when q {k bb})
      (when same {k ab})]))
 
 (defn diff-associative

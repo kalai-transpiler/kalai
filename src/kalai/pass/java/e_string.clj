@@ -5,7 +5,8 @@
             [camel-snake-kebab.core :as csk]
             [puget.printer :as puget]
             [clojure.java.io :as io]
-            [kalai.pass.java.util :as ju]))
+            [kalai.pass.java.util :as ju]
+            [kalai.util :as u]))
 
 (declare stringify)
 

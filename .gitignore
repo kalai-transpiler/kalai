@@ -14,13 +14,11 @@ pom.xml.asc
 **/.idea*
 .gradle
 build
-/examples/java/build
-/examples/rust/target
+/*/java/build
+/*/rust/target
 .cpcache
 *.iml
 **/*.iml
 **/Cargo.lock
 **/.nrepl-port
-/sql_builder/java/build
-/sql_builder/rust/target
 /.clj-kondo

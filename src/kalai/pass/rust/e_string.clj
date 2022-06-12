@@ -155,7 +155,7 @@
            (str ": " (when ref "&") (type-str variable-name))))))
 
 (defn cast-str [identifier t]
-  (space-separated (stringify identifier) "as" (t-str t)))
+  (parens (space-separated (stringify identifier) "as" (t-str t))))
 
 (defn init-str
   ([variable-name]
