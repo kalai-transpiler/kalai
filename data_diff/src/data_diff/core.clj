@@ -12,13 +12,11 @@
         in-b (contains? b k)
         same (and in-a in-b
                   (or (not (nil? ab))
-                      (and (nil? va) (nil? vb))))
-        p (and in-a (or (not (nil? aa)) (not same)))
-        q (and in-b (or (not (nil? bb)) (not same)))]
+                      (and (nil? va) (nil? vb))))]
     ;; TODO: this produces weird nonsense `if` when p and q are inline
     ;; TODO: create a simpler test that recreates by having a boolean expression in an if or when block
-    [(when p {k aa})
-     (when q {k bb})
+    [(when (and in-a (or (not (nil? aa)) (not same))) {k aa})
+     (when (and in-b (or (not (nil? bb)) (not same))) {k bb})
      (when same {k ab})]))
 
 (defn diff-associative

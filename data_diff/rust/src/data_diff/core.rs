@@ -3,13 +3,13 @@ use crate::kalai::kalai::PMap;
 pub fn diff_associative_key(a: TYPE_MISSING, b: TYPE_MISSING, k: TYPE_MISSING) -> TYPE_MISSING {
     let va: kalai::BValue = a.get(&k).unwrap().clone();
     let vb: kalai::BValue = b.get(&k).unwrap().clone();
-    let vec_18629: kalai::BValue = diff(va, vb);
+    let vec_18633: kalai::BValue = diff(va, vb);
     let aa: kalai::BValue =
-        clojure.lang._rt / nth(vec_18629, 0i64, kalai::BValue::from(kalai::NIL));
+        clojure.lang._rt / nth(vec_18633, 0i64, kalai::BValue::from(kalai::NIL));
     let bb: kalai::BValue =
-        clojure.lang._rt / nth(vec_18629, 1i64, kalai::BValue::from(kalai::NIL));
+        clojure.lang._rt / nth(vec_18633, 1i64, kalai::BValue::from(kalai::NIL));
     let ab: kalai::BValue =
-        clojure.lang._rt / nth(vec_18629, 2i64, kalai::BValue::from(kalai::NIL));
+        clojure.lang._rt / nth(vec_18633, 2i64, kalai::BValue::from(kalai::NIL));
     let in_a: kalai::BValue = a.contains_key(&k);
     let in_b: kalai::BValue = b.contains_key(&k);
     let same = {
@@ -35,41 +35,39 @@ pub fn diff_associative_key(a: TYPE_MISSING, b: TYPE_MISSING, k: TYPE_MISSING) -
             and_5531_auto
         }
     };
-    let p = {
-        let and_5531_auto = in_a;
-        if and_5531_auto {
-            let or_5533_auto: kalai::BValue = !aa.is_type("Nil");
-            if or_5533_auto {
-                or_5533_auto
-            } else {
-                !same
-            }
-        } else {
-            and_5531_auto
-        }
-    };
-    let q = {
-        let and_5531_auto = in_b;
-        if and_5531_auto {
-            let or_5533_auto: kalai::BValue = !bb.is_type("Nil");
-            if or_5533_auto {
-                or_5533_auto
-            } else {
-                !same
-            }
-        } else {
-            and_5531_auto
-        }
-    };
     return TYPE_MISSING::new()
         .push_back(
-            if p {
+            if {
+                let and_5531_auto = in_a;
+                if and_5531_auto {
+                    let or_5533_auto: kalai::BValue = !aa.is_type("Nil");
+                    if or_5533_auto {
+                        or_5533_auto
+                    } else {
+                        !same
+                    }
+                } else {
+                    and_5531_auto
+                }
+            } {
                 TYPE_MISSING::new().insert(k.clone(), aa.clone())
             }
             .clone(),
         )
         .push_back(
-            if q {
+            if {
+                let and_5531_auto = in_b;
+                if and_5531_auto {
+                    let or_5533_auto: kalai::BValue = !bb.is_type("Nil");
+                    if or_5533_auto {
+                        or_5533_auto
+                    } else {
+                        !same
+                    }
+                } else {
+                    and_5531_auto
+                }
+            } {
                 TYPE_MISSING::new().insert(k.clone(), bb.clone())
             }
             .clone(),
@@ -175,12 +173,12 @@ pub fn vectorize(m: TYPE_MISSING) -> TYPE_MISSING {
     if m.clone().into_iter() {
         return m.clone().into_iter().fold(
             vec(repeat(apply(max, keys(m)), kalai::BValue::from(kalai::NIL))),
-            |result, p_18670| {
-                let vec_18672 = p_18670;
+            |result, p_18674| {
+                let vec_18676 = p_18674;
                 let k: kalai::BValue =
-                    clojure.lang._rt / nth(vec_18672, 0i64, kalai::BValue::from(kalai::NIL));
+                    clojure.lang._rt / nth(vec_18676, 0i64, kalai::BValue::from(kalai::NIL));
                 let v: kalai::BValue =
-                    clojure.lang._rt / nth(vec_18672, 1i64, kalai::BValue::from(kalai::NIL));
+                    clojure.lang._rt / nth(vec_18676, 1i64, kalai::BValue::from(kalai::NIL));
                 return assoc(result, k, v);
             },
         );

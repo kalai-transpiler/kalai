@@ -189,19 +189,23 @@
 
     ;; when a conditional appears as an expression, we need a tmp variable,
     ;; so we create a group.
-    (m/and (if ?condition ?then)
-           (m/let [?tmp (u/tmp-for ?then)]))
+    (m/and (if ?test ?then)
+           (m/let [?tmp (u/tmp-for ?then)
+                   ?result (u/tmp-for ?test)]))
     (group
       (j/init (m/app u/maybe-meta-assoc ?tmp :mut true))
-      (j/if (m/app expression ?condition)
+      (j/init ?result (m/app expression ?test))
+      (j/if ?result
         (j/block (j/assign ?tmp (m/app expression ?then))))
       ?tmp)
 
-    (m/and (if ?condition ?then ?else)
-           (m/let [?tmp (u/tmp-for ?then)]))
+    (m/and (if ?test ?then ?else)
+           (m/let [?tmp (u/tmp-for ?then)
+                   ?result (u/tmp-for ?test)]))
     (group
       (j/init (m/app u/maybe-meta-assoc ?tmp :mut true))
-      (j/if (m/app expression ?condition)
+      (j/init ?result (m/app expression ?test))
+      (j/if ?result
         (j/block (j/assign ?tmp (m/app expression ?then)))
         (j/block (j/assign ?tmp (m/app expression ?else))))
       ?tmp)
@@ -255,14 +259,20 @@
                  (j/block . (m/app statement !body) ...))
 
       ;; conditional
-      (if ?test ?then)
-      (j/if (m/app expression ?test)
-        (j/block (m/app statement ?then)))
+      (m/and (if ?test ?then)
+             (m/let [?result (u/tmp-for ?test)]))
+      (group
+        (j/init ?result (m/app expression ?test))
+        (j/if ?result
+          (j/block (m/app statement ?then))))
 
-      (if ?test ?then ?else)
-      (j/if (m/app expression ?test)
-        (j/block (m/app statement ?then))
-        (j/block (m/app statement ?else)))
+      (m/and (if ?test ?then ?else)
+             (m/let [?result (u/tmp-for ?test)]))
+      (group
+        (j/init ?result (m/app expression ?test))
+        (j/if ?result
+          (j/block (m/app statement ?then))
+          (j/block (m/app statement ?else))))
 
       (case ?x {& (m/seqable [!k [_ !v]] ...)} ?default)
       (j/switch (m/app expression ?x)
