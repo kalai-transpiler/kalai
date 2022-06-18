@@ -435,7 +435,8 @@ return myBinding;
        (invoke println 1)
        (invoke println 2))
     ;;->
-    "if (true)
+    "boolean tmp1 = true;
+if (tmp1)
 {
 System.out.println(1L);
 }
@@ -797,21 +798,28 @@ System.out.println(\"hi\");
          (if true
            (invoke println 3))))
     ;;->
-    "if (true)
+    "boolean tmp1 = true;
+if (tmp1)
 {
 System.out.println(1L);
 }
 else
 {
-if (false)
+boolean tmp2 = false;
+{
+if (tmp2)
 {
 System.out.println(2L);
 }
 else
 {
-if (true)
+boolean tmp3 = true;
+{
+if (tmp3)
 {
 System.out.println(3L);
+}
+}
 }
 }
 }"))
@@ -929,7 +937,8 @@ break;
                          5)))
     ;;->
     "long tmp1;
-if (true)
+boolean tmp2 = true;
+if (tmp2)
 {
 tmp1 = 1L;
 }
@@ -937,27 +946,29 @@ else
 {
 tmp1 = 2L;
 }
-long tmp2;
-if (true)
-{
 long tmp3;
-if (true)
+boolean tmp4 = true;
+if (tmp4)
 {
-tmp3 = 3L;
+long tmp5;
+boolean tmp6 = true;
+if (tmp6)
+{
+tmp5 = 3L;
 }
 else
 {
-tmp3 = 4L;
+tmp5 = 4L;
 }
 {
-tmp2 = tmp3;
+tmp3 = tmp5;
 }
 }
 else
 {
-tmp2 = 5L;
+tmp3 = 5L;
 }
-System.out.println((tmp1 + tmp2));"))
+System.out.println((tmp1 + tmp3));"))
 
 (deftest nested-group-test
   #_(inner-form
@@ -990,7 +1001,8 @@ System.out.println((tmp1 + tmp2));"))
                        4))
     ;;->
     "long tmp1;
-if (true)
+boolean tmp2 = true;
+if (tmp2)
 {
 System.out.println(1L);
 {
@@ -1015,23 +1027,25 @@ System.out.println((tmp1 + 4L));"))
                        4))
     ;;->
     "long tmp1;
-if (true)
+boolean tmp2 = true;
+if (tmp2)
 {
 tmp1 = 1L;
 }
 else
 {
-long tmp2;
-if (false)
+long tmp3;
+boolean tmp4 = false;
+if (tmp4)
 {
-tmp2 = 2L;
+tmp3 = 2L;
 }
 else
 {
-tmp2 = 3L;
+tmp3 = 3L;
 }
 {
-tmp1 = tmp2;
+tmp1 = tmp3;
 }
 }
 System.out.println((tmp1 + 4L));"))
@@ -1182,7 +1196,8 @@ System.out.println(\"hi\");"))
                      (return x)))))
     ;;->
     "public static final long f() {
-if (true)
+boolean tmp1 = true;
+if (tmp1)
 {
 return 1L;
 }
@@ -1283,23 +1298,25 @@ System.out.println(z);"))
     ;;->
     "long a = 1L;
 long tmp1;
-if (true)
+boolean tmp2 = true;
+if (tmp2)
 {
 tmp1 = a;
 }
 else
 {
-long tmp2;
-if (false)
+long tmp3;
+boolean tmp4 = false;
+if (tmp4)
 {
-tmp2 = a;
+tmp3 = a;
 }
 else
 {
-tmp2 = a;
+tmp3 = a;
 }
 {
-tmp1 = tmp2;
+tmp1 = tmp3;
 }
 }
 final long x = tmp1;
