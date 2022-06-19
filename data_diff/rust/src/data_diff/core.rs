@@ -3,13 +3,31 @@ use crate::kalai::kalai::PMap;
 pub fn diff_associative_key(a: TYPE_MISSING, b: TYPE_MISSING, k: TYPE_MISSING) -> TYPE_MISSING {
     let va: kalai::BValue = a.get(&k).unwrap().clone();
     let vb: kalai::BValue = b.get(&k).unwrap().clone();
-    let vec_18633: kalai::BValue = diff(va, vb);
-    let aa: kalai::BValue =
-        clojure.lang._rt / nth(vec_18633, 0i64, kalai::BValue::from(kalai::NIL));
-    let bb: kalai::BValue =
-        clojure.lang._rt / nth(vec_18633, 1i64, kalai::BValue::from(kalai::NIL));
-    let ab: kalai::BValue =
-        clojure.lang._rt / nth(vec_18633, 2i64, kalai::BValue::from(kalai::NIL));
+    let vec_18649: kalai::BValue = diff(va, vb);
+    let aa: kalai::BValue = {
+        let get1 = vec_18649.get((0i64 as usize));
+        if get1.is_some() {
+            get1.unwrap().clone()
+        } else {
+            kalai::BValue::from(kalai::NIL)
+        }
+    };
+    let bb: kalai::BValue = {
+        let get2 = vec_18649.get((1i64 as usize));
+        if get2.is_some() {
+            get2.unwrap().clone()
+        } else {
+            kalai::BValue::from(kalai::NIL)
+        }
+    };
+    let ab: kalai::BValue = {
+        let get3 = vec_18649.get((2i64 as usize));
+        if get3.is_some() {
+            get3.unwrap().clone()
+        } else {
+            kalai::BValue::from(kalai::NIL)
+        }
+    };
     let in_a: kalai::BValue = a.contains_key(&k);
     let in_b: kalai::BValue = b.contains_key(&k);
     let same = {
@@ -173,12 +191,24 @@ pub fn vectorize(m: TYPE_MISSING) -> TYPE_MISSING {
     if m.clone().into_iter() {
         return m.clone().into_iter().fold(
             vec(repeat(apply(max, keys(m)), kalai::BValue::from(kalai::NIL))),
-            |result, p_18674| {
-                let vec_18676 = p_18674;
-                let k: kalai::BValue =
-                    clojure.lang._rt / nth(vec_18676, 0i64, kalai::BValue::from(kalai::NIL));
-                let v: kalai::BValue =
-                    clojure.lang._rt / nth(vec_18676, 1i64, kalai::BValue::from(kalai::NIL));
+            |result, p_18690| {
+                let vec_18692 = p_18690;
+                let k: kalai::BValue = {
+                    let get4 = vec_18692.get((0i64 as usize));
+                    if get4.is_some() {
+                        get4.unwrap().clone()
+                    } else {
+                        kalai::BValue::from(kalai::NIL)
+                    }
+                };
+                let v: kalai::BValue = {
+                    let get5 = vec_18692.get((1i64 as usize));
+                    if get5.is_some() {
+                        get5.unwrap().clone()
+                    } else {
+                        kalai::BValue::from(kalai::NIL)
+                    }
+                };
                 return assoc(result, k, v);
             },
         );

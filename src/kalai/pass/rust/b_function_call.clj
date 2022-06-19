@@ -95,6 +95,17 @@
       (r/invoke clojure.lang.RT/nth ?x ?n)
       (r/method clone (r/method unwrap (r/method get ?x (r/cast ?n :usize))))
 
+      (m/and
+        (r/invoke clojure.lang.RT/nth ?x ?n ?not-found)
+        ;; Note: not using `u/tmp-for` because we don't want to create a type
+        ;; for the temporary variable because the type will be a Rust `Some<T>`
+        ;; type, which as a Rust-specific type, we cannot/do not want to express in Kalai.
+        (m/let [?get (u/gensym2 "get")]))
+      (r/block
+        (r/init ?get (r/method get ?x (r/cast ?n :usize)))
+        (r/if (r/method is_some ?get)
+          (r/block (r/method clone (r/method unwrap ?get)))
+          (r/block ?not-found)))
 
       ;; TODO: for vectors, we should detect the vector type and do a
       ;; cast of the index argument to `usize` like we do for `nth`

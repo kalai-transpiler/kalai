@@ -2,9 +2,10 @@
   (:require [clojure.test :refer [deftest testing is]]
             [kalai.pass.test-helpers
              :refer [ns-form-rust top-level-form-rust inner-form-rust]
-             :rename {ns-form-rust ns-form
+             :rename {ns-form-rust        ns-form
                       top-level-form-rust top-level-form
-                      inner-form-rust inner-form}]))
+                      inner-form-rust     inner-form}]
+            [kalai.util :as u]))
 
 ;; # Creating Variables
 
@@ -1535,3 +1536,49 @@ f(1i32);"))
     "rpds::Vector::new().push_back(1i64).push_back(2i64).push_back(3i64).clone().into_iter().map(|x|{
 return x;
 });"))
+
+;; TODO: Figure out if we can write this test in order to predictably match the Rust output string, which in turn
+;; would require us to detect gensym'ed symbols created at Clojure _reader_ time. This is a testing-only concern that
+;; is not a reflection of the main code functionality itself.
+;;(deftest destructure-test
+;;  (inner-form
+;;    '(let [[aa bb ab] ^{:t {:vector [:long]}} [1 5 9]]
+;;       (println "aa:" aa "bb:" bb "ab:" ab))
+;;    '(do
+;;       (init aa (nth 0 [1 5 9]))
+;;       (init bb (nth 1 [1 5 9]))
+;;       (init ab (nth 2 [1 5 9])))
+;;    '()))
+
+;; test the extra arity of nth that allows for a default value when the index is out of bounds
+(deftest nth-test
+  (inner-form
+    '(let [v ^{:t {:vector [:long]}} [1 5 9]
+           aa (nth v 0)
+           bb (nth v 1)
+           ab (nth v 2)
+           x (nth v 3 2468)]
+       (println "aa:" aa "bb:" bb "ab:" ab "x:" x))
+    '(do
+       (init v [1 5 9])
+       (init aa (invoke clojure.lang.RT/nth v 0))
+       (init bb (invoke clojure.lang.RT/nth v 1))
+       (init ab (invoke clojure.lang.RT/nth v 2))
+       (init x (invoke clojure.lang.RT/nth v 3 2468))
+       (invoke println "aa:" aa "bb:" bb "ab:" ab "x:" x))
+"let v: rpds::Vector<i64> = rpds::Vector::new().push_back(1i64).push_back(5i64).push_back(9i64);
+let aa: kalai::BValue = v.get((0i64 as usize)).unwrap().clone();
+let bb: kalai::BValue = v.get((1i64 as usize)).unwrap().clone();
+let ab: kalai::BValue = v.get((2i64 as usize)).unwrap().clone();
+let x: kalai::BValue = {
+let get1 = v.get((3i64 as usize));
+if get1.is_some()
+{
+get1.unwrap().clone()
+}
+else
+{
+2468i64
+}
+};
+println!(\"{} {} {} {} {} {} {} {}\", String::from(\"aa:\"), aa, String::from(\"bb:\"), bb, String::from(\"ab:\"), ab, String::from(\"x:\"), x);"))

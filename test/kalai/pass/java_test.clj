@@ -1485,3 +1485,48 @@ f(1);"))
     "new io.lacuna.bifurcan.List<Long>().addLast(1L).addLast(2L).addLast(3L).stream().map((x) -> {
 return x;
 });"))
+
+
+;; TODO: Figure out if we can write this test in order to predictably match the Java/Rust output string, which in turn
+;; would require us to detect gensym'ed symbols created at Clojure _reader_ time. This is a testing-only concern that
+;; is not a reflection of the main code functionality itself.
+;;(deftest destructure-test
+;;  (inner-form
+;;    '(let [[aa bb ab] ^{:t {:vector [:long]}} [1 5 9]]
+;;       (println "aa:" aa "bb:" bb "ab:" ab))
+;;    '(do
+;;       (init aa (nth 0 [1 5 9]))
+;;       (init bb (nth 1 [1 5 9]))
+;;       (init ab (nth 2 [1 5 9])))
+;;    '()))
+
+;; test the extra arity of nth that allows for a default value when the index is out of bounds
+(deftest nth-test
+  (inner-form
+    '(let [v ^{:t {:vector [:long]}} [1 5 9]
+           aa (nth v 0)
+           bb (nth v 1)
+           ab (nth v 2)
+           ^{:t :string} x ^{:cast :string} (nth v 3 2468)]
+       (println "aa:" aa "bb:" bb "ab:" ab "x:" x))
+    '(do
+       (init v [1 5 9])
+       (init aa (invoke clojure.lang.RT/nth v 0))
+       (init bb (invoke clojure.lang.RT/nth v 1))
+       (init ab (invoke clojure.lang.RT/nth v 2))
+       (init x (invoke clojure.lang.RT/nth v 3 2468))
+       (invoke println "aa:" aa "bb:" bb "ab:" ab "x:" x))
+    "final io.lacuna.bifurcan.List<Long> v = new io.lacuna.bifurcan.List<Long>().addLast(1L).addLast(5L).addLast(9L);
+final Object aa = v.get(0L);
+final Object bb = v.get(1L);
+final Object ab = v.get(2L);
+Object tmp1 = 2468L;
+if ((0L <= 3L))
+{
+if ((3L < v.size()))
+{
+tmp1 = v.get();
+}
+}
+final String x = (String)tmp1;
+System.out.println((\"\" + \"aa:\" + aa + \"bb:\" + bb + \"ab:\" + ab + \"x:\" + x));"))

@@ -14,8 +14,10 @@
 (defn gensym2
   "Returns a symbol for an identifier whose name needs to be unique. The name is prefixed by `s`,
 and uses an auto-incrementing number as a suffix for uniqueness."
-  [s]
-  (symbol (str s (swap! c inc))))
+  ([]
+   (gensym2 "X__"))
+  ([s]
+   (symbol (str s (swap! c inc)))))
 
 (defn spy
   ([x] (spy x nil))
@@ -27,7 +29,8 @@ and uses an auto-incrementing number as a suffix for uniqueness."
 
 (defn tmp
   "Creates a unique symbol (named via `gensym2`) with the metadata necessary for
-creating a temporary mutable variable."
+creating a temporary mutable variable.
+`expr` is, to the extent known, what we want to assign to the tmp variable."
   [type expr]
   (with-meta (gensym2 "tmp") {:t type :expr expr :mut true}))
 

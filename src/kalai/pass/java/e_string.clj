@@ -131,7 +131,10 @@
    (statement (typed-param variable-name)))
   ([variable-name value]
    (statement (space-separated (typed-param variable-name)
-                               "=" (stringify value)))))
+                               "=" (stringify value))))
+  ([a b & args]
+   (throw (ex-info (str "Init has more than 2 args:\n" (str/join \newline args))
+                   {:form args}))))
 
 (defn invoke-str [function-name & args]
   (str (if (symbol? function-name)
