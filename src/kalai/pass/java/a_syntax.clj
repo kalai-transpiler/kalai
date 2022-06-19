@@ -180,7 +180,8 @@
     (lambda ?params . !body ...)
     (j/lambda ?params (j/block . (m/app statement !body) ...))
 
-    ;; conditionals as an expression must be ternaries, but ternaries cannot contain bodies
+    ;; conditional expression
+    ;; must be ternaries, but ternaries cannot contain bodies
     ;;(if ?condition ?then)
     ;;(j/ternary (m/app expression ?condition) (m/app expression ?then) nil)
 
@@ -191,7 +192,7 @@
     ;; so we create a group.
     (m/and (if ?test ?then)
            (m/let [?tmp (u/tmp-for ?then)
-                   ?result (u/tmp-for ?test)]))
+                   ?result (u/tmp :bool ?test)]))
     (group
       (j/init (m/app u/maybe-meta-assoc ?tmp :mut true))
       (j/init ?result (m/app expression ?test))
@@ -201,7 +202,7 @@
 
     (m/and (if ?test ?then ?else)
            (m/let [?tmp (u/tmp-for ?then)
-                   ?result (u/tmp-for ?test)]))
+                   ?result (u/tmp :bool ?test)]))
     (group
       (j/init (m/app u/maybe-meta-assoc ?tmp :mut true))
       (j/init ?result (m/app expression ?test))
@@ -258,17 +259,17 @@
       (j/foreach ?sym (m/app expression ?xs)
                  (j/block . (m/app statement !body) ...))
 
-      ;; conditional
+      ;; conditional statement
       (m/and (if ?test ?then)
-             (m/let [?result (u/tmp-for ?test)]))
-      (group
+             (m/let [?result (u/tmp :bool ?test)]))
+      (j/block
         (j/init ?result (m/app expression ?test))
         (j/if ?result
           (j/block (m/app statement ?then))))
 
       (m/and (if ?test ?then ?else)
-             (m/let [?result (u/tmp-for ?test)]))
-      (group
+             (m/let [?result (u/tmp :bool ?test)]))
+      (j/block
         (j/init ?result (m/app expression ?test))
         (j/if ?result
           (j/block (m/app statement ?then))

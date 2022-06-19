@@ -806,7 +806,6 @@ System.out.println(1L);
 else
 {
 boolean tmp2 = false;
-{
 if (tmp2)
 {
 System.out.println(2L);
@@ -814,12 +813,9 @@ System.out.println(2L);
 else
 {
 boolean tmp3 = true;
-{
 if (tmp3)
 {
 System.out.println(3L);
-}
-}
 }
 }
 }"))

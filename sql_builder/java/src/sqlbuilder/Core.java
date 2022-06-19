@@ -7,7 +7,8 @@ import java.util.stream.Collectors;
 
 public class Core {
   public static final String castToStr(final Object x) {
-    if ((x instanceof List)) {
+    boolean tmp1 = (x instanceof List);
+    if (tmp1) {
       final ArrayList<Object> v = (ArrayList<Object>) x;
       final Object vFirst = v.get(0);
       final String tableName = (String) vFirst;
@@ -15,13 +16,16 @@ public class Core {
       final String tableAlias = (String) vSecond;
       return ("" + tableName + " AS " + tableAlias);
     } else {
-      if ((x instanceof String)) {
+      boolean tmp2 = (x instanceof String);
+      if (tmp2) {
         return ("" + (String) x);
       } else {
-        if ((x instanceof Integer)) {
+        boolean tmp3 = (x instanceof Integer);
+        if (tmp3) {
           return ("" + (int) x);
         } else {
-          if ((x instanceof Long)) {
+          boolean tmp4 = (x instanceof Long);
+          if (tmp4) {
             return ("" + (long) x);
           } else {
             return "";
@@ -47,7 +51,8 @@ public class Core {
   }
 
   public static final String whereStr(final Object clause) {
-    if ((clause instanceof List)) {
+    boolean tmp5 = (clause instanceof List);
+    if (tmp5) {
       final ArrayList<Object> v = (ArrayList<Object>) clause;
       final Object vFirst = v.stream().findFirst().get();
       final String op = (String) vFirst;
@@ -90,13 +95,14 @@ public class Core {
     final Object insertInto = queryMap.getOrDefault(":insert-into", null);
     final Object columns = queryMap.getOrDefault(":columns", null);
     final Object values = queryMap.getOrDefault(":values", null);
-    String tmp1;
-    if ((insertInto == null)) {
-      tmp1 = "";
+    String tmp6;
+    boolean tmp7 = (insertInto == null);
+    if (tmp7) {
+      tmp6 = "";
     } else {
       final ArrayList<Object> v2 = (ArrayList<Object>) values;
       {
-        tmp1 =
+        tmp6 =
             (""
                 + "INSERT INTO "
                 + sqlbuilder.Core.fromStr((ArrayList<Object>) insertInto)
@@ -108,42 +114,48 @@ public class Core {
                     ",\n", v2.stream().map(sqlbuilder.Core::rowStr).collect(Collectors.toList())));
       }
     }
-    String tmp2;
-    if ((select == null)) {
-      tmp2 = "";
+    String tmp8;
+    boolean tmp9 = (select == null);
+    if (tmp9) {
+      tmp8 = "";
     } else {
-      tmp2 = ("" + "SELECT " + sqlbuilder.Core.selectStr((ArrayList<Object>) select));
+      tmp8 = ("" + "SELECT " + sqlbuilder.Core.selectStr((ArrayList<Object>) select));
     }
-    String tmp3;
-    if ((from == null)) {
-      tmp3 = "";
+    String tmp10;
+    boolean tmp11 = (from == null);
+    if (tmp11) {
+      tmp10 = "";
     } else {
-      tmp3 = ("" + " FROM " + sqlbuilder.Core.fromStr((ArrayList<Object>) from));
+      tmp10 = ("" + " FROM " + sqlbuilder.Core.fromStr((ArrayList<Object>) from));
     }
-    String tmp4;
-    if ((join == null)) {
-      tmp4 = "";
+    String tmp12;
+    boolean tmp13 = (join == null);
+    if (tmp13) {
+      tmp12 = "";
     } else {
-      tmp4 = ("" + " JOIN " + sqlbuilder.Core.joinStr((ArrayList<Object>) join));
+      tmp12 = ("" + " JOIN " + sqlbuilder.Core.joinStr((ArrayList<Object>) join));
     }
-    String tmp5;
-    if ((whereClause == null)) {
-      tmp5 = "";
+    String tmp14;
+    boolean tmp15 = (whereClause == null);
+    if (tmp15) {
+      tmp14 = "";
     } else {
-      tmp5 = ("" + " WHERE " + sqlbuilder.Core.whereStr(whereClause));
+      tmp14 = ("" + " WHERE " + sqlbuilder.Core.whereStr(whereClause));
     }
-    String tmp6;
-    if ((groupBy == null)) {
-      tmp6 = "";
+    String tmp16;
+    boolean tmp17 = (groupBy == null);
+    if (tmp17) {
+      tmp16 = "";
     } else {
-      tmp6 = ("" + " GROUP BY " + sqlbuilder.Core.groupByStr((ArrayList<Object>) groupBy));
+      tmp16 = ("" + " GROUP BY " + sqlbuilder.Core.groupByStr((ArrayList<Object>) groupBy));
     }
-    String tmp7;
-    if ((having == null)) {
-      tmp7 = "";
+    String tmp18;
+    boolean tmp19 = (having == null);
+    if (tmp19) {
+      tmp18 = "";
     } else {
-      tmp7 = ("" + " HAVING " + sqlbuilder.Core.havingStr(having));
+      tmp18 = ("" + " HAVING " + sqlbuilder.Core.havingStr(having));
     }
-    return ("" + tmp1 + tmp2 + tmp3 + tmp4 + tmp5 + tmp6 + tmp7);
+    return ("" + tmp6 + tmp8 + tmp10 + tmp12 + tmp14 + tmp16 + tmp18);
   }
 }
