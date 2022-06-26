@@ -28,7 +28,7 @@ pub fn select_str(select: std::vec::Vec<kalai::BValue>) -> String {
     return select
         .clone()
         .into_iter()
-        .map(cast_to_str)
+        .map(|a| cast_to_str(a))
         .collect::<Vec<String>>()
         .join(&String::from(", "));
 }
@@ -36,7 +36,7 @@ pub fn from_str(from: std::vec::Vec<kalai::BValue>) -> String {
     return from
         .clone()
         .into_iter()
-        .map(cast_to_str)
+        .map(|a| cast_to_str(a))
         .collect::<Vec<String>>()
         .join(&String::from(", "));
 }
@@ -44,7 +44,7 @@ pub fn join_str(join: std::vec::Vec<kalai::BValue>) -> String {
     return join
         .clone()
         .into_iter()
-        .map(cast_to_str)
+        .map(|a| cast_to_str(a))
         .collect::<Vec<String>>()
         .join(&String::from(", "));
 }
@@ -61,7 +61,7 @@ pub fn where_str(clause: kalai::BValue) -> String {
                 .skip(1)
                 .clone()
                 .into_iter()
-                .map(where_str)
+                .map(|a| { where_str(a) })
                 .collect::<Vec<String>>()
                 .join(&format!("{}{}{}", String::from(" "), op, String::from(" "))),
             String::from(")")
@@ -74,7 +74,7 @@ pub fn group_by_str(join: std::vec::Vec<kalai::BValue>) -> String {
     return join
         .clone()
         .into_iter()
-        .map(cast_to_str)
+        .map(|a| cast_to_str(a))
         .collect::<Vec<String>>()
         .join(&String::from(", "));
 }
@@ -88,7 +88,7 @@ pub fn row_str(row: kalai::BValue) -> String {
         String::from("("),
         mrow.clone()
             .into_iter()
-            .map(cast_to_str)
+            .map(|a| { cast_to_str(a) })
             .collect::<Vec<String>>()
             .join(&String::from(", ")),
         String::from(")")
@@ -146,7 +146,7 @@ pub fn format(query_map: std::collections::HashMap<String, kalai::BValue>) -> St
                 String::from("VALUES\n"),
                 {
                     let v2: std::vec::Vec<kalai::BValue> = std::vec::Vec::from(values);
-                    v2.clone().into_iter().map(row_str)
+                    v2.clone().into_iter().map(|a| row_str(a))
                 }
                 .collect::<Vec<String>>()
                 .join(&String::from(",\n"))

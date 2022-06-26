@@ -3,9 +3,9 @@ use crate::kalai::kalai::PMap;
 pub fn diff_associative_key(a: TYPE_MISSING, b: TYPE_MISSING, k: TYPE_MISSING) -> TYPE_MISSING {
     let va: kalai::BValue = a.get(&k).unwrap().clone();
     let vb: kalai::BValue = b.get(&k).unwrap().clone();
-    let vec_18649: kalai::BValue = diff(va, vb);
+    let vec_18694: kalai::BValue = diff(va, vb);
     let aa: kalai::BValue = {
-        let get1 = vec_18649.get((0i64 as usize));
+        let get1 = vec_18694.get((0i64 as usize));
         if get1.is_some() {
             get1.unwrap().clone()
         } else {
@@ -13,7 +13,7 @@ pub fn diff_associative_key(a: TYPE_MISSING, b: TYPE_MISSING, k: TYPE_MISSING) -
         }
     };
     let bb: kalai::BValue = {
-        let get2 = vec_18649.get((1i64 as usize));
+        let get2 = vec_18694.get((1i64 as usize));
         if get2.is_some() {
             get2.unwrap().clone()
         } else {
@@ -21,7 +21,7 @@ pub fn diff_associative_key(a: TYPE_MISSING, b: TYPE_MISSING, k: TYPE_MISSING) -
         }
     };
     let ab: kalai::BValue = {
-        let get3 = vec_18649.get((2i64 as usize));
+        let get3 = vec_18694.get((2i64 as usize));
         if get3.is_some() {
             get3.unwrap().clone()
         } else {
@@ -112,7 +112,7 @@ pub fn diff_associative(a: TYPE_MISSING, b: TYPE_MISSING, ks: TYPE_MISSING) -> T
                 .push_back(kalai::BValue::from(kalai::NIL).clone())
                 .push_back(kalai::BValue::from(kalai::NIL).clone()),
             |diff1, diff2| {
-                return doall(map(merge, diff1, diff2));
+                return std::iter::zip(diff1, diff2).map(|t| |a, b| { merge(a, b) }(t.0, t.1));
             },
         );
 }
@@ -127,7 +127,7 @@ pub fn difference(s1: TYPE_MISSING, s2: TYPE_MISSING) -> TYPE_MISSING {
     if ((s1.len() as i32) < (s2.len() as i32)) {
         return s1.clone().into_iter().fold(s1, |result, item| {
             if s2.contains_key(&item) {
-                return disj(result, item);
+                return result.remove(item);
             } else {
                 return result;
             }
@@ -144,7 +144,7 @@ pub fn intersection(s1: TYPE_MISSING, s2: TYPE_MISSING) -> TYPE_MISSING {
             if s2.contains_key(&item) {
                 return result;
             } else {
-                return disj(result, item);
+                return result.remove(item);
             }
         });
     }
@@ -191,10 +191,10 @@ pub fn vectorize(m: TYPE_MISSING) -> TYPE_MISSING {
     if m.clone().into_iter() {
         return m.clone().into_iter().fold(
             vec(repeat(apply(max, keys(m)), kalai::BValue::from(kalai::NIL))),
-            |result, p_18690| {
-                let vec_18692 = p_18690;
+            |result, p_18735| {
+                let vec_18737 = p_18735;
                 let k: kalai::BValue = {
-                    let get4 = vec_18692.get((0i64 as usize));
+                    let get4 = vec_18737.get((0i64 as usize));
                     if get4.is_some() {
                         get4.unwrap().clone()
                     } else {
@@ -202,7 +202,7 @@ pub fn vectorize(m: TYPE_MISSING) -> TYPE_MISSING {
                     }
                 };
                 let v: kalai::BValue = {
-                    let get5 = vec_18692.get((1i64 as usize));
+                    let get5 = vec_18737.get((1i64 as usize));
                     if get5.is_some() {
                         get5.unwrap().clone()
                     } else {
@@ -232,7 +232,7 @@ pub fn sequence_diff(a: TYPE_MISSING, b: TYPE_MISSING) -> TYPE_MISSING {
     )
     .clone()
     .into_iter()
-    .map(vectorize));
+    .map(|a| vectorize(a)));
 }
 pub fn diff_similar(a: TYPE_MISSING, b: TYPE_MISSING) -> TYPE_MISSING {
     let partition_a: kalai::BValue = equality_partition(a);

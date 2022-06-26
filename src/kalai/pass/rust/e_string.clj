@@ -176,7 +176,9 @@
                     (stringify value)))))))
 
 (defn invoke-str [function-name & args]
-  (str (ru/fully-qualified-function-identifier-str function-name)
+  (str (if (or (string? function-name) (symbol? function-name))
+         (ru/fully-qualified-function-identifier-str function-name)
+         (stringify function-name))
        (args-list args)))
 
 (defn param-str [param]
@@ -280,6 +282,9 @@
     (when-let [t (-> method meta :t)]
       (str "::<" (t-str t) ">"))
     (args-list args)))
+
+(defn field-str [field object]
+  (str (stringify object) "." field))
 
 (defn new-str [t & args]
   (str (if (symbol? t)
@@ -385,6 +390,7 @@
    'r/match                match-str
    'r/arm                  arm-str
    'r/method               method-str
+   'r/field                field-str
    'r/new                  new-str
    'r/literal              literal-str
    'r/cast                 cast-str

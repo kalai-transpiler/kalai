@@ -8,31 +8,31 @@ public class Core {
 public static final TYPE_MISSING diffAssociativeKey(final TYPE_MISSING a, final TYPE_MISSING b, final TYPE_MISSING k) {
 final Object va = a.get(k);
 final Object vb = b.get(k);
-final Object vec18649 = datadiff.Core.diff(va, vb);
+final Object vec18694 = datadiff.Core.diff(va, vb);
 Object tmp43 = null;
 if ((0L <= 0L))
 {
-if ((0L < vec__18649.length()))
+if ((0L < vec__18694.length()))
 {
-tmp43 = vec__18649.get();
+tmp43 = vec__18694.get();
 }
 }
 final Object aa = tmp43;
 Object tmp44 = null;
 if ((0L <= 1L))
 {
-if ((1L < vec__18649.length()))
+if ((1L < vec__18694.length()))
 {
-tmp44 = vec__18649.get();
+tmp44 = vec__18694.get();
 }
 }
 final Object bb = tmp44;
 Object tmp45 = null;
 if ((0L <= 2L))
 {
-if ((2L < vec__18649.length()))
+if ((2L < vec__18694.length()))
 {
-tmp45 = vec__18649.get();
+tmp45 = vec__18694.get();
 }
 }
 final Object ab = tmp45;
@@ -269,22 +269,22 @@ if (tmp32)
 Object tmp46 = null;
 if ((0L <= 0L))
 {
-if ((0L < vec__18692.length()))
+if ((0L < vec__18737.length()))
 {
-tmp46 = vec__18692.get();
+tmp46 = vec__18737.get();
 }
 }
 Object tmp47 = null;
 if ((0L <= 1L))
 {
-if ((1L < vec__18692.length()))
+if ((1L < vec__18737.length()))
 {
-tmp47 = vec__18692.get();
+tmp47 = vec__18737.get();
 }
 }
 {
-return kalai.Kalai.foldLeft(m, clojure.Core.vec(clojure.Core.repeat(clojure.Core.apply(max, clojure.Core.keys(m)), null)), (result, p__18690) -> {
-final TYPE_MISSING vec18692 = p__18690;
+return kalai.Kalai.foldLeft(m, clojure.Core.vec(clojure.Core.repeat(clojure.Core.apply(max, clojure.Core.keys(m)), null)), (result, p__18735) -> {
+final TYPE_MISSING vec18737 = p__18735;
 final Object k = tmp46;
 final Object v = tmp47;
 return result.put(k, v);

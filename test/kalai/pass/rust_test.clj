@@ -309,7 +309,7 @@ return z;
 (deftest type-aliasing-and-casting-test
   (ns-form
     '((ns test-package.test-class)
-      (def ^{:kalias {:mvector [:any]}} Clause) ;; Clause represents a part of a larger expression for a SQL keyword
+      (def ^{:kalias {:mvector [:any]}} Clause)             ;; Clause represents a part of a larger expression for a SQL keyword
       (defn f ^{:t :string} [^{:t :any} x]
         (let [v ^{:cast Clause} x
               ^{:t :any} v-first (nth v (int 0))
@@ -601,7 +601,7 @@ println!(\"{}\", y);"))
 
 ;; TODO: for now, you can do this just fine
 (deftest t2a
-    #_(inner-form
+  #_(inner-form
       '(let [^{:t :int} w (int 1)
              ^{:t :int} x (int 3)
              ^{:t :int} y (+ w x)
@@ -1535,6 +1535,36 @@ f(1i32);"))
              [1 2 3])
     "rpds::Vector::new().push_back(1i64).push_back(2i64).push_back(3i64).clone().into_iter().map(|x|{
 return x;
+});"))
+
+(deftest lambda-test3
+  (inner-form
+    '(map (fn [x y] (+ x y))
+          ^{:t {:vector [:long]}} [1 2 3]
+          ^{:t {:vector [:long]}} [4 5 6])
+    '(invoke map
+             (lambda [x y]
+                     (return (operator + x y)))
+             [1 2 3]
+             [4 5 6])
+    "std::iter::zip(rpds::Vector::new().push_back(1i64).push_back(2i64).push_back(3i64), rpds::Vector::new().push_back(4i64).push_back(5i64).push_back(6i64)).map(|t|{
+|x, y|{
+return (x + y);
+}(t.0, t.1)
+});"))
+
+(deftest lambda-test4
+  (inner-form
+    '(map +
+          ^{:t {:vector [:long]}} [1 2 3]
+          ^{:t {:vector [:long]}} [4 5 6])
+    '(invoke map +
+             [1 2 3]
+             [4 5 6])
+    "std::iter::zip(rpds::Vector::new().push_back(1i64).push_back(2i64).push_back(3i64), rpds::Vector::new().push_back(4i64).push_back(5i64).push_back(6i64)).map(|t|{
+|a, b|{
+(a + b)
+}(t.0, t.1)
 });"))
 
 ;; TODO: Figure out if we can write this test in order to predictably match the Rust output string, which in turn

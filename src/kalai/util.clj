@@ -138,7 +138,6 @@ Maps are ordered by their keys. Numbers come before strings, and numbers and str
         (recur threaded (next forms)))
       x)))
 
-
 (defn preserve-type
   "Preserves the type information on the replacement expr"
   [expr replacement-expr]
@@ -147,3 +146,24 @@ Maps are ordered by their keys. Numbers come before strings, and numbers and str
     (or (meta expr)
         (when-let [t (get types/java-types (type expr))]
           {:t t}))))
+
+(def binary-operator
+  '{clojure.lang.Numbers/add                    +
+    clojure.lang.Numbers/addP                   +
+    clojure.lang.Numbers/unchecked_add          +
+    clojure.lang.Numbers/minus                  -
+    clojure.lang.Numbers/minusP                 -
+    clojure.lang.Numbers/unchecked_minus        -
+    clojure.lang.Numbers/unchecked_int_subtract -
+    clojure.lang.Numbers/multiply               *
+    clojure.lang.Numbers/divide                 /
+    clojure.lang.Util/equiv                     ==
+    clojure.lang.Numbers/lt                     <
+    clojure.lang.Numbers/lte                    <=
+    clojure.lang.Numbers/gt                     >
+    clojure.lang.Numbers/gte                    >=
+    clojure.lang.Numbers/quotient               /
+    clojure.lang.Numbers/remainder              %})
+
+(def operator-symbols
+  (set (vals binary-operator)))

@@ -16,6 +16,26 @@
     {(m/pred #{:mmap :map :mset :set :mvector :vector}) (m/pred some?)} 'len
     ?else 'len))
 
+;; ifn? would be more permissive, but it would include using data structures as functions
+;; which would require more syntactic gymnastics to translate into each target language
+(defn fn-var? [x]
+  (some-> x meta :var deref fn?))
+
+(declare rewrite)
+
+(defn maybe-lambda [?fn arg-count]
+  (if (fn-var? ?fn)
+    (let [args (mapv symbol (map str (take arg-count "abcdefghikjlmnopqrstuvwxyz")))]
+      (list 'r/lambda
+            args
+            (list 'r/block
+                  (rewrite (list* (if (u/operator-symbols ?fn)
+                                    'r/operator
+                                    'r/invoke)
+                                  ?fn
+                                  args)))))
+    ?fn))
+
 (def rewrite
   (s/bottom-up
     (s/rewrite
@@ -131,6 +151,9 @@
       (r/invoke (u/var ~#'dissoc) & ?more)
       (r/method remove & ?more)
 
+      (r/invoke (u/var ~#'disj) & ?more)
+      (r/method remove & ?more)
+
       ;; Note: this particular rule would only support vectors and sets (maps would need to be handled differently)
       (r/invoke (u/var ~#'conj)
                 (m/and ?coll
@@ -160,11 +183,28 @@
                 (r/method "collect::<Vec<String>>" ?xs)
                 (r/ref ?sep))
 
+      (r/invoke (u/var ~#'doall) ?xs)
+      ?xs
+
       (r/invoke (u/var ~#'map) ?fn ?xs)
       (r/method map
                 (r/method into_iter (r/method clone ?xs))
-                ;; TODO: maybe gensym the argname
-                ?fn)
+                ~(maybe-lambda ?fn 1))
+
+      (r/invoke (u/var ~#'map) ?fn ?xs ?ys)
+      (r/method map
+                (r/invoke "std::iter::zip" ?xs ?ys)
+                (r/lambda [t] (r/block (r/invoke ~(maybe-lambda ?fn 2)
+                                                 (r/field 0 t)
+                                                 (r/field 1 t)))))
+
+      (r/invoke (u/var ~#'map) ?fn ?xs ?ys ?zs)
+      (r/method map
+                (r/invoke "std::iter::zip" ?xs ?ys ?zs)
+                (r/lambda [t] (r/block (r/invoke ~(maybe-lambda ?fn 3)
+                                                 (r/field 0 t)
+                                                 (r/field 1 t)
+                                                 (r/field 2 t)))))
 
       (r/invoke (u/var ~#'reduce) ?fn ?xs)
       (r/method unwrap
