@@ -32,6 +32,36 @@
           classname (csk/->PascalCase (last xs))]
       (str packagename "." classname))))
 
+;; Note: ifn? would be more permissive, but it would include using data structures as functions
+;; which would require more syntactic gymnastics to translate into each target language
+(defn fn-var?
+  "Indicates whether a value in the S-expressions (emitted by tools.analyzer) is a function
+  var. Examples include `inc`, `assoc`, or any previously-defined user functions."
+  [x]
+  (some-> x meta :var deref fn?))
+
+(declare rewrite)
+
+(defn maybe-lambda
+  "For HOFs, transpiling a user-provided function literal works fine. But when the user
+  provides a function var (ex: `inc`, `assoc`), the target language does not necessarily
+  handle the output (ex: because it needs to know which arity of the function), so we
+  always create our own lambda in such cases."
+  [?fn arg-count]
+  (if (fn-var? ?fn)
+    (let [args (mapv symbol (map str (take arg-count "abcdefghikjlmnopqrstuvwxyz")))]
+      (list 'j/lambda
+            args
+            (list 'j/block
+                  (list 'j/expression-statement
+                        (list 'j/return
+                              (rewrite (list* (if (u/operator-symbols ?fn)
+                                                'j/operator
+                                                'j/invoke)
+                                              ?fn
+                                              args)))))))
+    ?fn))
+
 (def rewrite
   (s/bottom-up
     (s/rewrite
@@ -164,11 +194,18 @@
              (j/method map ~(if (:seq (meta ?xs))
                               ?xs
                               (list 'j/method 'stream ?xs))
-                       ~(if (symbol? ?fn)
-                          (symbol (ju/fully-qualified-function-identifier-str ?fn "::"))
-                          ?fn)))
+                       ~(maybe-lambda ?fn 1)))
 
-
+      (j/invoke (u/var ~#'map) ?fn ?xs ?ys)
+      (m/app #(with-meta % {:seq true})
+             ;; TODO: is there a cleaner version
+             (j/invoke kalai.Kalai.map ~(maybe-lambda ?fn 2)
+                       ~(if (:seq (meta ?xs))
+                          ?xs
+                          (list 'j/method 'stream ?xs))
+                       ~(if (:seq (meta ?ys))
+                          ?ys
+                          (list 'j/method 'stream ?ys))))
 
       (j/invoke (u/var ~#'reduce) ?fn ?xs)
       (j/method get
@@ -176,10 +213,7 @@
                           ~(if (:seq (meta ?xs))
                              ?xs
                              (list 'j/method 'stream ?xs))
-                          ~(if (symbol? ?fn)
-                             (symbol (ju/fully-qualified-function-identifier-str ?fn "::"))
-                             ?fn)))
-
+                          ~(maybe-lambda ?fn 2)))
 
       ;; Options:
       ;; 1. https://stackoverflow.com/a/67532404

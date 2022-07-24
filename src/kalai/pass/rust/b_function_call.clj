@@ -16,14 +16,22 @@
     {(m/pred #{:mmap :map :mset :set :mvector :vector}) (m/pred some?)} 'len
     ?else 'len))
 
-;; ifn? would be more permissive, but it would include using data structures as functions
+;; Note: ifn? would be more permissive, but it would include using data structures as functions
 ;; which would require more syntactic gymnastics to translate into each target language
-(defn fn-var? [x]
+(defn fn-var?
+  "Indicates whether a value in the S-expressions (emitted by tools.analyzer) is a function
+  var. Examples include `inc`, `assoc`, or any previously-defined user functions."
+  [x]
   (some-> x meta :var deref fn?))
 
 (declare rewrite)
 
-(defn maybe-lambda [?fn arg-count]
+(defn maybe-lambda
+  "For HOFs, transpiling a user-provided function literal works fine. But when the user
+  provides a function var (ex: `inc`, `assoc`), the target language does not necessarily
+  handle the output (ex: because it needs to know which arity of the function), so we
+  always create our own lambda in such cases."
+  [?fn arg-count]
   (if (fn-var? ?fn)
     (let [args (mapv symbol (map str (take arg-count "abcdefghikjlmnopqrstuvwxyz")))]
       (list 'r/lambda
@@ -198,25 +206,17 @@
                                                  (r/field 0 t)
                                                  (r/field 1 t)))))
 
-      (r/invoke (u/var ~#'map) ?fn ?xs ?ys ?zs)
-      (r/method map
-                (r/invoke "std::iter::zip" ?xs ?ys ?zs)
-                (r/lambda [t] (r/block (r/invoke ~(maybe-lambda ?fn 3)
-                                                 (r/field 0 t)
-                                                 (r/field 1 t)
-                                                 (r/field 2 t)))))
-
       (r/invoke (u/var ~#'reduce) ?fn ?xs)
       (r/method unwrap
                 (r/method reduce
                           (r/method into_iter (r/method clone ?xs))
-                          ?fn))
+                          ~(maybe-lambda ?fn 2)))
 
       (r/invoke (u/var ~#'reduce) ?fn ?initial ?xs)
       (r/method fold
                 (r/method into_iter (r/method clone ?xs))
                 ?initial
-                ?fn)
+                ~(maybe-lambda ?fn 2))
 
       ;; TODO: do we really need to clone here???
       (r/invoke (u/var ~#'vector?) ?x)

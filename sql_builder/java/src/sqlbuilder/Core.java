@@ -37,17 +37,35 @@ public class Core {
 
   public static final String selectStr(final ArrayList<Object> select) {
     return String.join(
-        ", ", select.stream().map(sqlbuilder.Core::castToStr).collect(Collectors.toList()));
+        ", ",
+        select.stream()
+            .map(
+                (a) -> {
+                  return sqlbuilder.Core.castToStr(a);
+                })
+            .collect(Collectors.toList()));
   }
 
   public static final String fromStr(final ArrayList<Object> from) {
     return String.join(
-        ", ", from.stream().map(sqlbuilder.Core::castToStr).collect(Collectors.toList()));
+        ", ",
+        from.stream()
+            .map(
+                (a) -> {
+                  return sqlbuilder.Core.castToStr(a);
+                })
+            .collect(Collectors.toList()));
   }
 
   public static final String joinStr(final ArrayList<Object> join) {
     return String.join(
-        ", ", join.stream().map(sqlbuilder.Core::castToStr).collect(Collectors.toList()));
+        ", ",
+        join.stream()
+            .map(
+                (a) -> {
+                  return sqlbuilder.Core.castToStr(a);
+                })
+            .collect(Collectors.toList()));
   }
 
   public static final String whereStr(final Object clause) {
@@ -60,7 +78,13 @@ public class Core {
           + "("
           + String.join(
               ("" + " " + op + " "),
-              v.stream().skip(1L).map(sqlbuilder.Core::whereStr).collect(Collectors.toList()))
+              v.stream()
+                  .skip(1L)
+                  .map(
+                      (a) -> {
+                        return sqlbuilder.Core.whereStr(a);
+                      })
+                  .collect(Collectors.toList()))
           + ")");
     } else {
       return sqlbuilder.Core.castToStr(clause);
@@ -69,7 +93,13 @@ public class Core {
 
   public static final String groupByStr(final ArrayList<Object> join) {
     return String.join(
-        ", ", join.stream().map(sqlbuilder.Core::castToStr).collect(Collectors.toList()));
+        ", ",
+        join.stream()
+            .map(
+                (a) -> {
+                  return sqlbuilder.Core.castToStr(a);
+                })
+            .collect(Collectors.toList()));
   }
 
   public static final String havingStr(final Object having) {
@@ -81,7 +111,13 @@ public class Core {
     return (""
         + "("
         + String.join(
-            ", ", mrow.stream().map(sqlbuilder.Core::castToStr).collect(Collectors.toList()))
+            ", ",
+            mrow.stream()
+                .map(
+                    (a) -> {
+                      return sqlbuilder.Core.castToStr(a);
+                    })
+                .collect(Collectors.toList()))
         + ")");
   }
 
@@ -111,7 +147,13 @@ public class Core {
                 + ")\n"
                 + "VALUES\n"
                 + String.join(
-                    ",\n", v2.stream().map(sqlbuilder.Core::rowStr).collect(Collectors.toList())));
+                    ",\n",
+                    v2.stream()
+                        .map(
+                            (a) -> {
+                              return sqlbuilder.Core.rowStr(a);
+                            })
+                        .collect(Collectors.toList())));
       }
     }
     String tmp8;

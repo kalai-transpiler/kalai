@@ -1500,6 +1500,32 @@ return x;
 ;;       (init ab (nth 2 [1 5 9])))
 ;;    '()))
 
+(deftest lambda-test3
+  (inner-form
+    '(map (fn [x y] (+ x y))
+          ^{:t {:vector [:long]}} [1 2 3]
+          ^{:t {:vector [:long]}} [4 5 6])
+    '(invoke map
+             (lambda [x y]
+                     (return (operator + x y)))
+             [1 2 3]
+             [4 5 6])
+    "kalai.Kalai.map((x, y) -> {
+return (x + y);
+}, new io.lacuna.bifurcan.List<Long>().addLast(1L).addLast(2L).addLast(3L).stream(), new io.lacuna.bifurcan.List<Long>().addLast(4L).addLast(5L).addLast(6L).stream());"))
+
+(deftest lambda-test4
+  (inner-form
+    '(map +
+          ^{:t {:vector [:long]}} [1 2 3]
+          ^{:t {:vector [:long]}} [4 5 6])
+    '(invoke map +
+             [1 2 3]
+             [4 5 6])
+    "kalai.Kalai.map((a, b) -> {
+return (a + b);
+}, new io.lacuna.bifurcan.List<Long>().addLast(1L).addLast(2L).addLast(3L).stream(), new io.lacuna.bifurcan.List<Long>().addLast(4L).addLast(5L).addLast(6L).stream());"))
+
 ;; test the extra arity of nth that allows for a default value when the index is out of bounds
 (deftest nth-test
   (inner-form
