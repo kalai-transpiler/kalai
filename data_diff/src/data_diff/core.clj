@@ -97,7 +97,7 @@
   (when (seq m)
     (reduce
       (fn [result [k v]] (assoc result k v))
-      (vec (repeat (apply max (keys m)) nil))
+      (vec (repeat (reduce max (keys m)) nil))
       m)))
 
 (defn sequence-diff [a b]

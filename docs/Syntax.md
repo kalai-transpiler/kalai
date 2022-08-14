@@ -113,3 +113,12 @@ Keywords had/have 2 main benefits in Clojure: 1) interning so that only a single
   - However, we currently are not supporting users of Kalai to create local binding values out of seqs
     * This is partly due to analogous target langauge constructs being one-use only
     * If there is a need, we can revisit, with the restriction that it only really makes sense / is useful when computed from persistent collections.
+  
+## Gaps in target languages that Kalai will not fill
+
+### Apply
+
+`apply` is a Clojure language feature that is prohibitively challenging many other target languages do not support.
+Most usages of `apply` can be replaced by `reduce`.
+
+Ex: `(apply + numbers)` then becomes `(reduce + numbers)`
