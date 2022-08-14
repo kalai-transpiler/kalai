@@ -1612,3 +1612,9 @@ else
 }
 };
 println!(\"{} {} {} {} {} {} {} {}\", String::from(\"aa:\"), aa, String::from(\"bb:\"), bb, String::from(\"ab:\"), ab, String::from(\"x:\"), x);"))
+
+(deftest conj-test
+  (inner-form
+    '(conj ^{:t {:map [:string :string]}}  {:a "1"} ^{:t {:vector [:string]}} [:b "2"])
+    '(invoke conj {:a "1"} [:b "2"])
+    ""))
