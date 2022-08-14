@@ -122,3 +122,9 @@ Keywords had/have 2 main benefits in Clojure: 1) interning so that only a single
 Most usages of `apply` can be replaced by `reduce`.
 
 Ex: `(apply + numbers)` then becomes `(reduce + numbers)`
+
+### Merge and Into
+
+`merge` and `into` are Clojure functions that are currently not supported, but you can trivially achieve the same functionality through `(reduce conj...)`.
+
+Ex: `(merge m1 m2)` then becomes `(reduce conj m1 m2)`

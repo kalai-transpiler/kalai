@@ -19,12 +19,17 @@
      (when (and in-b (or (not (nil? bb)) (not same))) {k bb})
      (when same {k ab})]))
 
+(defn merge2
+  "A helper function to replace `merge` with `(reduce conj...)`"
+  [m1 m2]
+  (reduce conj m1 m2))
+
 (defn diff-associative
   "Diff associative things a and b, comparing only keys in ks."
   [a b ks]
   (reduce
     (fn [diff1 diff2]
-      (doall (map merge diff1 diff2)))
+      (doall (map merge2 diff1 diff2)))
     [nil nil nil]
     (map (fn [k]
            (diff-associative-key a b k))
