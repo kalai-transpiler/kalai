@@ -360,7 +360,7 @@
 
 (defn value-str
   "Specifically for the Value enum for heterogeneous collections.
-  x is a value that may have meta data on it inticating a type.
+  x is a value that may have metadata on it indicating a type.
   x may be a primitive value or may need to be wrapped in the special rust Value enum."
   [x]
   (if (value-type x)

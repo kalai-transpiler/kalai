@@ -1615,6 +1615,7 @@ println!(\"{} {} {} {} {} {} {} {}\", String::from(\"aa:\"), aa, String::from(\"
 
 (deftest conj-test
   (inner-form
-    '(conj ^{:t {:map [:string :string]}}  {:a "1"} ^{:t {:vector [:string]}} [:b "2"])
-    '(invoke conj {:a "1"} [:b "2"])
+    '(conj ^{:t {:mmap [:string :long]}} {:a 1}
+           ^{:t {:mmap [:string :long]}} {:b 2})
+    '(invoke conj {:a 1} {:b 2})
     ""))

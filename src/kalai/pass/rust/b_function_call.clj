@@ -162,15 +162,33 @@
       (r/invoke (u/var ~#'disj) & ?more)
       (r/method remove & ?more)
 
-      ;; Note: this particular rule would only support vectors and sets (maps would need to be handled differently)
+      ;; vectors and sets
       (r/invoke (u/var ~#'conj)
                 (m/and ?coll
                        (m/app meta {:t {_ [?value-t]}}))
                 . !arg ...)
       (r/method push ?coll . (m/app #(ru/wrap-value-enum ?value-t %) !arg) ...)
 
+      ;; maps
+      ;;TODO: fix variadic or don't support it for assoc and conj
+      (m/and
+        (r/invoke (u/var ~#'conj)
+                  (m/and ?coll
+                         ;; TODO: fix for persistent map
+                         (m/app meta {:t {:mmap [?key-t ?value-t]
+                                          :as ?t}}))
+                  . (m/and !arg (m/app meta {:t {_ [?key-t ?value-t]}})) ...)
+        ?expr
+        (m/let [?tmp (u/tmp ?t ?expr)]))
+      (m/app
+        #(u/preserve-type ?expr %)
+        (r/block
+          (r/init ?tmp ?coll)
+          (r/expression-statement (r/method extend ?tmp . !arg ...))
+          ?tmp))
+
       ;; When inc is used as a function value for example (update m :x inc)
-      ;; See kalai/operators for when direcly called
+      ;; See kalai/operators for when directly called
       (r/invoke (u/var ~#'inc) ?x)
       (r/operator + ?x 1)
 

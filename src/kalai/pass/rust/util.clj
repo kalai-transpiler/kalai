@@ -14,7 +14,10 @@
       (string? x)
       (keyword? x)))
 
-(defn wrap-value-enum [t x]
+(defn wrap-value-enum
+  "Ensure that x is an owned type in Rust.
+   If the type t is :any then x is a Kalai BValue so wrap it in an r/value."
+  [t x]
   (let [wrap-owned-expression (if (literal? x)
                                 x
                                 (clone x))]
