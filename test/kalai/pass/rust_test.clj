@@ -1618,4 +1618,16 @@ println!(\"{} {} {} {} {} {} {} {}\", String::from(\"aa:\"), aa, String::from(\"
     '(conj ^{:t {:mmap [:string :long]}} {:a 1}
            ^{:t {:mmap [:string :long]}} {:b 2})
     '(invoke conj {:a 1} {:b 2})
-    ""))
+    "{
+let mut tmp3: std::collections::HashMap<String,i64> = {
+let mut tmp1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
+tmp1.insert(String::from(\":a\"), 1i64);
+tmp1
+};
+tmp3.extend({
+let mut tmp2: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
+tmp2.insert(String::from(\":b\"), 2i64);
+tmp2
+});
+tmp3
+};"))
