@@ -75,4 +75,9 @@ public class Kalai {
                 ? StreamSupport.stream(split, true)
                 : StreamSupport.stream(split, false);
     }
+
+    public static<K, V> Map<K,V> conj(Map<K, V> m1, Map<K, V> m2) {
+        m1.putAll(m2);
+        return m1;
+    }
 }

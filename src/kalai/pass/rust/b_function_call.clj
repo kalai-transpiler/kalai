@@ -163,6 +163,7 @@
       (r/method remove & ?more)
 
       ;; vectors and sets
+      ;;TODO: fix variadic or don't support it for assoc and conj
       (r/invoke (u/var ~#'conj)
                 (m/and ?coll
                        (m/app meta {:t {_ [?value-t]}}))

@@ -139,7 +139,8 @@ Maps are ordered by their keys. Numbers come before strings, and numbers and str
       x)))
 
 (defn preserve-type
-  "Preserves the type information on the replacement expr"
+  "Replace `expr` with `replacement-expr`, but ensure the type information
+   for `expr` is preserved on `replacement-expr`."
   [expr replacement-expr]
   (with-meta
     replacement-expr

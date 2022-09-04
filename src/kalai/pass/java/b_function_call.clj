@@ -139,8 +139,23 @@
       (j/invoke (u/var ~#'dissoc) & ?more)
       (j/method remove & ?more)
 
-      (j/invoke (u/var ~#'conj) & ?more)
-      (j/method add & ?more)
+      ;; vectors and sets
+      ;;TODO: fix variadic or don't support it for assoc and conj
+      (j/invoke (u/var ~#'conj)
+                (m/and ?coll
+                       (m/app meta {:t {_ [?value-t]}}))
+                . !arg ...)
+      (j/method add . !arg ...)
+
+      ;; maps
+      ;;TODO: fix variadic or don't support it for assoc and conj
+      (j/invoke (u/var ~#'conj)
+                (m/and ?coll
+                       ;; TODO: fix for persistent map
+                       (m/app meta {:t {:mmap [?key-t ?value-t]
+                                        :as   ?t}}))
+                . (m/and !arg (m/app meta {:t {_ [?key-t ?value-t]}})) ...)
+      (j/invoke kalai.Kalai.conj ?coll . !arg ...)
 
       (j/invoke (u/var ~#'inc) ?x)
       (j/operator + ?x 1)

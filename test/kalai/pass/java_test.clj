@@ -1556,3 +1556,14 @@ tmp1 = v.get();
 }
 final String x = (String)tmp1;
 System.out.println((\"\" + \"aa:\" + aa + \"bb:\" + bb + \"ab:\" + ab + \"x:\" + x));"))
+
+(deftest conj-test
+  (inner-form
+    '(conj ^{:t {:mmap [:string :long]}} {:a 1}
+           ^{:t {:mmap [:string :long]}} {:b 2})
+    '(invoke conj {:a 1} {:b 2})
+    "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
+tmp1.put(\":a\", 1L);
+HashMap<String,Long> tmp2 = new HashMap<String,Long>();
+tmp2.put(\":b\", 2L);
+kalai.Kalai.conj(tmp1, tmp2);"))
