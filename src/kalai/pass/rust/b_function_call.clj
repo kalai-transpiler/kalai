@@ -163,7 +163,6 @@
       (r/method remove & ?more)
 
       ;; vectors and sets
-      ;;TODO: fix variadic or don't support it for assoc and conj
       (r/invoke (u/var ~#'conj)
                 (m/and ?coll
                        (m/app meta {:t {_ [?value-t]}}))
@@ -171,7 +170,6 @@
       (r/method push ?coll . (m/app #(ru/wrap-value-enum ?value-t %) !arg) ...)
 
       ;; maps
-      ;;TODO: fix variadic or don't support it for assoc and conj
       (m/and
         (r/invoke (u/var ~#'conj)
                   (m/and ?coll

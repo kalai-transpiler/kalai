@@ -128,3 +128,7 @@ Ex: `(apply + numbers)` then becomes `(reduce + numbers)`
 `merge` and `into` are Clojure functions that are currently not supported, but you can trivially achieve the same functionality through `(reduce conj...)`.
 
 Ex: `(merge m1 m2)` then becomes `(reduce conj m1 m2)`
+
+`conj` is not supported as a variadic function because the implementation for target languages would be complicated.
+Ex: Statically typed target languages would not be able to easily represent a mix of maps and 2-element vectors as arguments for `conj` that assoc's those arguments into a provided map.
+For most use cases, a variadic version of `conj` is probably not necessary, and the combination of `conj` with `reduce` as mentioned above is also available.

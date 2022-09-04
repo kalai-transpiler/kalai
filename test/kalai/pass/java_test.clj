@@ -1567,3 +1567,10 @@ tmp1.put(\":a\", 1L);
 HashMap<String,Long> tmp2 = new HashMap<String,Long>();
 tmp2.put(\":b\", 2L);
 kalai.Kalai.conj(tmp1, tmp2);"))
+
+(deftest conj-test2
+  (inner-form
+    '(conj ^{:t {:map [:string :long]}} {:a 1}
+           ^{:t {:map [:string :long]}} {:b 2})
+    '(invoke conj {:a 1} {:b 2})
+    "new io.lacuna.bifurcan.Map<String,Long>().put(\":a\", 1L, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS).union(new io.lacuna.bifurcan.Map<String,Long>().put(\":b\", 2L, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS));"))
