@@ -6,6 +6,11 @@
             [kalai.util :as u]
             [clojure.java.io :as io]))
 
+;; skip these tests because we are already running compilation/transpilation in
+;; the `examples` and `sql_builder` folders in the main repo, when they are also
+;; followed by a formatter, which is not done here by default.
+
+#_#_#_#_
 (deftest compile-source-file-test
   (reset! u/c 0)
   (let [transpiled-file (io/file "examples/java/src/b/TypeAlias.java")]
