@@ -24,7 +24,6 @@
           ^{:t {:map [:any :any]}} e-map ^{:cast {:map [:any :any]}} e
           ^{:t :long} get-e-any-y ^{:cast :long :t :any} (get e-map any-y)]
       (println (str "key :y in persistent map e returns " get-e-any-y)))
-
     3))
 
 (defn test-vector ^Long []
@@ -53,7 +52,15 @@
 
     7))
 
+(defn test-conj ^Long []
+  (let [a ^{:t {:map [:string :long]}} {:a 1}
+        b ^{:t {:map [:string :long]}} {:b 2}
+        ^{:t {:map [:string :long]}} c (conj a b)]
+    (println (str "size of conj persistent map c returns " (count c)))
+    11))
+
 (defn -main ^{:t :void} [& _args]
   (println (test-map))
   (println (test-vector))
-  (println (test-set)))
+  (println (test-set))
+  (println (test-conj)))

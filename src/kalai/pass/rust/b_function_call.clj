@@ -13,8 +13,8 @@
 
 (defn count-for [x]
   (m/rewrite (:t (meta x))
-    {(m/pred #{:mmap :map :mset :set :mvector :vector}) (m/pred some?)} 'len
-    ?else 'len))
+    {(m/pred #{:map :set}) (m/pred some?)} size
+    ?else len))
 
 ;; Note: ifn? would be more permissive, but it would include using data structures as functions
 ;; which would require more syntactic gymnastics to translate into each target language
@@ -106,16 +106,8 @@
       (r/invoke clojure.lang.RT/count (u/of-t :string ?x))
       (r/cast (r/method count (r/method chars ?x)) :int)
 
-      (r/invoke clojure.lang.RT/count
-                (m/and ?x
-                       (m/app (comp :t meta) (m/and ?t
-                                                    (m/or (m/pred :set)
-                                                          (m/pred :map))))))
-      (r/cast (r/method size ?x) :int)
-
       (r/invoke clojure.lang.RT/count ?x)
-      (r/cast (r/method len ?x) :int)
-
+      (r/cast (r/method ~(count-for ?x) ?x) :int)
 
       (r/invoke clojure.lang.RT/nth (u/of-t :string ?x) ?n)
       (r/method unwrap (r/method nth (r/method chars ?x) (r/cast ?n :usize)))
@@ -173,7 +165,6 @@
       (m/and
         (r/invoke (u/var ~#'conj)
                   (m/and ?coll
-                         ;; TODO: fix for persistent map
                          (m/app meta {:t {:mmap [?key-t ?value-t]
                                           :as ?t}}))
                   . (m/and !arg (m/app meta {:t {_ [?key-t ?value-t]}})) ...)
@@ -184,6 +175,28 @@
         (r/block
           (r/init ?tmp ?coll)
           (r/expression-statement (r/method extend ?tmp . !arg ...))
+          ?tmp))
+
+      ;; persistent map
+      (m/and
+        (r/invoke (u/var ~#'conj)
+                  (m/and ?coll
+                         (m/app meta {:t {:map [?key-t ?value-t]
+                                          :as ?t}}))
+                  . (m/and !arg (m/app meta {:t {_ [?key-t ?value-t]}})) ...)
+        ?expr
+        (m/let [?tmp (u/tmp ?t ?expr)]))
+      (m/app
+        #(u/preserve-type ?expr %)
+        (r/block
+          (r/init ?tmp (r/method clone ?coll))
+          ;; map.iter().foreach(|tuple| tmp.insert(tuple.0, tuple.1))
+          . (r/expression-statement (r/method for_each
+                                              (r/method iter !arg)
+                                              (r/lambda [tuple]
+                                                        (r/method insert_mut ?tmp
+                                                                  (r/method clone (r/field 0 tuple))
+                                                                  (r/method clone (r/field 1 tuple)))))) ...
           ?tmp))
 
       ;; When inc is used as a function value for example (update m :x inc)

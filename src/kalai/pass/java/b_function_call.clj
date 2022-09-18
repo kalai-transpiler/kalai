@@ -149,21 +149,16 @@
       ;; maps
       (j/invoke (u/var ~#'conj)
                 (m/and ?coll
-                       ;; TODO: fix for persistent map
                        (m/app meta {:t {:mmap [?key-t ?value-t]
                                         :as   ?t}}))
                 . (m/and !arg (m/app meta {:t {_ [?key-t ?value-t]}})) ...)
       (j/invoke kalai.Kalai.conj ?coll . !arg ...)
 
       (j/invoke (u/var ~#'conj)
-                #_?coll
                 (m/and ?coll
-                       ;; TODO: fix for persistent map
-
                        (m/app meta {:t {:map [?key-t ?value-t]
-                                        :as  ?t}})
-                       )
-                . (m/and !arg #_(m/app meta {:t {_ [?key-t ?value-t]}})) ...)
+                                        :as  ?t}}))
+                . (m/and !arg (m/app meta {:t {_ [?key-t ?value-t]}})) ...)
       (j/method union ?coll . !arg ...)
 
       (j/invoke (u/var ~#'inc) ?x)

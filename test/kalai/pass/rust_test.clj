@@ -1219,6 +1219,28 @@ tmp1
     ;;->
     "let x: i32 = (String::from(\"abc\").len() as i32);"))
 
+(deftest interop4-1-test
+  (inner-form
+    '(let [a ^{:t {:map [:string :long]}} {:a 1}
+           b ^{:t {:map [:string :long]}} {:b 2}
+           ^{:t {:map [:string :long]}} c (conj a b)]
+       (count c))
+    ;;->
+    '(do
+       (init a {:a 1})
+       (init b {:b 2})
+       (init c (invoke conj a b))
+       (invoke clojure.lang.RT/count c))
+    ;;->
+    "let a: rpds::HashTrieMap<String,i64> = rpds::HashTrieMap::new().insert(String::from(\":a\"), 1i64);
+let b: rpds::HashTrieMap<String,i64> = rpds::HashTrieMap::new().insert(String::from(\":b\"), 2i64);
+let c: rpds::HashTrieMap<String,i64> = {
+let mut tmp1: rpds::HashTrieMap<String,i64> = a.clone();
+b.iter().for_each(|tuple|tmp1.insert_mut(tuple.0.clone(), tuple.1.clone()));
+tmp1
+};
+(c.size() as i32);"))
+
 ;; Because Rust strings semantically differ from Java strings, we're not even
 ;; sure if `nth` on strings even makes sense across languages. If/when we
 ;; revisit, we could instead offer an iterator over a (string as a) construct
@@ -1630,4 +1652,15 @@ tmp2.insert(String::from(\":b\"), 2i64);
 tmp2
 });
 tmp3
+};"))
+
+(deftest conj-test2
+  (inner-form
+    '(conj ^{:t {:map [:string :long]}} {:a 1}
+           ^{:t {:map [:string :long]}} {:b 2})
+    '(invoke conj {:a 1} {:b 2})
+    "{
+let mut tmp1: rpds::HashTrieMap<String,i64> = rpds::HashTrieMap::new().insert(String::from(\":a\"), 1i64).clone();
+rpds::HashTrieMap::new().insert(String::from(\":b\"), 2i64).iter().for_each(|tuple|tmp1.insert_mut(tuple.0.clone(), tuple.1.clone()));
+tmp1
 };"))
