@@ -1324,6 +1324,11 @@ impl PVector {
 }
 
 
+fn conj_mutable(m1: &mut BValue, m2: BValue) -> BValue {
+  m2
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
