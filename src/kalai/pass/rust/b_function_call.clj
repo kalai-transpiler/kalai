@@ -154,14 +154,14 @@
       (r/invoke (u/var ~#'disj) & ?more)
       (r/method remove & ?more)
 
-      ;; vectors and sets
+      ;; conj - vectors and sets
       (r/invoke (u/var ~#'conj)
                 (m/and ?coll
                        (m/app meta {:t {_ [?value-t]}}))
                 . !arg ...)
       (r/method push ?coll . (m/app #(ru/wrap-value-enum ?value-t %) !arg) ...)
 
-      ;; maps
+      ;; conj - maps
       (m/and
         (r/invoke (u/var ~#'conj)
                   (m/and ?coll
@@ -177,7 +177,7 @@
           (r/expression-statement (r/method extend ?tmp . !arg ...))
           ?tmp))
 
-      ;; persistent map
+      ;; conj - persistent map
       (m/and
         (r/invoke (u/var ~#'conj)
                   (m/and ?coll

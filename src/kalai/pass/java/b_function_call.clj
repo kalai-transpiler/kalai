@@ -139,14 +139,14 @@
       (j/invoke (u/var ~#'dissoc) & ?more)
       (j/method remove & ?more)
 
-      ;; vectors and sets
+      ;; conj - vectors and sets
       (j/invoke (u/var ~#'conj)
                 (m/and ?coll
                        (m/app meta {:t {_ [?value-t]}}))
                 . !arg ...)
       (j/method add ?coll . !arg ...)
 
-      ;; maps
+      ;; conj - maps
       (j/invoke (u/var ~#'conj)
                 (m/and ?coll
                        (m/app meta {:t {:mmap [?key-t ?value-t]
@@ -154,6 +154,7 @@
                 . (m/and !arg (m/app meta {:t {_ [?key-t ?value-t]}})) ...)
       (j/invoke kalai.Kalai.conj ?coll . !arg ...)
 
+      ;; conj - persistent maps
       (j/invoke (u/var ~#'conj)
                 (m/and ?coll
                        (m/app meta {:t {:map [?key-t ?value-t]

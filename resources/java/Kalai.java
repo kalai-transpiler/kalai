@@ -5,7 +5,22 @@ import java.util.function.BiFunction;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+/**
+ * Kalai helper code for Java.
+ */
 public class Kalai {
+
+    /**
+     * Not currently supported in the Java Stream interface set of methods (as of Java 18), but is necessary
+     * to support `reduce`, `merge`, etc. in Clojure.
+     * `reduce` in Clojure is effectively `foldLeft` in other languages like Scala/Rust/Haskell, etc.
+     * @param sequence
+     * @param initial
+     * @param accumulator
+     * @param <U>
+     * @param <T>
+     * @return
+     */
     public static <U, T> U foldLeft(Collection<T> sequence, U initial, BiFunction<U, ? super T, U> accumulator) {
         U result = initial;
         for (T element : sequence)
@@ -28,6 +43,12 @@ public class Kalai {
 //    }
 
     /**
+     * The Java Stream interface has a `map` method, but that implicitly operates on a
+     * single Stream (which maps to a Clojure sequence). But Clojure also supports `map`
+     * over many sequences. We at least would like to support `map` over 2 sequences
+     * (which means the provided function accepts 2 arguments), which requires the extra work
+     * below.
+     *
      * Can be viewed either as:
      * 1. a Clojure `map` invocation that takes 2 sequences
      * 2. a combination of a Rust/Scala `zip` that combines 2 sequences into one,
@@ -76,6 +97,16 @@ public class Kalai {
                 : StreamSupport.stream(split, false);
     }
 
+    /**
+     * `conj` can operate on many types of collections and new element types.
+     * This implementation function of `conj` supports when `conj` accepts a Map type
+     * collection with a new element type of Map.
+     * @param m1
+     * @param m2
+     * @param <K>
+     * @param <V>
+     * @return
+     */
     public static<K, V> Map<K,V> conj(Map<K, V> m1, Map<K, V> m2) {
         m1.putAll(m2);
         return m1;

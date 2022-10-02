@@ -34,7 +34,7 @@ pub type BValue = Box<dyn Value>;
 //
 // So we want to explore switching from an enum, which cannot be extended once it is defined, into
 // a trait, which can be extended on new types, similar to Clojure protocols. This would allow users
-// to have their own types and have the ability to extend the trait on their own types thesmelves.
+// to have their own types and have the ability to extend the trait on their own types themselves.
 
 // Note: the following structs are wrapping primitives to allow us functionality
 // (especially related to the `Value` trait) that the primitives don't allow
