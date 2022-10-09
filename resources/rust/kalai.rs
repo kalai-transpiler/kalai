@@ -1323,11 +1323,27 @@ impl PVector {
     pub fn len(&self) -> usize { self.0.len() }
 }
 
+pub trait PersistentCollection: Value {
+    fn conj(&self, other: &dyn Value) -> Self;
+}
 
+// KFC solution
+impl PersistentCollection for PMap {
+    fn conj(&self, m: BValue) -> Self {
+       self.combine(m)
+    }
+}
+
+// McDonald's solution
 fn conj_mutable(m1: &mut BValue, m2: BValue) -> BValue {
   m2
 }
 
+/*
+fn conj(m1: m2:) -> BValue {
+  m1.conj(m2)
+}
+*/
 
 #[cfg(test)]
 mod tests {

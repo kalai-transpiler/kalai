@@ -226,6 +226,36 @@ We would like to organize such helper code more cleanly by having separate files
 2. Code written natively in the target language that are necessary to implement the functions in item #1.
    The code here is not limited to function implementations, but for other things / constructs (ex: types) necessary for transpiling to the target language.
 
+### Type dispatch
+
+Clojure has heterogeneous persistent collections.
+There is a small set of functions that operate on many collections,
+and operate according to the collection type.
+Clojure also contains multiple concrete collection types.
+The philosophy is "a few functions that operate on many objects".
+Target language implementation of those functions need polymorphic dispatch.
+
+[TODO] review after rust implementation stuff
+
+For example `count` might be implemented in a single target language with different method names depending upon the collection type (it might be `size`, `length`) and Kalai implements such functions based on the type of the collection argument accordingly.
+The aim is to provide an interface to smooth those out.
+
+### Collection functions are functions (not translations)
+
+So that they can be composed `(map conj seq1 seq1)`.
+To make use of host language type dispatch.
+
+### Two motivations for runtime functions (not translations)
+
+a. Pass collection functions to higher order functions
+
+b. Apply collection functions to heterogeneous collections
+  The existence of BValue in our runtime for Rust is necessary in order to enable the collections to be heterogeneous.
+  BValue is necessary also to allow the function to dispatch based upon the collection type.
+
+Higher order functions and polymorphic dispatch occur often,
+and sometimes together, in Clojure programs.
+
 ## Recursion
 
 * happens at every level, on all expressions
