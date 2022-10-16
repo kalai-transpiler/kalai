@@ -1324,19 +1324,36 @@ impl PVector {
 }
 
 pub trait PersistentCollection: Value {
-    fn conj(&self, other: &dyn Value) -> Self;
+    fn conj(&self, other: BValue) -> Self;
 }
 
 // KFC solution
 impl PersistentCollection for PMap {
     fn conj(&self, m: BValue) -> Self {
-       self.combine(m)
+        let mut tmp_htm = self.0.clone();
+
+        if let Some(m_pmap) = m.as_any().downcast_ref::<PMap>() {
+            let m_htm = m_pmap.0.clone();
+            m_htm
+                .iter()
+                .for_each(|tuple| tmp_htm.insert_mut(tuple.0.clone(), tuple.1.clone()));
+
+            PMap(tmp_htm)
+        } else {
+            panic!("Could not downcast Value into HashTrieMap<BValue,BValue>!");
+        }
     }
 }
 
 // McDonald's solution
-fn conj_mutable(m1: &mut BValue, m2: BValue) -> BValue {
-  m2
+pub fn conj(m1: BValue, m2: BValue) -> BValue {
+    if let Some(m1_pmap) = m1.as_any().downcast_ref::<PMap>() {
+        BValue::from(m1_pmap.conj(m2))
+        // } else if let Some(m1_pset) = m1.as_any().downcast_ref::<PSet>() {
+        //     m1.conj(m2)
+    } else {
+        panic!("Could not downcast Value into provided Value trait implementing struct types!");
+    }
 }
 
 /*

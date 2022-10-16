@@ -1,5 +1,5 @@
 use crate::kalai::kalai;
-use crate::kalai::kalai::PMap;
+use crate::kalai::kalai::*;
 pub fn side_effect() -> i64 {
     let mut y: i64 = 2i64;
     {

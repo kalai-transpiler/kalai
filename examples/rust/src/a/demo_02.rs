@@ -1,5 +1,5 @@
 use crate::kalai::kalai;
-use crate::kalai::kalai::PMap;
+use crate::kalai::kalai::*;
 pub fn get_digits_map() -> std::collections::HashMap<char, i32> {
     return {
         let mut tmp1: std::collections::HashMap<char, i32> = std::collections::HashMap::new();

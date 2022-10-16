@@ -177,27 +177,27 @@
           (r/expression-statement (r/method extend ?tmp . !arg ...))
           ?tmp))
 
-      ;; conj - persistent map
-      (m/and
-        (r/invoke (u/var ~#'conj)
-                  (m/and ?coll
-                         (m/app meta {:t {:map [?key-t ?value-t]
-                                          :as ?t}}))
-                  . (m/and !arg (m/app meta {:t {_ [?key-t ?value-t]}})) ...)
-        ?expr
-        (m/let [?tmp (u/tmp ?t ?expr)]))
-      (m/app
-        #(u/preserve-type ?expr %)
-        (r/block
-          (r/init ?tmp (r/method clone ?coll))
-          ;; map.iter().foreach(|tuple| tmp.insert(tuple.0, tuple.1))
-          . (r/expression-statement (r/method for_each
-                                              (r/method iter !arg)
-                                              (r/lambda [tuple]
-                                                        (r/method insert_mut ?tmp
-                                                                  (r/method clone (r/field 0 tuple))
-                                                                  (r/method clone (r/field 1 tuple)))))) ...
-          ?tmp))
+      ;;;; conj - persistent map
+      ;;(m/and
+      ;;  (r/invoke (u/var ~#'conj)
+      ;;            (m/and ?coll
+      ;;                   (m/app meta {:t {:map [?key-t ?value-t]
+      ;;                                    :as ?t}}))
+      ;;            . (m/and !arg (m/app meta {:t {_ [?key-t ?value-t]}})) ...)
+      ;;  ?expr
+      ;;  (m/let [?tmp (u/tmp ?t ?expr)]))
+      ;;(m/app
+      ;;  #(u/preserve-type ?expr %)
+      ;;  (r/block
+      ;;    (r/init ?tmp (r/method clone ?coll))
+      ;;    ;; map.iter().foreach(|tuple| tmp.insert_mut(tuple.0, tuple.1))
+      ;;    . (r/expression-statement (r/method for_each
+      ;;                                        (r/method iter !arg)
+      ;;                                        (r/lambda [tuple]
+      ;;                                                  (r/method insert_mut ?tmp
+      ;;                                                            (r/method clone (r/field 0 tuple))
+      ;;                                                            (r/method clone (r/field 1 tuple)))))) ...
+      ;;    ?tmp))
 
       ;; When inc is used as a function value for example (update m :x inc)
       ;; See kalai/operators for when directly called

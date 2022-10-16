@@ -1,5 +1,5 @@
 use crate::kalai::kalai;
-use crate::kalai::kalai::PMap;
+use crate::kalai::kalai::*;
 pub fn test_map() -> i64 {
     let a: std::collections::HashMap<String, i64> = {
         let mut tmp1: std::collections::HashMap<String, i64> = std::collections::HashMap::new();
@@ -217,12 +217,7 @@ pub fn test_conj() -> i64 {
         rpds::HashTrieMap::new().insert(String::from(":a"), 1i64);
     let b: rpds::HashTrieMap<String, i64> =
         rpds::HashTrieMap::new().insert(String::from(":b"), 2i64);
-    let c: rpds::HashTrieMap<String, i64> = {
-        let mut tmp7: rpds::HashTrieMap<String, i64> = a.clone();
-        b.iter()
-            .for_each(|tuple| tmp7.insert_mut(tuple.0.clone(), tuple.1.clone()));
-        tmp7
-    };
+    let c: rpds::HashTrieMap<String, i64> = conj(a, b);
     {
         println!(
             "{}",

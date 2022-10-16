@@ -1,5 +1,5 @@
 use crate::kalai::kalai;
-use crate::kalai::kalai::PMap;
+use crate::kalai::kalai::*;
 pub fn add(a: i64, b: i64) -> i64 {
     return (a + b);
 }

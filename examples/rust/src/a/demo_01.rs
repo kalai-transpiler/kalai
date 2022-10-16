@@ -1,5 +1,5 @@
 use crate::kalai::kalai;
-use crate::kalai::kalai::PMap;
+use crate::kalai::kalai::*;
 pub fn format(num: i32) -> String {
     let mut i: i32 = num;
     let mut result: std::vec::Vec<char> = std::vec::Vec::new();

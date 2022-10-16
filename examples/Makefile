@@ -40,3 +40,4 @@ run_java:
 	cd java && gradle -PmainClass=b.TypeAlias run
 	cd java && gradle -PmainClass=b.Variable run
 	cd java && gradle -PmainClass=c.Persistent run
+	cd java && gradle -PmainClass=c.ConjAsFunction run

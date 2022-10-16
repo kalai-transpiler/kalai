@@ -12,4 +12,5 @@ pub fn main() {
     examples::b::variable::main();
 
     examples::c::persistent::main();
+    examples::c::conj_as_function::main();
 }
