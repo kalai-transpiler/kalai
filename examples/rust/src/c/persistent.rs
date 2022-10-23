@@ -212,30 +212,11 @@ pub fn test_set() -> i64 {
         return 7i64;
     }
 }
-pub fn test_conj() -> i64 {
-    let a: rpds::HashTrieMap<String, i64> =
-        rpds::HashTrieMap::new().insert(String::from(":a"), 1i64);
-    let b: rpds::HashTrieMap<String, i64> =
-        rpds::HashTrieMap::new().insert(String::from(":b"), 2i64);
-    let c: rpds::HashTrieMap<String, i64> = conj(a, b);
-    {
-        println!(
-            "{}",
-            format!(
-                "{}{}",
-                String::from("size of conj persistent map c returns "),
-                (c.size() as i32)
-            )
-        );
-        return 11i64;
-    }
-}
 pub fn main() {
     let _args: std::vec::Vec<String> = std::env::args().collect();
     {
         println!("{}", test_map());
         println!("{}", test_vector());
         println!("{}", test_set());
-        println!("{}", test_conj());
     }
 }

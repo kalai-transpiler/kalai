@@ -52,15 +52,7 @@
 
     7))
 
-(defn test-conj ^Long []
-  (let [a ^{:t {:map [:string :long]}} {:a 1}
-        b ^{:t {:map [:string :long]}} {:b 2}
-        ^{:t {:map [:string :long]}} c (conj a b)]
-    (println (str "size of conj persistent map c returns " (count c)))
-    11))
-
 (defn -main ^{:t :void} [& _args]
   (println (test-map))
   (println (test-vector))
-  (println (test-set))
-  (println (test-conj)))
+  (println (test-set)))

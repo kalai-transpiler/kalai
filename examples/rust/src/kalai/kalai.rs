@@ -1365,9 +1365,9 @@ pub fn conj(m1: BValue, m2: BValue) -> BValue {
     }
 }
 
-/*
-fn conj(m1: m2:) -> BValue {
-  m1.conj(m2)
+/* TODO:
+pub fn count(x: BValue) -> usize {
+    x.len()
 }
 */
 

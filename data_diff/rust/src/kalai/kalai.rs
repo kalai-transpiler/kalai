@@ -34,7 +34,7 @@ pub type BValue = Box<dyn Value>;
 //
 // So we want to explore switching from an enum, which cannot be extended once it is defined, into
 // a trait, which can be extended on new types, similar to Clojure protocols. This would allow users
-// to have their own types and have the ability to extend the trait on their own types thesmelves.
+// to have their own types and have the ability to extend the trait on their own types themselves.
 
 // Note: the following structs are wrapping primitives to allow us functionality
 // (especially related to the `Value` trait) that the primitives don't allow
@@ -1331,6 +1331,45 @@ impl PVector {
         self.0.len()
     }
 }
+
+pub trait PersistentCollection: Value {
+    fn conj(&self, other: BValue) -> Self;
+}
+
+// KFC solution
+impl PersistentCollection for PMap {
+    fn conj(&self, m: BValue) -> Self {
+        let mut tmp_htm = self.0.clone();
+
+        if let Some(m_pmap) = m.as_any().downcast_ref::<PMap>() {
+            let m_htm = m_pmap.0.clone();
+            m_htm
+                .iter()
+                .for_each(|tuple| tmp_htm.insert_mut(tuple.0.clone(), tuple.1.clone()));
+
+            PMap(tmp_htm)
+        } else {
+            panic!("Could not downcast Value into HashTrieMap<BValue,BValue>!");
+        }
+    }
+}
+
+// McDonald's solution
+pub fn conj(m1: BValue, m2: BValue) -> BValue {
+    if let Some(m1_pmap) = m1.as_any().downcast_ref::<PMap>() {
+        BValue::from(m1_pmap.conj(m2))
+        // } else if let Some(m1_pset) = m1.as_any().downcast_ref::<PSet>() {
+        //     m1.conj(m2)
+    } else {
+        panic!("Could not downcast Value into provided Value trait implementing struct types!");
+    }
+}
+
+/*
+fn conj(m1: m2:) -> BValue {
+  m1.conj(m2)
+}
+*/
 
 #[cfg(test)]
 mod tests {
