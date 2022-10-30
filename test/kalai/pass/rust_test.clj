@@ -296,7 +296,7 @@ let y: i64 = 5i64;"))
                             (return z))))
     ;;->
     "use crate::kalai::kalai;
-use crate::kalai::kalai::PMap;
+use crate::kalai::kalai::*;
 lazy_static::lazy_static! {
 static ref x: std::collections::HashMap<i64,String> = std::collections::HashMap::new();
 }
@@ -332,7 +332,7 @@ return z;
                             )))
     ;;->
     "use crate::kalai::kalai;
-use crate::kalai::kalai::PMap;
+use crate::kalai::kalai::*;
 pub fn f(x: kalai::BValue) -> String {
 let v: std::vec::Vec<kalai::BValue> = std::vec::Vec::from(x);
 let v_first: kalai::BValue = v.get((0i32 as usize)).unwrap().clone();
@@ -361,7 +361,7 @@ return format!(\"{}{}{}\", table_name, String::from(\" AS \"), table_alias);
            (invoke conj result 3))))
     ;;->
     "use crate::kalai::kalai;
-use crate::kalai::kalai::PMap;
+use crate::kalai::kalai::*;
 pub fn get_separator_positions() -> () {
 let mut result: std::vec::Vec<i32> = std::vec::Vec::new();
 result.push(3i64);
@@ -1234,11 +1234,7 @@ tmp1
     ;;->
     "let a: rpds::HashTrieMap<String,i64> = rpds::HashTrieMap::new().insert(String::from(\":a\"), 1i64);
 let b: rpds::HashTrieMap<String,i64> = rpds::HashTrieMap::new().insert(String::from(\":b\"), 2i64);
-let c: rpds::HashTrieMap<String,i64> = {
-let mut tmp1: rpds::HashTrieMap<String,i64> = a.clone();
-b.iter().for_each(|tuple|tmp1.insert_mut(tuple.0.clone(), tuple.1.clone()));
-tmp1
-};
+let c: rpds::HashTrieMap<String,i64> = conj(a, b);
 (c.size() as i32);"))
 
 ;; Because Rust strings semantically differ from Java strings, we're not even
@@ -1659,8 +1655,4 @@ tmp3
     '(conj ^{:t {:map [:string :long]}} {:a 1}
            ^{:t {:map [:string :long]}} {:b 2})
     '(invoke conj {:a 1} {:b 2})
-    "{
-let mut tmp1: rpds::HashTrieMap<String,i64> = rpds::HashTrieMap::new().insert(String::from(\":a\"), 1i64).clone();
-rpds::HashTrieMap::new().insert(String::from(\":b\"), 2i64).iter().for_each(|tuple|tmp1.insert_mut(tuple.0.clone(), tuple.1.clone()));
-tmp1
-};"))
+    "conj(rpds::HashTrieMap::new().insert(String::from(\":a\"), 1i64), rpds::HashTrieMap::new().insert(String::from(\":b\"), 2i64));"))
