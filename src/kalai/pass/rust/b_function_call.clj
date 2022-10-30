@@ -154,14 +154,18 @@
       (r/invoke (u/var ~#'disj) & ?more)
       (r/method remove & ?more)
 
-      ;; conj - vectors and sets
+      ;; conj - immutable collections - they are not caught by these rules, and instead
+      ;; fall through and are caught by the default r/invoke rule, which emits
+      ;; a stringified `conj(...)`, which is handled in our kalai.rs helper fns/method impls
+
+      ;; conj - mutable vectors and sets
       (r/invoke (u/var ~#'conj)
                 (m/and ?coll
-                       (m/app meta {:t {_ [?value-t]}}))
+                       (m/app meta {:t {(m/pred #{:mvector :mset}) [?value-t]}}))
                 . !arg ...)
       (r/method push ?coll . (m/app #(ru/wrap-value-enum ?value-t %) !arg) ...)
 
-      ;; conj - maps
+      ;; conj - mutable maps
       (m/and
         (r/invoke (u/var ~#'conj)
                   (m/and ?coll
@@ -176,28 +180,6 @@
           (r/init ?tmp ?coll)
           (r/expression-statement (r/method extend ?tmp . !arg ...))
           ?tmp))
-
-      ;;;; conj - persistent map
-      ;;(m/and
-      ;;  (r/invoke (u/var ~#'conj)
-      ;;            (m/and ?coll
-      ;;                   (m/app meta {:t {:map [?key-t ?value-t]
-      ;;                                    :as ?t}}))
-      ;;            . (m/and !arg (m/app meta {:t {_ [?key-t ?value-t]}})) ...)
-      ;;  ?expr
-      ;;  (m/let [?tmp (u/tmp ?t ?expr)]))
-      ;;(m/app
-      ;;  #(u/preserve-type ?expr %)
-      ;;  (r/block
-      ;;    (r/init ?tmp (r/method clone ?coll))
-      ;;    ;; map.iter().foreach(|tuple| tmp.insert_mut(tuple.0, tuple.1))
-      ;;    . (r/expression-statement (r/method for_each
-      ;;                                        (r/method iter !arg)
-      ;;                                        (r/lambda [tuple]
-      ;;                                                  (r/method insert_mut ?tmp
-      ;;                                                            (r/method clone (r/field 0 tuple))
-      ;;                                                            (r/method clone (r/field 1 tuple)))))) ...
-      ;;    ?tmp))
 
       ;; When inc is used as a function value for example (update m :x inc)
       ;; See kalai/operators for when directly called
@@ -277,10 +259,10 @@
       (r/invoke (u/var ~#'boolean?) ?x)
       (r/method is_type ?x (r/literal "bool"))
 
-      (r/invoke (u/var ~#'double) ?x)
+      (r/invoke (u/var ~#'double?) ?x)
       (r/method is_type ?x (r/literal "Double"))
 
-      (r/invoke (u/var ~#'float) ?x)
+      (r/invoke (u/var ~#'float?) ?x)
       (r/method is_type ?x (r/literal "Float"))
 
       (r/invoke clojure.lang.Util/identical ?x nil)

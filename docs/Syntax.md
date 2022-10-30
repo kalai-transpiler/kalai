@@ -39,7 +39,13 @@ abstract concepts of size. Specifically, integer size = a Java integer = 32-bit 
   for a platform dependent size, which must be cast to `i32`, `u32`, `i64`, `u64`, etc. to match the
   type specified by the user's input code.
 * A language like Rust does not allow floating point types in sets or as the keys of maps. 
-  Therefore, when outputting to such languages, instead of having a `^{:t {:set [:float]}}`, we must use a `^{:t {:set [:any]}}`, and then subsequently cast elements that we get (which would be of type `:any`) to the desired primitive type (`:float`). 
+  Therefore, when outputting to such languages, instead of having a `^{:t {:set [:float]}}`, we must use a `^{:t {:set [:any]}}`, and then subsequently cast elements that we get (which would be of type `:any`) to the desired primitive type (`:float`).
+* TODO: literals - Clojure only has longs and doubles. Should we only have longs/doubles?
+  We currently allow ints/shorts and floats in the type system, and users can get them for literals
+  via casting functions applied to literals (since literals turn into longs/doubles in Clojure by default) 
+* type predicate fns - not currently supporting `int?` because it is very confusing, because `int?`
+  returns true for `long` types in Clojure (and there is an `integer?` that returns true also for
+  BigIntegers as well), while there is no `long?` or `byte?`.
   
 ### Keywords
 

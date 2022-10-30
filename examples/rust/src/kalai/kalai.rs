@@ -257,6 +257,8 @@ impl Value for PSet {
     }
 }
 
+// Rust Vec
+// TODO: remove?  (we don't implement Value for Rust HashSet and HashMap)
 impl<T> Value for Vec<T>
 where
     T: PartialEq + Value + Clone + 'static,
@@ -292,6 +294,7 @@ where
     }
 }
 
+// wrapper type for Rust Vec
 impl Value for Vector {
     fn type_name(&self) -> &'static str {
         "Vector"
@@ -324,6 +327,7 @@ impl Value for Vector {
     }
 }
 
+// wrapper type for rpds Vector
 impl Value for PVector {
     fn type_name(&self) -> &'static str {
         "PVector"
@@ -1110,6 +1114,58 @@ impl From<PMap> for BValue {
     }
 }
 
+impl From<BValue> for PSet {
+    fn from(v: BValue) -> PSet {
+        if let Some(pset) = v.as_any().downcast_ref::<PSet>() {
+            pset.clone()
+        } else {
+            panic!("Could not downcast Value into PSet!");
+        }
+    }
+}
+
+impl From<&BValue> for PSet {
+    fn from(v: &BValue) -> PSet {
+        if let Some(pset) = v.as_any().downcast_ref::<PSet>() {
+            pset.clone()
+        } else {
+            panic!("Could not downcast Value into PSet!");
+        }
+    }
+}
+
+impl From<PSet> for BValue {
+    fn from(s: PSet) -> BValue {
+        Box::new(s)
+    }
+}
+
+impl From<BValue> for PVector {
+    fn from(v: BValue) -> PVector {
+        if let Some(pvec) = v.as_any().downcast_ref::<PVector>() {
+            pvec.clone()
+        } else {
+            panic!("Could not downcast Value into PVector!");
+        }
+    }
+}
+
+impl From<&BValue> for PVector {
+    fn from(v: &BValue) -> PVector {
+        if let Some(pvec) = v.as_any().downcast_ref::<PVector>() {
+            pvec.clone()
+        } else {
+            panic!("Could not downcast Value into PVector!");
+        }
+    }
+}
+
+impl From<PVector> for BValue {
+    fn from(v: PVector) -> BValue {
+        Box::new(v)
+    }
+}
+
 //
 // Float impls
 //
@@ -1336,32 +1392,55 @@ pub trait PersistentCollection: Value {
     fn conj(&self, other: BValue) -> Self;
 }
 
-// KFC solution
 impl PersistentCollection for PMap {
-    fn conj(&self, m: BValue) -> Self {
-        let mut tmp_htm = self.0.clone();
-
-        if let Some(m_pmap) = m.as_any().downcast_ref::<PMap>() {
-            let m_htm = m_pmap.0.clone();
-            m_htm
-                .iter()
-                .for_each(|tuple| tmp_htm.insert_mut(tuple.0.clone(), tuple.1.clone()));
-
-            PMap(tmp_htm)
-        } else {
-            panic!("Could not downcast Value into HashTrieMap<BValue,BValue>!");
+    fn conj(&self, x: BValue) -> Self {
+        match x.type_name() {
+            "PMap" => {
+                let mut tmp_htm = self.0.clone();
+                let m_pmap = x.as_any().downcast_ref::<PMap>().unwrap();
+                let m_htm = m_pmap.0.clone();
+                m_htm
+                    .iter()
+                    .for_each(|tuple| tmp_htm.insert_mut(tuple.0.clone(), tuple.1.clone()));
+                PMap(tmp_htm)
+            }
+            "PVector" => {
+                let pvec = x.as_any().downcast_ref::<PVector>().unwrap();
+                let first = pvec
+                    .get(0)
+                    .expect("PVector argument to conj into a PMap has 0 elements, needs 2");
+                let second = pvec
+                    .get(1)
+                    .expect("PVector argument to conj into a PMap has 1 element, needs 2");
+                PMap(self.0.insert(first.clone(), second.clone()))
+            }
+            _ => panic!(
+                "Could not downcast Value into HashTrieMap<BValue,BValue> or Vector<BValue>!"
+            ),
         }
     }
 }
 
-// McDonald's solution
-pub fn conj(m1: BValue, m2: BValue) -> BValue {
-    if let Some(m1_pmap) = m1.as_any().downcast_ref::<PMap>() {
-        BValue::from(m1_pmap.conj(m2))
-        // } else if let Some(m1_pset) = m1.as_any().downcast_ref::<PSet>() {
-        //     m1.conj(m2)
-    } else {
-        panic!("Could not downcast Value into provided Value trait implementing struct types!");
+impl PersistentCollection for PSet {
+    fn conj(&self, x: BValue) -> Self {
+        PSet(self.0.insert(x))
+    }
+}
+
+impl PersistentCollection for PVector {
+    fn conj(&self, x: BValue) -> Self {
+        PVector(self.0.push_back(x))
+    }
+}
+
+pub fn conj(coll: BValue, x: BValue) -> BValue {
+    match coll.type_name() {
+        "PMap" => BValue::from(coll.as_any().downcast_ref::<PMap>().unwrap().conj(x)),
+        "PSet" => BValue::from(coll.as_any().downcast_ref::<PSet>().unwrap().conj(x)),
+        "PVector" => BValue::from(coll.as_any().downcast_ref::<PVector>().unwrap().conj(x)),
+        _ => {
+            panic!("Could not downcast Value into provided Value trait implementing struct types!")
+        }
     }
 }
 
