@@ -666,6 +666,88 @@ Can we ignore nil? No, b/c you have initialize Clojure state containers with som
 * For creating binaries in Java, nothing special is required as it is for Rust because the Java compiler and build tools do not place constraints on declaring upfront which classes are allowed to have main methods before executing them.
   Also, there are no constraints on how a "binary"/executable class is allowed to refer to other "library" classes, as there are in Rust. 
 
+## Transducers
+
+Transducers retain the expressiveness of seq functions,
+allowing composition of seq functions that only materializes one result without intermediate sequences.
+
+### What problems do transducers solve?
+
+Before transducers users would operate on a seq with core library seq functions.
+Those functions materialize a new seq of elements as output.
+If you have a chain of n different seq functions being applied one after another
+you are materializing n-1 intermediary seqs before your final output seq.
+
+What we want is to compose functions into one super-function and then apply that one function that only materializes one seq but gives you the same output.
+
+#### Why doesn't regular composition suffice?
+
+If you compose a filter then a map, you'll reify 2 sequences:
+
+    (->> input-sequence (filter odd?) (map inc))
+    
+The above is equivalent to the below
+
+    ((comp #(filter odd? %) #(map inc %)) input-sequence)
+
+This is not the composition you are looking for because it creates 2 sequences,
+because the partials operate on the entire sequence independently.
+
+Imagine you had a bunch of map operations
+
+    (->> input-sequence (map inc) (map f2) (map f3))
+
+You could refactor it to be
+
+    (map (comp f3 f2 inc) input-sequence)
+
+But even though you can take `inc` out of the map function and compose it with other functions passed to other chained map calls, we cannot do the same with `filter` and other types of seq functions.
+Not all sequence functions maintain the size of the seq.
+We cannot compose `filter odd?` with `map inc` by composing `odd?` with `inc`.
+
+We can imagine crafting a "superfunction" that solves these problems,
+but it would require non-composable imperative code in a loop to make it work.
+
+### Using transducers
+
+You create a transducer by calling transducer functions:
+
+    (def t (comp (filter odd?) (map inc)))
+
+Sequence functions included in Clojure have an arity that produces a transducer:
+
+* `(filter odd?)` creates a transducer
+* `(map inc)` creates a transducer
+* Composing transducers `(comp t1 t2)` creates a transducer
+
+Functions that create transducers are `map`, `filter`, `take`, `partition` etc...
+(see the reference for the full list)
+
+To obtain a result from a transducer, there are special functions:
+
+    (into [] t (range 100))
+
+The special functions are:
+
+* `into` (for creating a data structure result)
+* `sequence` (for creating a persistent sequence result)
+* `transduce` (for creating a single value result)
+* `eduction` (for creating an ephemeral sequence)
+
+Can transducers be implemented in all target languages?
+
+Yes, they are just stateful steps.
+So long as the language allows generic heterogeneous nested data types because typed transducers are hard https://youtu.be/6mTbuzafcII?t=1678
+
+Existing implementations
+
+* Rust: https://github.com/benashford
+* Others C++ https://github.com/arximboldi/zug
+* JavaScript https://github.com/cognitect-labs/transducers-js
+
+* Can we skip lazy versions entirely? Will it make our job easier or harder? 
+* We'd also like to use seq functions on channels and make use of parallelism
+
 ####
 
 We have patterns, and it be nice to transfer state from outer patterns to inner patterns, but we don't know how to do that.
