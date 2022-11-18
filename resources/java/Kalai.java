@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import io.lacuna.bifurcan.*;
 
 /**
  * Kalai helper code for Java.
@@ -107,8 +108,31 @@ public class Kalai {
      * @param <V>
      * @return
      */
-    public static<K, V> Map<K,V> conj(Map<K, V> m1, Map<K, V> m2) {
-        m1.putAll(m2);
+    public static io.lacuna.bifurcan.Map conjImpl(io.lacuna.bifurcan.Map m1, io.lacuna.bifurcan.Map m2) {
+        m1.merge(m2);
         return m1;
+    }
+
+    public static io.lacuna.bifurcan.Map conjImpl(io.lacuna.bifurcan.Map m1, io.lacuna.bifurcan.List v1) {
+        Object k = v1.nth(0);
+        Object v = v1.nth(1);
+        m1.put(k, v);
+        return m1;
+    }
+
+    public static io.lacuna.bifurcan.List conjImpl(io.lacuna.bifurcan.List v1, Object elem) {
+        v1.addLast(elem);
+        return v1;
+    }
+
+    public static io.lacuna.bifurcan.Set conjImpl(io.lacuna.bifurcan.Set s1, Object elem) {
+        s1.add(elem);
+        return s1;
+    }
+
+    public static Object conj(Object o1, Object o2) {
+        if ((o1 instanceof io.lacuna.bifurcan.Map) && (o2 instanceof io.lacuna.bifurcan.Map)) {
+            return conjImpl((io.lacuna.bifurcan.Map o1), (io.lacuna.bifurcan.Map) o2);
+        }
     }
 }

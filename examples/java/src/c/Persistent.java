@@ -3,6 +3,7 @@ package c;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import kalai.Kalai.*;
 
 public class Persistent {
   public static final long testMap() {
@@ -97,8 +98,8 @@ public class Persistent {
   }
 
   public static final void main(String[] _args) {
-    System.out.println(c.Persistent.testMap());
-    System.out.println(c.Persistent.testVector());
-    System.out.println(c.Persistent.testSet());
+    System.out.println(testMap());
+    System.out.println(testVector());
+    System.out.println(testSet());
   }
 }

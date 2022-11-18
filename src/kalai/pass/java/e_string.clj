@@ -170,7 +170,8 @@
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.stream.Collectors;")
+import java.util.stream.Collectors;
+import kalai.Kalai.*;")
 
 (defn class-str [ns-name body]
   (let [parts (str/split (str ns-name) #"\.")

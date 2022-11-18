@@ -1,5 +1,6 @@
 package kalai;
 
+import io.lacuna.bifurcan.*;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
@@ -111,8 +112,25 @@ public class Kalai {
    * @param <V>
    * @return
    */
-  public static <K, V> Map<K, V> conj(Map<K, V> m1, Map<K, V> m2) {
+  public static io.lacuna.bifurcan.Map conj(io.lacuna.bifurcan.Map m1, io.lacuna.bifurcan.Map m2) {
     m1.putAll(m2);
     return m1;
+  }
+
+  public static io.lacuna.bifurcan.Map conj(io.lacuna.bifurcan.Map m1, io.lacuna.bifurcan.List v1) {
+    Object k = v1.get(0);
+    Object v = v1.get(1);
+    m1.put(k, v);
+    return m1;
+  }
+
+  public static io.lacuna.bifurcan.List conj(io.lacuna.bifurcan.List v1, Object elem) {
+    v1.add(elem);
+    return v1;
+  }
+
+  public static io.lacuna.bifurcan.Set conj(io.lacuna.bifurcan.Set s1, Object elem) {
+    s1.add(elem);
+    return s1;
   }
 }

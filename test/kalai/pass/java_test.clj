@@ -121,6 +121,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
+import kalai.Kalai.*;
 public class TestClass {
 public static final int f(final int x) {
 return (x + 1);
@@ -274,6 +275,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
+import kalai.Kalai.*;
 public class TestClass {
 static final HashMap<Long,String> x;
 public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
@@ -321,6 +323,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
+import kalai.Kalai.*;
 public class TestClass {
 public static final String f(final Object x) {
 final ArrayList<Object> v = (ArrayList<Object>)x;
@@ -1437,6 +1440,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
+import kalai.Kalai.*;
 public class TestClass {
 static final HashMap<Long,String> x;
 public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
@@ -1573,4 +1577,4 @@ kalai.Kalai.conj(tmp1, tmp2);"))
     '(conj ^{:t {:map [:string :long]}} {:a 1}
            ^{:t {:map [:string :long]}} {:b 2})
     '(invoke conj {:a 1} {:b 2})
-    "new io.lacuna.bifurcan.Map<String,Long>().put(\":a\", 1L, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS).union(new io.lacuna.bifurcan.Map<String,Long>().put(\":b\", 2L, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS));"))
+    "conj(new io.lacuna.bifurcan.Map<String,Long>().put(\":a\", 1L, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS), new io.lacuna.bifurcan.Map<String,Long>().put(\":b\", 2L, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS));"))

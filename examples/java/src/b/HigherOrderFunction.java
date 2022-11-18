@@ -1,6 +1,7 @@
 package b;
 
 import java.util.ArrayList;
+import kalai.Kalai.*;
 
 public class HigherOrderFunction {
   public static final void main(String[] _args) {

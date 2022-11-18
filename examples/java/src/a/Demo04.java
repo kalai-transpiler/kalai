@@ -2,6 +2,7 @@ package a;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import kalai.Kalai.*;
 
 public class Demo04 {
   public static final HashMap<Character, Integer> getDigitsMap() {
@@ -39,7 +40,7 @@ public class Demo04 {
     return tmp1;
   }
 
-  static final HashMap<Character, Integer> digitsMap = a.Demo04.getDigitsMap();
+  static final HashMap<Character, Integer> digitsMap = getDigitsMap();
 
   public static final int parse(final String s) {
     int result = 0;
@@ -105,8 +106,7 @@ public class Demo04 {
     return m;
   }
 
-  static final HashMap<String, ArrayList<Character>> numberSystemsMap =
-      a.Demo04.getNumberSystemsMap();
+  static final HashMap<String, ArrayList<Character>> numberSystemsMap = getNumberSystemsMap();
 
   public static final HashMap<String, Character> getGroupingSeparatorsMap() {
     HashMap<String, Character> tmp7 = new HashMap<String, Character>();
@@ -116,8 +116,7 @@ public class Demo04 {
     return tmp7;
   }
 
-  static final HashMap<String, Character> groupingSeparatorsMap =
-      a.Demo04.getGroupingSeparatorsMap();
+  static final HashMap<String, Character> groupingSeparatorsMap = getGroupingSeparatorsMap();
 
   public static final ArrayList<Integer> getSeparatorPositions(
       final int numLength, final String groupingStrategy) {
@@ -192,7 +191,7 @@ public class Demo04 {
         final char sep = groupingSeparatorsMap.get(numberSystem);
         final int numLength = result.length();
         final ArrayList<Integer> separatorPositions =
-            a.Demo04.getSeparatorPositions(numLength, groupingStrategy);
+            getSeparatorPositions(numLength, groupingStrategy);
         final int numPositions = separatorPositions.size();
         int idx = 0;
         while ((idx < numPositions)) {
@@ -208,12 +207,12 @@ public class Demo04 {
   }
 
   public static final void main(String[] _args) {
-    System.out.println(a.Demo04.parse("٥٠٣٠١"));
-    System.out.println(a.Demo04.parse("৫০৩০১"));
-    System.out.println(a.Demo04.parse("7,654,321"));
-    System.out.println(a.Demo04.parse("76,54,321"));
-    System.out.println(a.Demo04.format(7654321, "LATIN", "ON_ALIGNED_3_2"));
-    System.out.println(a.Demo04.format(7654321, "ARABIC", "ON_ALIGNED_3_3"));
-    System.out.println(a.Demo04.format(7654321, "BENGALI", "ON_ALIGNED_3_3"));
+    System.out.println(parse("٥٠٣٠١"));
+    System.out.println(parse("৫০৩০১"));
+    System.out.println(parse("7,654,321"));
+    System.out.println(parse("76,54,321"));
+    System.out.println(format(7654321, "LATIN", "ON_ALIGNED_3_2"));
+    System.out.println(format(7654321, "ARABIC", "ON_ALIGNED_3_3"));
+    System.out.println(format(7654321, "BENGALI", "ON_ALIGNED_3_3"));
   }
 }

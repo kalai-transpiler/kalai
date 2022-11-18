@@ -177,7 +177,7 @@
 
 (defn invoke-str [function-name & args]
   (str (if (or (string? function-name) (symbol? function-name))
-         (ru/fully-qualified-function-identifier-str function-name)
+         (ru/fully-qualified-function-identifier-str function-name "::")
          (stringify function-name))
        (args-list args)))
 

@@ -1,5 +1,7 @@
 package b;
 
+import kalai.Kalai.*;
+
 public class Variable {
   public static final long sideEffect() {
     long y = 2L;
@@ -10,6 +12,6 @@ public class Variable {
   }
 
   public static final void main(String[] _args) {
-    System.out.println(b.Variable.sideEffect());
+    System.out.println(sideEffect());
   }
 }

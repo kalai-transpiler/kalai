@@ -1,5 +1,7 @@
 package a;
 
+import kalai.Kalai.*;
+
 public class Demo01 {
   public static final String format(final int num) {
     int i = num;
@@ -18,7 +20,7 @@ public class Demo01 {
   }
 
   public static final void main(String[] _args) {
-    a.Demo01.format(2345);
-    System.out.println(a.Demo01.format(2345));
+    format(2345);
+    System.out.println(format(2345));
   }
 }
