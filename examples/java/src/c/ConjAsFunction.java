@@ -1,7 +1,5 @@
 package c;
 
-import kalai.Kalai.*;
-
 public class ConjAsFunction {
   public static final long conjMapMap() {
     final Object a =
@@ -10,7 +8,7 @@ public class ConjAsFunction {
     final Object b =
         new io.lacuna.bifurcan.Map<Object, Object>()
             .put(":b", 2L, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS);
-    final Object c = conj(a, b);
+    final Object c = kalai.Kalai.conj(a, b);
     return 3L;
   }
 
@@ -19,21 +17,21 @@ public class ConjAsFunction {
         new io.lacuna.bifurcan.Map<Object, Object>()
             .put(":a", 1L, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS);
     final Object b = new io.lacuna.bifurcan.List<Object>().addLast(":b").addLast(2L);
-    final Object c = conj(a, b);
+    final Object c = kalai.Kalai.conj(a, b);
     return 11L;
   }
 
   public static final long conjSet() {
     final Object a = new io.lacuna.bifurcan.Set<Object>().add(":a").add(":b");
     final Object newValue = ":c";
-    final Object c = conj(a, newValue);
+    final Object c = kalai.Kalai.conj(a, newValue);
     return 5L;
   }
 
   public static final long conjVector() {
     final Object a = new io.lacuna.bifurcan.List<Object>().addLast(":a").addLast(":b");
     final Object newValue = ":c";
-    final Object c = conj(a, newValue);
+    final Object c = kalai.Kalai.conj(a, newValue);
     return 7L;
   }
 
@@ -45,7 +43,7 @@ public class ConjAsFunction {
         new io.lacuna.bifurcan.Map<Object, Object>()
             .put(":b", 1L, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS);
     {
-      conj((Object) a, (Object) b);
+      kalai.Kalai.conj((Object) a, (Object) b);
       return 4L;
     }
   }

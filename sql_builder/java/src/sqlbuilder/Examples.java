@@ -137,23 +137,23 @@ public class Examples {
 
   public static final void main(String[] _args) {
     {
-      final String queryStr = sqlbuilder.Examples.f1();
+      final String queryStr = f1();
       System.out.println(("" + "example 1 query string:\n---\n" + queryStr + "\n---\n\n"));
     }
     {
-      final String queryStr = sqlbuilder.Examples.f2();
+      final String queryStr = f2();
       System.out.println(("" + "example 2 query string:\n---\n" + queryStr + "\n---\n\n"));
     }
     {
-      final String queryStr = sqlbuilder.Examples.f3();
+      final String queryStr = f3();
       System.out.println(("" + "example 3 query string:\n---\n" + queryStr + "\n---\n\n"));
     }
     {
-      final String queryStr = sqlbuilder.Examples.f4();
+      final String queryStr = f4();
       System.out.println(("" + "example 4 query string:\n---\n" + queryStr + "\n---\n\n"));
     }
     {
-      final String queryStr = sqlbuilder.Examples.f5();
+      final String queryStr = f5();
       System.out.println(("" + "example 5 query string:\n---\n" + queryStr + "\n---\n\n"));
     }
   }

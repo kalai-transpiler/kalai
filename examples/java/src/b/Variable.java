@@ -1,7 +1,5 @@
 package b;
 
-import kalai.Kalai.*;
-
 public class Variable {
   public static final long sideEffect() {
     long y = 2L;

@@ -2,7 +2,6 @@ package a;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import kalai.Kalai.*;
 
 public class Demo04 {
   public static final HashMap<Character, Integer> getDigitsMap() {

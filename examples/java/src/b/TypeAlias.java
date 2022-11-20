@@ -1,7 +1,6 @@
 package b;
 
 import java.util.HashMap;
-import kalai.Kalai.*;
 
 public class TypeAlias {
   static final HashMap<Long, String> x = new HashMap<Long, String>();

@@ -139,10 +139,10 @@
       (j/invoke (u/var ~#'dissoc) & ?more)
       (j/method remove & ?more)
 
-      ;; conj - vectors and sets
+      ;; conj - mutable vectors and sets
       (j/invoke (u/var ~#'conj)
                 (m/and ?coll
-                       (m/app meta {:t {_ [?value-t]}}))
+                       (m/app meta {:t {(m/pred #{:mvector :mset}) [?value-t]}}))
                 . !arg ...)
       (j/method add ?coll . !arg ...)
 
@@ -152,6 +152,12 @@
                        (m/app meta {:t {:mmap [?key-t ?value-t]
                                         :as   ?t}}))
                 . (m/and !arg (m/app meta {:t {_ [?key-t ?value-t]}})) ...)
+      (j/method putAll ?coll . !arg ...)
+
+      ;; conj - immutable collections (vectors, sets, maps)
+      (j/invoke (u/var ~#'conj)
+                ?coll
+                . !arg ...)
       (j/invoke kalai.Kalai.conj ?coll . !arg ...)
 
       ;;;; conj - persistent maps

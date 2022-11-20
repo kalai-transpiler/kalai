@@ -1,11 +1,26 @@
 package kalai;
 
+import io.lacuna.bifurcan.*;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+/** Kalai helper code for Java. */
 public class Kalai {
+
+  /**
+   * Not currently supported in the Java Stream interface set of methods (as of Java 18), but is
+   * necessary to support `reduce`, `merge`, etc. in Clojure. `reduce` in Clojure is effectively
+   * `foldLeft` in other languages like Scala/Rust/Haskell, etc.
+   *
+   * @param sequence
+   * @param initial
+   * @param accumulator
+   * @param <U>
+   * @param <T>
+   * @return
+   */
   public static <U, T> U foldLeft(
       Collection<T> sequence, U initial, BiFunction<U, ? super T, U> accumulator) {
     U result = initial;
@@ -28,9 +43,14 @@ public class Kalai {
   //    }
 
   /**
-   * Can be viewed either as: 1. a Clojure `map` invocation that takes 2 sequences 2. a combination
-   * of a Rust/Scala `zip` that combines 2 sequences into one, followed by a map of the resulting
-   * sequence.
+   * The Java Stream interface has a `map` method, but that implicitly operates on a single Stream
+   * (which maps to a Clojure sequence). But Clojure also supports `map` over many sequences. We at
+   * least would like to support `map` over 2 sequences (which means the provided function accepts 2
+   * arguments), which requires the extra work below.
+   *
+   * <p>Can be viewed either as: 1. a Clojure `map` invocation that takes 2 sequences 2. a
+   * combination of a Rust/Scala `zip` that combines 2 sequences into one, followed by a map of the
+   * resulting sequence.
    *
    * @param zipper the function applied to an element of `a` and an element of `b` to obtain the
    *     result of type `C` in the result output Stream.
@@ -81,8 +101,52 @@ public class Kalai {
         : StreamSupport.stream(split, false);
   }
 
-  public static <K, V> Map<K, V> conj(Map<K, V> m1, Map<K, V> m2) {
-    m1.putAll(m2);
+  /**
+   * `conj` can operate on many types of collections and new element types. This implementation
+   * function of `conj` supports when `conj` accepts a Map type collection with a new element type
+   * of Map.
+   *
+   * @param m1
+   * @param m2
+   * @param <K>
+   * @param <V>
+   * @return
+   */
+  public static io.lacuna.bifurcan.Map conjImpl(
+      io.lacuna.bifurcan.Map m1, io.lacuna.bifurcan.Map m2) {
+    m1.merge(m2, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS);
     return m1;
+  }
+
+  public static io.lacuna.bifurcan.Map conjImpl(
+      io.lacuna.bifurcan.Map m1, io.lacuna.bifurcan.List v1) {
+    Object k = v1.nth(0);
+    Object v = v1.nth(1);
+    m1.put(k, v);
+    return m1;
+  }
+
+  public static io.lacuna.bifurcan.List conjImpl(io.lacuna.bifurcan.List v1, Object elem) {
+    v1.addLast(elem);
+    return v1;
+  }
+
+  public static io.lacuna.bifurcan.Set conjImpl(io.lacuna.bifurcan.Set s1, Object elem) {
+    s1.add(elem);
+    return s1;
+  }
+
+  public static Object conj(Object o1, Object o2) {
+    if ((o1 instanceof io.lacuna.bifurcan.Map) && (o2 instanceof io.lacuna.bifurcan.Map)) {
+      return conjImpl((io.lacuna.bifurcan.Map) o1, (io.lacuna.bifurcan.Map) o2);
+    } else if ((o1 instanceof io.lacuna.bifurcan.Map) && (o2 instanceof io.lacuna.bifurcan.List)) {
+      return conjImpl((io.lacuna.bifurcan.Map) o1, (io.lacuna.bifurcan.List) o2);
+    } else if (o1 instanceof io.lacuna.bifurcan.List) {
+      return conjImpl((io.lacuna.bifurcan.List) o1, o2);
+    } else if (o1 instanceof io.lacuna.bifurcan.Set) {
+      return conjImpl((io.lacuna.bifurcan.Set) o1, o2);
+    } else {
+      return null;
+    }
   }
 }

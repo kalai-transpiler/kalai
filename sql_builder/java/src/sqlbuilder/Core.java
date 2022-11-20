@@ -41,7 +41,7 @@ public class Core {
         select.stream()
             .map(
                 (a) -> {
-                  return sqlbuilder.Core.castToStr(a);
+                  return castToStr(a);
                 })
             .collect(Collectors.toList()));
   }
@@ -52,7 +52,7 @@ public class Core {
         from.stream()
             .map(
                 (a) -> {
-                  return sqlbuilder.Core.castToStr(a);
+                  return castToStr(a);
                 })
             .collect(Collectors.toList()));
   }
@@ -63,7 +63,7 @@ public class Core {
         join.stream()
             .map(
                 (a) -> {
-                  return sqlbuilder.Core.castToStr(a);
+                  return castToStr(a);
                 })
             .collect(Collectors.toList()));
   }
@@ -82,12 +82,12 @@ public class Core {
                   .skip(1L)
                   .map(
                       (a) -> {
-                        return sqlbuilder.Core.whereStr(a);
+                        return whereStr(a);
                       })
                   .collect(Collectors.toList()))
           + ")");
     } else {
-      return sqlbuilder.Core.castToStr(clause);
+      return castToStr(clause);
     }
   }
 
@@ -97,13 +97,13 @@ public class Core {
         join.stream()
             .map(
                 (a) -> {
-                  return sqlbuilder.Core.castToStr(a);
+                  return castToStr(a);
                 })
             .collect(Collectors.toList()));
   }
 
   public static final String havingStr(final Object having) {
-    return sqlbuilder.Core.whereStr(having);
+    return whereStr(having);
   }
 
   public static final String rowStr(final Object row) {
@@ -115,7 +115,7 @@ public class Core {
             mrow.stream()
                 .map(
                     (a) -> {
-                      return sqlbuilder.Core.castToStr(a);
+                      return castToStr(a);
                     })
                 .collect(Collectors.toList()))
         + ")");
@@ -141,9 +141,9 @@ public class Core {
         tmp6 =
             (""
                 + "INSERT INTO "
-                + sqlbuilder.Core.fromStr((ArrayList<Object>) insertInto)
+                + fromStr((ArrayList<Object>) insertInto)
                 + "("
-                + sqlbuilder.Core.selectStr((ArrayList<Object>) columns)
+                + selectStr((ArrayList<Object>) columns)
                 + ")\n"
                 + "VALUES\n"
                 + String.join(
@@ -151,7 +151,7 @@ public class Core {
                     v2.stream()
                         .map(
                             (a) -> {
-                              return sqlbuilder.Core.rowStr(a);
+                              return rowStr(a);
                             })
                         .collect(Collectors.toList())));
       }
@@ -161,42 +161,42 @@ public class Core {
     if (tmp9) {
       tmp8 = "";
     } else {
-      tmp8 = ("" + "SELECT " + sqlbuilder.Core.selectStr((ArrayList<Object>) select));
+      tmp8 = ("" + "SELECT " + selectStr((ArrayList<Object>) select));
     }
     String tmp10;
     boolean tmp11 = (from == null);
     if (tmp11) {
       tmp10 = "";
     } else {
-      tmp10 = ("" + " FROM " + sqlbuilder.Core.fromStr((ArrayList<Object>) from));
+      tmp10 = ("" + " FROM " + fromStr((ArrayList<Object>) from));
     }
     String tmp12;
     boolean tmp13 = (join == null);
     if (tmp13) {
       tmp12 = "";
     } else {
-      tmp12 = ("" + " JOIN " + sqlbuilder.Core.joinStr((ArrayList<Object>) join));
+      tmp12 = ("" + " JOIN " + joinStr((ArrayList<Object>) join));
     }
     String tmp14;
     boolean tmp15 = (whereClause == null);
     if (tmp15) {
       tmp14 = "";
     } else {
-      tmp14 = ("" + " WHERE " + sqlbuilder.Core.whereStr(whereClause));
+      tmp14 = ("" + " WHERE " + whereStr(whereClause));
     }
     String tmp16;
     boolean tmp17 = (groupBy == null);
     if (tmp17) {
       tmp16 = "";
     } else {
-      tmp16 = ("" + " GROUP BY " + sqlbuilder.Core.groupByStr((ArrayList<Object>) groupBy));
+      tmp16 = ("" + " GROUP BY " + groupByStr((ArrayList<Object>) groupBy));
     }
     String tmp18;
     boolean tmp19 = (having == null);
     if (tmp19) {
       tmp18 = "";
     } else {
-      tmp18 = ("" + " HAVING " + sqlbuilder.Core.havingStr(having));
+      tmp18 = ("" + " HAVING " + havingStr(having));
     }
     return ("" + tmp6 + tmp8 + tmp10 + tmp12 + tmp14 + tmp16 + tmp18);
   }

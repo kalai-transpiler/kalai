@@ -121,7 +121,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
-import kalai.Kalai.*;
+import kalai.Kalai;
 public class TestClass {
 public static final int f(final int x) {
 return (x + 1);
@@ -275,7 +275,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
-import kalai.Kalai.*;
+import kalai.Kalai;
 public class TestClass {
 static final HashMap<Long,String> x;
 public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
@@ -323,7 +323,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
-import kalai.Kalai.*;
+import kalai.Kalai;
 public class TestClass {
 public static final String f(final Object x) {
 final ArrayList<Object> v = (ArrayList<Object>)x;
@@ -1440,7 +1440,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
-import kalai.Kalai.*;
+import kalai.Kalai;
 public class TestClass {
 static final HashMap<Long,String> x;
 public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
@@ -1570,11 +1570,11 @@ System.out.println((\"\" + \"aa:\" + aa + \"bb:\" + bb + \"ab:\" + ab + \"x:\" +
 tmp1.put(\":a\", 1L);
 HashMap<String,Long> tmp2 = new HashMap<String,Long>();
 tmp2.put(\":b\", 2L);
-kalai.Kalai.conj(tmp1, tmp2);"))
+tmp1.putAll(tmp2);"))
 
 (deftest conj-test2
   (inner-form
     '(conj ^{:t {:map [:string :long]}} {:a 1}
            ^{:t {:map [:string :long]}} {:b 2})
     '(invoke conj {:a 1} {:b 2})
-    "conj(new io.lacuna.bifurcan.Map<String,Long>().put(\":a\", 1L, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS), new io.lacuna.bifurcan.Map<String,Long>().put(\":b\", 2L, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS));"))
+    "kalai.Kalai.conj(new io.lacuna.bifurcan.Map<String,Long>().put(\":a\", 1L, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS), new io.lacuna.bifurcan.Map<String,Long>().put(\":b\", 2L, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS));"))
