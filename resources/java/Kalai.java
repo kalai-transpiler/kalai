@@ -109,7 +109,7 @@ public class Kalai {
      * @return
      */
     public static io.lacuna.bifurcan.Map conjImpl(io.lacuna.bifurcan.Map m1, io.lacuna.bifurcan.Map m2) {
-        m1.merge(m2);
+        m1.merge(m2, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS);
         return m1;
     }
 
@@ -132,7 +132,15 @@ public class Kalai {
 
     public static Object conj(Object o1, Object o2) {
         if ((o1 instanceof io.lacuna.bifurcan.Map) && (o2 instanceof io.lacuna.bifurcan.Map)) {
-            return conjImpl((io.lacuna.bifurcan.Map o1), (io.lacuna.bifurcan.Map) o2);
+            return conjImpl((io.lacuna.bifurcan.Map) o1, (io.lacuna.bifurcan.Map) o2);
+        } else if ((o1 instanceof io.lacuna.bifurcan.Map) && (o2 instanceof io.lacuna.bifurcan.List)) {
+            return conjImpl((io.lacuna.bifurcan.Map) o1, (io.lacuna.bifurcan.List) o2);
+        } else if (o1 instanceof io.lacuna.bifurcan.List) {
+            return conjImpl((io.lacuna.bifurcan.List) o1, o2);
+        } else if (o1 instanceof io.lacuna.bifurcan.Set) {
+            return conjImpl((io.lacuna.bifurcan.Set) o1, o2);
+        } else {
+            return null;
         }
     }
 }
