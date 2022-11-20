@@ -4,35 +4,36 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
+import kalai.Kalai;
 public class Core {
 public static final TYPE_MISSING diffAssociativeKey(final TYPE_MISSING a, final TYPE_MISSING b, final TYPE_MISSING k) {
 final Object va = a.get(k);
 final Object vb = b.get(k);
-final Object vec18694 = datadiff.Core.diff(va, vb);
+final Object vec18815 = diff(va, vb);
 Object tmp43 = null;
 if ((0L <= 0L))
 {
-if ((0L < vec__18694.length()))
+if ((0L < vec__18815.length()))
 {
-tmp43 = vec__18694.get();
+tmp43 = vec__18815.get();
 }
 }
 final Object aa = tmp43;
 Object tmp44 = null;
 if ((0L <= 1L))
 {
-if ((1L < vec__18694.length()))
+if ((1L < vec__18815.length()))
 {
-tmp44 = vec__18694.get();
+tmp44 = vec__18815.get();
 }
 }
 final Object bb = tmp44;
 Object tmp45 = null;
 if ((0L <= 2L))
 {
-if ((2L < vec__18694.length()))
+if ((2L < vec__18815.length()))
 {
-tmp45 = vec__18694.get();
+tmp45 = vec__18815.get();
 }
 }
 final Object ab = tmp45;
@@ -157,11 +158,16 @@ tmp21 = new TYPE_MISSING().put(k, ab, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_W
 }
 return new TYPE_MISSING().addLast(tmp9).addLast(tmp15).addLast(tmp21);
 }
+public static final TYPE_MISSING merge2(final TYPE_MISSING m1, final TYPE_MISSING m2) {
+return kalai.Kalai.foldLeft(m2, m1, conj);
+}
 public static final TYPE_MISSING diffAssociative(final TYPE_MISSING a, final TYPE_MISSING b, final TYPE_MISSING ks) {
 return kalai.Kalai.foldLeft(ks.stream().map((k) -> {
-return datadiff.Core.diffAssociativeKey(a, b, k);
+return diffAssociativeKey(a, b, k);
 }), new TYPE_MISSING().addLast(null).addLast(null).addLast(null), (diff1, diff2) -> {
-return clojure.Core.doall(clojure.Core.map(merge, diff1, diff2));
+return doall(kalai.Kalai.map((a, b) -> {
+return merge2(a, b);
+}, diff1.stream(), diff2.stream()));
 });
 }
 public static final TYPE_MISSING union(final TYPE_MISSING s1, final TYPE_MISSING s2) {
@@ -183,7 +189,7 @@ return kalai.Kalai.foldLeft(s1, s1, (result, item) -> {
 boolean tmp25 = s2.containsKey(item);
 if (tmp25)
 {
-return clojure.Core.disj(result, item);
+return disj(result, item);
 }
 else
 {
@@ -200,7 +206,7 @@ public static final TYPE_MISSING intersection(final TYPE_MISSING s1, final TYPE_
 boolean tmp26 = (s2.length() < s1.length());
 if (tmp26)
 {
-return recur(s2, s1);
+return intersection(s2, s1);
 }
 else
 {
@@ -212,7 +218,7 @@ return result;
 }
 else
 {
-return clojure.Core.disj(result, item);
+return disj(result, item);
 }
 });
 }
@@ -256,11 +262,11 @@ return ":atom";
 }
 }
 public static final TYPE_MISSING mapDiff(final TYPE_MISSING a, final TYPE_MISSING b) {
-final Object abKeys = datadiff.Core.union(clojure.Core.set(clojure.Core.keys(a)), clojure.Core.set(clojure.Core.keys(b)));
-return datadiff.Core.diffAssociative(a, b, abKeys);
+final Object abKeys = union(keys(a), keys(b));
+return diffAssociative(a, b, abKeys);
 }
 public static final TYPE_MISSING setDiff(final TYPE_MISSING a, final TYPE_MISSING b) {
-return new TYPE_MISSING().addLast(clojure.Core.notEmpty(datadiff.Core.difference(a, b))).addLast(clojure.Core.notEmpty(datadiff.Core.difference(b, a))).addLast(clojure.Core.notEmpty(datadiff.Core.intersection(a, b)));
+return new TYPE_MISSING().addLast(notEmpty(difference(a, b))).addLast(notEmpty(difference(b, a))).addLast(notEmpty(intersection(a, b)));
 }
 public static final TYPE_MISSING vectorize(final TYPE_MISSING m) {
 boolean tmp32 = m.stream();
@@ -269,22 +275,24 @@ if (tmp32)
 Object tmp46 = null;
 if ((0L <= 0L))
 {
-if ((0L < vec__18737.length()))
+if ((0L < vec__18860.length()))
 {
-tmp46 = vec__18737.get();
+tmp46 = vec__18860.get();
 }
 }
 Object tmp47 = null;
 if ((0L <= 1L))
 {
-if ((1L < vec__18737.length()))
+if ((1L < vec__18860.length()))
 {
-tmp47 = vec__18737.get();
+tmp47 = vec__18860.get();
 }
 }
 {
-return kalai.Kalai.foldLeft(m, clojure.Core.vec(clojure.Core.repeat(clojure.Core.apply(max, clojure.Core.keys(m)), null)), (result, p__18735) -> {
-final TYPE_MISSING vec18737 = p__18735;
+return kalai.Kalai.foldLeft(m, vec(repeat(keys(m).stream().reduce((a, b) -> {
+return max(a, b);
+}).get(), null)), (result, p__18858) -> {
+final TYPE_MISSING vec18860 = p__18858;
 final Object k = tmp46;
 final Object v = tmp47;
 return result.put(k, v);
@@ -305,7 +313,7 @@ tmp33 = a;
 }
 else
 {
-tmp33 = clojure.Core.vec(a);
+tmp33 = vec(a);
 }
 "MISSING_TYPE" tmp35;
 boolean tmp36 = (b instanceof List);
@@ -315,13 +323,15 @@ tmp35 = b;
 }
 else
 {
-tmp35 = clojure.Core.vec(b);
+tmp35 = vec(b);
 }
-return clojure.Core.vec(datadiff.Core.diffAssociative(tmp33, tmp35, clojure.Core.range(clojure.lang.Numbers.max(a.length(), b.length()))).stream().map(datadiff.Core::vectorize));
+return vec(diffAssociative(tmp33, tmp35, range(clojure.lang.Numbers.max(a.length(), b.length()))).stream().map((a) -> {
+return vectorize(a);
+}));
 }
 public static final TYPE_MISSING diffSimilar(final TYPE_MISSING a, final TYPE_MISSING b) {
-final Object partitionA = datadiff.Core.equalityPartition(a);
-final Object partitionB = datadiff.Core.equalityPartition(b);
+final Object partitionA = equalityPartition(a);
+final Object partitionB = equalityPartition(b);
 {
 boolean tmp37 = (partitionA == partitionB);
 if (tmp37)
@@ -329,28 +339,28 @@ if (tmp37)
 boolean tmp38 = (partitionA == ":set");
 if (tmp38)
 {
-return datadiff.Core.setDiff(a, b);
+return setDiff(a, b);
 }
 else
 {
 boolean tmp39 = (partitionA == ":map");
 if (tmp39)
 {
-return datadiff.Core.mapDiff(a, b);
+return mapDiff(a, b);
 }
 else
 {
 boolean tmp40 = (partitionA == ":sequence");
 if (tmp40)
 {
-return datadiff.Core.sequenceDiff(a, b);
+return sequenceDiff(a, b);
 }
 else
 {
 boolean tmp41 = (partitionA == ":atom");
 if (tmp41)
 {
-return datadiff.Core.atomDiff(a, b);
+return atomDiff(a, b);
 }
 else
 {
@@ -362,7 +372,7 @@ return null;
 }
 else
 {
-return datadiff.Core.atomDiff(a, b);
+return atomDiff(a, b);
 }
 }
 }
@@ -374,7 +384,7 @@ return new TYPE_MISSING().addLast(null).addLast(null).addLast(a);
 }
 else
 {
-return datadiff.Core.diffSimilar(a, b);
+return diffSimilar(a, b);
 }
 }
 }

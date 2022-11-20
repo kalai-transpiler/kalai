@@ -1383,6 +1383,7 @@ impl PVector {
 
 pub trait PersistentCollection: Value {
     fn conj(&self, other: BValue) -> Self;
+    fn is_empty(&self) -> bool;
 }
 
 impl PersistentCollection for PMap {
@@ -1406,17 +1407,29 @@ impl PersistentCollection for PMap {
             _ => panic!("Could not downcast Value into HashTrieMap<BValue,BValue> or Vector<BValue>!")
         }
     }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
 }
 
 impl PersistentCollection for PSet {
     fn conj(&self, x: BValue) -> Self {
         PSet(self.0.insert(x))
     }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
 }
 
 impl PersistentCollection for PVector {
     fn conj(&self, x: BValue) -> Self {
         PVector(self.0.push_back(x))
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 }
 
@@ -1427,6 +1440,36 @@ pub fn conj(coll: BValue, x: BValue) -> BValue {
         "PVector" => BValue::from(coll.as_any().downcast_ref::<PVector>().unwrap().conj(x)),
         _ => panic!("Could not downcast Value into provided Value trait implementing struct types!"),
     }
+}
+
+/// We return a BValue of a PSet (unlike Clojure)
+pub fn keys(m: BValue) -> BValue {
+    match coll.type_name() {
+        "PMap" => BValue::from(
+            PSet::from_iter(
+                m.as_any().downcast_ref::<PMap>().unwrap().0.keys()
+            )
+        ),
+        "PSet" => m,
+        _ => panic!("Could not get keys() from BValue of type {}!", coll.type_name()),
+    }
+}
+
+pub fn is_empty(coll: BValue) -> bool {
+    match coll.type_name() {
+        "PMap" => BValue::from(coll.as_any().downcast_ref::<PMap>().unwrap().is_empty(x)),
+        "PSet" => BValue::from(coll.as_any().downcast_ref::<PSet>().unwrap().is_empty(x)),
+        "PVector" => BValue::from(coll.as_any().downcast_ref::<PVector>().unwrap().is_empty(x)),
+        _ => panic!("Could not downcast Value into provided Value trait implementing struct types!"),
+    }
+}
+
+pub fn empty(coll: BValue) -> bool {
+    is_empty(coll)
+}
+
+pub fn not_empty(coll: BValue) -> bool {
+    !is_empty(col)
 }
 
 /* TODO:

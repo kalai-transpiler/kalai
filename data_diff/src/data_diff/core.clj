@@ -66,7 +66,7 @@
   "Return a set that is the intersection of the input sets"
   [s1 s2]
   (if (< (count s2) (count s1))
-    (recur s2 s1)
+    (intersection s2 s1)
     (reduce (fn [result item]
               (if (contains? s2 item)
                 result
@@ -87,7 +87,7 @@
         :else :atom))
 
 (defn map-diff [a b]
-  (let [ab-keys (union (set (keys a)) (set (keys b)))]
+  (let [ab-keys (union (keys a) (keys b))]
     (diff-associative a b ab-keys)))
 
 (defn set-diff [a b]
