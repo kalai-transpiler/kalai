@@ -3,9 +3,9 @@ use crate::kalai::kalai::*;
 pub fn diff_associative_key(a: TYPE_MISSING, b: TYPE_MISSING, k: TYPE_MISSING) -> TYPE_MISSING {
     let va: kalai::BValue = a.get(&k).unwrap().clone();
     let vb: kalai::BValue = b.get(&k).unwrap().clone();
-    let vec_18815: kalai::BValue = diff(va, vb);
+    let vec_18638: kalai::BValue = diff(va, vb);
     let aa: kalai::BValue = {
-        let get1 = vec_18815.get((0i64 as usize));
+        let get1 = vec_18638.get((0i64 as usize));
         if get1.is_some() {
             get1.unwrap().clone()
         } else {
@@ -13,7 +13,7 @@ pub fn diff_associative_key(a: TYPE_MISSING, b: TYPE_MISSING, k: TYPE_MISSING) -
         }
     };
     let bb: kalai::BValue = {
-        let get2 = vec_18815.get((1i64 as usize));
+        let get2 = vec_18638.get((1i64 as usize));
         if get2.is_some() {
             get2.unwrap().clone()
         } else {
@@ -21,7 +21,7 @@ pub fn diff_associative_key(a: TYPE_MISSING, b: TYPE_MISSING, k: TYPE_MISSING) -
         }
     };
     let ab: kalai::BValue = {
-        let get3 = vec_18815.get((2i64 as usize));
+        let get3 = vec_18638.get((2i64 as usize));
         if get3.is_some() {
             get3.unwrap().clone()
         } else {
@@ -31,41 +31,41 @@ pub fn diff_associative_key(a: TYPE_MISSING, b: TYPE_MISSING, k: TYPE_MISSING) -
     let in_a: kalai::BValue = a.contains_key(&k);
     let in_b: kalai::BValue = b.contains_key(&k);
     let same = {
-        let and_5531_auto = in_a;
-        if and_5531_auto {
-            let and_5531_auto = in_b;
-            if and_5531_auto {
-                let or_5533_auto: kalai::BValue = !ab.is_type("Nil");
-                if or_5533_auto {
-                    or_5533_auto
+        let and_5579_auto = in_a;
+        if and_5579_auto {
+            let and_5579_auto = in_b;
+            if and_5579_auto {
+                let or_5581_auto: kalai::BValue = !ab.is_type("Nil");
+                if or_5581_auto {
+                    or_5581_auto
                 } else {
-                    let and_5531_auto: bool = va.is_type("Nil");
-                    if and_5531_auto {
+                    let and_5579_auto: bool = va.is_type("Nil");
+                    if and_5579_auto {
                         vb.is_type("Nil")
                     } else {
-                        and_5531_auto
+                        and_5579_auto
                     }
                 }
             } else {
-                and_5531_auto
+                and_5579_auto
             }
         } else {
-            and_5531_auto
+            and_5579_auto
         }
     };
     return TYPE_MISSING::new()
         .push_back(
             if {
-                let and_5531_auto = in_a;
-                if and_5531_auto {
-                    let or_5533_auto: kalai::BValue = !aa.is_type("Nil");
-                    if or_5533_auto {
-                        or_5533_auto
+                let and_5579_auto = in_a;
+                if and_5579_auto {
+                    let or_5581_auto: kalai::BValue = !aa.is_type("Nil");
+                    if or_5581_auto {
+                        or_5581_auto
                     } else {
                         !same
                     }
                 } else {
-                    and_5531_auto
+                    and_5579_auto
                 }
             } {
                 TYPE_MISSING::new().insert(k.clone(), aa.clone())
@@ -74,16 +74,16 @@ pub fn diff_associative_key(a: TYPE_MISSING, b: TYPE_MISSING, k: TYPE_MISSING) -
         )
         .push_back(
             if {
-                let and_5531_auto = in_b;
-                if and_5531_auto {
-                    let or_5533_auto: kalai::BValue = !bb.is_type("Nil");
-                    if or_5533_auto {
-                        or_5533_auto
+                let and_5579_auto = in_b;
+                if and_5579_auto {
+                    let or_5581_auto: kalai::BValue = !bb.is_type("Nil");
+                    if or_5581_auto {
+                        or_5581_auto
                     } else {
                         !same
                     }
                 } else {
-                    and_5531_auto
+                    and_5579_auto
                 }
             } {
                 TYPE_MISSING::new().insert(k.clone(), bb.clone())
@@ -201,10 +201,10 @@ pub fn vectorize(m: TYPE_MISSING) -> TYPE_MISSING {
                     .unwrap(),
                 kalai::BValue::from(kalai::NIL),
             )),
-            |result, p_18858| {
-                let vec_18860 = p_18858;
+            |result, p_18681| {
+                let vec_18683 = p_18681;
                 let k: kalai::BValue = {
-                    let get4 = vec_18860.get((0i64 as usize));
+                    let get4 = vec_18683.get((0i64 as usize));
                     if get4.is_some() {
                         get4.unwrap().clone()
                     } else {
@@ -212,7 +212,7 @@ pub fn vectorize(m: TYPE_MISSING) -> TYPE_MISSING {
                     }
                 };
                 let v: kalai::BValue = {
-                    let get5 = vec_18860.get((1i64 as usize));
+                    let get5 = vec_18683.get((1i64 as usize));
                     if get5.is_some() {
                         get5.unwrap().clone()
                     } else {

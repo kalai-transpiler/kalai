@@ -143,4 +143,20 @@ public class Kalai {
             return null;
         }
     }
+
+    public static boolean empty(Iterable coll) {
+        return coll.iterator().hasNext();
+    }
+
+    public static boolean empty(java.util.Collection coll) {
+        return coll.isEmpty();
+    }
+
+    public static boolean notEmpty(Iterable coll) {
+        return !empty(coll);
+    }
+
+    public static boolean notEmpty(java.util.Collection coll) {
+        return !empty(coll);
+    }
 }

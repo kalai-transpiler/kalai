@@ -1356,7 +1356,6 @@ impl PVector {
     }
 
     /*
-    // TODO: Can we avoid the `.clone()` by making the return type be a reference somehow?
     pub fn iter(&self) -> impl std::iter::Iterator + 'static {
         self.0.clone().iter()
     }
@@ -1364,15 +1363,15 @@ impl PVector {
     pub fn contains(&self, x: &BValue) -> bool {
         self.0.contains(x)
     }
+    */
 
     pub fn push(&self, x: BValue) -> () {
-        self.0.push(x)
+        self.0.push_back(x)
     }
 
     pub fn insert(&self, idx: usize, x: BValue) -> () {
         self.0.insert(idx, x)
     }
-    */
 
     pub fn new() -> Self {
         Self::default()
@@ -1444,22 +1443,22 @@ pub fn conj(coll: BValue, x: BValue) -> BValue {
 
 /// We return a BValue of a PSet (unlike Clojure)
 pub fn keys(m: BValue) -> BValue {
-    match coll.type_name() {
+    match m.type_name() {
         "PMap" => BValue::from(
             PSet::from_iter(
                 m.as_any().downcast_ref::<PMap>().unwrap().0.keys()
             )
         ),
         "PSet" => m,
-        _ => panic!("Could not get keys() from BValue of type {}!", coll.type_name()),
+        _ => panic!("Could not get keys() from BValue of type {}!", m.type_name()),
     }
 }
 
 pub fn is_empty(coll: BValue) -> bool {
     match coll.type_name() {
-        "PMap" => BValue::from(coll.as_any().downcast_ref::<PMap>().unwrap().is_empty(x)),
-        "PSet" => BValue::from(coll.as_any().downcast_ref::<PSet>().unwrap().is_empty(x)),
-        "PVector" => BValue::from(coll.as_any().downcast_ref::<PVector>().unwrap().is_empty(x)),
+        "PMap" => coll.as_any().downcast_ref::<PMap>().unwrap().is_empty(),
+        "PSet" => coll.as_any().downcast_ref::<PSet>().unwrap().is_empty(),
+        "PVector" => coll.as_any().downcast_ref::<PVector>().unwrap().is_empty(),
         _ => panic!("Could not downcast Value into provided Value trait implementing struct types!"),
     }
 }
@@ -1469,7 +1468,25 @@ pub fn empty(coll: BValue) -> bool {
 }
 
 pub fn not_empty(coll: BValue) -> bool {
-    !is_empty(col)
+    !is_empty(coll)
+}
+
+pub fn vec(i: impl Iterator) -> PVector {
+    PVector(i.collect())
+}
+
+pub fn max<T: Ord>(a: T, b: T) -> T { std::cmp::max(a, b) }
+
+pub fn assoc(coll: BValue, k: BValue, v: BValue) -> BValue {
+    conj(coll, PVector::new().push(k).push(v))
+}
+
+pub fn range<T>(n: i32) -> impl Iterator {
+    0..n
+}
+
+pub fn repeat(n: usize, x: BValue) -> impl Iterator {
+    std::iter::repeat(x).take(n)
 }
 
 /* TODO:
