@@ -5,12 +5,12 @@
             [kalai.pass.java.pipeline :as java-pipeline]
             [kalai.pass.rust.pipeline :as rust-pipeline]
             [kalai.pass.rust.e-string :as e-string]
+            [kalai.util :as u]
             [clojure.tools.analyzer.jvm :as az]
             [clojure.tools.analyzer.jvm.utils :as azu]
             [clojure.string :as str]
             [clojure.java.io :as io]
-            [camel-snake-kebab.core :as csk]
-            [kalai.util :as u])
+            [camel-snake-kebab.core :as csk])
   (:import (java.io File)
            (java.nio.file Paths)))
 
@@ -59,7 +59,6 @@
   (.getPath (.relativize (.toURI base) (.toURI file))))
 
 (defn write-file [^String content ^String relative-path ^File transpile-dir lang]
-  (reset! u/c 0)
   (let [file-naming (get file-naming-conventions lang)
         ;; "src" might be "test" sometimes, and might be language specific
         path (Paths/get (name lang) (into-array String ["src" relative-path]))
@@ -80,6 +79,7 @@
   (let [kalai (read-kalai source-file)
         relative-path (relative (io/file src-dir) source-file)]
     (doseq [[language translate] (select-keys translators languages)]
+      (reset! u/c 0)
       (-> (translate kalai)
           (write-file relative-path transpile-dir language)))))
 

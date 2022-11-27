@@ -1505,7 +1505,7 @@ pub fn range<T>(n: i32) -> impl Iterator {
     0..n
 }
 
-pub fn repeat(n: i32, x: BValue) -> impl Iterator {
+pub fn repeat(n: usize, x: BValue) -> impl Iterator {
     std::iter::repeat(x).take(n)
 }
 
