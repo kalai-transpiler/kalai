@@ -5,6 +5,7 @@ use std::collections::{BinaryHeap, HashMap};
 use std::convert::TryInto;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
+use std::iter::FromIterator;
 use std::ops::{Add, Deref};
 use std::vec::Vec;
 use std::{any, any::Any};
@@ -1365,12 +1366,12 @@ impl PVector {
     }
     */
 
-    pub fn push(&self, x: BValue) -> () {
-        self.0.push_back(x)
+    pub fn push(&self, x: BValue) -> Self {
+        Self(self.0.push_back(x))
     }
 
-    pub fn insert(&self, idx: usize, x: BValue) -> () {
-        self.0.insert(idx, x)
+    pub fn set(&self, idx: usize, x: BValue) -> Self {
+        Self(self.0.set(idx, x).unwrap())
     }
 
     pub fn new() -> Self {
@@ -1445,8 +1446,10 @@ pub fn conj(coll: BValue, x: BValue) -> BValue {
 pub fn keys(m: BValue) -> BValue {
     match m.type_name() {
         "PMap" => BValue::from(
-            PSet::from_iter(
-                m.as_any().downcast_ref::<PMap>().unwrap().0.keys()
+            PSet(
+                rpds::HashTrieSet::from_iter(
+                    m.as_any().downcast_ref::<PMap>().unwrap().0.keys().cloned()
+                )
             )
         ),
         "PSet" => m,
@@ -1471,21 +1474,25 @@ pub fn not_empty(coll: BValue) -> bool {
     !is_empty(coll)
 }
 
-pub fn vec(i: impl Iterator) -> PVector {
-    PVector(i.collect())
+pub fn vec(i: impl Iterator<Item = BValue>) -> PVector {
+    PVector(
+        rpds::Vector::from_iter(
+            i
+        )
+    )
 }
 
 pub fn max<T: Ord>(a: T, b: T) -> T { std::cmp::max(a, b) }
 
 pub fn assoc(coll: BValue, k: BValue, v: BValue) -> BValue {
-    conj(coll, PVector::new().push(k).push(v))
+    conj(coll, BValue::from(PVector::new().push(k).push(v)))
 }
 
 pub fn range<T>(n: i32) -> impl Iterator {
     0..n
 }
 
-pub fn repeat(n: usize, x: BValue) -> impl Iterator {
+pub fn repeat(n: usize, x: BValue) -> impl Iterator<Item = BValue> {
     std::iter::repeat(x).take(n)
 }
 

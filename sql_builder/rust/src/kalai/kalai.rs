@@ -6,6 +6,7 @@ use std::collections::{BinaryHeap, HashMap};
 use std::convert::TryInto;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
+use std::iter::FromIterator;
 use std::ops::{Add, Deref};
 use std::vec::Vec;
 use std::{any, any::Any};
@@ -1361,7 +1362,6 @@ impl PVector {
     }
 
     /*
-    // TODO: Can we avoid the `.clone()` by making the return type be a reference somehow?
     pub fn iter(&self) -> impl std::iter::Iterator + 'static {
         self.0.clone().iter()
     }
@@ -1369,15 +1369,15 @@ impl PVector {
     pub fn contains(&self, x: &BValue) -> bool {
         self.0.contains(x)
     }
-
-    pub fn push(&self, x: BValue) -> () {
-        self.0.push(x)
-    }
-
-    pub fn insert(&self, idx: usize, x: BValue) -> () {
-        self.0.insert(idx, x)
-    }
     */
+
+    pub fn push(&self, x: BValue) -> Self {
+        Self(self.0.push_back(x))
+    }
+
+    pub fn set(&self, idx: usize, x: BValue) -> Self {
+        Self(self.0.set(idx, x).unwrap())
+    }
 
     pub fn new() -> Self {
         Self::default()
@@ -1390,6 +1390,7 @@ impl PVector {
 
 pub trait PersistentCollection: Value {
     fn conj(&self, other: BValue) -> Self;
+    fn is_empty(&self) -> bool;
 }
 
 impl PersistentCollection for PMap {
@@ -1419,17 +1420,29 @@ impl PersistentCollection for PMap {
             ),
         }
     }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
 }
 
 impl PersistentCollection for PSet {
     fn conj(&self, x: BValue) -> Self {
         PSet(self.0.insert(x))
     }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
 }
 
 impl PersistentCollection for PVector {
     fn conj(&self, x: BValue) -> Self {
         PVector(self.0.push_back(x))
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 }
 
@@ -1442,6 +1455,59 @@ pub fn conj(coll: BValue, x: BValue) -> BValue {
             panic!("Could not downcast Value into provided Value trait implementing struct types!")
         }
     }
+}
+
+/// We return a BValue of a PSet (unlike Clojure)
+pub fn keys(m: BValue) -> BValue {
+    match m.type_name() {
+        "PMap" => BValue::from(PSet(rpds::HashTrieSet::from_iter(
+            m.as_any().downcast_ref::<PMap>().unwrap().0.keys().cloned(),
+        ))),
+        "PSet" => m,
+        _ => panic!(
+            "Could not get keys() from BValue of type {}!",
+            m.type_name()
+        ),
+    }
+}
+
+pub fn is_empty(coll: BValue) -> bool {
+    match coll.type_name() {
+        "PMap" => coll.as_any().downcast_ref::<PMap>().unwrap().is_empty(),
+        "PSet" => coll.as_any().downcast_ref::<PSet>().unwrap().is_empty(),
+        "PVector" => coll.as_any().downcast_ref::<PVector>().unwrap().is_empty(),
+        _ => {
+            panic!("Could not downcast Value into provided Value trait implementing struct types!")
+        }
+    }
+}
+
+pub fn empty(coll: BValue) -> bool {
+    is_empty(coll)
+}
+
+pub fn not_empty(coll: BValue) -> bool {
+    !is_empty(coll)
+}
+
+pub fn vec(i: impl Iterator<Item = BValue>) -> PVector {
+    PVector(rpds::Vector::from_iter(i))
+}
+
+pub fn max<T: Ord>(a: T, b: T) -> T {
+    std::cmp::max(a, b)
+}
+
+pub fn assoc(coll: BValue, k: BValue, v: BValue) -> BValue {
+    conj(coll, BValue::from(PVector::new().push(k).push(v)))
+}
+
+pub fn range<T>(n: i32) -> impl Iterator {
+    0..n
+}
+
+pub fn repeat(n: usize, x: BValue) -> impl Iterator<Item = BValue> {
+    std::iter::repeat(x).take(n)
 }
 
 /* TODO:
