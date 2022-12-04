@@ -109,6 +109,9 @@
       (r/invoke clojure.lang.RT/count ?x)
       (r/cast (r/method ~(count-for ?x) ?x) :int)
 
+      (r/invoke clojure.lang.Numbers/max ?x ?y)
+      (r/invoke max ?x ?y)
+
       (r/invoke clojure.lang.RT/nth (u/of-t :string ?x) ?n)
       (r/method unwrap (r/method nth (r/method chars ?x) (r/cast ?n :usize)))
 

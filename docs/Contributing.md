@@ -35,8 +35,8 @@ They can be configured this way:
   - Make (simple commands to run transpile+compile examples)
   - Gradle (compile Java transpiled code in examples)
   - Rustup (install Rust compiler, Cargo, etc.)
-    MacOS: `brew uninstall rust` `brew install rustup` `rustup-init`
-    and start a new terminal session
+    * MacOS: `brew uninstall rust` `brew install rustup` `rustup-init` and start a new terminal session
+    * version 1.65.0 or later
   - Java JDK (OpenJDK seems fine, no version constraint known yet)
   - For compiling/running Java via gradle, set `JAVA_HOME` environment variable to your default Java version path ([how to find Java version on macOS](https://stackoverflow.com/questions/36766028/see-all-the-java-versions-installed-on-mac)) 
   - `clojure` command-line tool (from the [official Clojure distribution](https://clojure.org/guides/getting_started),

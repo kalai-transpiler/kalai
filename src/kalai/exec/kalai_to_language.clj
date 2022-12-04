@@ -52,6 +52,7 @@
     (az/analyze-ns file-path)))
 
 (defn read-kalai [file]
+  ;; Note: clojure.tools.analyzer is honoring inlining in its form expansion, and we don't know how to turn that off
   (-> (analyze-file file)
       (kalai-pipeline/asts->kalai)))
 

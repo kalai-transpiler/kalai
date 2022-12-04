@@ -3,9 +3,9 @@ use crate::kalai::kalai::*;
 pub fn diff_associative_key(a: TYPE_MISSING, b: TYPE_MISSING, k: TYPE_MISSING) -> TYPE_MISSING {
     let va: kalai::BValue = a.get(&k).unwrap().clone();
     let vb: kalai::BValue = b.get(&k).unwrap().clone();
-    let vec_18815: kalai::BValue = diff(va, vb);
+    let vec_18822: kalai::BValue = diff(va, vb);
     let aa: kalai::BValue = {
-        let get1 = vec_18815.get((0i64 as usize));
+        let get1 = vec_18822.get((0i64 as usize));
         if get1.is_some() {
             get1.unwrap().clone()
         } else {
@@ -13,7 +13,7 @@ pub fn diff_associative_key(a: TYPE_MISSING, b: TYPE_MISSING, k: TYPE_MISSING) -
         }
     };
     let bb: kalai::BValue = {
-        let get2 = vec_18815.get((1i64 as usize));
+        let get2 = vec_18822.get((1i64 as usize));
         if get2.is_some() {
             get2.unwrap().clone()
         } else {
@@ -21,7 +21,7 @@ pub fn diff_associative_key(a: TYPE_MISSING, b: TYPE_MISSING, k: TYPE_MISSING) -
         }
     };
     let ab: kalai::BValue = {
-        let get3 = vec_18815.get((2i64 as usize));
+        let get3 = vec_18822.get((2i64 as usize));
         if get3.is_some() {
             get3.unwrap().clone()
         } else {
@@ -201,10 +201,10 @@ pub fn vectorize(m: TYPE_MISSING) -> TYPE_MISSING {
                     .unwrap(),
                 kalai::BValue::from(kalai::NIL),
             )),
-            |result, p_18858| {
-                let vec_18860 = p_18858;
+            |result, p_18865| {
+                let vec_18867 = p_18865;
                 let k: kalai::BValue = {
-                    let get4 = vec_18860.get((0i64 as usize));
+                    let get4 = vec_18867.get((0i64 as usize));
                     if get4.is_some() {
                         get4.unwrap().clone()
                     } else {
@@ -212,7 +212,7 @@ pub fn vectorize(m: TYPE_MISSING) -> TYPE_MISSING {
                     }
                 };
                 let v: kalai::BValue = {
-                    let get5 = vec_18860.get((1i64 as usize));
+                    let get5 = vec_18867.get((1i64 as usize));
                     if get5.is_some() {
                         get5.unwrap().clone()
                     } else {
@@ -238,7 +238,7 @@ pub fn sequence_diff(a: TYPE_MISSING, b: TYPE_MISSING) -> TYPE_MISSING {
         } else {
             vec(b)
         },
-        range(clojure.lang._numbers / max((a.len() as i32), (b.len() as i32))),
+        range(max((a.len() as i32), (b.len() as i32))),
     )
     .clone()
     .into_iter()

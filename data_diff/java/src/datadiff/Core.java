@@ -9,31 +9,31 @@ public class Core {
 public static final TYPE_MISSING diffAssociativeKey(final TYPE_MISSING a, final TYPE_MISSING b, final TYPE_MISSING k) {
 final Object va = a.get(k);
 final Object vb = b.get(k);
-final Object vec18815 = diff(va, vb);
+final Object vec18822 = diff(va, vb);
 Object tmp43 = null;
 if ((0L <= 0L))
 {
-if ((0L < vec__18815.length()))
+if ((0L < vec__18822.length()))
 {
-tmp43 = vec__18815.get();
+tmp43 = vec__18822.get();
 }
 }
 final Object aa = tmp43;
 Object tmp44 = null;
 if ((0L <= 1L))
 {
-if ((1L < vec__18815.length()))
+if ((1L < vec__18822.length()))
 {
-tmp44 = vec__18815.get();
+tmp44 = vec__18822.get();
 }
 }
 final Object bb = tmp44;
 Object tmp45 = null;
 if ((0L <= 2L))
 {
-if ((2L < vec__18815.length()))
+if ((2L < vec__18822.length()))
 {
-tmp45 = vec__18815.get();
+tmp45 = vec__18822.get();
 }
 }
 final Object ab = tmp45;
@@ -275,24 +275,24 @@ if (tmp32)
 Object tmp46 = null;
 if ((0L <= 0L))
 {
-if ((0L < vec__18860.length()))
+if ((0L < vec__18867.length()))
 {
-tmp46 = vec__18860.get();
+tmp46 = vec__18867.get();
 }
 }
 Object tmp47 = null;
 if ((0L <= 1L))
 {
-if ((1L < vec__18860.length()))
+if ((1L < vec__18867.length()))
 {
-tmp47 = vec__18860.get();
+tmp47 = vec__18867.get();
 }
 }
 {
 return kalai.Kalai.foldLeft(m, vec(repeat(keys(m).stream().reduce((a, b) -> {
 return max(a, b);
-}).get(), null)), (result, p__18858) -> {
-final TYPE_MISSING vec18860 = p__18858;
+}).get(), null)), (result, p__18865) -> {
+final TYPE_MISSING vec18867 = p__18865;
 final Object k = tmp46;
 final Object v = tmp47;
 return result.put(k, v);
