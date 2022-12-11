@@ -4,7 +4,7 @@
             [meander.strategy.epsilon :as s])
   (:import (clojure.lang IMeta)))
 
-(def TYPE-MISSING-STR "TYPE_MISSING")
+(def TYPE-MISSING-STR "kalai::BValue")
 (def BAD-TYPE_CAST-STR "BAD_TYPE_CAST")
 
 ;; Primitive types in Kalai's supported types

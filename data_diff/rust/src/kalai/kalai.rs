@@ -1391,6 +1391,9 @@ impl PVector {
 pub trait PersistentCollection: Value {
     fn conj(&self, other: BValue) -> Self;
     fn is_empty(&self) -> bool;
+    fn seq(&self) -> dyn Iterator<Item = BValue> {
+        self.0.clone().into_iter()
+    }
 }
 
 impl PersistentCollection for PMap {
@@ -1508,6 +1511,21 @@ pub fn range<T>(n: i32) -> impl Iterator {
 
 pub fn repeat(n: usize, x: BValue) -> impl Iterator<Item = BValue> {
     std::iter::repeat(x).take(n)
+}
+
+pub fn seq(x: BValue) -> impl Iterator<Item = BValue> {
+    match coll.type_name() {
+        "PMap" => coll.as_any().downcast_ref::<PMap>().unwrap().seq(),
+        "PSet" => coll.as_any().downcast_ref::<PSet>().unwrap().seq(),
+        "PVector" => coll.as_any().downcast_ref::<PVector>().unwrap().seq(),
+        _ => {
+            panic!("Could not downcast Value into provided Value trait implementing struct types!")
+        }
+    }
+}
+
+pub fn reduce(f: fn(BValue, BValue) -> BValue, init: BValue, xs: BValue) -> BValue {
+    seq(xs).fold(init, |a, b| conj(a, b));
 }
 
 /* TODO:

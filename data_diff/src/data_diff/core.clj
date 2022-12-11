@@ -29,11 +29,12 @@
   [a b ks]
   (reduce
     (fn [diff1 diff2]
-      (doall (map merge2 diff1 diff2)))
+      ;; TODO: move the explict seq calls into function_call
+      (doall (map merge2 (seq diff1) (seq diff2))))
     [nil nil nil]
     (map (fn [k]
            (diff-associative-key a b k))
-         ks)))
+         (seq ks))))
 
 ;;(defn- diff-sequential
 ;;  [a b]

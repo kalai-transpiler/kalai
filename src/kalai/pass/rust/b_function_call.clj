@@ -53,8 +53,10 @@
                                  (str/join " ")))
                 & ?args)
 
+      ;; seq on persistent data structures falls through to kalai.rs
       ;; In Rust, we don't need to insert `{:seq true}` in metadata because `.into_iter()` is idempotent on Rust Iterators
-      (r/invoke (u/var ~#'seq) ?coll)
+      (r/invoke (u/var ~#'seq) (m/and ?coll
+                                      (m/app meta {:t {(m/pred (complement #{:pmap :pvector :pset})) [?value-t]}})))
       (r/method into_iter (r/method clone ?coll))
 
       (r/invoke (u/var ~#'first) ?seq)
@@ -221,13 +223,20 @@
                                                  (r/field 0 t)
                                                  (r/field 1 t)))))
 
-      (r/invoke (u/var ~#'reduce) ?fn ?xs)
+      ;; reduce - immutable collections - they are not caught by these rules, and instead
+      ;; fall through and are caught by the default r/invoke rule, which emits
+      ;; a stringified `reduce(...)`, which is handled in our kalai.rs helper fns/method impls
+
+      ;; reduce mutables
+      (r/invoke (u/var ~#'reduce) ?fn (m/and ?xs
+                                             (m/app meta {:t {(m/pred #{:mmap :mvector :mset}) [?value-t]}})))
       (r/method unwrap
                 (r/method reduce
                           (r/method into_iter (r/method clone ?xs))
                           ~(maybe-lambda ?fn 2)))
 
-      (r/invoke (u/var ~#'reduce) ?fn ?initial ?xs)
+      (r/invoke (u/var ~#'reduce) ?fn ?initial (m/and ?xs
+                                                      (m/app meta {:t {(m/pred #{:mmap :mvector :mset}) [?value-t]}})))
       (r/method fold
                 (r/method into_iter (r/method clone ?xs))
                 ?initial
