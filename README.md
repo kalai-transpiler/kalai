@@ -47,21 +47,75 @@ See also `kalai.emit.langs/TARGET-LANGS`
 
 The easiest way to get started is to follow the pattern established in the `examples` folder.
 The [examples/deps.edn](./examples/deps.edn) defines how you can invoke Kalai.
-You can replace `{:local/root ".."}` version with `{:mvn/version "<INSERT VERSION HERE>"}` if you wish to rely on a release version.
-
 The [examples/Makefile](./examples/Makefile) defines tasks to invoke Kalai and downstream compilers.
+The examples are described in the "End-to-end toolchain usage" section.
 
-### Setup to run examples
+### Setup to run Kalai
 
 You will need to install the following tools:
 
 - `clojure` command-line tool (from the [official Clojure distribution](https://clojure.org/guides/getting_started),
   ex: `brew install clojure/tools/clojure` on macOS)
+
+### Running Kalai to transpile your own code
+
+In order to run Kalai on your input Clojure sources to get output sources in your preferred target programming langauges,
+you will need to provide the following:
+
+- input source and output source directories
+  
+```shell
+mkdir myproject
+cd myproject
+mkdir src
+mkdir out
+```
+
+- create a `deps.edn` with the following contents
+
+```clojure
+{:deps {com.github.echeran/kalai {:local/root ".."}}}
+```
+
+You should replace `{:local/root ".."}` version with `{:mvn/version "<INSERT VERSION HERE>"}` in order to rely on a release version.
+
+- create your input source code: `src/mynamespace/simple.clj`
+
+```clojure
+(ns mynamespace.simple)
+
+(defn add ^Long [^Long a ^Long b]
+      (+ a b))
+```
+
+- invoke the tool
+
+```shell
+clojure -M -m kalai.exec.main --verbose --src-dir src --transpile-dir out
+```
+
+For more options, you can run help with
+
+```shell
+clojure -M -m kalai.exec.main --help
+```
+
+## End-to-end toolchain usage
+
+Kalai transiples from Clojure to your target language(s).
+The code in `examples` show how to compile your target language code, using Makefiles,
+in order to invoke a complete end-to-end process.
+
+
+### Setup to run provided examples
+
+You will need to additionally install the following tools:
+
 - Make (simple commands to run transpile+compile examples)
 - Gradle (compile Java transpiled code in examples)
 - Rustup (install Rust compiler, Cargo, etc.)
 
-### Running examples
+### Running provided examples
 
 Start in the `examples` directory:
 
@@ -90,7 +144,6 @@ clojure -M -m kalai.exec.main --verbose
 To run the compiled output:
 
 `./rust/target/debug/demo_01`
-
 
 ## Development
 

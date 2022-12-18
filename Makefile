@@ -7,10 +7,10 @@ clean:
 
 build:
 	# Install dependencies
-	lein deps
+	clojure -P
 
 	# Run tests
-	lein test
+	clojure -X:test
 
 	# Transpile & build examples
 	cd examples && make

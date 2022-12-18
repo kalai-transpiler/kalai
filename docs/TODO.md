@@ -7,8 +7,10 @@
 * Instructions (Usage, Setup)
   - [ ] Make a diagram
   - [ ] Remove Leiningen
+    - [ ] add `clojure -Spom` and check that root pom.xml has no diff
   - [ ] In Readme, point to details in Contributing about minimum tools/versions
   - [ ] Add "standalone code" usage section
+    - [ ] Create a versioned release so that the instructions will work
   - [X] Error handling: better error message for "wrong" file type
   - [X] Error handling: failure to properly process the Clojure code
   - [X] Command-line help message (add pointer to more info)
