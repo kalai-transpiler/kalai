@@ -9,9 +9,9 @@
   - [ ] Remove Leiningen
   - [ ] In Readme, point to details in Contributing about minimum tools/versions
   - [ ] Add "standalone code" usage section
-  - [ ] Error handling: better error message for "wrong" file type
-  - [ ] Error handling: failure to properly process the Clojure code
-  - [ ] Command-line help message (add pointer to more info)
+  - [X] Error handling: better error message for "wrong" file type
+  - [X] Error handling: failure to properly process the Clojure code
+  - [X] Command-line help message (add pointer to more info)
 
 * Persistent data structures
   - all languages have a library, but not everyone wants the dependency
