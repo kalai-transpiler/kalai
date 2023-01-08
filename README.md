@@ -1,11 +1,10 @@
 # Kalai Transpiler
 
+<img src="kalai-logo.png" alt="Kalai" width="200" align="right"/>
 
 Kalai is a source-to-source transpiler from Clojure to other languages (Rust, Java, C++, ...).
 
 The goal of Kalai is to allow useful algorithms to be encoded once and then automatically be made available natively to other target programming languages.
-
-<img src="kalai-logo.png" alt="Kalai" width="200" align="right"/>
 
 Kalai (கலை) means "art" in Tamil.
 
