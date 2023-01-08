@@ -17,3 +17,8 @@ build:
 
 	# Transpile & build sql_builder
 	cd sql_builder && make
+
+deploy:
+	clojure -Spom
+	clojure -X:jar
+	clojure -X:deploy
