@@ -5,7 +5,7 @@
   - port of fipp for pretty-printing
   
 * Instructions (Usage, Setup)
-  - [ ] Make a diagram
+  - [X] Make a diagram
   - [ ] Remove Leiningen
     - [ ] add `clojure -Spom` and check that root pom.xml has no diff
   - [ ] In Readme, point to details in Contributing about minimum tools/versions

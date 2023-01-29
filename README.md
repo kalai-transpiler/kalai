@@ -12,33 +12,9 @@ Kalai (கலை) means "art" in Tamil.
 
 [Rationale](./docs/Rationale.md)
 
-## Supported forms
-
-Kalai is designed to operate on working Clojure source code.
-Kalai does not introduce any new syntax on top of Clojure.
-Kalai supports a sufficient subset of Clojure language constructs to represent many useful algorithms and applications.
-
-Namespaces translate to classes,
-functions translate to static functions,
-defs and lets translate to variables,
-atoms translate to mutable data structures,
-data literals default to equivalent persistent data structures via libraries when used.
-
-Kalai expressly disallows top-level forms other than `defn` and `def`.
-For example:
-
-```clojure
-(ns foo.bar)
-(println "hi")
-```
-
-While valid in Clojure,
-most target languages disallow code execution during compilation,
-so Kalai will reject this code.
-
-Read more about supported forms in [docs/Syntax.md](./docs/Syntax.md).
-
 ### Implemented target languages
+
+![](Kalai.png)
 
 - Rust
 - Java
@@ -148,6 +124,32 @@ clojure -M -m kalai.exec.main --verbose
 To run the compiled output:
 
 `./rust/target/debug/demo_01`
+
+## Supported forms
+
+Kalai is designed to operate on working Clojure source code.
+Kalai does not introduce any new syntax on top of Clojure.
+Kalai supports a sufficient subset of Clojure language constructs to represent many useful algorithms and applications.
+
+Namespaces translate to classes,
+functions translate to static functions,
+defs and lets translate to variables,
+atoms translate to mutable data structures,
+data literals default to equivalent persistent data structures via libraries when used.
+
+Kalai expressly disallows top-level forms other than `defn` and `def`.
+For example:
+
+```clojure
+(ns foo.bar)
+(println "hi")
+```
+
+While valid in Clojure,
+most target languages disallow code execution during compilation,
+so Kalai will reject this code.
+
+Read more about supported forms in [docs/Syntax.md](./docs/Syntax.md).
 
 ## Development
 
