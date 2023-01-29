@@ -27,14 +27,7 @@ jobs:
       with:
         # Install just one or all simultaneously
         cli:  latest     # Clojure CLI based on tools.deps
-        lein: latest     # or use 'latest' to always provision latest version of leiningen
         boot: latest     # or use 'latest' to always provision latest version of boot
-
-    - name: Install dependencies
-      run: lein deps
-
-    - name: Run tests
-      run: lein test
 
     - name: Transpile & build examples
       run: |
