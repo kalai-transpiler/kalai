@@ -12,7 +12,7 @@ Kalai (கலை) means "art" in Tamil.
 
 [Rationale](./docs/Rationale.md)
 
-### Implemented target languages
+## Target languages
 
 ![](Kalai.png)
 
