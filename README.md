@@ -23,7 +23,7 @@ See also `kalai.emit.langs/TARGET-LANGS`
 
 ## Usage
 
-[![Clojars Project](https://img.shields.io/clojars/v/com.github.echeran/kalai.svg)](https://clojars.org/com.github.echeran/kalai)
+[![Clojars Project](https://img.shields.io/clojars/v/com.github.kalai-transpiler/kalai.svg)](https://clojars.org/com.github.kalai-transpiler/kalai)
 
 The easiest way to get started is to follow the pattern established in the `examples` folder.
 The [examples/deps.edn](./examples/deps.edn) defines how you can invoke Kalai.
@@ -54,10 +54,8 @@ mkdir out
 - create a `deps.edn` with the following contents
 
 ```clojure
-{:deps {com.github.echeran/kalai {:local/root ".."}}}
+{:deps {com.github.kalai-transpiler/kalai {:mvn/version "RELEASE"}}}
 ```
-
-You should replace `{:local/root ".."}` version with `{:mvn/version "<INSERT VERSION HERE>"}` in order to rely on a release version.
 
 - create your input source code: `src/mynamespace/simple.clj`
 

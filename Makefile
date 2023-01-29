@@ -1,10 +1,6 @@
 .PHONY: all build clean
 all: build
 
-clean:
-	cd examples && make clean
-	cd sql_builder && make clean
-
 build:
 	# Install dependencies
 	clojure -P
@@ -18,7 +14,12 @@ build:
 	# Transpile & build sql_builder
 	cd sql_builder && make
 
+## one offs
+
+clean:
+	cd examples && make clean
+	cd sql_builder && make clean
+
 deploy:
-	clojure -Spom
-	clojure -X:jar
-	clojure -X:deploy
+	clojure -T:build jar
+	clojure -T:build deploy
