@@ -10,7 +10,8 @@
             [clojure.string :as str]
             [clojure.java.io :as io]
             [camel-snake-kebab.core :as csk]
-            [kalai.util :as u])
+            [kalai.util :as u]
+            [clojure.string :as string])
   (:import (java.io File)
            (java.nio.file Paths)))
 
@@ -194,6 +195,14 @@
         (write-module-definition dir))
       (.renameTo (io/file src "mod.rs") (io/file src "lib.rs")))))
 
+(defn clj-file? [source-file]
+  (and (not (.isDirectory source-file))
+       (or (string/ends-with? (.getName source-file) ".clj")
+           (string/ends-with? (.getName source-file) ".cljc"))))
+
+(defn clj-files-in-dir [^String dir]
+  (filter clj-file? (file-seq (io/file dir))))
+
 (defn transpile-all
   "options is a map of
   {:src-dir \"src\"           ;; a directory containing Kalai source files that are inputs to transpilation>
@@ -202,8 +211,7 @@
    }"
   ;; TODO: consider adding a spec to this
   [options]
-  (doseq [^File source-file (file-seq (io/file (:src-dir options)))
-          :when (not (.isDirectory source-file))]
+  (doseq [^File source-file (clj-files-in-dir (:src-dir options))]
     (transpile-file source-file options))
   (inject-kalai-helper-files options)
   (write-module-definitions options))

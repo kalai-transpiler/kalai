@@ -27,15 +27,8 @@ jobs:
       with:
         # Install just one or all simultaneously
         cli:  latest     # Clojure CLI based on tools.deps
-        lein: latest     # or use 'latest' to always provision latest version of leiningen
         boot: latest     # or use 'latest' to always provision latest version of boot
 
-    - name: Install dependencies
-      run: lein deps
-
-    - name: Run tests
-      run: lein test
-    
     - name: Transpile & build examples
       run: |
         pushd examples
@@ -55,3 +48,10 @@ jobs:
 
     - name: Compare transpilation to repo files for sql_builder
       run: git diff-index --exit-code HEAD
+
+    - name: Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'kalai-transpiler/kalai'
+      env:
+        CLOJARS_PASSWORD: ${CLOJARSTOKEN}
+        CLOJARS_USERNAME: timothypratley
+      run: make deploy

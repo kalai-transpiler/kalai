@@ -8,10 +8,13 @@
 
 (def cli-options
   [["-s" "--src-dir DIRECTORY" "Input directory"
-    :missing "Input directory is missing"
-    :validate [(fn check-filename [filename]
-                 (.exists (io/file filename)))
-               "File must exist"]
+    :missing "Input directory not provided"
+    :validate [(fn check-directory [dir]
+                 (.exists (io/file dir)))
+               "Directory must exist"
+               (fn check-has-clj-files [dir]
+                 (seq (kalai-to-language/clj-files-in-dir dir)))
+               "Directory must contain Clojure source files"]
     :default "src"]
    ["-t" "--transpile-dir DIRECTORY" "Output directory"
     :default "."]
@@ -33,7 +36,12 @@
       (let [{:keys [verbose languages transpile-dir]} options]
         (when verbose
           (println "Options" (pr-str options)))
-        (kalai-to-language/transpile-all options)
+        (try
+          (kalai-to-language/transpile-all options)
+          (catch Exception e
+            (when-not verbose
+              (println "For more information, try using the `--verbose true` option"))
+            (throw e)))
         (lc/build languages transpile-dir)
         (when verbose
           (println "Done")))))
