@@ -52,6 +52,6 @@ jobs:
     - name: Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'kalai-transpiler/kalai'
       env:
-        CLOJARS_PASSWORD: ${CLOJARSTOKEN}
+        CLOJARS_PASSWORD: ${{ secrets.CLOJARSTOKEN }}
         CLOJARS_USERNAME: timothypratley
       run: make deploy
