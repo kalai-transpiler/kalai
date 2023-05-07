@@ -247,7 +247,6 @@
 
 (def function
   (s/rewrite
-    ;; function definition
     (function ?name ?params . !body ...)
     (r/function ?name ?params
                 (r/block . (m/app statement !body) ...))))
