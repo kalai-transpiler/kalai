@@ -1,9 +1,16 @@
-.PHONY: all run_all build clean setup transpile rust java run_rust run_java
+.PHONY: all run_all build clean setup transpile rust java run_rust run_java deploy
 all: build run_all
 
 CARGO := RUSTFLAGS=-Awarnings cargo
 
 run_all: run_rust run_java
+
+build:
+	clojure -M -m kalai.exec.main --verbose
+	cd rust && (cargo fmt && cargo build) || cargo build
+	cd java && (gradle googleJavaFormat && gradle build) || gradle build
+
+## one offs
 
 clean:
 	rm -rf java/src java/build

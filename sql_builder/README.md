@@ -52,16 +52,13 @@ As a consequence, values from external sources will always be used safely by the
 
 Currently, we do not support named parameters. 
 The idea of named parameters would be to provide names to parameters in the query, and provide a map of values for those names along with the query.
-This would allows repeated use of the same value and create explicit naming.
-
+This would allow repeated use of the same value and create explicit naming.
 They are not a standardized feature of SQL.
-
 Named parameters are not as useful as they sound.
-Already, developers would already be using a named variable in their code.
+Developers would already be using a named variable in their code.
 
 If we wanted, we could create an algorithm that converts a formatted SQL query string into a query string with named parameters. Algorithm:
 - take the formatted SQL string
 - find occurrences of special names (where "special" could mean beginning with "?" or ":" character) to create an ordering of them
 - use the map of name->value substitution values to construct the sequence of values that correspond to their named parameters according to their occurences
 - replace the special names with `?`
-

@@ -388,13 +388,15 @@
     ~(throw (ex-info "ASTs" {:else ?else}))))
 
 (def annotate-vars
+  "annotate vars with their var as metadata,
+   so that they can be identified later in the pipeline"
   (s/rewrite
-    ;; annotate vars with their var as metadata so they can be identified later in the pipeline
+    ;; match
     {:op   :var
      :var  ?var
      :form ?form
      &     ?ast}
-    ;;->
+    ;; replace
     {:op   :var
      :var  ?var
      :form ~(u/maybe-meta-assoc ?form :var ?var)

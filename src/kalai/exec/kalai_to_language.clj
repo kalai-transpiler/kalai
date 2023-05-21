@@ -210,6 +210,14 @@
         (write-module-definition dir))
       (.renameTo (io/file src "mod.rs") (io/file src "lib.rs")))))
 
+(defn clj-file? [source-file]
+  (and (not (.isDirectory source-file))
+       (or (string/ends-with? (.getName source-file) ".clj")
+           (string/ends-with? (.getName source-file) ".cljc"))))
+
+(defn clj-files-in-dir [^String dir]
+  (filter clj-file? (file-seq (io/file dir))))
+
 (defn transpile-all
   "options is a map of
   {:src-dir \"src\"           ;; a directory containing Kalai source files that are inputs to transpilation>

@@ -14,7 +14,7 @@
   - import when needed
   - We might be better of using Collection builder functions instead of temporary variables?
   - We should check static block semantics
-  
+
 * Typing
   - for users
     * users need to specify a lot of typing and casting
@@ -100,7 +100,7 @@
     - if so, can make them ignore leading target language symbol prefix (ex: "j/", "r/")
     - a block is just a block, why bother with r/block, j/block
   - StringBuffer mutability should be inferred
-  
+
 * Types!!!
   - Document target language type conversions (when added)
   - Validate types and narrow the set of accepted types
@@ -113,7 +113,7 @@
   - Propagate return type of fn to a data literal passed as return value in fn body implementation, ex: `(defn f ^{:t {:mmap [:char :int]}} [] {})`
   - Option types
   - (let [x (String. "abc")]) should infer :t :string
-    * does this already happen 
+    * does this already happen
     * also, consider turning "user-defined types" (non-Kalai supported primitives) (ex: `'java.lang.StringBuffer`) into Kalai style
     target-language type representation in target-language pipeline phase (ex: Rust syntax pass converts `'StringBuffer` into
       `{:mvector [:char]}` as early as possible)
