@@ -1384,8 +1384,8 @@ impl PVector {
 pub trait PersistentCollection: Value {
     fn conj(&self, other: BValue) -> Self;
     fn is_empty(&self) -> bool;
-    fn seq(&self) -> dyn Iterator<Item = BValue> {
-        self.0.clone().into_iter()
+    fn seq(&self) -> Box<dyn Iterator<Item = BValue>> {
+        Box::from(self.clone().into_iter())
     }
 }
 
@@ -1499,7 +1499,7 @@ pub fn repeat(n: usize, x: BValue) -> impl Iterator<Item = BValue> {
     std::iter::repeat(x).take(n)
 }
 
-pub fn seq(x:BValue) -> impl Iterator<Item = BValue> {
+pub fn seq(coll: BValue) -> Box<dyn Iterator<Item = BValue> + '_> {
     match coll.type_name() {
         "PMap" => coll.as_any().downcast_ref::<PMap>().unwrap().seq(),
         "PSet" => coll.as_any().downcast_ref::<PSet>().unwrap().seq(),
@@ -1510,6 +1510,23 @@ pub fn seq(x:BValue) -> impl Iterator<Item = BValue> {
 
 pub fn reduce(f: fn(BValue, BValue)->BValue, init: BValue, xs: BValue) -> BValue {
     seq(xs).fold(init, |a, b| conj(a, b));
+}
+
+pub fn seq(coll: BValue) -> Box<dyn Iterator<Item = BValue>> {
+    Box::from(
+        match coll.type_name() {
+            "PMap" => coll.as_any().downcast_ref::<PMap>().unwrap().seq(),
+            "PSet" => coll.as_any().downcast_ref::<PSet>().unwrap().seq(),
+            "PVector" => coll.as_any().downcast_ref::<PVector>().unwrap().seq(),
+            _ => {
+                panic!("Could not downcast Value into provided Value trait implementing struct types!")
+            }
+        }
+    )
+}
+
+pub fn reduce(f: fn(BValue, BValue) -> BValue, init: BValue, xs: BValue) -> BValue {
+    seq(xs).deref().fold(init, |a, b| conj(a, b));
 }
 
 /* TODO:
