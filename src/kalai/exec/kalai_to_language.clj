@@ -212,8 +212,8 @@
 
 (defn clj-file? [source-file]
   (and (not (.isDirectory source-file))
-       (or (string/ends-with? (.getName source-file) ".clj")
-           (string/ends-with? (.getName source-file) ".cljc"))))
+       (or (str/ends-with? (.getName source-file) ".clj")
+           (str/ends-with? (.getName source-file) ".cljc"))))
 
 (defn clj-files-in-dir [^String dir]
   (filter clj-file? (file-seq (io/file dir))))
