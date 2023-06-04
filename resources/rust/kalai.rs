@@ -1381,18 +1381,19 @@ impl PVector {
     }
 
     pub fn len(&self) -> usize { self.0.len() }
-}
 
-pub trait PersistentCollection: Value + IntoIterator {
-    fn conj(&self, other: BValue) -> Self;
-    fn is_empty(&self) -> bool;
-    fn seq(&self) -> Box<dyn Iterator<Item = BValue>> {
-        Box::from(self.clone().into_iter())
+    pub fn seq(&self) -> impl Iterator<Item = &BValue> + '_ {
+        self.0.iter()
     }
 }
 
+pub trait PersistentCollection: Value {
+    fn conj(&self, other: &BValue) -> Self;
+    fn is_empty(&self) -> bool;
+}
+
 impl PersistentCollection for PMap {
-    fn conj(&self, x: BValue) -> Self {
+    fn conj(&self, x: &BValue) -> Self {
         match x.type_name() {
             "PMap" => {
                 let mut tmp_htm = self.0.clone();
@@ -1418,39 +1419,20 @@ impl PersistentCollection for PMap {
     }
 }
 
-impl IntoIterator for PMap
-{
-    type Item = (BValue, BValue);
-    type IntoIter = <rpds::map::hash_trie_map::HashTrieMap<Box<(dyn Value + 'static)>, Box<(dyn Value + 'static)>> as IntoIterator>::IntoIter;
-
-    fn into_iter(self) -> Self::IntoIter
-    {
-        self.0.into_iter()
-    }
-}
 
 impl PersistentCollection for PSet {
-    fn conj(&self, x: BValue) -> Self {
-        PSet(self.0.insert(x))
+    fn conj(&self, x: &BValue) -> Self {
+        PSet(self.0.insert(x.clone()))
     }
 
     fn is_empty(&self) -> bool {
         self.0.is_empty()
-    }
-}
-
-impl IntoIterator for PSet {
-    type Item = BValue;
-    type IntoIter = std::vec::IntoIter<Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.iter()
     }
 }
 
 impl PersistentCollection for PVector {
-    fn conj(&self, x: BValue) -> Self {
-        PVector(self.0.push_back(x))
+    fn conj(&self, x: &BValue) -> Self {
+        PVector(self.0.push_back(x.clone()))
     }
 
     fn is_empty(&self) -> bool {
@@ -1458,21 +1440,11 @@ impl PersistentCollection for PVector {
     }
 }
 
-
-impl IntoIterator for PVector {
-    type Item = BValue;
-    type IntoIter = std::vec::IntoIter<Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.iter()
-    }
-}
-
-pub fn conj(coll: BValue, x: BValue) -> BValue {
+pub fn conj(coll: BValue, x: &BValue) -> BValue {
     match coll.type_name() {
-        "PMap" => BValue::from(coll.as_any().downcast_ref::<PMap>().unwrap().conj(x)),
-        "PSet" => BValue::from(coll.as_any().downcast_ref::<PSet>().unwrap().conj(x)),
-        "PVector" => BValue::from(coll.as_any().downcast_ref::<PVector>().unwrap().conj(x)),
+        "PMap" => BValue::from(coll.as_any().downcast_ref::<PMap>().unwrap().conj(&x)),
+        "PSet" => BValue::from(coll.as_any().downcast_ref::<PSet>().unwrap().conj(&x)),
+        "PVector" => BValue::from(coll.as_any().downcast_ref::<PVector>().unwrap().conj(&x)),
         _ => panic!("Could not downcast Value into provided Value trait implementing struct types!"),
     }
 }
@@ -1520,7 +1492,7 @@ pub fn vec(i: impl Iterator<Item = BValue>) -> PVector {
 pub fn max<T: Ord>(a: T, b: T) -> T { std::cmp::max(a, b) }
 
 pub fn assoc(coll: BValue, k: BValue, v: BValue) -> BValue {
-    conj(coll, BValue::from(PVector::new().push(k).push(v)))
+    conj(coll, &BValue::from(PVector::new().push(k).push(v)))
 }
 
 pub fn range<T>(n: i32) -> impl Iterator {
@@ -1531,21 +1503,19 @@ pub fn repeat(n: usize, x: BValue) -> impl Iterator<Item = BValue> {
     std::iter::repeat(x).take(n)
 }
 
-pub fn seq(coll: BValue) -> Box<dyn Iterator<Item = BValue>> {
-    Box::from(
-        match coll.type_name() {
-            "PMap" => coll.as_any().downcast_ref::<PMap>().unwrap().seq(),
-            "PSet" => coll.as_any().downcast_ref::<PSet>().unwrap().seq(),
-            "PVector" => coll.as_any().downcast_ref::<PVector>().unwrap().seq(),
-            _ => {
-                panic!("Could not downcast Value into provided Value trait implementing struct types!")
-            }
+pub fn seq<'a>(coll: &'a BValue) -> impl Iterator<Item = &BValue> {
+    match coll.type_name() {
+        // "PMap" => coll.as_any().downcast_ref::<PMap>().unwrap().seq(),
+        // "PSet" => coll.as_any().downcast_ref::<PSet>().unwrap().seq(),
+        "PVector" => coll.as_any().downcast_ref::<PVector>().unwrap().seq(),
+        _ => {
+            panic!("Could not downcast Value into provided Value trait implementing struct types!")
         }
-    )
+    }
 }
 
-pub fn reduce(f: fn(BValue, BValue) -> BValue, init: BValue, xs: BValue) -> BValue {
-    seq(xs).deref().fold(init, |a, b| conj(a, b));
+pub fn reduce<'a>(f: fn(BValue, &'a BValue) -> BValue, init: BValue, xs: impl Iterator<Item = &'a BValue>) -> BValue {
+    xs.fold(init, |a, b| f(a, b))
 }
 
 /* TODO:
@@ -1881,4 +1851,60 @@ mod tests {
 
         assert_eq!(x, 30);
     }
+
+
+    #[test]
+    fn iterator_test() {
+        let v: rpds::Vector<i64> = rpds::Vector::new()
+            .push_back(11)
+            .push_back(13);
+        let sum = v.iter().fold(0, |acc, x| acc + x);
+        assert_eq!(sum, 24);
+    }
+
+    #[test]
+    fn iterator_test2() {
+        let pv: rpds::Vector<BValue> = rpds::Vector::new()
+            .push_back(BValue::from(11))
+            .push_back(BValue::from(13));
+        let bv = BValue::from(pv);
+        let s = seq(&bv);
+        let sum = s.fold(0, |acc, x| acc);
+        assert_eq!(sum, 0);
+    }
+
+    #[test]
+    fn iterator_test3() {
+        let pv: rpds::Vector<BValue> = rpds::Vector::new()
+            .push_back(BValue::from(11))
+            .push_back(BValue::from(13));
+        let bv = BValue::from(pv);
+        let s = seq(&bv);
+        let sum = s.fold(0, |acc, x| acc + x.as_any().downcast_ref::<i32>().unwrap());
+        assert_eq!(sum, 24);
+    }
+
+    #[test]
+    fn iterator_test4() {
+        let pv: rpds::Vector<BValue> = rpds::Vector::new()
+            .push_back(BValue::from(11))
+            .push_back(BValue::from(13));
+        let bv = BValue::from(pv);
+        let s = seq(&bv);
+
+        // TODO: we want reduce() to do the unwrapping, we don't want the lambda passed to
+        // reduce() to do the unwrapping, so that the lambda can be in terms of values
+
+        let f = |acc: BValue, x: &BValue|
+            BValue::from(
+                acc.as_any().downcast_ref::<i32>().unwrap()
+                    + x.as_any().downcast_ref::<i32>().unwrap()
+            );
+
+
+        let sum = reduce(f,BValue::from(0_i32),s);
+        let sum_deref = sum.as_any().downcast_ref::<i32>().unwrap();
+        assert_eq!(*sum_deref, 24_i32);
+    }
+}
 }
