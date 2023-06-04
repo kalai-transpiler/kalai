@@ -4,12 +4,14 @@ use std::collections::HashSet;
 use std::collections::{BinaryHeap, HashMap};
 use std::convert::TryInto;
 use std::fmt::Debug;
-use std::hash::{Hash, Hasher};
+use std::hash::{BuildHasher, Hash, Hasher};
 use std::iter::FromIterator;
 use std::ops::{Add, Deref};
+use std::slice::Iter;
 use std::vec::Vec;
 use std::{any, any::Any};
 use std::{fmt, ops};
+use archery::*;
 use rpds;
 
 /// Because we want to insert values that implement the Value trait (in order to
@@ -1381,7 +1383,7 @@ impl PVector {
     pub fn len(&self) -> usize { self.0.len() }
 }
 
-pub trait PersistentCollection: Value {
+pub trait PersistentCollection: Value + IntoIterator {
     fn conj(&self, other: BValue) -> Self;
     fn is_empty(&self) -> bool;
     fn seq(&self) -> Box<dyn Iterator<Item = BValue>> {
@@ -1416,6 +1418,17 @@ impl PersistentCollection for PMap {
     }
 }
 
+impl IntoIterator for PMap
+{
+    type Item = (BValue, BValue);
+    type IntoIter = <rpds::map::hash_trie_map::HashTrieMap<Box<(dyn Value + 'static)>, Box<(dyn Value + 'static)>> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter
+    {
+        self.0.into_iter()
+    }
+}
+
 impl PersistentCollection for PSet {
     fn conj(&self, x: BValue) -> Self {
         PSet(self.0.insert(x))
@@ -1426,6 +1439,15 @@ impl PersistentCollection for PSet {
     }
 }
 
+impl IntoIterator for PSet {
+    type Item = BValue;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
+    }
+}
+
 impl PersistentCollection for PVector {
     fn conj(&self, x: BValue) -> Self {
         PVector(self.0.push_back(x))
@@ -1433,6 +1455,16 @@ impl PersistentCollection for PVector {
 
     fn is_empty(&self) -> bool {
         self.0.is_empty()
+    }
+}
+
+
+impl IntoIterator for PVector {
+    type Item = BValue;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
     }
 }
 
@@ -1497,19 +1529,6 @@ pub fn range<T>(n: i32) -> impl Iterator {
 
 pub fn repeat(n: usize, x: BValue) -> impl Iterator<Item = BValue> {
     std::iter::repeat(x).take(n)
-}
-
-pub fn seq(coll: BValue) -> Box<dyn Iterator<Item = BValue> + '_> {
-    match coll.type_name() {
-        "PMap" => coll.as_any().downcast_ref::<PMap>().unwrap().seq(),
-        "PSet" => coll.as_any().downcast_ref::<PSet>().unwrap().seq(),
-        "PVector" => coll.as_any().downcast_ref::<PVector>().unwrap().seq(),
-        _ => panic!("Could not downcast Value into provided Value trait implementing struct types!"),
-    }
-}
-
-pub fn reduce(f: fn(BValue, BValue)->BValue, init: BValue, xs: BValue) -> BValue {
-    seq(xs).fold(init, |a, b| conj(a, b));
 }
 
 pub fn seq(coll: BValue) -> Box<dyn Iterator<Item = BValue>> {
