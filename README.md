@@ -12,7 +12,9 @@ Kalai (கலை) means "art" in Tamil.
 
 [Rationale](./docs/Rationale.md)
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/32aiLfLwDzc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+<img src="https://github.com/codereport/kalai/assets/36027403/eb86af93-e3c6-49ee-9fc6-390099eb3b51" width="400">
+
+[CloujureConj 2023 - "How to transfer Clojure goodness to other languages" by Elango Cheran and Timothy Pratley](https://youtu.be/terdLf0ribg)
 
 ## Target languages
 
