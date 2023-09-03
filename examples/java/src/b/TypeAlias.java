@@ -10,7 +10,7 @@ public class TypeAlias {
     return z;
   }
 
-  public static final void main(String[] args) {
+  public static final void main(String[] _args) {
     System.out.println("OK");
   }
 }

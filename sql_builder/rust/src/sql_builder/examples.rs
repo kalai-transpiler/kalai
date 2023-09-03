@@ -1,5 +1,5 @@
-use crate::kalai;
-use crate::kalai::PMap;
+use crate::kalai::kalai;
+use crate::kalai::kalai::*;
 pub fn f1() -> String {
     let query_map: std::collections::HashMap<String, kalai::BValue> = {
         let mut tmp1: std::collections::HashMap<String, kalai::BValue> =

@@ -3,7 +3,7 @@ package b;
 import java.util.ArrayList;
 
 public class Loops {
-  public static final void main(String[] args) {
+  public static final void main(String[] _args) {
     int i1 = 0;
     while ((i1 < 10)) {
       System.out.println(i1);

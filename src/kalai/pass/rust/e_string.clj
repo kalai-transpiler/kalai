@@ -68,6 +68,7 @@
    :vector  "rpds::Vector"
    ;; TODO: does this depend on whether it's a {:t {:vector [:some-primitive]}} vs. {:t {:vector [:any]}} ? How is this being used instead of t-str?
    :mvector "std::vec::Vec"
+   :function "std::ops::Fn"
    :bool    "bool"
    :byte    "i8"
    :char    "char"
@@ -154,7 +155,7 @@
            (str ": " (when ref "&") (type-str variable-name))))))
 
 (defn cast-str [identifier t]
-  (space-separated (stringify identifier) "as" (t-str t)))
+  (parens (space-separated (stringify identifier) "as" (t-str t))))
 
 (defn init-str
   ([variable-name]
@@ -175,7 +176,9 @@
                     (stringify value)))))))
 
 (defn invoke-str [function-name & args]
-  (str (ru/fully-qualified-function-identifier-str function-name)
+  (str (if (or (string? function-name) (symbol? function-name))
+         (ru/fully-qualified-function-identifier-str function-name "::")
+         (stringify function-name))
        (args-list args)))
 
 (defn param-str [param]
@@ -191,6 +194,11 @@
                        (str (when ref "&")
                             (when mut "mut ")
                             (type-str param))))))
+
+(defn optional-param-str [param]
+  (if (-> param meta :t)
+    (param-str param)
+    (ru/identifier param)))
 
 (defn function-str [name params body]
   (if (= '-main name)
@@ -219,7 +227,7 @@
      (apply space-separated
             (interpose op (map stringify (cons x xs)))))))
 
-(def std-imports "use crate::kalai;\nuse crate::kalai::PMap;")
+(def std-imports "use crate::kalai::kalai;\nuse crate::kalai::kalai::*;")
 
 (defn module-str [& forms]
   (apply line-separated
@@ -275,6 +283,9 @@
       (str "::<" (t-str t) ">"))
     (args-list args)))
 
+(defn field-str [field object]
+  (str (stringify object) "." field))
+
 (defn new-str [t & args]
   (str (if (symbol? t)
          t
@@ -285,10 +296,6 @@
 
 (defn literal-str [s]
   (pr-str s))
-
-(defn lambda-str [args body]
-  (str "|" (comma-separated (map ru/identifier args)) "|"
-       (stringify body)))
 
 (defn ref-str [s]
   (if (and (instance? IMeta s)
@@ -353,12 +360,16 @@
 
 (defn value-str
   "Specifically for the Value enum for heterogeneous collections.
-  x is a value that may have meta data on it inticating a type.
+  x is a value that may have metadata on it indicating a type.
   x may be a primitive value or may need to be wrapped in the special rust Value enum."
   [x]
   (if (value-type x)
     (str "kalai::BValue::from" (parens (stringify x)))
     (stringify x)))
+
+(defn lambda-str [args body]
+  (str "|" (comma-separated (map optional-param-str args)) "|"
+       (stringify body)))
 
 ;;;; This is the main entry point
 
@@ -379,14 +390,15 @@
    'r/match                match-str
    'r/arm                  arm-str
    'r/method               method-str
+   'r/field                field-str
    'r/new                  new-str
    'r/literal              literal-str
-   'r/lambda               lambda-str
    'r/cast                 cast-str
    'r/ref                  ref-str
    'r/deref                deref-str
    'r/range                range-str
-   'r/value                value-str})
+   'r/value                value-str
+   'r/lambda               lambda-str})
 
 (def stringify
   (s/match

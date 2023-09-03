@@ -35,15 +35,14 @@
     ?else
     (return ?else)))
 
-(def maybe-function
-  (s/rewrite
-    (function ?name (m/pred #(not= :void (:t (meta %))) ?params) . !statements ... ?last)
-    (function ?name ?params . !statements ... (m/app return ?last))
-
-    ?else
-    ?else))
-
 (def rewrite
-  (s/rewrite
-    (namespace ?name . !function ...)
-    (namespace ?name . (m/app maybe-function !function) ...)))
+  (s/bottom-up
+    (s/rewrite
+      (function ?name (m/pred #(not= :void (:t (meta %))) ?params) . !statements ... ?last)
+      (function ?name ?params . !statements ... (m/app return ?last))
+
+      (lambda (m/pred #(not= :void (:t (meta %))) ?params) . !statements ... ?last)
+      (lambda ?params . !statements ... (m/app return ?last))
+
+      ?else
+      ?else)))

@@ -1,5 +1,5 @@
-use crate::kalai;
-use crate::kalai::PMap;
+use crate::kalai::kalai;
+use crate::kalai::kalai::*;
 pub fn format(num: i32) -> String {
     let mut i: i32 = num;
     let mut result: std::vec::Vec<char> = std::vec::Vec::new();
@@ -18,7 +18,7 @@ pub fn format(num: i32) -> String {
                 i = quotient;
             }
         }
-        return result.iter().collect();
+        return result.into_iter().collect();
     }
 }
 pub fn main() {

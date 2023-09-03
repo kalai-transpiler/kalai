@@ -171,17 +171,17 @@
     (m/and (invoke ?f . !args ...)
            (m/app meta ?meta))
     (m/app with-meta
-           (j/invoke ?f . (m/app expression !args) ...)
+           (j/invoke (m/app expression ?f) . (m/app expression !args) ...)
            ?meta)
 
     (method ?method ?object . !args ...)
     (j/method ?method (m/app expression ?object) . (m/app expression !args) ...)
 
-    ;; TODO: lambda function
-    (lambda ?name ?docstring ?body)
-    (j/lambda ?name ?docstring ?body)
+    (lambda ?params . !body ...)
+    (j/lambda ?params (j/block . (m/app statement !body) ...))
 
-    ;; conditionals as an expression must be ternaries, but ternaries cannot contain bodies
+    ;; conditional expression
+    ;; must be ternaries, but ternaries cannot contain bodies
     ;;(if ?condition ?then)
     ;;(j/ternary (m/app expression ?condition) (m/app expression ?then) nil)
 
@@ -190,19 +190,23 @@
 
     ;; when a conditional appears as an expression, we need a tmp variable,
     ;; so we create a group.
-    (m/and (if ?condition ?then)
-           (m/let [?tmp (u/tmp-for ?then)]))
+    (m/and (if ?test ?then)
+           (m/let [?tmp (u/tmp-for ?then)
+                   ?result (u/tmp :bool ?test)]))
     (group
       (j/init (m/app u/maybe-meta-assoc ?tmp :mut true))
-      (j/if (m/app expression ?condition)
+      (j/init ?result (m/app expression ?test))
+      (j/if ?result
         (j/block (j/assign ?tmp (m/app expression ?then))))
       ?tmp)
 
-    (m/and (if ?condition ?then ?else)
-           (m/let [?tmp (u/tmp-for ?then)]))
+    (m/and (if ?test ?then ?else)
+           (m/let [?tmp (u/tmp-for ?then)
+                   ?result (u/tmp :bool ?test)]))
     (group
       (j/init (m/app u/maybe-meta-assoc ?tmp :mut true))
-      (j/if (m/app expression ?condition)
+      (j/init ?result (m/app expression ?test))
+      (j/if ?result
         (j/block (j/assign ?tmp (m/app expression ?then)))
         (j/block (j/assign ?tmp (m/app expression ?else))))
       ?tmp)
@@ -255,15 +259,21 @@
       (j/foreach ?sym (m/app expression ?xs)
                  (j/block . (m/app statement !body) ...))
 
-      ;; conditional
-      (if ?test ?then)
-      (j/if (m/app expression ?test)
-        (j/block (m/app statement ?then)))
+      ;; conditional statement
+      (m/and (if ?test ?then)
+             (m/let [?result (u/tmp :bool ?test)]))
+      (j/block
+        (j/init ?result (m/app expression ?test))
+        (j/if ?result
+          (j/block (m/app statement ?then))))
 
-      (if ?test ?then ?else)
-      (j/if (m/app expression ?test)
-        (j/block (m/app statement ?then))
-        (j/block (m/app statement ?else)))
+      (m/and (if ?test ?then ?else)
+             (m/let [?result (u/tmp :bool ?test)]))
+      (j/block
+        (j/init ?result (m/app expression ?test))
+        (j/if ?result
+          (j/block (m/app statement ?then))
+          (j/block (m/app statement ?else))))
 
       (case ?x {& (m/seqable [!k [_ !v]] ...)} ?default)
       (j/switch (m/app expression ?x)

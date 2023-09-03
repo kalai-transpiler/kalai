@@ -37,6 +37,7 @@ They can be configured this way:
   - Rustup (preferred installer for the Rust compiler, Cargo, etc.)
     * MacOS: `brew uninstall rust` `brew install rustup` `rustup-init`
     and start a new terminal session
+    * version 1.65.0 or later
     * Note: Installing from the [Rustup website](https://rustup.rs/) is recommended over the OS package installer system   
   - Java JDK (OpenJDK seems fine, no version constraint known yet)
   - For compiling/running Java via gradle, set `JAVA_HOME` environment variable to your default Java version path ([how to find Java version on macOS](https://stackoverflow.com/questions/36766028/see-all-the-java-versions-installed-on-mac)) 

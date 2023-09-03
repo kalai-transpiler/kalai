@@ -14,8 +14,10 @@
 (defn gensym2
   "Returns a symbol for an identifier whose name needs to be unique. The name is prefixed by `s`,
 and uses an auto-incrementing number as a suffix for uniqueness."
-  [s]
-  (symbol (str s (swap! c inc))))
+  ([]
+   (gensym2 "X__"))
+  ([s]
+   (symbol (str s (swap! c inc)))))
 
 (defn spy
   ([x] (spy x nil))
@@ -27,7 +29,8 @@ and uses an auto-incrementing number as a suffix for uniqueness."
 
 (defn tmp
   "Creates a unique symbol (named via `gensym2`) with the metadata necessary for
-creating a temporary mutable variable."
+creating a temporary mutable variable.
+`expr` is, to the extent known, what we want to assign to the tmp variable."
   [type expr]
   (with-meta (gensym2 "tmp") {:t type :expr expr :mut true}))
 
@@ -135,12 +138,33 @@ Maps are ordered by their keys. Numbers come before strings, and numbers and str
         (recur threaded (next forms)))
       x)))
 
-
 (defn preserve-type
-  "Preserves the type information on the replacement expr"
+  "Replace `expr` with `replacement-expr`, but ensure the type information
+   for `expr` is preserved on `replacement-expr`."
   [expr replacement-expr]
   (with-meta
     replacement-expr
     (or (meta expr)
         (when-let [t (get types/java-types (type expr))]
           {:t t}))))
+
+(def binary-operator
+  '{clojure.lang.Numbers/add                    +
+    clojure.lang.Numbers/addP                   +
+    clojure.lang.Numbers/unchecked_add          +
+    clojure.lang.Numbers/minus                  -
+    clojure.lang.Numbers/minusP                 -
+    clojure.lang.Numbers/unchecked_minus        -
+    clojure.lang.Numbers/unchecked_int_subtract -
+    clojure.lang.Numbers/multiply               *
+    clojure.lang.Numbers/divide                 /
+    clojure.lang.Util/equiv                     ==
+    clojure.lang.Numbers/lt                     <
+    clojure.lang.Numbers/lte                    <=
+    clojure.lang.Numbers/gt                     >
+    clojure.lang.Numbers/gte                    >=
+    clojure.lang.Numbers/quotient               /
+    clojure.lang.Numbers/remainder              %})
+
+(def operator-symbols
+  (set (vals binary-operator)))

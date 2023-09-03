@@ -9,7 +9,7 @@ public class Variable {
     }
   }
 
-  public static final void main(String[] args) {
-    System.out.println(b.Variable.sideEffect());
+  public static final void main(String[] _args) {
+    System.out.println(sideEffect());
   }
 }

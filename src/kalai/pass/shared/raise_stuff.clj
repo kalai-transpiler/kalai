@@ -1,6 +1,7 @@
 (ns kalai.pass.shared.raise-stuff
   (:require [meander.strategy.epsilon :as s]
-            [meander.epsilon :as m]))
+            [meander.epsilon :as m]
+            [kalai.util :as u]))
 
 ;; The reason this pipeline pass exists is because
 ;; flatten-groups only splices out group s-expressions.
@@ -63,10 +64,11 @@
 
     ;; establish an enclosing group,
     ;; and raise temporary variable initialization
-    ((m/or (group . !tmp-init ... !tmp-variable)
-           !tmp-variable)
-     ...)
-    (group . !tmp-init ... (!tmp-variable ...))
+    (m/and ((m/or (group . !tmp-init ... !tmp-variable)
+                  !tmp-variable)
+            ...)
+           ?expr)
+    (group . !tmp-init ... (m/app u/preserve-type ?expr (!tmp-variable ...)))
 
     ?else
     ?else))

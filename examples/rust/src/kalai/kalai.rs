@@ -6,6 +6,7 @@ use std::collections::{BinaryHeap, HashMap};
 use std::convert::TryInto;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
+use std::iter::FromIterator;
 use std::ops::{Add, Deref};
 use std::vec::Vec;
 use std::{any, any::Any};
@@ -34,7 +35,7 @@ pub type BValue = Box<dyn Value>;
 //
 // So we want to explore switching from an enum, which cannot be extended once it is defined, into
 // a trait, which can be extended on new types, similar to Clojure protocols. This would allow users
-// to have their own types and have the ability to extend the trait on their own types thesmelves.
+// to have their own types and have the ability to extend the trait on their own types themselves.
 
 // Note: the following structs are wrapping primitives to allow us functionality
 // (especially related to the `Value` trait) that the primitives don't allow
@@ -257,6 +258,8 @@ impl Value for PSet {
     }
 }
 
+// Rust Vec
+// TODO: remove?  (we don't implement Value for Rust HashSet and HashMap)
 impl<T> Value for Vec<T>
 where
     T: PartialEq + Value + Clone + 'static,
@@ -292,6 +295,7 @@ where
     }
 }
 
+// wrapper type for Rust Vec
 impl Value for Vector {
     fn type_name(&self) -> &'static str {
         "Vector"
@@ -324,6 +328,7 @@ impl Value for Vector {
     }
 }
 
+// wrapper type for rpds Vector
 impl Value for PVector {
     fn type_name(&self) -> &'static str {
         "PVector"
@@ -1110,6 +1115,58 @@ impl From<PMap> for BValue {
     }
 }
 
+impl From<BValue> for PSet {
+    fn from(v: BValue) -> PSet {
+        if let Some(pset) = v.as_any().downcast_ref::<PSet>() {
+            pset.clone()
+        } else {
+            panic!("Could not downcast Value into PSet!");
+        }
+    }
+}
+
+impl From<&BValue> for PSet {
+    fn from(v: &BValue) -> PSet {
+        if let Some(pset) = v.as_any().downcast_ref::<PSet>() {
+            pset.clone()
+        } else {
+            panic!("Could not downcast Value into PSet!");
+        }
+    }
+}
+
+impl From<PSet> for BValue {
+    fn from(s: PSet) -> BValue {
+        Box::new(s)
+    }
+}
+
+impl From<BValue> for PVector {
+    fn from(v: BValue) -> PVector {
+        if let Some(pvec) = v.as_any().downcast_ref::<PVector>() {
+            pvec.clone()
+        } else {
+            panic!("Could not downcast Value into PVector!");
+        }
+    }
+}
+
+impl From<&BValue> for PVector {
+    fn from(v: &BValue) -> PVector {
+        if let Some(pvec) = v.as_any().downcast_ref::<PVector>() {
+            pvec.clone()
+        } else {
+            panic!("Could not downcast Value into PVector!");
+        }
+    }
+}
+
+impl From<PVector> for BValue {
+    fn from(v: PVector) -> BValue {
+        Box::new(v)
+    }
+}
+
 //
 // Float impls
 //
@@ -1305,7 +1362,6 @@ impl PVector {
     }
 
     /*
-    // TODO: Can we avoid the `.clone()` by making the return type be a reference somehow?
     pub fn iter(&self) -> impl std::iter::Iterator + 'static {
         self.0.clone().iter()
     }
@@ -1313,15 +1369,15 @@ impl PVector {
     pub fn contains(&self, x: &BValue) -> bool {
         self.0.contains(x)
     }
-
-    pub fn push(&self, x: BValue) -> () {
-        self.0.push(x)
-    }
-
-    pub fn insert(&self, idx: usize, x: BValue) -> () {
-        self.0.insert(idx, x)
-    }
     */
+
+    pub fn push(&self, x: BValue) -> Self {
+        Self(self.0.push_back(x))
+    }
+
+    pub fn set(&self, idx: usize, x: BValue) -> Self {
+        Self(self.0.set(idx, x).unwrap())
+    }
 
     pub fn new() -> Self {
         Self::default()
@@ -1331,6 +1387,134 @@ impl PVector {
         self.0.len()
     }
 }
+
+pub trait PersistentCollection: Value {
+    fn conj(&self, other: BValue) -> Self;
+    fn is_empty(&self) -> bool;
+}
+
+impl PersistentCollection for PMap {
+    fn conj(&self, x: BValue) -> Self {
+        match x.type_name() {
+            "PMap" => {
+                let mut tmp_htm = self.0.clone();
+                let m_pmap = x.as_any().downcast_ref::<PMap>().unwrap();
+                let m_htm = m_pmap.0.clone();
+                m_htm
+                    .iter()
+                    .for_each(|tuple| tmp_htm.insert_mut(tuple.0.clone(), tuple.1.clone()));
+                PMap(tmp_htm)
+            }
+            "PVector" => {
+                let pvec = x.as_any().downcast_ref::<PVector>().unwrap();
+                let first = pvec
+                    .get(0)
+                    .expect("PVector argument to conj into a PMap has 0 elements, needs 2");
+                let second = pvec
+                    .get(1)
+                    .expect("PVector argument to conj into a PMap has 1 element, needs 2");
+                PMap(self.0.insert(first.clone(), second.clone()))
+            }
+            _ => panic!(
+                "Could not downcast Value into HashTrieMap<BValue,BValue> or Vector<BValue>!"
+            ),
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+}
+
+impl PersistentCollection for PSet {
+    fn conj(&self, x: BValue) -> Self {
+        PSet(self.0.insert(x))
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+}
+
+impl PersistentCollection for PVector {
+    fn conj(&self, x: BValue) -> Self {
+        PVector(self.0.push_back(x))
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+}
+
+pub fn conj(coll: BValue, x: BValue) -> BValue {
+    match coll.type_name() {
+        "PMap" => BValue::from(coll.as_any().downcast_ref::<PMap>().unwrap().conj(x)),
+        "PSet" => BValue::from(coll.as_any().downcast_ref::<PSet>().unwrap().conj(x)),
+        "PVector" => BValue::from(coll.as_any().downcast_ref::<PVector>().unwrap().conj(x)),
+        _ => {
+            panic!("Could not downcast Value into provided Value trait implementing struct types!")
+        }
+    }
+}
+
+/// We return a BValue of a PSet (unlike Clojure)
+pub fn keys(m: BValue) -> BValue {
+    match m.type_name() {
+        "PMap" => BValue::from(PSet(rpds::HashTrieSet::from_iter(
+            m.as_any().downcast_ref::<PMap>().unwrap().0.keys().cloned(),
+        ))),
+        "PSet" => m,
+        _ => panic!(
+            "Could not get keys() from BValue of type {}!",
+            m.type_name()
+        ),
+    }
+}
+
+pub fn is_empty(coll: BValue) -> bool {
+    match coll.type_name() {
+        "PMap" => coll.as_any().downcast_ref::<PMap>().unwrap().is_empty(),
+        "PSet" => coll.as_any().downcast_ref::<PSet>().unwrap().is_empty(),
+        "PVector" => coll.as_any().downcast_ref::<PVector>().unwrap().is_empty(),
+        _ => {
+            panic!("Could not downcast Value into provided Value trait implementing struct types!")
+        }
+    }
+}
+
+pub fn empty(coll: BValue) -> bool {
+    is_empty(coll)
+}
+
+pub fn not_empty(coll: BValue) -> bool {
+    !is_empty(coll)
+}
+
+pub fn vec(i: impl Iterator<Item = BValue>) -> PVector {
+    PVector(rpds::Vector::from_iter(i))
+}
+
+pub fn max<T: Ord>(a: T, b: T) -> T {
+    std::cmp::max(a, b)
+}
+
+pub fn assoc(coll: BValue, k: BValue, v: BValue) -> BValue {
+    conj(coll, BValue::from(PVector::new().push(k).push(v)))
+}
+
+pub fn range<T>(n: i32) -> impl Iterator {
+    0..n
+}
+
+pub fn repeat(n: usize, x: BValue) -> impl Iterator<Item = BValue> {
+    std::iter::repeat(x).take(n)
+}
+
+/* TODO:
+pub fn count(x: BValue) -> usize {
+    x.len()
+}
+*/
 
 #[cfg(test)]
 mod tests {
@@ -1659,591 +1843,911 @@ mod tests {
 
 impl Set {
     pub fn contains_bool(&self, x: bool) -> bool {
-        return self.contains(&crate::kalai::BValue::from(x));
+        return self.contains(&crate::kalai::kalai::BValue::from(x));
     }
     pub fn contains_i8(&self, x: i8) -> bool {
-        return self.contains(&crate::kalai::BValue::from(x));
+        return self.contains(&crate::kalai::kalai::BValue::from(x));
     }
     pub fn contains_char(&self, x: char) -> bool {
-        return self.contains(&crate::kalai::BValue::from(x));
+        return self.contains(&crate::kalai::kalai::BValue::from(x));
     }
     pub fn contains_i32(&self, x: i32) -> bool {
-        return self.contains(&crate::kalai::BValue::from(x));
+        return self.contains(&crate::kalai::kalai::BValue::from(x));
     }
     pub fn contains_i64(&self, x: i64) -> bool {
-        return self.contains(&crate::kalai::BValue::from(x));
+        return self.contains(&crate::kalai::kalai::BValue::from(x));
     }
     pub fn contains_f32(&self, x: f32) -> bool {
-        return self.contains(&crate::kalai::BValue::from(x));
+        return self.contains(&crate::kalai::kalai::BValue::from(x));
     }
     pub fn contains_f64(&self, x: f64) -> bool {
-        return self.contains(&crate::kalai::BValue::from(x));
+        return self.contains(&crate::kalai::kalai::BValue::from(x));
     }
     pub fn contains_string(&self, x: String) -> bool {
-        return self.contains(&crate::kalai::BValue::from(x));
+        return self.contains(&crate::kalai::kalai::BValue::from(x));
     }
     pub fn insert_bool(&mut self, x: bool) -> bool {
-        return self.insert(crate::kalai::BValue::from(x));
+        return self.insert(crate::kalai::kalai::BValue::from(x));
     }
     pub fn insert_i8(&mut self, x: i8) -> bool {
-        return self.insert(crate::kalai::BValue::from(x));
+        return self.insert(crate::kalai::kalai::BValue::from(x));
     }
     pub fn insert_char(&mut self, x: char) -> bool {
-        return self.insert(crate::kalai::BValue::from(x));
+        return self.insert(crate::kalai::kalai::BValue::from(x));
     }
     pub fn insert_i32(&mut self, x: i32) -> bool {
-        return self.insert(crate::kalai::BValue::from(x));
+        return self.insert(crate::kalai::kalai::BValue::from(x));
     }
     pub fn insert_i64(&mut self, x: i64) -> bool {
-        return self.insert(crate::kalai::BValue::from(x));
+        return self.insert(crate::kalai::kalai::BValue::from(x));
     }
     pub fn insert_f32(&mut self, x: f32) -> bool {
-        return self.insert(crate::kalai::BValue::from(x));
+        return self.insert(crate::kalai::kalai::BValue::from(x));
     }
     pub fn insert_f64(&mut self, x: f64) -> bool {
-        return self.insert(crate::kalai::BValue::from(x));
+        return self.insert(crate::kalai::kalai::BValue::from(x));
     }
     pub fn insert_string(&mut self, x: String) -> bool {
-        return self.insert(crate::kalai::BValue::from(x));
+        return self.insert(crate::kalai::kalai::BValue::from(x));
     }
 }
 impl Map {
     pub fn insert_bool_bool(&mut self, k: bool, v: bool) -> Option<bool> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(bool::from);
     }
     pub fn insert_bool_i8(&mut self, k: bool, v: i8) -> Option<i8> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i8::from);
     }
     pub fn insert_bool_char(&mut self, k: bool, v: char) -> Option<char> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(char::from);
     }
     pub fn insert_bool_i32(&mut self, k: bool, v: i32) -> Option<i32> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i32::from);
     }
     pub fn insert_bool_i64(&mut self, k: bool, v: i64) -> Option<i64> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i64::from);
     }
     pub fn insert_bool_f32(&mut self, k: bool, v: f32) -> Option<f32> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(f32::from);
     }
     pub fn insert_bool_f64(&mut self, k: bool, v: f64) -> Option<f64> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(f64::from);
     }
     pub fn insert_bool_string(&mut self, k: bool, v: String) -> Option<String> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(String::from);
     }
     pub fn insert_i8_bool(&mut self, k: i8, v: bool) -> Option<bool> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(bool::from);
     }
     pub fn insert_i8_i8(&mut self, k: i8, v: i8) -> Option<i8> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i8::from);
     }
     pub fn insert_i8_char(&mut self, k: i8, v: char) -> Option<char> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(char::from);
     }
     pub fn insert_i8_i32(&mut self, k: i8, v: i32) -> Option<i32> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i32::from);
     }
     pub fn insert_i8_i64(&mut self, k: i8, v: i64) -> Option<i64> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i64::from);
     }
     pub fn insert_i8_f32(&mut self, k: i8, v: f32) -> Option<f32> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(f32::from);
     }
     pub fn insert_i8_f64(&mut self, k: i8, v: f64) -> Option<f64> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(f64::from);
     }
     pub fn insert_i8_string(&mut self, k: i8, v: String) -> Option<String> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(String::from);
     }
     pub fn insert_char_bool(&mut self, k: char, v: bool) -> Option<bool> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(bool::from);
     }
     pub fn insert_char_i8(&mut self, k: char, v: i8) -> Option<i8> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i8::from);
     }
     pub fn insert_char_char(&mut self, k: char, v: char) -> Option<char> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(char::from);
     }
     pub fn insert_char_i32(&mut self, k: char, v: i32) -> Option<i32> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i32::from);
     }
     pub fn insert_char_i64(&mut self, k: char, v: i64) -> Option<i64> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i64::from);
     }
     pub fn insert_char_f32(&mut self, k: char, v: f32) -> Option<f32> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(f32::from);
     }
     pub fn insert_char_f64(&mut self, k: char, v: f64) -> Option<f64> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(f64::from);
     }
     pub fn insert_char_string(&mut self, k: char, v: String) -> Option<String> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(String::from);
     }
     pub fn insert_i32_bool(&mut self, k: i32, v: bool) -> Option<bool> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(bool::from);
     }
     pub fn insert_i32_i8(&mut self, k: i32, v: i8) -> Option<i8> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i8::from);
     }
     pub fn insert_i32_char(&mut self, k: i32, v: char) -> Option<char> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(char::from);
     }
     pub fn insert_i32_i32(&mut self, k: i32, v: i32) -> Option<i32> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i32::from);
     }
     pub fn insert_i32_i64(&mut self, k: i32, v: i64) -> Option<i64> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i64::from);
     }
     pub fn insert_i32_f32(&mut self, k: i32, v: f32) -> Option<f32> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(f32::from);
     }
     pub fn insert_i32_f64(&mut self, k: i32, v: f64) -> Option<f64> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(f64::from);
     }
     pub fn insert_i32_string(&mut self, k: i32, v: String) -> Option<String> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(String::from);
     }
     pub fn insert_i64_bool(&mut self, k: i64, v: bool) -> Option<bool> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(bool::from);
     }
     pub fn insert_i64_i8(&mut self, k: i64, v: i8) -> Option<i8> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i8::from);
     }
     pub fn insert_i64_char(&mut self, k: i64, v: char) -> Option<char> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(char::from);
     }
     pub fn insert_i64_i32(&mut self, k: i64, v: i32) -> Option<i32> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i32::from);
     }
     pub fn insert_i64_i64(&mut self, k: i64, v: i64) -> Option<i64> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i64::from);
     }
     pub fn insert_i64_f32(&mut self, k: i64, v: f32) -> Option<f32> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(f32::from);
     }
     pub fn insert_i64_f64(&mut self, k: i64, v: f64) -> Option<f64> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(f64::from);
     }
     pub fn insert_i64_string(&mut self, k: i64, v: String) -> Option<String> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(String::from);
     }
     pub fn insert_f32_bool(&mut self, k: f32, v: bool) -> Option<bool> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(bool::from);
     }
     pub fn insert_f32_i8(&mut self, k: f32, v: i8) -> Option<i8> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i8::from);
     }
     pub fn insert_f32_char(&mut self, k: f32, v: char) -> Option<char> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(char::from);
     }
     pub fn insert_f32_i32(&mut self, k: f32, v: i32) -> Option<i32> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i32::from);
     }
     pub fn insert_f32_i64(&mut self, k: f32, v: i64) -> Option<i64> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i64::from);
     }
     pub fn insert_f32_f32(&mut self, k: f32, v: f32) -> Option<f32> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(f32::from);
     }
     pub fn insert_f32_f64(&mut self, k: f32, v: f64) -> Option<f64> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(f64::from);
     }
     pub fn insert_f32_string(&mut self, k: f32, v: String) -> Option<String> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(String::from);
     }
     pub fn insert_f64_bool(&mut self, k: f64, v: bool) -> Option<bool> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(bool::from);
     }
     pub fn insert_f64_i8(&mut self, k: f64, v: i8) -> Option<i8> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i8::from);
     }
     pub fn insert_f64_char(&mut self, k: f64, v: char) -> Option<char> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(char::from);
     }
     pub fn insert_f64_i32(&mut self, k: f64, v: i32) -> Option<i32> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i32::from);
     }
     pub fn insert_f64_i64(&mut self, k: f64, v: i64) -> Option<i64> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i64::from);
     }
     pub fn insert_f64_f32(&mut self, k: f64, v: f32) -> Option<f32> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(f32::from);
     }
     pub fn insert_f64_f64(&mut self, k: f64, v: f64) -> Option<f64> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(f64::from);
     }
     pub fn insert_f64_string(&mut self, k: f64, v: String) -> Option<String> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(String::from);
     }
     pub fn insert_string_bool(&mut self, k: String, v: bool) -> Option<bool> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(bool::from);
     }
     pub fn insert_string_i8(&mut self, k: String, v: i8) -> Option<i8> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i8::from);
     }
     pub fn insert_string_char(&mut self, k: String, v: char) -> Option<char> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(char::from);
     }
     pub fn insert_string_i32(&mut self, k: String, v: i32) -> Option<i32> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i32::from);
     }
     pub fn insert_string_i64(&mut self, k: String, v: i64) -> Option<i64> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(i64::from);
     }
     pub fn insert_string_f32(&mut self, k: String, v: f32) -> Option<f32> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(f32::from);
     }
     pub fn insert_string_f64(&mut self, k: String, v: f64) -> Option<f64> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(f64::from);
     }
     pub fn insert_string_string(&mut self, k: String, v: String) -> Option<String> {
         return self
-            .insert(crate::kalai::BValue::from(k), crate::kalai::BValue::from(v))
+            .insert(
+                crate::kalai::kalai::BValue::from(k),
+                crate::kalai::kalai::BValue::from(v),
+            )
             .map(String::from);
     }
     pub fn get_bool_bool(&self, k: &bool) -> Option<bool> {
-        return self.get(&crate::kalai::BValue::from(k)).map(bool::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(bool::from);
     }
     pub fn get_bool_i8(&self, k: &bool) -> Option<i8> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i8::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i8::from);
     }
     pub fn get_bool_char(&self, k: &bool) -> Option<char> {
-        return self.get(&crate::kalai::BValue::from(k)).map(char::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(char::from);
     }
     pub fn get_bool_i32(&self, k: &bool) -> Option<i32> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i32::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i32::from);
     }
     pub fn get_bool_i64(&self, k: &bool) -> Option<i64> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i64::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i64::from);
     }
     pub fn get_bool_f32(&self, k: &bool) -> Option<f32> {
-        return self.get(&crate::kalai::BValue::from(k)).map(f32::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(f32::from);
     }
     pub fn get_bool_f64(&self, k: &bool) -> Option<f64> {
-        return self.get(&crate::kalai::BValue::from(k)).map(f64::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(f64::from);
     }
     pub fn get_bool_string(&self, k: &bool) -> Option<String> {
-        return self.get(&crate::kalai::BValue::from(k)).map(String::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(String::from);
     }
     pub fn get_i8_bool(&self, k: &i8) -> Option<bool> {
-        return self.get(&crate::kalai::BValue::from(k)).map(bool::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(bool::from);
     }
     pub fn get_i8_i8(&self, k: &i8) -> Option<i8> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i8::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i8::from);
     }
     pub fn get_i8_char(&self, k: &i8) -> Option<char> {
-        return self.get(&crate::kalai::BValue::from(k)).map(char::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(char::from);
     }
     pub fn get_i8_i32(&self, k: &i8) -> Option<i32> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i32::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i32::from);
     }
     pub fn get_i8_i64(&self, k: &i8) -> Option<i64> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i64::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i64::from);
     }
     pub fn get_i8_f32(&self, k: &i8) -> Option<f32> {
-        return self.get(&crate::kalai::BValue::from(k)).map(f32::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(f32::from);
     }
     pub fn get_i8_f64(&self, k: &i8) -> Option<f64> {
-        return self.get(&crate::kalai::BValue::from(k)).map(f64::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(f64::from);
     }
     pub fn get_i8_string(&self, k: &i8) -> Option<String> {
-        return self.get(&crate::kalai::BValue::from(k)).map(String::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(String::from);
     }
     pub fn get_char_bool(&self, k: &char) -> Option<bool> {
-        return self.get(&crate::kalai::BValue::from(k)).map(bool::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(bool::from);
     }
     pub fn get_char_i8(&self, k: &char) -> Option<i8> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i8::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i8::from);
     }
     pub fn get_char_char(&self, k: &char) -> Option<char> {
-        return self.get(&crate::kalai::BValue::from(k)).map(char::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(char::from);
     }
     pub fn get_char_i32(&self, k: &char) -> Option<i32> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i32::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i32::from);
     }
     pub fn get_char_i64(&self, k: &char) -> Option<i64> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i64::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i64::from);
     }
     pub fn get_char_f32(&self, k: &char) -> Option<f32> {
-        return self.get(&crate::kalai::BValue::from(k)).map(f32::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(f32::from);
     }
     pub fn get_char_f64(&self, k: &char) -> Option<f64> {
-        return self.get(&crate::kalai::BValue::from(k)).map(f64::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(f64::from);
     }
     pub fn get_char_string(&self, k: &char) -> Option<String> {
-        return self.get(&crate::kalai::BValue::from(k)).map(String::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(String::from);
     }
     pub fn get_i32_bool(&self, k: &i32) -> Option<bool> {
-        return self.get(&crate::kalai::BValue::from(k)).map(bool::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(bool::from);
     }
     pub fn get_i32_i8(&self, k: &i32) -> Option<i8> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i8::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i8::from);
     }
     pub fn get_i32_char(&self, k: &i32) -> Option<char> {
-        return self.get(&crate::kalai::BValue::from(k)).map(char::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(char::from);
     }
     pub fn get_i32_i32(&self, k: &i32) -> Option<i32> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i32::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i32::from);
     }
     pub fn get_i32_i64(&self, k: &i32) -> Option<i64> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i64::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i64::from);
     }
     pub fn get_i32_f32(&self, k: &i32) -> Option<f32> {
-        return self.get(&crate::kalai::BValue::from(k)).map(f32::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(f32::from);
     }
     pub fn get_i32_f64(&self, k: &i32) -> Option<f64> {
-        return self.get(&crate::kalai::BValue::from(k)).map(f64::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(f64::from);
     }
     pub fn get_i32_string(&self, k: &i32) -> Option<String> {
-        return self.get(&crate::kalai::BValue::from(k)).map(String::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(String::from);
     }
     pub fn get_i64_bool(&self, k: &i64) -> Option<bool> {
-        return self.get(&crate::kalai::BValue::from(k)).map(bool::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(bool::from);
     }
     pub fn get_i64_i8(&self, k: &i64) -> Option<i8> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i8::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i8::from);
     }
     pub fn get_i64_char(&self, k: &i64) -> Option<char> {
-        return self.get(&crate::kalai::BValue::from(k)).map(char::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(char::from);
     }
     pub fn get_i64_i32(&self, k: &i64) -> Option<i32> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i32::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i32::from);
     }
     pub fn get_i64_i64(&self, k: &i64) -> Option<i64> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i64::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i64::from);
     }
     pub fn get_i64_f32(&self, k: &i64) -> Option<f32> {
-        return self.get(&crate::kalai::BValue::from(k)).map(f32::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(f32::from);
     }
     pub fn get_i64_f64(&self, k: &i64) -> Option<f64> {
-        return self.get(&crate::kalai::BValue::from(k)).map(f64::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(f64::from);
     }
     pub fn get_i64_string(&self, k: &i64) -> Option<String> {
-        return self.get(&crate::kalai::BValue::from(k)).map(String::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(String::from);
     }
     pub fn get_f32_bool(&self, k: &f32) -> Option<bool> {
-        return self.get(&crate::kalai::BValue::from(k)).map(bool::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(bool::from);
     }
     pub fn get_f32_i8(&self, k: &f32) -> Option<i8> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i8::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i8::from);
     }
     pub fn get_f32_char(&self, k: &f32) -> Option<char> {
-        return self.get(&crate::kalai::BValue::from(k)).map(char::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(char::from);
     }
     pub fn get_f32_i32(&self, k: &f32) -> Option<i32> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i32::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i32::from);
     }
     pub fn get_f32_i64(&self, k: &f32) -> Option<i64> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i64::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i64::from);
     }
     pub fn get_f32_f32(&self, k: &f32) -> Option<f32> {
-        return self.get(&crate::kalai::BValue::from(k)).map(f32::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(f32::from);
     }
     pub fn get_f32_f64(&self, k: &f32) -> Option<f64> {
-        return self.get(&crate::kalai::BValue::from(k)).map(f64::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(f64::from);
     }
     pub fn get_f32_string(&self, k: &f32) -> Option<String> {
-        return self.get(&crate::kalai::BValue::from(k)).map(String::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(String::from);
     }
     pub fn get_f64_bool(&self, k: &f64) -> Option<bool> {
-        return self.get(&crate::kalai::BValue::from(k)).map(bool::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(bool::from);
     }
     pub fn get_f64_i8(&self, k: &f64) -> Option<i8> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i8::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i8::from);
     }
     pub fn get_f64_char(&self, k: &f64) -> Option<char> {
-        return self.get(&crate::kalai::BValue::from(k)).map(char::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(char::from);
     }
     pub fn get_f64_i32(&self, k: &f64) -> Option<i32> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i32::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i32::from);
     }
     pub fn get_f64_i64(&self, k: &f64) -> Option<i64> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i64::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i64::from);
     }
     pub fn get_f64_f32(&self, k: &f64) -> Option<f32> {
-        return self.get(&crate::kalai::BValue::from(k)).map(f32::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(f32::from);
     }
     pub fn get_f64_f64(&self, k: &f64) -> Option<f64> {
-        return self.get(&crate::kalai::BValue::from(k)).map(f64::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(f64::from);
     }
     pub fn get_f64_string(&self, k: &f64) -> Option<String> {
-        return self.get(&crate::kalai::BValue::from(k)).map(String::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(String::from);
     }
     pub fn get_string_bool(&self, k: &String) -> Option<bool> {
-        return self.get(&crate::kalai::BValue::from(k)).map(bool::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(bool::from);
     }
     pub fn get_string_i8(&self, k: &String) -> Option<i8> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i8::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i8::from);
     }
     pub fn get_string_char(&self, k: &String) -> Option<char> {
-        return self.get(&crate::kalai::BValue::from(k)).map(char::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(char::from);
     }
     pub fn get_string_i32(&self, k: &String) -> Option<i32> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i32::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i32::from);
     }
     pub fn get_string_i64(&self, k: &String) -> Option<i64> {
-        return self.get(&crate::kalai::BValue::from(k)).map(i64::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(i64::from);
     }
     pub fn get_string_f32(&self, k: &String) -> Option<f32> {
-        return self.get(&crate::kalai::BValue::from(k)).map(f32::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(f32::from);
     }
     pub fn get_string_f64(&self, k: &String) -> Option<f64> {
-        return self.get(&crate::kalai::BValue::from(k)).map(f64::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(f64::from);
     }
     pub fn get_string_string(&self, k: &String) -> Option<String> {
-        return self.get(&crate::kalai::BValue::from(k)).map(String::from);
+        return self
+            .get(&crate::kalai::kalai::BValue::from(k))
+            .map(String::from);
     }
 }
 impl Vector {
     pub fn contains_bool(&self, x: bool) -> bool {
-        return self.contains(&crate::kalai::BValue::from(x));
+        return self.contains(&crate::kalai::kalai::BValue::from(x));
     }
     pub fn contains_i8(&self, x: i8) -> bool {
-        return self.contains(&crate::kalai::BValue::from(x));
+        return self.contains(&crate::kalai::kalai::BValue::from(x));
     }
     pub fn contains_char(&self, x: char) -> bool {
-        return self.contains(&crate::kalai::BValue::from(x));
+        return self.contains(&crate::kalai::kalai::BValue::from(x));
     }
     pub fn contains_i32(&self, x: i32) -> bool {
-        return self.contains(&crate::kalai::BValue::from(x));
+        return self.contains(&crate::kalai::kalai::BValue::from(x));
     }
     pub fn contains_i64(&self, x: i64) -> bool {
-        return self.contains(&crate::kalai::BValue::from(x));
+        return self.contains(&crate::kalai::kalai::BValue::from(x));
     }
     pub fn contains_f32(&self, x: f32) -> bool {
-        return self.contains(&crate::kalai::BValue::from(x));
+        return self.contains(&crate::kalai::kalai::BValue::from(x));
     }
     pub fn contains_f64(&self, x: f64) -> bool {
-        return self.contains(&crate::kalai::BValue::from(x));
+        return self.contains(&crate::kalai::kalai::BValue::from(x));
     }
     pub fn contains_string(&self, x: String) -> bool {
-        return self.contains(&crate::kalai::BValue::from(x));
+        return self.contains(&crate::kalai::kalai::BValue::from(x));
     }
 }

@@ -4,17 +4,6 @@
   - implement
   - port of fipp for pretty-printing
 
-* Instructions (Usage, Setup)
-  - [X] Make a diagram
-  - [X] Remove Leiningen
-    - [X] add `clojure -Spom` and check that root pom.xml has no diff
-  - [X] In Readme, point to details in Contributing about minimum tools/versions
-  - [X] Add "standalone code" usage section
-    - [X] Create a versioned release so that the instructions will work
-  - [X] Error handling: better error message for "wrong" file type
-  - [X] Error handling: failure to properly process the Clojure code
-  - [X] Command-line help message (add pointer to more info)
-
 * Persistent data structures
   - all languages have a library, but not everyone wants the dependency
   - performance goals
@@ -79,16 +68,14 @@
 (let [^{:t :int} i (int 1)]
   (+ i i))
 ```
-* Create a task in `examples` to run the output (binaries, logic tests, etc.)
-  - There should be a make task should run the final compiled binary (b/c invocation is non-trivial)
-  - Stretch: make should also run logic unit tests
+* Testing Stretch: Can make also compile and run logic unit tests?
 * Verify that examples can compile using deployed artifact (namely, if/how to update deps.clj and/or pom.xml)
-* Don't depend on import statements being intelligent (not hard-coded)
+* Remove import statements in Java (maybe and Rust)
   - instead using fully-qualified identifier names
 * Rust etc
     - swap! doesn't seem to work atm
     - how to deal with multiple overloads of fns in Rust?
-    - dealing with refs?
+    - dealing with refs? currently just cloning stuff.
     - do we make the user annotate the type in every assignment?
     - or do we infer this in the S-exprs?
     - how do we know when to deref a ref vs. not deref when it is not a ref (ex: Vec.insert() in demo_02.rs code)
@@ -141,7 +128,6 @@
     - local action
   - Resurect placation or find some way of doing that better
 * Interop
-  - Add demo03 from https://github.com/echeran/kalai/pull/13 (environment variables)
   - Support import statements (ex: for user-defined classes; automatically created when user uses data collections)
   - expand the "function-call" pass (core/interop/kalai/custom)
     - depends on us choosing another target language
@@ -154,10 +140,8 @@
   - try using `case` instead of `cond` in `getSeparatorPositions` of demo02
   - transpile logic unit tests into target languages
 * Miscellaneous
-  - Filename syntax should be language specific
   - Update Design doc headings & organization
   - Throw warning/error if expression cannot be supported as statement in target language (target-language's a_syntax.clj)
-  - Delete the line "import java.util.List" from Java pipeline's e-string/std-imports
 * We think we have most of the proof of concept language concepts, but we need to hook up the tests
   - workflows (developer and CI)
     * documenting workflows (?)
@@ -166,7 +150,6 @@
   - figure out feature coverage across languages / feature parity
   - indenting strings and comparing ignoring leading space
   - elseif
-  - run the output through the native language compiler
   - pleasant cider testing
 * Operator and language specific transformation (e.g. = in Clojure is either .equals java or ==)
 * test helper clean up
@@ -175,7 +158,6 @@
   - Solve importing
 * Allow users to bring their own functions
 * Allow users to bring their own languages
-* Indentation
 * Do we support first class enums?
   - Without it you lose type strictness
   - Namespaced keywords?

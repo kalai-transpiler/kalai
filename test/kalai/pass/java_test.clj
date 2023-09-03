@@ -121,6 +121,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
+import kalai.Kalai;
 public class TestClass {
 public static final int f(final int x) {
 return (x + 1);
@@ -274,6 +275,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
+import kalai.Kalai;
 public class TestClass {
 static final HashMap<Long,String> x;
 public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
@@ -293,7 +295,7 @@ return z;
 (deftest type-aliasing-and-casting-test
   (ns-form
     '((ns test-package.test-class)
-      (def ^{:kalias {:mvector [:any]}} Clause) ;; Clause represents a part of a larger expression for a SQL keyword
+      (def ^{:kalias {:mvector [:any]}} Clause)             ;; Clause represents a part of a larger expression for a SQL keyword
       (defn f ^{:t :string} [^{:t :any} x]
         (let [v ^{:cast Clause} x
               ^{:t :any} v-first (nth v (int 0))
@@ -321,6 +323,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
+import kalai.Kalai;
 public class TestClass {
 public static final String f(final Object x) {
 final ArrayList<Object> v = (ArrayList<Object>)x;
@@ -435,7 +438,8 @@ return myBinding;
        (invoke println 1)
        (invoke println 2))
     ;;->
-    "if (true)
+    "boolean tmp1 = true;
+if (tmp1)
 {
 System.out.println(1L);
 }
@@ -797,19 +801,22 @@ System.out.println(\"hi\");
          (if true
            (invoke println 3))))
     ;;->
-    "if (true)
+    "boolean tmp1 = true;
+if (tmp1)
 {
 System.out.println(1L);
 }
 else
 {
-if (false)
+boolean tmp2 = false;
+if (tmp2)
 {
 System.out.println(2L);
 }
 else
 {
-if (true)
+boolean tmp3 = true;
+if (tmp3)
 {
 System.out.println(3L);
 }
@@ -857,18 +864,18 @@ final long v = m.get(k);"
     ))
 
 #_(deftest collection-closure-test
-  (inner-form
-    '(let [c [1 2 3]
-           f (fn [] (conj c 4))
-           g (fn [] (conj c 5))
-           d (f)
-           e (g)]
-       c)
-    ;;->
-    '()
-    ;;->
-    ""
-    ))
+    (inner-form
+      '(let [c [1 2 3]
+             f (fn [] (conj c 4))
+             g (fn [] (conj c 5))
+             d (f)
+             e (g)]
+         c)
+      ;;->
+      '()
+      ;;->
+      ""
+      ))
 
 ;; TODO: due to a quirk of Clojure, cases can be ints, I don't think this will compile
 (deftest switch-case-test
@@ -895,20 +902,20 @@ break;
 ;; TODO: support switch as expression
 (deftest switch-case2-test
   #_(inner-form
-    '(println (case 1
-                1 :a
-                2 :b))
-    ;;->
-    '(invoke println
-             (case 1 {1 [1 :a]
-                      2 [2 :b]}))
-    ;;->
-    "switch (1) {
-case 1 : \":a\";
-break;
-case 2 : \":b\";
-break;
-}"))
+      '(println (case 1
+                  1 :a
+                  2 :b))
+      ;;->
+      '(invoke println
+               (case 1 {1 [1 :a]
+                        2 [2 :b]}))
+      ;;->
+      "switch (1) {
+  case 1 : \":a\";
+  break;
+  case 2 : \":b\";
+  break;
+  }"))
 
 (deftest conditional-expression-test
   ;; For simple expressions, a true ternary could be used instead
@@ -929,7 +936,8 @@ break;
                          5)))
     ;;->
     "long tmp1;
-if (true)
+boolean tmp2 = true;
+if (tmp2)
 {
 tmp1 = 1L;
 }
@@ -937,27 +945,29 @@ else
 {
 tmp1 = 2L;
 }
-long tmp2;
-if (true)
-{
 long tmp3;
-if (true)
+boolean tmp4 = true;
+if (tmp4)
 {
-tmp3 = 3L;
+long tmp5;
+boolean tmp6 = true;
+if (tmp6)
+{
+tmp5 = 3L;
 }
 else
 {
-tmp3 = 4L;
+tmp5 = 4L;
 }
 {
-tmp2 = tmp3;
+tmp3 = tmp5;
 }
 }
 else
 {
-tmp2 = 5L;
+tmp3 = 5L;
 }
-System.out.println((tmp1 + tmp2));"))
+System.out.println((tmp1 + tmp3));"))
 
 (deftest nested-group-test
   #_(inner-form
@@ -990,7 +1000,8 @@ System.out.println((tmp1 + tmp2));"))
                        4))
     ;;->
     "long tmp1;
-if (true)
+boolean tmp2 = true;
+if (tmp2)
 {
 System.out.println(1L);
 {
@@ -1015,23 +1026,25 @@ System.out.println((tmp1 + 4L));"))
                        4))
     ;;->
     "long tmp1;
-if (true)
+boolean tmp2 = true;
+if (tmp2)
 {
 tmp1 = 1L;
 }
 else
 {
-long tmp2;
-if (false)
+long tmp3;
+boolean tmp4 = false;
+if (tmp4)
 {
-tmp2 = 2L;
+tmp3 = 2L;
 }
 else
 {
-tmp2 = 3L;
+tmp3 = 3L;
 }
 {
-tmp1 = tmp2;
+tmp1 = tmp3;
 }
 }
 System.out.println((tmp1 + 4L));"))
@@ -1182,7 +1195,8 @@ System.out.println(\"hi\");"))
                      (return x)))))
     ;;->
     "public static final long f() {
-if (true)
+boolean tmp1 = true;
+if (tmp1)
 {
 return 1L;
 }
@@ -1283,23 +1297,25 @@ System.out.println(z);"))
     ;;->
     "long a = 1L;
 long tmp1;
-if (true)
+boolean tmp2 = true;
+if (tmp2)
 {
 tmp1 = a;
 }
 else
 {
-long tmp2;
-if (false)
+long tmp3;
+boolean tmp4 = false;
+if (tmp4)
 {
-tmp2 = a;
+tmp3 = a;
 }
 else
 {
-tmp2 = a;
+tmp3 = a;
 }
 {
-tmp1 = tmp2;
+tmp1 = tmp3;
 }
 }
 final long x = tmp1;
@@ -1424,6 +1440,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
+import kalai.Kalai;
 public class TestClass {
 static final HashMap<Long,String> x;
 public static final HashMap<Long,String> f(final HashMap<Long,String> y) {
@@ -1437,9 +1454,127 @@ return tmp1;
 ;; TODO:
 (deftest destructure-test
   #_(inner-form
-    '(let [{:keys [a b]} {:a "a" :b "b"}]
-       a)
-    ;;->
-    '()
-    ;;->
-    ""))
+      '(let [{:keys [a b]} {:a "a" :b "b"}]
+         a)
+      ;;->
+      '()
+      ;;->
+      ""))
+
+(deftest lambda-test
+  (inner-form
+    '(let [f ^{:t {:function [:int :int]}} (fn [x] x)]
+       (f (int 1)))
+    '(do
+       (init f (lambda [^{:t :int} x]
+                       (return x)))
+       (invoke f 1))
+    "final java.util.Function<Integer,Integer> f = (x) -> {
+return x;
+};
+f(1);"))
+
+#_(deftest lambda-test
+    (inner-form
+      '(map (fn [x] x) [1])
+      '(invoke map (lambda [x] x) [1])
+      "z"))
+
+(deftest lambda-test2
+  (inner-form
+    '(map (fn [x] x) ^{:t {:vector [:long]}} [1 2 3])
+    '(invoke map
+             (lambda [x] (return x))
+             [1 2 3])
+    "new io.lacuna.bifurcan.List<Long>().addLast(1L).addLast(2L).addLast(3L).stream().map((x) -> {
+return x;
+});"))
+
+
+;; TODO: Figure out if we can write this test in order to predictably match the Java/Rust output string, which in turn
+;; would require us to detect gensym'ed symbols created at Clojure _reader_ time. This is a testing-only concern that
+;; is not a reflection of the main code functionality itself.
+;;(deftest destructure-test
+;;  (inner-form
+;;    '(let [[aa bb ab] ^{:t {:vector [:long]}} [1 5 9]]
+;;       (println "aa:" aa "bb:" bb "ab:" ab))
+;;    '(do
+;;       (init aa (nth 0 [1 5 9]))
+;;       (init bb (nth 1 [1 5 9]))
+;;       (init ab (nth 2 [1 5 9])))
+;;    '()))
+
+(deftest lambda-test3
+  (inner-form
+    '(map (fn [x y] (+ x y))
+          ^{:t {:vector [:long]}} [1 2 3]
+          ^{:t {:vector [:long]}} [4 5 6])
+    '(invoke map
+             (lambda [x y]
+                     (return (operator + x y)))
+             [1 2 3]
+             [4 5 6])
+    "kalai.Kalai.map((x, y) -> {
+return (x + y);
+}, new io.lacuna.bifurcan.List<Long>().addLast(1L).addLast(2L).addLast(3L).stream(), new io.lacuna.bifurcan.List<Long>().addLast(4L).addLast(5L).addLast(6L).stream());"))
+
+(deftest lambda-test4
+  (inner-form
+    '(map +
+          ^{:t {:vector [:long]}} [1 2 3]
+          ^{:t {:vector [:long]}} [4 5 6])
+    '(invoke map +
+             [1 2 3]
+             [4 5 6])
+    "kalai.Kalai.map((a, b) -> {
+return (a + b);
+}, new io.lacuna.bifurcan.List<Long>().addLast(1L).addLast(2L).addLast(3L).stream(), new io.lacuna.bifurcan.List<Long>().addLast(4L).addLast(5L).addLast(6L).stream());"))
+
+;; test the extra arity of nth that allows for a default value when the index is out of bounds
+(deftest nth-test
+  (inner-form
+    '(let [v ^{:t {:vector [:long]}} [1 5 9]
+           aa (nth v 0)
+           bb (nth v 1)
+           ab (nth v 2)
+           ^{:t :string} x ^{:cast :string} (nth v 3 2468)]
+       (println "aa:" aa "bb:" bb "ab:" ab "x:" x))
+    '(do
+       (init v [1 5 9])
+       (init aa (invoke clojure.lang.RT/nth v 0))
+       (init bb (invoke clojure.lang.RT/nth v 1))
+       (init ab (invoke clojure.lang.RT/nth v 2))
+       (init x (invoke clojure.lang.RT/nth v 3 2468))
+       (invoke println "aa:" aa "bb:" bb "ab:" ab "x:" x))
+    "final io.lacuna.bifurcan.List<Long> v = new io.lacuna.bifurcan.List<Long>().addLast(1L).addLast(5L).addLast(9L);
+final Object aa = v.get(0L);
+final Object bb = v.get(1L);
+final Object ab = v.get(2L);
+Object tmp1 = 2468L;
+if ((0L <= 3L))
+{
+if ((3L < v.size()))
+{
+tmp1 = v.get();
+}
+}
+final String x = (String)tmp1;
+System.out.println((\"\" + \"aa:\" + aa + \"bb:\" + bb + \"ab:\" + ab + \"x:\" + x));"))
+
+(deftest conj-test
+  (inner-form
+    '(conj ^{:t {:mmap [:string :long]}} {:a 1}
+           ^{:t {:mmap [:string :long]}} {:b 2})
+    '(invoke conj {:a 1} {:b 2})
+    "HashMap<String,Long> tmp1 = new HashMap<String,Long>();
+tmp1.put(\":a\", 1L);
+HashMap<String,Long> tmp2 = new HashMap<String,Long>();
+tmp2.put(\":b\", 2L);
+tmp1.putAll(tmp2);"))
+
+(deftest conj-test2
+  (inner-form
+    '(conj ^{:t {:map [:string :long]}} {:a 1}
+           ^{:t {:map [:string :long]}} {:b 2})
+    '(invoke conj {:a 1} {:b 2})
+    "kalai.Kalai.conj(new io.lacuna.bifurcan.Map<String,Long>().put(\":a\", 1L, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS), new io.lacuna.bifurcan.Map<String,Long>().put(\":b\", 2L, io.lacuna.bifurcan.Maps.MERGE_LAST_WRITE_WINS));"))

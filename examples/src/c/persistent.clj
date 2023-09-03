@@ -24,7 +24,6 @@
           ^{:t {:map [:any :any]}} e-map ^{:cast {:map [:any :any]}} e
           ^{:t :long} get-e-any-y ^{:cast :long :t :any} (get e-map any-y)]
       (println (str "key :y in persistent map e returns " get-e-any-y)))
-
     3))
 
 (defn test-vector ^Long []

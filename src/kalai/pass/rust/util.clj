@@ -14,7 +14,10 @@
       (string? x)
       (keyword? x)))
 
-(defn wrap-value-enum [t x]
+(defn wrap-value-enum
+  "Ensure that x is an owned type in Rust.
+   If the type t is :any then x is a Kalai BValue so wrap it in an r/value."
+  [t x]
   (let [wrap-owned-expression (if (literal? x)
                                 x
                                 (clone x))]
@@ -39,7 +42,7 @@
           (str \_ snake-case)
           snake-case)))))
 
-(defn fully-qualified-function-identifier-str [function-name]
+(defn fully-qualified-function-identifier-str [function-name class-function-separator]
   (if (string? function-name)
     function-name
     (let [varmeta (some-> function-name meta :var meta)]
@@ -52,5 +55,5 @@
               rustified-ns (str/join "." rustified-ns-by-dot)]
           (str "crate::"
                (str/replace rustified-ns "." "::") ;; we use varmeta because we want the full ns, not an alias
-               "::" (identifier (:name varmeta))))
+               class-function-separator (identifier (:name varmeta))))
         (str (identifier function-name))))))

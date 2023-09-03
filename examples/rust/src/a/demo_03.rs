@@ -1,5 +1,5 @@
-use crate::kalai;
-use crate::kalai::PMap;
+use crate::kalai::kalai;
+use crate::kalai::kalai::*;
 pub fn main() {
     let _args: std::vec::Vec<String> = std::env::args().collect();
     {

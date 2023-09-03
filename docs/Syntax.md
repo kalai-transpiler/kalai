@@ -39,7 +39,13 @@ abstract concepts of size. Specifically, integer size = a Java integer = 32-bit 
   for a platform dependent size, which must be cast to `i32`, `u32`, `i64`, `u64`, etc. to match the
   type specified by the user's input code.
 * A language like Rust does not allow floating point types in sets or as the keys of maps. 
-  Therefore, when outputting to such languages, instead of having a `^{:t {:set [:float]}}`, we must use a `^{:t {:set [:any]}}`, and then subsequently cast elements that we get (which would be of type `:any`) to the desired primitive type (`:float`). 
+  Therefore, when outputting to such languages, instead of having a `^{:t {:set [:float]}}`, we must use a `^{:t {:set [:any]}}`, and then subsequently cast elements that we get (which would be of type `:any`) to the desired primitive type (`:float`).
+* TODO: literals - Clojure only has longs and doubles. Should we only have longs/doubles?
+  We currently allow ints/shorts and floats in the type system, and users can get them for literals
+  via casting functions applied to literals (since literals turn into longs/doubles in Clojure by default) 
+* type predicate fns - not currently supporting `int?` because it is very confusing, because `int?`
+  returns true for `long` types in Clojure (and there is an `integer?` that returns true also for
+  BigIntegers as well), while there is no `long?` or `byte?`.
   
 ### Keywords
 
@@ -92,4 +98,43 @@ Keywords had/have 2 main benefits in Clojure: 1) interning so that only a single
 * Languages like Rust have literal syntax for some but not all collections
   * Rust: vectors -> `vec!`, but not for set and map)
     C++: can support literal values in initialization statement only, for some versions of C++ and later only
-    
+
+### Immutability and persistent data collections
+
+* Clojure makes values immutable by default, uses persistent data collections
+  - Persistent collections implies immutable. Clojure persistent collections are heterogeneous
+  - Heterogenous collections allows easy nesting of data structures
+* Persistent data collections in target languages are supported via 3rd-party libraries
+  - Ex: Bifurcan in Java, rpds in Rust
+* Types
+  - There are separate types for mutable and immutable collections in Kalai (Ex: `:mvector` is a mutable vector, `:vector` is an immutable (persistent) vector).
+  
+#### Sequences
+  
+* Clojure uses the `seq` abstraction/interface for many core library functions, and implements it on all collection types
+  - Clojure seqs are immutable
+* Other languages may have something analogous, but often they are one-use only (perhaps because they are mutable)
+  - Ex: `Stream` in Java, `Iterator` in Rust
+* In Kalai, we may represent internally such seq-like constructs using a type (ex: the type map `{:t :seq}`)
+  - However, we currently are not supporting users of Kalai to create local binding values out of seqs
+    * This is partly due to analogous target langauge constructs being one-use only
+    * If there is a need, we can revisit, with the restriction that it only really makes sense / is useful when computed from persistent collections.
+  
+## Gaps in target languages that Kalai will not fill
+
+### Apply
+
+`apply` is a Clojure language feature that is prohibitively challenging many other target languages do not support.
+Most usages of `apply` can be replaced by `reduce`.
+
+Ex: `(apply + numbers)` then becomes `(reduce + numbers)`
+
+### Merge and Into
+
+`merge` and `into` are Clojure functions that are currently not supported, but you can trivially achieve the same functionality through `(reduce conj...)`.
+
+Ex: `(merge m1 m2)` then becomes `(reduce conj m1 m2)`
+
+`conj` is not supported as a variadic function because the implementation for target languages would be complicated.
+Ex: Statically typed target languages would not be able to easily represent a mix of maps and 2-element vectors as arguments for `conj` that assoc's those arguments into a provided map.
+For most use cases, a variadic version of `conj` is probably not necessary, and the combination of `conj` with `reduce` as mentioned above is also available.

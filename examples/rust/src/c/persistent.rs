@@ -1,5 +1,5 @@
-use crate::kalai;
-use crate::kalai::PMap;
+use crate::kalai::kalai;
+use crate::kalai::kalai::*;
 pub fn test_map() -> i64 {
     let a: std::collections::HashMap<String, i64> = {
         let mut tmp1: std::collections::HashMap<String, i64> = std::collections::HashMap::new();
@@ -123,7 +123,7 @@ pub fn test_vector() -> i64 {
             format!(
                 "{}{}",
                 String::from("size of mutable vector a returns "),
-                a.len() as i32
+                (a.len() as i32)
             )
         );
         println!(
@@ -131,7 +131,7 @@ pub fn test_vector() -> i64 {
             format!(
                 "{}{}",
                 String::from("size of mutable vector b returns "),
-                b.len() as i32
+                (b.len() as i32)
             )
         );
         println!(
@@ -139,7 +139,7 @@ pub fn test_vector() -> i64 {
             format!(
                 "{}{}",
                 String::from("size of persistent vector c returns "),
-                c.len() as i32
+                (c.len() as i32)
             )
         );
         println!(
@@ -147,7 +147,7 @@ pub fn test_vector() -> i64 {
             format!(
                 "{}{}",
                 String::from("size of persistent vector d returns "),
-                d.len() as i32
+                (d.len() as i32)
             )
         );
         return 5i64;
@@ -182,7 +182,7 @@ pub fn test_set() -> i64 {
             format!(
                 "{}{}",
                 String::from("size of mutable set a returns "),
-                a.len() as i32
+                (a.len() as i32)
             )
         );
         println!(
@@ -190,7 +190,7 @@ pub fn test_set() -> i64 {
             format!(
                 "{}{}",
                 String::from("size of mutable set b returns "),
-                b.len() as i32
+                (b.len() as i32)
             )
         );
         println!(
@@ -198,7 +198,7 @@ pub fn test_set() -> i64 {
             format!(
                 "{}{}",
                 String::from("size of persistent set c returns "),
-                c.size() as i32
+                (c.size() as i32)
             )
         );
         println!(
@@ -206,7 +206,7 @@ pub fn test_set() -> i64 {
             format!(
                 "{}{}",
                 String::from("size of persistent set d returns "),
-                d.size() as i32
+                (d.size() as i32)
             )
         );
         return 7i64;

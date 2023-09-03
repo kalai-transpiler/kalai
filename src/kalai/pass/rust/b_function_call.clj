@@ -13,8 +13,36 @@
 
 (defn count-for [x]
   (m/rewrite (:t (meta x))
-    {(m/pred #{:mmap :map :mset :set :mvector :vector}) (m/pred some?)} 'len
-    ?else 'len))
+    {(m/pred #{:map :set}) (m/pred some?)} size
+    ?else len))
+
+;; Note: ifn? would be more permissive, but it would include using data structures as functions
+;; which would require more syntactic gymnastics to translate into each target language
+(defn fn-var?
+  "Indicates whether a value in the S-expressions (emitted by tools.analyzer) is a function
+  var. Examples include `inc`, `assoc`, or any previously-defined user functions."
+  [x]
+  (some-> x meta :var deref fn?))
+
+(declare rewrite)
+
+(defn maybe-lambda
+  "For HOFs, transpiling a user-provided function literal works fine. But when the user
+  provides a function var (ex: `inc`, `assoc`), the target language does not necessarily
+  handle the output (ex: because it needs to know which arity of the function), so we
+  always create our own lambda in such cases."
+  [?fn arg-count]
+  (if (fn-var? ?fn)
+    (let [args (mapv symbol (map str (take arg-count "abcdefghikjlmnopqrstuvwxyz")))]
+      (list 'r/lambda
+            args
+            (list 'r/block
+                  (rewrite (list* (if (u/operator-symbols ?fn)
+                                    'r/operator
+                                    'r/invoke)
+                                  ?fn
+                                  args)))))
+    ?fn))
 
 (def rewrite
   (s/bottom-up
@@ -25,10 +53,11 @@
                                  (str/join " ")))
                 & ?args)
 
-      ;; TODO: put a predicate to ensure ?coll is not a seq because Rust .iter()
-      ;; is not allowed/available on a Rust Iterator
-      (r/invoke (u/var ~#'seq) ?coll)
-      (r/method iter (r/method clone ?coll))
+      ;; seq on persistent data structures falls through to kalai.rs
+      ;; In Rust, we don't need to insert `{:seq true}` in metadata because `.into_iter()` is idempotent on Rust Iterators
+      (r/invoke (u/var ~#'seq) (m/and ?coll
+                                      (m/app meta {:t {(m/pred (complement #{:pmap :pvector :pset})) [?value-t]}})))
+      (r/method into_iter (r/method clone ?coll))
 
       (r/invoke (u/var ~#'first) ?seq)
       (r/method clone (r/method unwrap (r/method next ?seq)))
@@ -61,7 +90,7 @@
       (r/method push_str ?this ?x)
 
       (r/method toString (u/of-t StringBuffer ?this))
-      (r/method collect (r/method iter ?this))
+      (r/method collect (r/method into_iter ?this))
 
       (r/method insert (u/of-t StringBuffer ?this) ?idx (u/of-t :char ?s2))
       (r/method insert ?this (r/cast ?idx :usize)
@@ -79,16 +108,11 @@
       (r/invoke clojure.lang.RT/count (u/of-t :string ?x))
       (r/cast (r/method count (r/method chars ?x)) :int)
 
-      (r/invoke clojure.lang.RT/count
-                (m/and ?x
-                       (m/app (comp :t meta) (m/and ?t
-                                                    (m/or (m/pred :set)
-                                                          (m/pred :map))))))
-      (r/cast (r/method size ?x) :int)
-
       (r/invoke clojure.lang.RT/count ?x)
-      (r/cast (r/method len ?x) :int)
+      (r/cast (r/method ~(count-for ?x) ?x) :int)
 
+      (r/invoke clojure.lang.Numbers/max ?x ?y)
+      (r/invoke max ?x ?y)
 
       (r/invoke clojure.lang.RT/nth (u/of-t :string ?x) ?n)
       (r/method unwrap (r/method nth (r/method chars ?x) (r/cast ?n :usize)))
@@ -96,6 +120,17 @@
       (r/invoke clojure.lang.RT/nth ?x ?n)
       (r/method clone (r/method unwrap (r/method get ?x (r/cast ?n :usize))))
 
+      (m/and
+        (r/invoke clojure.lang.RT/nth ?x ?n ?not-found)
+        ;; Note: not using `u/tmp-for` because we don't want to create a type
+        ;; for the temporary variable because the type will be a Rust `Some<T>`
+        ;; type, which as a Rust-specific type, we cannot/do not want to express in Kalai.
+        (m/let [?get (u/gensym2 "get")]))
+      (r/block
+        (r/init ?get (r/method get ?x (r/cast ?n :usize)))
+        (r/if (r/method is_some ?get)
+          (r/block (r/method clone (r/method unwrap ?get)))
+          (r/block ?not-found)))
 
       ;; TODO: for vectors, we should detect the vector type and do a
       ;; cast of the index argument to `usize` like we do for `nth`
@@ -121,15 +156,38 @@
       (r/invoke (u/var ~#'dissoc) & ?more)
       (r/method remove & ?more)
 
-      ;; Note: this particular rule would only support vectors and sets (maps would need to be handled differently)
+      (r/invoke (u/var ~#'disj) & ?more)
+      (r/method remove & ?more)
+
+      ;; conj - immutable collections - they are not caught by these rules, and instead
+      ;; fall through and are caught by the default r/invoke rule, which emits
+      ;; a stringified `conj(...)`, which is handled in our kalai.rs helper fns/method impls
+
+      ;; conj - mutable vectors and sets
       (r/invoke (u/var ~#'conj)
                 (m/and ?coll
-                       (m/app meta {:t {_ [?value-t]}}))
+                       (m/app meta {:t {(m/pred #{:mvector :mset}) [?value-t]}}))
                 . !arg ...)
       (r/method push ?coll . (m/app #(ru/wrap-value-enum ?value-t %) !arg) ...)
 
+      ;; conj - mutable maps
+      (m/and
+        (r/invoke (u/var ~#'conj)
+                  (m/and ?coll
+                         (m/app meta {:t {:mmap [?key-t ?value-t]
+                                          :as ?t}}))
+                  . (m/and !arg (m/app meta {:t {_ [?key-t ?value-t]}})) ...)
+        ?expr
+        (m/let [?tmp (u/tmp ?t ?expr)]))
+      (m/app
+        #(u/preserve-type ?expr %)
+        (r/block
+          (r/init ?tmp ?coll)
+          (r/expression-statement (r/method extend ?tmp . !arg ...))
+          ?tmp))
+
       ;; When inc is used as a function value for example (update m :x inc)
-      ;; See kalai/operators for when direcly called
+      ;; See kalai/operators for when directly called
       (r/invoke (u/var ~#'inc) ?x)
       (r/operator + ?x 1)
 
@@ -150,12 +208,39 @@
                 (r/method "collect::<Vec<String>>" ?xs)
                 (r/ref ?sep))
 
+      (r/invoke (u/var ~#'doall) ?xs)
+      ?xs
+
       (r/invoke (u/var ~#'map) ?fn ?xs)
       (r/method map
-                (r/method clone ?xs)
-                ;; TODO: maybe gensym the argname
-                (r/lambda [kalai_elem]
-                          (r/invoke ?fn (r/method clone kalai_elem))))
+                (r/method into_iter (r/method clone ?xs))
+                ~(maybe-lambda ?fn 1))
+
+      (r/invoke (u/var ~#'map) ?fn ?xs ?ys)
+      (r/method map
+                (r/invoke "std::iter::zip" ?xs ?ys)
+                (r/lambda [t] (r/block (r/invoke ~(maybe-lambda ?fn 2)
+                                                 (r/field 0 t)
+                                                 (r/field 1 t)))))
+
+      ;; reduce - immutable collections - they are not caught by these rules, and instead
+      ;; fall through and are caught by the default r/invoke rule, which emits
+      ;; a stringified `reduce(...)`, which is handled in our kalai.rs helper fns/method impls
+
+      ;; reduce mutables
+      (r/invoke (u/var ~#'reduce) ?fn (m/and ?xs
+                                             (m/app meta {:t {(m/pred #{:mmap :mvector :mset}) [?value-t]}})))
+      (r/method unwrap
+                (r/method reduce
+                          (r/method into_iter (r/method clone ?xs))
+                          ~(maybe-lambda ?fn 2)))
+
+      (r/invoke (u/var ~#'reduce) ?fn ?initial (m/and ?xs
+                                                      (m/app meta {:t {(m/pred #{:mmap :mvector :mset}) [?value-t]}})))
+      (r/method fold
+                (r/method into_iter (r/method clone ?xs))
+                ?initial
+                ~(maybe-lambda ?fn 2))
 
       ;; TODO: do we really need to clone here???
       (r/invoke (u/var ~#'vector?) ?x)
@@ -186,10 +271,10 @@
       (r/invoke (u/var ~#'boolean?) ?x)
       (r/method is_type ?x (r/literal "bool"))
 
-      (r/invoke (u/var ~#'double) ?x)
+      (r/invoke (u/var ~#'double?) ?x)
       (r/method is_type ?x (r/literal "Double"))
 
-      (r/invoke (u/var ~#'float) ?x)
+      (r/invoke (u/var ~#'float?) ?x)
       (r/method is_type ?x (r/literal "Float"))
 
       (r/invoke clojure.lang.Util/identical ?x nil)

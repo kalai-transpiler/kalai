@@ -16,5 +16,7 @@
        (raise-stuff/rewrite)
        (flatten-groups/rewrite)
        (java.b-function-call/rewrite)
+       (raise-stuff/rewrite)
+       (flatten-groups/rewrite)
        (java.c-condense/rewrite)
        (java.e-string/stringify-entry)))

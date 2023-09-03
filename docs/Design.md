@@ -168,6 +168,94 @@ either through provided interop or by the user.
 * what does it assume
 * why does it exist
 
+## Dynamic vs. Static
+
+### Dynamic linking vs. Static linking
+
+Clojure is a dynamic language. By that, we are not referring to types, but the fact that you can redefine functions.
+By contrast, a language like Rust is not dynamic because you cannot redefine a function without recompiling the whole thing.
+Hence, we call Rust static.
+Since Kalai targets Rust and other static languages, it's not a goal to have Kalai be dynamic.
+All that means is that you're going to compile your program every time you run it.
+We do not intend to provide a REPL implementation in the target language.
+The intended workflow is that you write in Clojure, and when you use Kalai, you are always statically compiling.
+
+### Dynamic types vs. Static types 
+
+Things that are often called dynamic that we do not consider as such, here:
+* scope: Ex: in Rust, you can shadow a variable, say in the body of a function, with a new type and/or value.
+  However, the shadowing functionality happens at compile time.
+* typing: a dynamic type means that you have some memory that can be interpreted in different ways, whereas a static type means that the memory can only be interpreted in one way.
+  There is a difference between strong typing vs. weak typing, and dynamic typing vs. static typing.
+  Strong typing means that a value can be interpreted in one way, but weak typing means that a value can be interpreted in many ways (ex: [Perl](https://www.i-programmer.info/programming/theory/1469-type-systems-demystified-part2-weak-vs-strong.html); duck-typing).
+  So Java is strongly typed and statically typed, but Clojure is strongly typed and dynamically typed.
+  The difference
+
+### Passing by reference vs. by value
+
+There is a heap and a stack in which memory gets allocated.
+Stack memory automatically gets deallocated when a call stack frame is popped.
+Heap memory is allocated dynamically during the execution of the method/function.
+Making function calls or returning values are either passing by reference or passing by value.
+Passing by value uses the stack, so no GC involved.
+Passing by reference uses pointers, which uses the heap.
+
+### Garbage Collection
+
+GC is a memory management concept.
+There are certain ways to implement, such as reference counting.
+It will allow you, as created memory goes out of scope, to automatically clean up that memory without having explicit allocation and deallocation.
+Whether a target language manages allocation / deallocation of memory manually or by GC is not currently a concern of Kalai.
+
+## Runtime
+
+There are 2 definitions of "runtime" that are common.
+One refers to one of the phases of lifecycle of a program, from development time to compile time to run time.
+The definition we are referring to here is also referred in full as "runtime environment".
+The runtime environment refers to the set functions that you can use but are provided by someone else.
+In a way, the functions provided in the `clojure.core` namespace are like a runtime for code written in Clojure.
+
+As an organizational principle, so far, we have added helper functions per target language that are required to implement basic constructs / functions from `clojure.core` that would be generally useful for many programs.
+In addition to helper functions, we may have other code that is necessary for supporting Kalai-required constructs in a target language (ex: types).
+We would like to organize such helper code more cleanly by having separate files for at least the following categories:
+
+
+1. An implementation of `clojure.core` functions.
+   (The set of functions may be a subset of all of `clojure.core`).
+   The point is to still make available most/all of `clojure.core` functionality for all programs.
+2. Code written natively in the target language that are necessary to implement the functions in item #1.
+   The code here is not limited to function implementations, but for other things / constructs (ex: types) necessary for transpiling to the target language.
+
+### Type dispatch
+
+Clojure has heterogeneous persistent collections.
+There is a small set of functions that operate on many collections,
+and operate according to the collection type.
+Clojure also contains multiple concrete collection types.
+The philosophy is "a few functions that operate on many objects".
+Target language implementation of those functions need polymorphic dispatch.
+
+[TODO] review after rust implementation stuff
+
+For example `count` might be implemented in a single target language with different method names depending upon the collection type (it might be `size`, `length`) and Kalai implements such functions based on the type of the collection argument accordingly.
+The aim is to provide an interface to smooth those out.
+
+### Collection functions are functions (not translations)
+
+So that they can be composed `(map conj seq1 seq1)`.
+To make use of host language type dispatch.
+
+### Two motivations for runtime functions (not translations)
+
+a. Pass collection functions to higher order functions
+
+b. Apply collection functions to heterogeneous collections
+  The existence of BValue in our runtime for Rust is necessary in order to enable the collections to be heterogeneous.
+  BValue is necessary also to allow the function to dispatch based upon the collection type.
+
+Higher order functions and polymorphic dispatch occur often,
+and sometimes together, in Clojure programs.
+
 ## Recursion
 
 * happens at every level, on all expressions

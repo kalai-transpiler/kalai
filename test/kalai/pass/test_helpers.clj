@@ -16,12 +16,14 @@
         (list 'defn 'test-function ^{:t :void} [] form)))
 
 (defn remove-kalai-class [s]
-  (nth s 2))
+  (->> s
+       (drop 2)
+       first))
 
 (defn remove-java-class [s]
   (->> s
        (str/split-lines)
-       (drop 7)
+       (drop 8)
        (butlast)
        (str/join \newline)))
 
@@ -31,7 +33,7 @@
 (defn remove-java-function [s]
   (->> s
        (str/split-lines)
-       (drop 8)
+       (drop 9)
        (drop-last 2)
        (str/join \newline)))
 

@@ -2,9 +2,10 @@
   (:require [clojure.test :refer [deftest testing is]]
             [kalai.pass.test-helpers
              :refer [ns-form-rust top-level-form-rust inner-form-rust]
-             :rename {ns-form-rust ns-form
+             :rename {ns-form-rust        ns-form
                       top-level-form-rust top-level-form
-                      inner-form-rust inner-form}]))
+                      inner-form-rust     inner-form}]
+            [kalai.util :as u]))
 
 ;; # Creating Variables
 
@@ -71,6 +72,16 @@ x;"))
   x = tmp1;
   }"))
 
+;; # Declare
+;; (declarations are erased in kalai pipeline's kalai-constructs)
+
+(deftest declare-test
+  (top-level-form
+    '(declare ^{:t :int} x)
+    ;;->
+    nil
+    ;;->
+    ""))
 
 ;; # Functions
 
@@ -93,7 +104,7 @@ return (x + 1i32);
   #_(testing
       "Some Clojure forms expand to multiple statements.
       The way Kalai deals with this is by creating a group.
-      That group is later unrolled as temporary variable assignments."
+      That group is later (unrolled as temporary) variable assignments."
       (top-level-form
         '(defn f ^{:t :int} []
            (let [x (atom (int 0))]
@@ -284,8 +295,8 @@ let y: i64 = 5i64;"))
                             (init z y)
                             (return z))))
     ;;->
-    "use crate::kalai;
-use crate::kalai::PMap;
+    "use crate::kalai::kalai;
+use crate::kalai::kalai::*;
 lazy_static::lazy_static! {
 static ref x: std::collections::HashMap<i64,String> = std::collections::HashMap::new();
 }
@@ -298,7 +309,7 @@ return z;
 (deftest type-aliasing-and-casting-test
   (ns-form
     '((ns test-package.test-class)
-      (def ^{:kalias {:mvector [:any]}} Clause) ;; Clause represents a part of a larger expression for a SQL keyword
+      (def ^{:kalias {:mvector [:any]}} Clause)             ;; Clause represents a part of a larger expression for a SQL keyword
       (defn f ^{:t :string} [^{:t :any} x]
         (let [v ^{:cast Clause} x
               ^{:t :any} v-first (nth v (int 0))
@@ -320,13 +331,13 @@ return z;
                             ;;(return nil)
                             )))
     ;;->
-    "use crate::kalai;
-use crate::kalai::PMap;
+    "use crate::kalai::kalai;
+use crate::kalai::kalai::*;
 pub fn f(x: kalai::BValue) -> String {
 let v: std::vec::Vec<kalai::BValue> = std::vec::Vec::from(x);
-let v_first: kalai::BValue = v.get(0i32 as usize).unwrap().clone();
+let v_first: kalai::BValue = v.get((0i32 as usize)).unwrap().clone();
 let table_name: String = String::from(v_first);
-let v_second: kalai::BValue = v.get(1i32 as usize).unwrap().clone();
+let v_second: kalai::BValue = v.get((1i32 as usize)).unwrap().clone();
 let table_alias: String = String::from(v_second);
 return format!(\"{}{}{}\", table_name, String::from(\" AS \"), table_alias);
 }"))
@@ -349,8 +360,8 @@ return format!(\"{}{}{}\", table_name, String::from(\" AS \"), table_alias);
            (init result [])
            (invoke conj result 3))))
     ;;->
-    "use crate::kalai;
-use crate::kalai::PMap;
+    "use crate::kalai::kalai;
+use crate::kalai::kalai::*;
 pub fn get_separator_positions() -> () {
 let mut result: std::vec::Vec<i32> = std::vec::Vec::new();
 result.push(3i64);
@@ -557,7 +568,7 @@ x = rpds::Vector::new().push_back(3i64).push_back(4i64);"))
        (init y x)
        (invoke println y))
     "let x: i32 = 1;
-let y: i64 = x as i64;
+let y: i64 = (x as i64);
 println!(\"{}\", y);"))
 
 (deftest user-cast-test
@@ -570,7 +581,7 @@ println!(\"{}\", y);"))
        (init y x)
        (invoke println y))
     "let x: i32 = 1i32;
-let y: i64 = x as i64;
+let y: i64 = (x as i64);
 println!(\"{}\", y);"))
 
 ;; TODO: revisit if necessary, but for now don't bother
@@ -585,12 +596,12 @@ println!(\"{}\", y);"))
        (init y x)
        (invoke println y))
     "let x: i32 = 1;
-let y: i64 = x as i64;
+let y: i64 = (x as i64);
 println!(\"{}\", y);"))
 
 ;; TODO: for now, you can do this just fine
 (deftest t2a
-    #_(inner-form
+  #_(inner-form
       '(let [^{:t :int} w (int 1)
              ^{:t :int} x (int 3)
              ^{:t :int} y (+ w x)
@@ -605,7 +616,7 @@ println!(\"{}\", y);"))
       "let w: i32 = 1;
 let x: i32 = 3;
 let y: i32 = w + x;
-let z: i64 = y as i64;
+let z: i64 = (y as i64);
 println!(\"{}\", z);"))
 
 (deftest data-literals7-test
@@ -1057,7 +1068,7 @@ else
 5i64
 }));"))
 
-;; Note: Rust will not compile when conditionals as expressions don't have
+;; Note: Rust will not compile when (conditionals as expressions) don't have
 ;; an "else" branch (that is, only has a "then" branch)
 (deftest conditional-expression2-test
   (inner-form
@@ -1146,9 +1157,9 @@ else
 let b: String = String::new();
 let c: String = String::new();
 {
-a.chars().count() as i32;
-b.chars().count() as i32;
-c.chars().count() as i32;
+(a.chars().count() as i32);
+(b.chars().count() as i32);
+(c.chars().count() as i32);
 }"))
 
 (deftest interop1b-test
@@ -1168,8 +1179,8 @@ c.chars().count() as i32;
     "let a: std::vec::Vec<char> = std::vec::Vec::new();
 let b: std::vec::Vec<char> = std::vec::Vec::new();
 {
-a.len() as i32;
-b.len() as i32;
+(a.len() as i32);
+(b.len() as i32);
 }"))
 
 (deftest interop2-test
@@ -1206,11 +1217,29 @@ tmp1
     ;;->
     '(init x (invoke clojure.lang.RT/count "abc"))
     ;;->
-    "let x: i32 = String::from(\"abc\").len() as i32;"))
+    "let x: i32 = (String::from(\"abc\").len() as i32);"))
+
+(deftest interop4-1-test
+  (inner-form
+    '(let [a ^{:t {:map [:string :long]}} {:a 1}
+           b ^{:t {:map [:string :long]}} {:b 2}
+           ^{:t {:map [:string :long]}} c (conj a b)]
+       (count c))
+    ;;->
+    '(do
+       (init a {:a 1})
+       (init b {:b 2})
+       (init c (invoke conj a b))
+       (invoke clojure.lang.RT/count c))
+    ;;->
+    "let a: rpds::HashTrieMap<String,i64> = rpds::HashTrieMap::new().insert(String::from(\":a\"), 1i64);
+let b: rpds::HashTrieMap<String,i64> = rpds::HashTrieMap::new().insert(String::from(\":b\"), 2i64);
+let c: rpds::HashTrieMap<String,i64> = conj(a, b);
+(c.size() as i32);"))
 
 ;; Because Rust strings semantically differ from Java strings, we're not even
 ;; sure if `nth` on strings even makes sense across languages. If/when we
-;; revisit, we could instead offer an iterator over a string as a construct
+;; revisit, we could instead offer an iterator over a (string as a) construct
 ;; in input Kalai.
 (deftest interop5-test
   #_(inner-form
@@ -1242,7 +1271,7 @@ tmp1.push(2i32);
 tmp1.push(3i32);
 tmp1
 };
-println!(\"{}\", v.get(1i64 as usize).unwrap().clone());"))
+println!(\"{}\", v.get((1i64 as usize)).unwrap().clone());"))
 
 
 (deftest interop7-test
@@ -1280,7 +1309,7 @@ i = (i - 3i32);
        (invoke println "hi"))
     ;;->
     "let separator_positions: std::vec::Vec<i32> = std::vec::Vec::new();
-let num_positions: i32 = separator_positions.len() as i32;
+let num_positions: i32 = (separator_positions.len() as i32);
 println!(\"{}\", String::from(\"hi\"));"))
 
 
@@ -1498,3 +1527,132 @@ result;"))
     '(str "a" "b")
     '(invoke str "a" "b")
     "format!(\"{}{}\", String::from(\"a\"), String::from(\"b\"));"))
+
+;; TODO: broken, must fix: must support Fn type signature when a value
+;; Perhaps as  Box<dyn Fn(_) -> _>   ? -- https://stackoverflow.com/a/65756127
+;; More specifically, we want the Box<dyn Fn> to be a BValue (in other words,
+;; make a Fn trait obj implement the Value somehow so that we get Box<dyn Value>).
+#_(deftest lambda-test
+  (inner-form
+    '(let [f ^{:t {:function [:int :int]}} (fn [x] x)]
+       (f (int 1)))
+    '(do
+       (init f (lambda [^{:t :int} x]
+                       (return x)))
+       (invoke f 1))
+    "let f: std::ops::Fn(i32) -> i32 = |x| {
+return x;
+};
+f(1i32);"))
+
+(deftest lambda-test2
+  (inner-form
+    '(map (fn [x] x) ^{:t {:vector [:long]}} [1 2 3])
+    '(invoke map
+             (lambda [x] (return x))
+             [1 2 3])
+    "rpds::Vector::new().push_back(1i64).push_back(2i64).push_back(3i64).clone().into_iter().map(|x|{
+return x;
+});"))
+
+(deftest lambda-test3
+  (inner-form
+    '(map (fn [x y] (+ x y))
+          ^{:t {:vector [:long]}} [1 2 3]
+          ^{:t {:vector [:long]}} [4 5 6])
+    '(invoke map
+             (lambda [x y]
+                     (return (operator + x y)))
+             [1 2 3]
+             [4 5 6])
+    "std::iter::zip(rpds::Vector::new().push_back(1i64).push_back(2i64).push_back(3i64), rpds::Vector::new().push_back(4i64).push_back(5i64).push_back(6i64)).map(|t|{
+|x, y|{
+return (x + y);
+}(t.0, t.1)
+});"))
+
+(deftest lambda-test4
+  (inner-form
+    '(map +
+          ^{:t {:vector [:long]}} [1 2 3]
+          ^{:t {:vector [:long]}} [4 5 6])
+    '(invoke map +
+             [1 2 3]
+             [4 5 6])
+    "std::iter::zip(rpds::Vector::new().push_back(1i64).push_back(2i64).push_back(3i64), rpds::Vector::new().push_back(4i64).push_back(5i64).push_back(6i64)).map(|t|{
+|a, b|{
+(a + b)
+}(t.0, t.1)
+});"))
+
+;; TODO: Figure out if we can write this test in order to predictably match the Rust output string, which in turn
+;; would require us to detect gensym'ed symbols created at Clojure _reader_ time. This is a testing-only concern that
+;; is not a reflection of the main code functionality itself.
+;;(deftest destructure-test
+;;  (inner-form
+;;    '(let [[aa bb ab] ^{:t {:vector [:long]}} [1 5 9]]
+;;       (println "aa:" aa "bb:" bb "ab:" ab))
+;;    '(do
+;;       (init aa (nth 0 [1 5 9]))
+;;       (init bb (nth 1 [1 5 9]))
+;;       (init ab (nth 2 [1 5 9])))
+;;    '()))
+
+;; test the extra arity of nth that allows for a default value when the index is out of bounds
+(deftest nth-test
+  (inner-form
+    '(let [v ^{:t {:vector [:long]}} [1 5 9]
+           aa (nth v 0)
+           bb (nth v 1)
+           ab (nth v 2)
+           x (nth v 3 2468)]
+       (println "aa:" aa "bb:" bb "ab:" ab "x:" x))
+    '(do
+       (init v [1 5 9])
+       (init aa (invoke clojure.lang.RT/nth v 0))
+       (init bb (invoke clojure.lang.RT/nth v 1))
+       (init ab (invoke clojure.lang.RT/nth v 2))
+       (init x (invoke clojure.lang.RT/nth v 3 2468))
+       (invoke println "aa:" aa "bb:" bb "ab:" ab "x:" x))
+"let v: rpds::Vector<i64> = rpds::Vector::new().push_back(1i64).push_back(5i64).push_back(9i64);
+let aa: kalai::BValue = v.get((0i64 as usize)).unwrap().clone();
+let bb: kalai::BValue = v.get((1i64 as usize)).unwrap().clone();
+let ab: kalai::BValue = v.get((2i64 as usize)).unwrap().clone();
+let x: kalai::BValue = {
+let get1 = v.get((3i64 as usize));
+if get1.is_some()
+{
+get1.unwrap().clone()
+}
+else
+{
+2468i64
+}
+};
+println!(\"{} {} {} {} {} {} {} {}\", String::from(\"aa:\"), aa, String::from(\"bb:\"), bb, String::from(\"ab:\"), ab, String::from(\"x:\"), x);"))
+
+(deftest conj-test
+  (inner-form
+    '(conj ^{:t {:mmap [:string :long]}} {:a 1}
+           ^{:t {:mmap [:string :long]}} {:b 2})
+    '(invoke conj {:a 1} {:b 2})
+    "{
+let mut tmp3: std::collections::HashMap<String,i64> = {
+let mut tmp1: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
+tmp1.insert(String::from(\":a\"), 1i64);
+tmp1
+};
+tmp3.extend({
+let mut tmp2: std::collections::HashMap<String,i64> = std::collections::HashMap::new();
+tmp2.insert(String::from(\":b\"), 2i64);
+tmp2
+});
+tmp3
+};"))
+
+(deftest conj-test2
+  (inner-form
+    '(conj ^{:t {:map [:string :long]}} {:a 1}
+           ^{:t {:map [:string :long]}} {:b 2})
+    '(invoke conj {:a 1} {:b 2})
+    "conj(rpds::HashTrieMap::new().insert(String::from(\":a\"), 1i64), rpds::HashTrieMap::new().insert(String::from(\":b\"), 2i64));"))

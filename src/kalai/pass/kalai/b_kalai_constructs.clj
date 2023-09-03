@@ -58,6 +58,11 @@
                                 (ref-form? ?x)))
         (inner-form ?x)))
 
+(def lambda
+  (s/rewrite
+    (fn* (?params . !body-forms ...))
+    (lambda ?params . (m/app inner-form !body-forms) ...)))
+
 (def loops
   (s/rewrite
     ;; while -> while
@@ -160,7 +165,7 @@
     ((u/var (m/pred swap-vars))
      (m/pred #(not (:mut (meta %))) ?ref)
      ?f . !args ...)
-    (invoke ?f ?ref . (m/app inner-form !args) ...)
+    (invoke (m/app inner-form ?f) ?ref . (m/app inner-form !args) ...)
 
     ;; matches (swap! atom fn arg1 arg2)
     ;; and send, send-off, alter, alter-var-root
@@ -168,7 +173,7 @@
     ((u/var (m/pred swap-vars)) ?ref ?f . !args ...)
     (group
       (assign ?ref
-              (invoke ?f
+              (invoke (m/app inner-form ?f)
                       ?ref
                       . (m/app inner-form !args) ...))
       ?ref)
@@ -237,12 +242,13 @@
     (m/and (?f . !args ...)
            (m/app meta ?meta))
     (m/app with-meta
-           (invoke ?f . (m/app inner-form !args) ...)
+           (invoke (m/app inner-form ?f) . (m/app inner-form !args) ...)
            ?meta)))
 
 (def inner-form
   "Ordered from most to least specific."
   (s/choice
+    lambda
     loops
     conditionals
     assignments
@@ -260,7 +266,7 @@
         ..?m))
     ;;->
     (arity-group . (function ?name . !params .
-                             (m/app inner-form !body-forms) ..!n)
+                           (m/app inner-form !body-forms) ..!n)
                  ..?m)))
 
 (def top-level-form
@@ -272,11 +278,15 @@
     (s/rewrite ?else ~(throw (ex-info "Top level form" {:else ?else})))))
 
 ;; takes a sequence of forms, returns a single form
+;; Also, detect `(declare foo)` as `(do (def foo))` and swallow (don't return
+;; anything). This assumes all target languages have a multi-pass compiler. If not,
+;; then we need to propagate the `(declare foo)` and handle downstream.
 (def rewrite-namespace
   (s/rewrite
     ;; ns
     ((do (clojure.core/in-ns ('quote ?ns-name)) & _)
-     . !forms ...)
+     . (m/or (do (def _))
+             !forms) ...)
     ;;->
     (namespace ?ns-name .
                (m/app top-level-form !forms)

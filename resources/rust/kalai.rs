@@ -4,11 +4,14 @@ use std::collections::HashSet;
 use std::collections::{BinaryHeap, HashMap};
 use std::convert::TryInto;
 use std::fmt::Debug;
-use std::hash::{Hash, Hasher};
+use std::hash::{BuildHasher, Hash, Hasher};
+use std::iter::FromIterator;
 use std::ops::{Add, Deref};
+use std::slice::Iter;
 use std::vec::Vec;
 use std::{any, any::Any};
 use std::{fmt, ops};
+use archery::*;
 use rpds;
 
 /// Because we want to insert values that implement the Value trait (in order to
@@ -34,7 +37,7 @@ pub type BValue = Box<dyn Value>;
 //
 // So we want to explore switching from an enum, which cannot be extended once it is defined, into
 // a trait, which can be extended on new types, similar to Clojure protocols. This would allow users
-// to have their own types and have the ability to extend the trait on their own types thesmelves.
+// to have their own types and have the ability to extend the trait on their own types themselves.
 
 // Note: the following structs are wrapping primitives to allow us functionality
 // (especially related to the `Value` trait) that the primitives don't allow
@@ -257,6 +260,8 @@ impl Value for PSet {
     }
 }
 
+// Rust Vec
+// TODO: remove?  (we don't implement Value for Rust HashSet and HashMap)
 impl<T> Value for Vec<T>
     where
         T: PartialEq + Value + Clone + 'static,
@@ -292,6 +297,7 @@ impl<T> Value for Vec<T>
     }
 }
 
+// wrapper type for Rust Vec
 impl Value for Vector {
     fn type_name(&self) -> &'static str {
         "Vector"
@@ -324,6 +330,7 @@ impl Value for Vector {
     }
 }
 
+// wrapper type for rpds Vector
 impl Value for PVector {
     fn type_name(&self) -> &'static str {
         "PVector"
@@ -933,8 +940,8 @@ impl From<rpds::HashTrieMap<BValue, BValue>> for BValue {
     }
 }
 
-impl From<BValue> for rpds::HashTrieMap<BValue,BValue> {
-    fn from(v: BValue) -> rpds::HashTrieMap<BValue,BValue> {
+impl From<BValue> for rpds::HashTrieMap<BValue, BValue> {
+    fn from(v: BValue) -> rpds::HashTrieMap<BValue, BValue> {
         if let Some(x) = v.as_any().downcast_ref::<PMap>() {
             x.clone().0
         } else {
@@ -1002,15 +1009,15 @@ impl From<BValue> for Vec<BValue> {
 }
 
 
-impl From<HashMap<BValue,BValue>> for BValue {
-    fn from(x: HashMap<BValue,BValue>) -> Self {
+impl From<HashMap<BValue, BValue>> for BValue {
+    fn from(x: HashMap<BValue, BValue>) -> Self {
         let b: BValue = Box::new(Map(x));
         b
     }
 }
 
-impl From<BValue> for HashMap<BValue,BValue> {
-    fn from(v: BValue) -> HashMap<BValue,BValue> {
+impl From<BValue> for HashMap<BValue, BValue> {
+    fn from(v: BValue) -> HashMap<BValue, BValue> {
         if let Some(x) = v.as_any().downcast_ref::<Map>() {
             x.clone().0
         } else {
@@ -1112,6 +1119,60 @@ impl From<PMap> for BValue {
         Box::new(m)
     }
 }
+
+impl From<BValue> for PSet {
+    fn from(v: BValue) -> PSet {
+        if let Some(pset) = v.as_any().downcast_ref::<PSet>() {
+            pset.clone()
+        } else {
+            panic!("Could not downcast Value into PSet!");
+        }
+    }
+}
+
+impl From<&BValue> for PSet {
+    fn from(v: &BValue) -> PSet {
+        if let Some(pset) = v.as_any().downcast_ref::<PSet>() {
+            pset.clone()
+        } else {
+            panic!("Could not downcast Value into PSet!");
+        }
+    }
+}
+
+impl From<PSet> for BValue {
+    fn from(s: PSet) -> BValue {
+        Box::new(s)
+    }
+}
+
+impl From<BValue> for PVector {
+    fn from(v: BValue) -> PVector {
+        if let Some(pvec) = v.as_any().downcast_ref::<PVector>() {
+            pvec.clone()
+        } else {
+            panic!("Could not downcast Value into PVector!");
+        }
+    }
+}
+
+impl From<&BValue> for PVector {
+    fn from(v: &BValue) -> PVector {
+        if let Some(pvec) = v.as_any().downcast_ref::<PVector>() {
+            pvec.clone()
+        } else {
+            panic!("Could not downcast Value into PVector!");
+        }
+    }
+}
+
+impl From<PVector> for BValue {
+    fn from(v: PVector) -> BValue {
+        Box::new(v)
+    }
+}
+
+
 
 //
 // Float impls
@@ -1298,7 +1359,6 @@ impl PVector {
     }
 
     /*
-    // TODO: Can we avoid the `.clone()` by making the return type be a reference somehow?
     pub fn iter(&self) -> impl std::iter::Iterator + 'static {
         self.0.clone().iter()
     }
@@ -1306,23 +1366,163 @@ impl PVector {
     pub fn contains(&self, x: &BValue) -> bool {
         self.0.contains(x)
     }
-
-    pub fn push(&self, x: BValue) -> () {
-        self.0.push(x)
-    }
-
-    pub fn insert(&self, idx: usize, x: BValue) -> () {
-        self.0.insert(idx, x)
-    }
     */
+
+    pub fn push(&self, x: BValue) -> Self {
+        Self(self.0.push_back(x))
+    }
+
+    pub fn set(&self, idx: usize, x: BValue) -> Self {
+        Self(self.0.set(idx, x).unwrap())
+    }
 
     pub fn new() -> Self {
         Self::default()
     }
 
     pub fn len(&self) -> usize { self.0.len() }
+
+    pub fn seq(&self) -> impl Iterator<Item = &BValue> + '_ {
+        self.0.iter()
+    }
 }
 
+pub trait PersistentCollection: Value {
+    fn conj(&self, other: &BValue) -> Self;
+    fn is_empty(&self) -> bool;
+}
+
+impl PersistentCollection for PMap {
+    fn conj(&self, x: &BValue) -> Self {
+        match x.type_name() {
+            "PMap" => {
+                let mut tmp_htm = self.0.clone();
+                let m_pmap = x.as_any().downcast_ref::<PMap>().unwrap();
+                let m_htm = m_pmap.0.clone();
+                m_htm
+                    .iter()
+                    .for_each(|tuple| tmp_htm.insert_mut(tuple.0.clone(), tuple.1.clone()));
+                PMap(tmp_htm)
+            },
+            "PVector" => {
+                let pvec = x.as_any().downcast_ref::<PVector>().unwrap();
+                let first = pvec.get(0).expect("PVector argument to conj into a PMap has 0 elements, needs 2");
+                let second = pvec.get(1).expect("PVector argument to conj into a PMap has 1 element, needs 2");
+                PMap(self.0.insert(first.clone(), second.clone()))
+            },
+            _ => panic!("Could not downcast Value into HashTrieMap<BValue,BValue> or Vector<BValue>!")
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+}
+
+
+impl PersistentCollection for PSet {
+    fn conj(&self, x: &BValue) -> Self {
+        PSet(self.0.insert(x.clone()))
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+}
+
+impl PersistentCollection for PVector {
+    fn conj(&self, x: &BValue) -> Self {
+        PVector(self.0.push_back(x.clone()))
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+}
+
+pub fn conj(coll: BValue, x: &BValue) -> BValue {
+    match coll.type_name() {
+        "PMap" => BValue::from(coll.as_any().downcast_ref::<PMap>().unwrap().conj(&x)),
+        "PSet" => BValue::from(coll.as_any().downcast_ref::<PSet>().unwrap().conj(&x)),
+        "PVector" => BValue::from(coll.as_any().downcast_ref::<PVector>().unwrap().conj(&x)),
+        _ => panic!("Could not downcast Value into provided Value trait implementing struct types!"),
+    }
+}
+
+/// We return a BValue of a PSet (unlike Clojure)
+pub fn keys(m: BValue) -> BValue {
+    match m.type_name() {
+        "PMap" => BValue::from(
+            PSet(
+                rpds::HashTrieSet::from_iter(
+                    m.as_any().downcast_ref::<PMap>().unwrap().0.keys().cloned()
+                )
+            )
+        ),
+        "PSet" => m,
+        _ => panic!("Could not get keys() from BValue of type {}!", m.type_name()),
+    }
+}
+
+pub fn is_empty(coll: BValue) -> bool {
+    match coll.type_name() {
+        "PMap" => coll.as_any().downcast_ref::<PMap>().unwrap().is_empty(),
+        "PSet" => coll.as_any().downcast_ref::<PSet>().unwrap().is_empty(),
+        "PVector" => coll.as_any().downcast_ref::<PVector>().unwrap().is_empty(),
+        _ => panic!("Could not downcast Value into provided Value trait implementing struct types!"),
+    }
+}
+
+pub fn empty(coll: BValue) -> bool {
+    is_empty(coll)
+}
+
+pub fn not_empty(coll: BValue) -> bool {
+    !is_empty(coll)
+}
+
+pub fn vec(i: impl Iterator<Item = BValue>) -> PVector {
+    PVector(
+        rpds::Vector::from_iter(
+            i
+        )
+    )
+}
+
+pub fn max<T: Ord>(a: T, b: T) -> T { std::cmp::max(a, b) }
+
+pub fn assoc(coll: BValue, k: BValue, v: BValue) -> BValue {
+    conj(coll, &BValue::from(PVector::new().push(k).push(v)))
+}
+
+pub fn range<T>(n: i32) -> impl Iterator {
+    0..n
+}
+
+pub fn repeat(n: usize, x: BValue) -> impl Iterator<Item = BValue> {
+    std::iter::repeat(x).take(n)
+}
+
+pub fn seq<'a>(coll: &'a BValue) -> impl Iterator<Item = &BValue> {
+    match coll.type_name() {
+        // "PMap" => coll.as_any().downcast_ref::<PMap>().unwrap().seq(),
+        // "PSet" => coll.as_any().downcast_ref::<PSet>().unwrap().seq(),
+        "PVector" => coll.as_any().downcast_ref::<PVector>().unwrap().seq(),
+        _ => {
+            panic!("Could not downcast Value into provided Value trait implementing struct types!")
+        }
+    }
+}
+
+pub fn reduce<'a>(f: fn(BValue, &'a BValue) -> BValue, init: BValue, xs: impl Iterator<Item = &'a BValue>) -> BValue {
+    xs.fold(init, |a, b| f(a, b))
+}
+
+/* TODO:
+pub fn count(x: BValue) -> usize {
+    x.len()
+}
+*/
 
 #[cfg(test)]
 mod tests {
@@ -1647,8 +1847,64 @@ mod tests {
         let a: i32 = i32::from(pm3.get(&BValue::from(":a")).unwrap());
         let xy = PMap::from(pm3.get(&BValue::from(":xy")).unwrap());
         let y: i32 = i32::from(xy.get(&BValue::from(":y")).unwrap());
-        let x = (a+y) as i64;
+        let x = (a + y) as i64;
 
         assert_eq!(x, 30);
     }
+
+
+    #[test]
+    fn iterator_test() {
+        let v: rpds::Vector<i64> = rpds::Vector::new()
+            .push_back(11)
+            .push_back(13);
+        let sum = v.iter().fold(0, |acc, x| acc + x);
+        assert_eq!(sum, 24);
+    }
+
+    #[test]
+    fn iterator_test2() {
+        let pv: rpds::Vector<BValue> = rpds::Vector::new()
+            .push_back(BValue::from(11))
+            .push_back(BValue::from(13));
+        let bv = BValue::from(pv);
+        let s = seq(&bv);
+        let sum = s.fold(0, |acc, x| acc);
+        assert_eq!(sum, 0);
+    }
+
+    #[test]
+    fn iterator_test3() {
+        let pv: rpds::Vector<BValue> = rpds::Vector::new()
+            .push_back(BValue::from(11))
+            .push_back(BValue::from(13));
+        let bv = BValue::from(pv);
+        let s = seq(&bv);
+        let sum = s.fold(0, |acc, x| acc + x.as_any().downcast_ref::<i32>().unwrap());
+        assert_eq!(sum, 24);
+    }
+
+    #[test]
+    fn iterator_test4() {
+        let pv: rpds::Vector<BValue> = rpds::Vector::new()
+            .push_back(BValue::from(11))
+            .push_back(BValue::from(13));
+        let bv = BValue::from(pv);
+        let s = seq(&bv);
+
+        // TODO: we want reduce() to do the unwrapping, we don't want the lambda passed to
+        // reduce() to do the unwrapping, so that the lambda can be in terms of values
+
+        let f = |acc: BValue, x: &BValue|
+            BValue::from(
+                acc.as_any().downcast_ref::<i32>().unwrap()
+                    + x.as_any().downcast_ref::<i32>().unwrap()
+            );
+
+
+        let sum = reduce(f,BValue::from(0_i32),s);
+        let sum_deref = sum.as_any().downcast_ref::<i32>().unwrap();
+        assert_eq!(*sum_deref, 24_i32);
+    }
+}
 }

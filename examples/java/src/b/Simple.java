@@ -5,7 +5,7 @@ public class Simple {
     return (a + b);
   }
 
-  public static final void main(String[] args) {
-    System.out.println(b.Simple.add(1L, 2L));
+  public static final void main(String[] _args) {
+    System.out.println(add(1L, 2L));
   }
 }
